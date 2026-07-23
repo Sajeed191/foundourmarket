@@ -135,25 +135,59 @@ function QuestionModal({
   const [details, setDetails] = useState("");
   const [anon, setAnon] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [initialSnapshot, setInitialSnapshot] = useState<{ q: string; anon: boolean }>({ q: "", anon: false });
   const submittingRef = useRef(false);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!open) {
       setBusy(false);
+      setMounted(false);
       submittingRef.current = false;
       return;
     }
-    setQuestion(initial?.question ?? "");
+    const q = initial?.question ?? "";
+    const a = initial?.is_anonymous ?? false;
+    setQuestion(q);
     setDetails(initial?.details ?? "");
-    setAnon(initial?.is_anonymous ?? false);
+    setAnon(a);
+    setInitialSnapshot({ q, anon: a });
+    // Trigger open animation on next frame
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
   }, [open, initial]);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.max(140, el.scrollHeight) + "px";
+  }, [question, open]);
+
   if (!open) return null;
+
+  const trimmed = question.trim();
+  const tooShort = trimmed.length > 0 && trimmed.length < 5;
+  const tooLong = trimmed.length > 500;
+  const invalid = !trimmed || tooShort || tooLong;
+  const changed = isEdit
+    ? trimmed !== initialSnapshot.q.trim() || anon !== initialSnapshot.anon
+    : trimmed.length > 0;
+  const canSubmit = !busy && !invalid && changed;
+  const validationMsg = !trimmed
+    ? ""
+    : tooShort
+      ? "Please write at least 5 characters."
+      : tooLong
+        ? "Please keep your question under 500 characters."
+        : "";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const text = question.trim();
-    if (!text) return;
+    if (!canSubmit) return;
     if (submittingRef.current) return;
     if (!user) {
       navigate({ to: "/auth", search: { redirect: window.location.pathname } });
@@ -164,16 +198,14 @@ function QuestionModal({
     setBusy(true);
     try {
       if (isEdit && initial?.id) {
+        // Edit mode: only question + anonymous flag. Existing details in the DB
+        // are preserved untouched (not editable here per v2 spec).
         const { error } = await supabase
           .from("product_questions")
-          .update({
-            question: text,
-            details: details.trim() || null,
-            is_anonymous: anon,
-          })
+          .update({ question: text, is_anonymous: anon })
           .eq("id", initial.id);
         if (error) throw error;
-        toast.success("Question updated");
+        toast.success("Question updated successfully.");
       } else {
         const { error } = await supabase.from("product_questions").insert({
           product_slug: productSlug,
@@ -197,59 +229,158 @@ function QuestionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-background/70 backdrop-blur-sm p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[80] grid place-items-center p-4"
+      onClick={onClose}
+      style={{
+        background: "rgba(5,6,8,0.72)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        opacity: mounted ? 1 : 0,
+        transition: "opacity 180ms ease-out",
+      }}
+    >
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-card border border-border rounded-[18px] shadow-2xl p-5 sm:p-6 relative"
+        className="w-full sm:w-[560px] max-w-[560px] relative"
+        style={{
+          background: "#121316",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 24,
+          padding: 24,
+          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.8), 0 8px 24px -14px rgba(0,0,0,0.6)",
+          transform: mounted ? "scale(1)" : "scale(0.96)",
+          opacity: mounted ? 1 : 0,
+          transition: "transform 180ms ease-out, opacity 180ms ease-out",
+        }}
       >
-        <button type="button" onClick={onClose} aria-label="Close" className="absolute top-3 right-3 p-1.5 rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground transition">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 p-1.5 rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground transition"
+        >
           <X className="size-4" />
         </button>
-        <div className="mb-4">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-accent mb-2">
-            {isEdit ? "Edit your question" : "Ask the community"}
-          </p>
-          <h3 className="text-lg font-display font-semibold">
-            {isEdit ? "Update your question" : "Have a question about this product?"}
+
+        <div className="mb-5">
+          <h3 className="text-[20px] font-display font-semibold text-foreground leading-tight">
+            {isEdit ? "Edit Question" : "Ask a Question"}
           </h3>
+          <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">
+            {isEdit
+              ? "Make your question clear and easy for other shoppers to understand."
+              : "Ask the community or our team — we usually reply within a day."}
+          </p>
         </div>
-        <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5">Your question</label>
-        <textarea
-          autoFocus
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          rows={3}
-          maxLength={500}
-          placeholder="e.g. Does this support fast charging?"
-          className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent resize-none"
-        />
-        <div className="flex justify-end text-[10px] font-mono text-muted-foreground mt-1">{question.length}/500</div>
 
-        <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5 mt-2">Optional details</label>
-        <textarea
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          rows={2}
-          maxLength={500}
-          placeholder="Add any context that would help someone answer…"
-          className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent resize-none"
-        />
+        <div className="relative">
+          <textarea
+            ref={taRef}
+            autoFocus
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            maxLength={500}
+            placeholder="What would you like to know about this product?"
+            className="w-full text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none transition-colors"
+            style={{
+              minHeight: 140,
+              background: "#181a1f",
+              border: `1px solid ${validationMsg ? "rgba(239,68,68,0.55)" : "rgba(255,255,255,0.08)"}`,
+              borderRadius: 18,
+              padding: 18,
+              paddingBottom: 34,
+              fontSize: 16,
+              lineHeight: 1.6,
+            }}
+            onFocus={(e) => {
+              if (!validationMsg) e.currentTarget.style.borderColor = "var(--color-accent)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = validationMsg
+                ? "rgba(239,68,68,0.55)"
+                : "rgba(255,255,255,0.08)";
+            }}
+          />
+          <div className="pointer-events-none absolute right-4 bottom-3 text-[11px] tabular-nums text-muted-foreground">
+            {question.length} / 500
+          </div>
+        </div>
 
-        <label className="mt-4 flex items-center gap-2.5 select-none cursor-pointer">
-          <input type="checkbox" checked={anon} onChange={(e) => setAnon(e.target.checked)} className="size-4 accent-accent" />
-          <span className="text-sm text-muted-foreground">Post anonymously</span>
+        {validationMsg && (
+          <p className="mt-2 text-[12px] text-destructive">{validationMsg}</p>
+        )}
+
+        {/* Only editing the question is allowed in edit mode (v2 spec). */}
+        {!isEdit && (
+          <div className="mt-3">
+            <textarea
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              rows={2}
+              maxLength={500}
+              placeholder="Add any context that would help someone answer (optional)…"
+              className="w-full text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none"
+              style={{
+                background: "#181a1f",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 14,
+                padding: 14,
+                fontSize: 14,
+                lineHeight: 1.55,
+              }}
+            />
+          </div>
+        )}
+
+        <label className="mt-4 flex items-start gap-3 select-none cursor-pointer group">
+          <span className="relative mt-0.5 inline-grid place-items-center size-[18px] rounded-[6px] border transition-colors"
+            style={{
+              borderColor: anon ? "var(--color-accent)" : "rgba(255,255,255,0.18)",
+              background: anon ? "var(--color-accent)" : "transparent",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={anon}
+              onChange={(e) => setAnon(e.target.checked)}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              aria-label="Hide my name from other customers"
+            />
+            {anon && (
+              <svg viewBox="0 0 20 20" className="size-[12px] text-accent-foreground" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="4 10 8.5 14.5 16 6" />
+              </svg>
+            )}
+          </span>
+          <span className="flex flex-col">
+            <span className="text-[14px] text-foreground font-medium leading-tight">Hide my name from other customers</span>
+            <span className="mt-0.5 text-[12px] text-muted-foreground leading-snug">Your profile won't be shown publicly. Only admins can see the author.</span>
+          </span>
         </label>
 
-        <div className="mt-5 flex items-center justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition">Cancel</button>
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center px-5 rounded-full text-[14px] font-medium text-foreground/85 hover:text-foreground transition-colors"
+            style={{ height: 46, border: "1px solid rgba(255,255,255,0.10)", background: "transparent" }}
+          >
+            Cancel
+          </button>
           <button
             type="submit"
-            disabled={busy || !question.trim()}
-            className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50"
+            disabled={!canSubmit}
+            className="inline-flex items-center justify-center px-6 rounded-full text-[14px] font-bold transition disabled:opacity-45 disabled:cursor-not-allowed"
+            style={{
+              height: 46,
+              color: "#050608",
+              background: "linear-gradient(135deg,#ff9f43 0%, #ff8a2a 55%, #f07d00 100%)",
+              boxShadow: canSubmit ? "0 10px 26px -14px rgba(255,138,42,0.55)" : "none",
+            }}
           >
-            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-            {busy ? "Saving…" : isEdit ? "Save changes" : user ? "Submit" : "Sign in to submit"}
+            {busy ? "Saving…" : isEdit ? "Save Changes" : user ? "Submit" : "Sign in to submit"}
           </button>
         </div>
       </form>

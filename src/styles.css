@@ -157,22 +157,24 @@
   --input: rgba(255, 255, 255, 0.10);
   --ring: #ff8a2a;
 
-  /* Reusable gradients & glows — accent tuned to #ff8a2a, calmer alphas */
-  --gradient-ember: radial-gradient(ellipse at center, rgba(255, 138, 42, 0.22), transparent 70%);
-  --gradient-ember-soft: radial-gradient(circle at 30% 30%, rgba(255, 138, 42, 0.14), transparent 60%);
-  --gradient-violet: radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.14), transparent 65%);
+  /* Reusable gradients & glows — Luxury Minimalism v3.0
+     Orange reserved for true CTAs; ambient tokens are quieted to hairline
+     traces so surfaces read as neutral premium dark. */
+  --gradient-ember: radial-gradient(ellipse at center, rgba(255, 138, 42, 0.10), transparent 70%);
+  --gradient-ember-soft: radial-gradient(circle at 30% 30%, rgba(255, 138, 42, 0.06), transparent 60%);
+  --gradient-violet: radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.06), transparent 65%);
   --gradient-hero: radial-gradient(120% 80% at 50% 0%, #0d1015 0%, #0a0c11 42%, #050608 100%);
   /* Exact top tone of the hero surface — bridges the header spacer into the
      hero so no darker "gap band" appears between the nav and content. */
   --hero-top: #0d1015;
-  --gradient-mesh: conic-gradient(from 180deg at 50% 50%, rgba(255, 138, 42, 0.12), rgba(139, 92, 246, 0.10), rgba(255, 138, 42, 0.12));
-  --gradient-border: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 40%, rgba(255, 138, 42, 0.20));
-  --shadow-ember: 0 10px 40px -14px rgba(255, 138, 42, 0.30);
-  --shadow-card: 0 8px 32px -16px rgba(0, 0, 0, 0.7);
-  --shadow-float: 0 30px 80px -30px rgba(0, 0, 0, 0.8), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 0 1px rgba(255, 138, 42, 0.22), 0 12px 40px -12px rgba(255, 138, 42, 0.28);
+  --gradient-mesh: conic-gradient(from 180deg at 50% 50%, rgba(255, 138, 42, 0.05), rgba(139, 92, 246, 0.05), rgba(255, 138, 42, 0.05));
+  --gradient-border: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0.06));
+  --shadow-ember: 0 10px 32px -18px rgba(255, 138, 42, 0.28), 0 6px 18px -10px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 8px 32px -16px rgba(0, 0, 0, 0.72);
+  --shadow-float: 0 30px 80px -30px rgba(0, 0, 0, 0.82), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 40px -18px rgba(0, 0, 0, 0.75);
   /* Single optimized shadow used across cards/categories/footer/nav on mobile */
-  --shadow-soft: 0 6px 20px -12px rgba(0, 0, 0, 0.6);
+  --shadow-soft: 0 6px 20px -12px rgba(0, 0, 0, 0.65);
 }
 
 /* ---------------------------------------------------------------
@@ -457,8 +459,8 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   transition: box-shadow 0.4s var(--ease-out-expo), transform 0.4s var(--ease-out-expo);
 }
 .glow-border:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 0 0 1px oklch(0.74 0.19 49 / 0.4), 0 0 40px -10px oklch(0.74 0.19 49 / 0.45), 0 26px 60px -28px oklch(0 0 0 / 0.85);
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.10), 0 26px 60px -30px oklch(0 0 0 / 0.9);
 }
 
 /* Subtle film-grain noise texture overlay (use as ::before via .noise-layer) */
@@ -543,40 +545,33 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   transition: transform 0.5s var(--ease-out-expo), border-color 0.3s ease, box-shadow 0.4s ease;
 }
 .card-premium:hover {
-  transform: translateY(-4px);
-  border-color: oklch(0.74 0.19 49 / 0.4);
-  box-shadow: var(--shadow-float), 0 0 60px -20px oklch(0.74 0.19 49 / 0.3);
+  transform: translateY(-3px);
+  border-color: oklch(1 0 0 / 0.14);
+  box-shadow: var(--shadow-float);
 }
 
 /* Premium glass product card — luxury marketplace look */
 .product-card-glass {
   position: relative;
   border-radius: 20px;
-  /* Avoid per-card backdrop readback layers. This is a suspected Chromium
-     compositor risk and is intentionally covered by the binary-search harness;
-     do not treat it as a proven root cause without A/B/A device evidence. */
-  background:
-    radial-gradient(120% 90% at 50% -10%, oklch(0.74 0.19 49 / 0.08), transparent 55%),
-    linear-gradient(180deg, oklch(0.2 0.012 260), oklch(0.15 0.009 260));
-  border: 1px solid oklch(1 0 0 / 0.08);
+  background: linear-gradient(180deg, oklch(0.2 0.012 260), oklch(0.15 0.009 260));
+  border: 1px solid oklch(1 0 0 / 0.07);
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 0.06),
-    0 8px 30px -12px oklch(0 0 0 / 0.6),
-    0 0 0 1px oklch(0.74 0.19 49 / 0.04);
+    inset 0 1px 0 oklch(1 0 0 / 0.05),
+    0 8px 30px -14px oklch(0 0 0 / 0.65);
   transition: transform 0.45s var(--ease-out-expo), border-color 0.3s ease, box-shadow 0.4s ease;
 }
 .product-card-glass:hover {
-  transform: translateY(-4px);
-  border-color: oklch(0.74 0.19 49 / 0.4);
+  transform: translateY(-3px);
+  border-color: oklch(1 0 0 / 0.14);
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 0.08),
-    0 14px 44px -14px oklch(0 0 0 / 0.7),
-    0 0 50px -16px oklch(0.74 0.19 49 / 0.45);
+    inset 0 1px 0 oklch(1 0 0 / 0.06),
+    0 16px 44px -18px oklch(0 0 0 / 0.75);
 }
 .product-card-glass:active {
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 0.08),
-    0 0 60px -10px oklch(0.74 0.19 49 / 0.55);
+    inset 0 1px 0 oklch(1 0 0 / 0.06),
+    0 10px 30px -12px oklch(0 0 0 / 0.7);
 }
 
 /* Cart icon button pulse */
@@ -765,26 +760,26 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 
 .card-outline:hover {
   transform: translateY(-3px);
-  border-color: oklch(0.74 0.19 49 / 0.5);
-  background: oklch(0.74 0.19 49 / 0.04);
+  border-color: oklch(1 0 0 / 0.14);
+  background: oklch(1 0 0 / 0.02);
 }
 
-/* Gradient ambient card: warm ember-washed feature surface */
+/* Gradient ambient card: subtle warm-washed feature surface */
 .card-ambient {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(130% 110% at 0% 0%, oklch(0.74 0.19 49 / 0.16), transparent 55%),
-    linear-gradient(160deg, oklch(0.2 0.02 60), oklch(0.145 0.009 260));
-  border: 1px solid oklch(0.74 0.19 49 / 0.22);
+    radial-gradient(130% 110% at 0% 0%, oklch(0.74 0.19 49 / 0.08), transparent 55%),
+    linear-gradient(160deg, oklch(0.18 0.012 260), oklch(0.145 0.009 260));
+  border: 1px solid oklch(1 0 0 / 0.08);
   border-radius: var(--radius);
-  box-shadow: 0 18px 50px -24px oklch(0.74 0.19 49 / 0.45);
+  box-shadow: 0 18px 50px -28px oklch(0 0 0 / 0.7);
   transition: transform 0.5s var(--ease-out-expo), box-shadow 0.4s ease, border-color 0.3s ease;
 }
 .card-ambient:hover {
-  transform: translateY(-4px);
-  border-color: oklch(0.74 0.19 49 / 0.45);
-  box-shadow: 0 26px 70px -26px oklch(0.74 0.19 49 / 0.6);
+  transform: translateY(-3px);
+  border-color: oklch(1 0 0 / 0.14);
+  box-shadow: 0 26px 70px -30px oklch(0 0 0 / 0.8);
 }
 
 
@@ -806,10 +801,9 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
 .input-glass::placeholder { color: transparent; }
 .input-glass:focus {
   outline: none;
-  background: oklch(1 0 0 / 0.05);
-  border-color: oklch(0.74 0.19 49 / 0.6);
-  box-shadow: 0 0 0 3px oklch(0.74 0.19 49 / 0.12), 0 0 32px -8px oklch(0.74 0.19 49 / 0.55);
-  transform: scale(1.012);
+  background: oklch(1 0 0 / 0.04);
+  border-color: oklch(0.74 0.19 49 / 0.5);
+  box-shadow: 0 0 0 3px oklch(0.74 0.19 49 / 0.10);
 }
 .input-glass:disabled { opacity: 0.7; cursor: not-allowed; }
 

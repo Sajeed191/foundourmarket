@@ -223,10 +223,6 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const selectedCount = selectedNonCurrent + 1;
   const canCompare = selectedNonCurrent >= 1 && selectedCount >= 2;
 
-  const confidenceMap = useMemo(
-    () => buildConfidenceMap(sortedSuggestions, priceOf),
-    [sortedSuggestions, priceOf],
-  );
 
   const handleToggle = useCallback(
     (slug: string) => {

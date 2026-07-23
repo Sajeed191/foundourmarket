@@ -519,7 +519,8 @@ function RailItemImpl({
         </button>
 
         {/* Content */}
-        <div className="flex flex-1 flex-col px-3.5 pt-4 pb-4">
+        <div className="flex flex-1 flex-col px-3.5 pt-4 pb-3">
+
           <Link
             to="/products/$slug"
             params={{ slug: product.slug }}

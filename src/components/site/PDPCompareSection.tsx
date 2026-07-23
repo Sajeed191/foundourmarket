@@ -370,17 +370,12 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           : `${selectedCount} products selected for comparison.`}
       </div>
 
-      {/* Shopping guidance + CTA summary */}
-      <div className="mt-10 rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5 sm:p-6">
-        <p className="text-[12.5px] leading-relaxed text-white/60">
-          {canCompare
-            ? "Ready to compare your selected products."
-            : "Compare up to 4 similar products to see differences in price, ratings and specifications."}
-        </p>
-        <div className="mt-4 flex items-center justify-between gap-4">
-          <span className={`text-[12.5px] tabular-nums ${canCompare ? "text-foreground/85" : "text-white/40"}`}>
+      {/* Compare summary bar */}
+      <div className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <span className={`text-[12.5px] tabular-nums ${canCompare ? "text-foreground/85" : "text-white/45"}`}>
             {selectedNonCurrent === 0
-              ? "Select at least 2 products"
+              ? "Select at least 1 more"
               : `${selectedCount} products selected`}
           </span>
           <button
@@ -388,7 +383,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
             disabled={!canCompare || navigating}
             onClick={handleCompare}
             aria-label={canCompare ? "Compare selected products" : "Select one more product to compare"}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] font-semibold tracking-wide transition-colors duration-150 ease-out min-h-[40px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-full border h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
               canCompare && !navigating
                 ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
                 : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
@@ -402,6 +397,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           </button>
         </div>
       </div>
+
 
       <QuickPreviewSheet
         product={preview}

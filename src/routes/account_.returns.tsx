@@ -137,7 +137,7 @@ const TONE_CLASS: Record<Tone, string> = {
   neutral: "text-white/70 bg-white/[0.06] ring-white/15",
   blue: "text-sky-300 bg-sky-400/10 ring-sky-400/25",
   purple: "text-violet-300 bg-violet-400/10 ring-violet-400/25",
-  orange: "text-[#FF9F43] bg-[#FF7A00]/12 ring-[#FF7A00]/30",
+  orange: "text-accent-hi bg-primary/12 ring-primary/30",
   indigo: "text-indigo-300 bg-indigo-400/10 ring-indigo-400/25",
   green: "text-emerald-300 bg-emerald-400/10 ring-emerald-400/25",
   red: "text-rose-300 bg-rose-400/10 ring-rose-400/25",
@@ -537,8 +537,8 @@ function ReturnsPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-[60vh] grid place-items-center bg-[#050816]">
-        <Loader2 className="size-5 animate-spin text-[#FF7A00]" />
+      <div className="min-h-[60vh] grid place-items-center bg-background">
+        <Loader2 className="size-5 animate-spin text-primary" />
       </div>
     );
   }
@@ -559,13 +559,13 @@ function ReturnsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050816] text-white relative overflow-hidden">
+    <div className="min-h-screen bg-background text-white relative overflow-hidden">
       {/* Cinematic ambient atmosphere */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-0">
         <div className="absolute -top-40 -left-32 size-[420px] rounded-full blur-3xl opacity-[0.18]"
-          style={{ background: "radial-gradient(circle, #FF7A00 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
         <div className="absolute top-1/3 -right-32 size-[360px] rounded-full blur-3xl opacity-[0.12]"
-          style={{ background: "radial-gradient(circle, #FF9F43 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, var(--accent-hi) 0%, transparent 70%)" }} />
       </div>
 
       {/* Sticky collapsible glass header */}
@@ -573,7 +573,7 @@ function ReturnsPage() {
         className={cn(
           "sticky top-0 z-30 transition-all duration-300 backdrop-blur-xl",
           scrolled
-            ? "bg-[#050816]/80 border-b border-white/[0.06] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
+            ? "bg-background/80 border-b border-white/[0.06] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]"
             : "bg-transparent border-b border-transparent"
         )}
         style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
@@ -587,7 +587,7 @@ function ReturnsPage() {
             <ArrowLeft className="size-4" />
           </Link>
           <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/40">Account</span>
-          <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.24em] text-[#FF9F43]">
+          <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.24em] text-accent-hi">
             Resolution
           </span>
         </div>
@@ -601,7 +601,7 @@ function ReturnsPage() {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="pt-1 pb-4"
         >
-          <p className="text-[10px] font-mono uppercase tracking-[0.32em] text-[#FF9F43] mb-2">
+          <p className="text-[10px] font-mono uppercase tracking-[0.32em] text-accent-hi mb-2">
             Account · Post-purchase
           </p>
           <h1 className="text-[28px] sm:text-[34px] leading-[1.05] font-display font-semibold tracking-tight">
@@ -649,9 +649,9 @@ function ReturnsPage() {
                 whileTap={{ scale: 0.96 }}
                 whileHover={{ y: -1 }}
                 transition={{ type: "spring", stiffness: 420, damping: 26 }}
-                className="group relative h-full rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-3.5 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all overflow-hidden"
+                className="group relative h-full rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-3.5 hover:ring-primary/30 hover:bg-white/[0.05] transition-all overflow-hidden"
               >
-                <div className="size-9 grid place-items-center rounded-xl bg-[#FF7A00]/12 ring-1 ring-[#FF7A00]/25 text-[#FF9F43] mb-2.5">
+                <div className="size-9 grid place-items-center rounded-xl bg-primary/12 ring-1 ring-primary/25 text-accent-hi mb-2.5">
                   <a.icon className="size-4" />
                 </div>
                 <p className="text-[12.5px] font-semibold leading-tight">{a.label}</p>
@@ -692,14 +692,14 @@ function ReturnsPage() {
                     <input
                       type="number" min={0} max={it.quantity} value={qty[it.id] ?? 0}
                       onChange={(e) => setQty((p) => ({ ...p, [it.id]: Math.min(it.quantity, Math.max(0, Number(e.target.value))) }))}
-                      className="w-20 bg-white/[0.04] border border-white/10 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-[#FF7A00]/60 focus:ring-2 focus:ring-[#FF7A00]/20 transition"
+                      className="w-20 bg-white/[0.04] border border-white/10 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition"
                     />
                   </div>
                 ))}
               </div>
               <select
                 value={reason} onChange={(e) => setReason(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FF7A00]/60 mb-3 transition"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary/60 mb-3 transition"
               >
                 <option value="">Select reason…</option>
                 <option value="Defective / damaged">Defective / damaged</option>
@@ -711,13 +711,13 @@ function ReturnsPage() {
               <textarea
                 value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
                 placeholder="Additional details (optional)"
-                className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#FF7A00]/60 mb-4 transition resize-none"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary/60 mb-4 transition resize-none"
               />
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={submit}
                 disabled={submitting}
-                className="w-full sm:w-auto bg-[#FF7A00] text-white rounded-full px-6 py-3 text-xs uppercase tracking-widest font-bold disabled:opacity-50 hover:brightness-110 shadow-[0_8px_24px_-8px_#FF7A00] transition-all"
+                className="w-full sm:w-auto bg-primary text-white rounded-full px-6 py-3 text-xs uppercase tracking-widest font-bold disabled:opacity-50 hover:brightness-110 shadow-[0_8px_24px_-8px_var(--primary)] transition-all"
               >
                 {submitting ? "Submitting…" : "Submit request"}
               </motion.button>
@@ -730,7 +730,7 @@ function ReturnsPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.14 }}
-          className="mt-6 sticky top-12 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 py-2 bg-[#050816]/70 backdrop-blur-xl"
+          className="mt-6 sticky top-12 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 py-2 bg-background/70 backdrop-blur-xl"
         >
           <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {FILTERS.map((f) => {
@@ -746,7 +746,7 @@ function ReturnsPage() {
                   className={cn(
                     "shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-wide transition-all ring-1 backdrop-blur-xl",
                     active
-                      ? "bg-[#FF7A00] text-white ring-[#FF7A00] shadow-[0_6px_20px_-6px_#FF7A00,0_0_0_4px_rgba(255,122,0,0.12)] scale-[1.02]"
+                      ? "bg-primary text-white ring-primary shadow-[0_6px_20px_-6px_var(--primary),0_0_0_4px_rgba(255,122,0,0.12)] scale-[1.02]"
                       : "bg-white/[0.04] text-white/70 ring-white/[0.08] hover:text-white hover:bg-white/[0.07]"
                   )}
                 >
@@ -791,13 +791,13 @@ function ReturnsPage() {
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                   className="relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl px-6 py-12 text-center overflow-hidden"
                 >
-                  <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/50 to-transparent" />
+                  <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                   <motion.div
                     initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.08, type: "spring", stiffness: 220, damping: 18 }}
-                    className="relative size-20 mx-auto mb-5 grid place-items-center rounded-3xl bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/25"
+                    className="relative size-20 mx-auto mb-5 grid place-items-center rounded-3xl bg-primary/10 ring-1 ring-primary/25"
                   >
-                    <Icon className="size-8 text-[#FF9F43]" />
+                    <Icon className="size-8 text-accent-hi" />
                   </motion.div>
                   <p className="relative text-base font-semibold">{E.title}</p>
                   <p className="relative text-[13px] text-white/55 mt-1.5 max-w-sm mx-auto leading-relaxed">{E.sub}</p>
@@ -812,7 +812,7 @@ function ReturnsPage() {
                     )}
                     <Link
                       to="/account/orders"
-                      className="inline-flex items-center justify-center gap-1.5 bg-[#FF7A00] text-white rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 shadow-[0_8px_20px_-8px_#FF7A00] transition-all"
+                      className="inline-flex items-center justify-center gap-1.5 bg-primary text-white rounded-full px-5 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 shadow-[0_8px_20px_-8px_var(--primary)] transition-all"
                     >
                       Browse Orders <ChevronRight className="size-3.5" />
                     </Link>
@@ -832,7 +832,7 @@ function ReturnsPage() {
                     transition={{ duration: 0.35, delay: i * 0.04 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => { hapticTap(); setDetail(r); }}
-                    className="w-full text-left rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all"
+                    className="w-full text-left rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 hover:ring-primary/30 hover:bg-white/[0.05] transition-all"
                   >
                     <div className="flex items-start gap-3">
                       {/* Thumbnail */}
@@ -911,7 +911,7 @@ function ReturnsPage() {
             { icon: ShieldCheck, label: "Buyer Protection" },
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl ring-1 ring-white/[0.06] bg-white/[0.02] py-3 px-2">
-              <Icon className="size-3.5 text-[#FF9F43]" />
+              <Icon className="size-3.5 text-accent-hi" />
               <span className="text-[10px] font-medium text-white/65 text-center leading-tight">{label}</span>
             </div>
           ))}
@@ -938,10 +938,10 @@ function ReturnsPage() {
                   whileTap={{ scale: 0.97 }}
                   whileHover={{ y: -1 }}
                   transition={{ type: "spring", stiffness: 420, damping: 26 }}
-                  className="group relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 hover:ring-[#FF7A00]/30 hover:bg-white/[0.05] transition-all overflow-hidden min-h-[64px]"
+                  className="group relative rounded-2xl ring-1 ring-white/[0.07] bg-white/[0.03] backdrop-blur-xl p-4 hover:ring-primary/30 hover:bg-white/[0.05] transition-all overflow-hidden min-h-[64px]"
                 >
                   <div className="flex items-center gap-3 relative">
-                    <div className="size-10 grid place-items-center rounded-xl bg-[#FF7A00]/10 ring-1 ring-[#FF7A00]/20 text-[#FF9F43] shrink-0">
+                    <div className="size-10 grid place-items-center rounded-xl bg-primary/10 ring-1 ring-primary/20 text-accent-hi shrink-0">
                       <a.icon className="size-4" />
                     </div>
                     <div className="min-w-0">
@@ -976,13 +976,13 @@ function ReturnsPage() {
 
       {/* DETAIL DIALOG */}
       <Dialog open={!!detail} onOpenChange={(o) => { if (!o) setDetail(null); }}>
-        <DialogContent className="bg-[#050816] border-white/[0.08] text-white w-[calc(100vw-1.5rem)] max-w-md rounded-2xl p-0 overflow-hidden">
+        <DialogContent className="bg-background border-white/[0.08] text-white w-[calc(100vw-1.5rem)] max-w-md rounded-2xl p-0 overflow-hidden">
           {detail && (() => {
             const view = deriveView(detail);
             const prod = productFor(detail);
             return (
               <div className="relative w-full min-w-0 overflow-hidden">
-                <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/70 to-transparent" />
+                <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
                 <div className="p-5">
                   <DialogHeader className="space-y-0 text-left">
                     <div className="flex items-start gap-3">
@@ -1053,7 +1053,7 @@ function ReturnsPage() {
                         ? { return: detail.id, order: detail.order_id, category: "return_request", subject: `Return request · Order #${detail.order_id.slice(0, 8)}` }
                         : { refund: detail.id, order: detail.order_id, category: "refund_request", subject: `Refund request · Order #${detail.order_id.slice(0, 8)}` },
                     )}
-                    className="mt-5 w-full inline-flex items-center justify-center gap-1.5 bg-[#FF7A00] text-white rounded-full px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 transition"
+                    className="mt-5 w-full inline-flex items-center justify-center gap-1.5 bg-primary text-white rounded-full px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 transition"
                   >
                     <LifeBuoy className="size-3.5" /> Contact Support
                   </Link>
@@ -1069,7 +1069,7 @@ function ReturnsPage() {
                     </Link>
                     <button
                       onClick={() => { hapticTap(); setDetail(null); openEmailSupport(); }}
-                      className="inline-flex items-center justify-center gap-1.5 bg-[#FF7A00] text-white rounded-full px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 transition"
+                      className="inline-flex items-center justify-center gap-1.5 bg-primary text-white rounded-full px-4 py-2.5 text-[11px] uppercase tracking-widest font-bold hover:brightness-110 transition"
                     >
                       <MessageCircle className="size-3.5" /> Support
                     </button>
@@ -1083,8 +1083,8 @@ function ReturnsPage() {
 
       {/* EMAIL SUPPORT DIALOG */}
       <Dialog open={emailOpen} onOpenChange={(o) => { setEmailOpen(o); if (!o) setSending(false); }}>
-        <DialogContent className="bg-[#050816] border-white/[0.08] text-white max-w-[22rem] rounded-2xl p-0 overflow-hidden">
-          <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF7A00]/70 to-transparent" />
+        <DialogContent className="bg-background border-white/[0.08] text-white max-w-[22rem] rounded-2xl p-0 overflow-hidden">
+          <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
 
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -1093,7 +1093,7 @@ function ReturnsPage() {
             className="relative p-5"
           >
             <DialogHeader className="space-y-2">
-              <div className="size-9 grid place-items-center rounded-xl bg-[#FF7A00]/15 ring-1 ring-[#FF7A00]/30 text-[#FF9F43]">
+              <div className="size-9 grid place-items-center rounded-xl bg-primary/15 ring-1 ring-primary/30 text-accent-hi">
                 <Mail className="size-4" />
               </div>
               <DialogTitle className="text-[15px] font-semibold tracking-tight">Contact Support</DialogTitle>
@@ -1110,7 +1110,7 @@ function ReturnsPage() {
                 aria-label="Copy support email"
                 className={cn(
                   "shrink-0 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded-md transition",
-                  copied ? "text-emerald-300 bg-emerald-400/10" : "text-[#FF9F43] hover:text-white hover:bg-white/5"
+                  copied ? "text-emerald-300 bg-emerald-400/10" : "text-accent-hi hover:text-white hover:bg-white/5"
                 )}
               >
                 {copied ? <><Check className="size-3" /> Copied</> : <><Copy className="size-3" /> Copy</>}
@@ -1122,7 +1122,7 @@ function ReturnsPage() {
                 whileTap={{ scale: 0.985 }}
                 onClick={sendEmail}
                 disabled={sending}
-                className="w-full inline-flex items-center justify-center gap-2 bg-[#FF7A00] text-white rounded-full px-5 py-2.5 text-[11px] uppercase tracking-[0.18em] font-bold hover:brightness-110 shadow-[0_10px_28px_-10px_#FF7A00] transition-all disabled:opacity-70"
+                className="w-full inline-flex items-center justify-center gap-2 bg-primary text-white rounded-full px-5 py-2.5 text-[11px] uppercase tracking-[0.18em] font-bold hover:brightness-110 shadow-[0_10px_28px_-10px_var(--primary)] transition-all disabled:opacity-70"
               >
                 {sending ? (
                   <><Loader2 className="size-3.5 animate-spin" /> Launching mail app…</>

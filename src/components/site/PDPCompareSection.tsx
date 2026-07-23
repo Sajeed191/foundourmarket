@@ -327,28 +327,46 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background/95 to-transparent z-10" />
 
         <ul
-          className="flex overflow-x-auto gap-4 sm:gap-5 px-4 sm:px-1 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch" }}
+          className="flex overflow-x-auto snap-x gap-4 sm:gap-5 pl-4 pr-6 sm:pl-1 sm:pr-2 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          style={{
+            overscrollBehaviorX: "contain",
+            WebkitOverflowScrolling: "touch",
+            scrollPaddingLeft: "1rem",
+            scrollSnapType: "x proximity",
+          }}
         >
-          <li className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
+          <li className="shrink-0 snap-start w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
             <RailItem
               product={currentProduct}
               pinned
-              pill={pillFor(currentProduct, shippingFeeOf(currentProduct))}
+              pill={pillFor(currentProduct, currentShipping)}
               onPreview={() => setPreview(currentProduct)}
             />
           </li>
           {sortedSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
+            const price = priceOf(p) || 0;
+            const shipping = shippingFeeOf(p);
+            const chip = diffChipFor(p, {
+              curPrice: currentPrice,
+              curRating: currentProduct.rating || 0,
+              curReviews: currentProduct.reviews || 0,
+              curShipping: currentShipping,
+              curFastSelling: currentFast,
+              curDiscount: currentDiscount,
+              price,
+              shipping,
+              format,
+            });
             return (
-              <li key={p.slug} className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
+              <li key={p.slug} className="shrink-0 snap-start w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
                 <RailItem
                   product={p}
                   active={active}
                   disabled={disabled}
-                  pill={pillFor(p, shippingFeeOf(p))}
-                  onToggle={() => handleToggle(p.slug)}
+                  pill={chip}
+                  onToggle={() => handleToggle(p.slug, p.name)}
                   onPreview={() => setPreview(p)}
                 />
               </li>
@@ -357,6 +375,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           <div aria-hidden className="shrink-0 w-1" />
         </ul>
       </div>
+
 
       {sortedSuggestions.length >= VIEW_MORE_THRESHOLD && (
         <div className="mt-7 flex justify-center sm:justify-start px-1">

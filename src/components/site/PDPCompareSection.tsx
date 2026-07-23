@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Heart, Loader2, Star, Zap } from "lucide-react";
+import { ArrowRight, Check, Eye, Heart, Loader2, Star, Zap } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -75,6 +75,79 @@ const pillClasses: Record<Pill["tone"], string> = {
   neutral: "text-white/60 bg-white/[0.035] border-white/10",
 };
 
+/**
+ * v8.0 — Quick Difference Chip.
+ * Returns ONE factual comparison relative to the currently-viewed product,
+ * priority: cheaper price > higher rating > better delivery > bigger discount
+ * > more reviews > best-seller / new-arrival status. Never marketing copy.
+ */
+function diffChipFor(
+  p: Product,
+  ctx: {
+    curPrice: number;
+    curRating: number;
+    curReviews: number;
+    curShipping: number;
+    curFastSelling: boolean;
+    curDiscount: number;
+    price: number;
+    shipping: number;
+    format: (n: number) => string;
+  },
+): Pill | null {
+  const { curPrice, curRating, curReviews, curShipping, curFastSelling, curDiscount, price, shipping, format } = ctx;
+
+  // Price cheaper (>=5% or ≥ ~small threshold)
+  if (curPrice > 0 && price > 0 && price < curPrice) {
+    const diff = curPrice - price;
+    if (diff / curPrice >= 0.05) {
+      return { label: `${format(diff)} Cheaper`, tone: "emerald" };
+    }
+  }
+
+  // Rating meaningfully higher
+  if ((p.rating || 0) >= (curRating || 0) + 0.3 && (p.rating || 0) > 0) {
+    const delta = ((p.rating || 0) - (curRating || 0)).toFixed(1);
+    return { label: `+${delta} Rating`, tone: "sky" };
+  }
+
+  // Delivery better
+  if (shipping === 0 && curShipping > 0) return { label: "Free Delivery", tone: "emerald" };
+  if (p.fastSelling && !curFastSelling) return { label: "Faster Delivery", tone: "sky" };
+
+  // Discount % bigger
+  const pDiscount = discountPctOf(p, price);
+  if (pDiscount >= curDiscount + 5) {
+    return { label: `${pDiscount - curDiscount}% More Discount`, tone: "emerald" };
+  }
+
+  // More reviews (meaningful only if there is decent volume)
+  if ((p.reviews || 0) >= 20 && (p.reviews || 0) >= (curReviews || 0) * 1.5 && (p.reviews || 0) > (curReviews || 0)) {
+    return { label: "More Reviews", tone: "sky" };
+  }
+
+  // Status fallbacks
+  if (p.bestseller) return { label: "Best Seller", tone: "violet" };
+  if (p.newArrival) return { label: "New Arrival", tone: "neutral" };
+  if (
+    p.inStock !== false &&
+    p.stockQuantity > 0 &&
+    p.lowStockThreshold > 0 &&
+    p.stockQuantity <= p.lowStockThreshold
+  ) return { label: "Limited Stock", tone: "amber" };
+
+  return null;
+}
+
+function discountPctOf(p: Product, price: number): number {
+  const original =
+    (p.comparePriceInr && p.comparePriceInr > price ? p.comparePriceInr : null) ??
+    (p.comparePriceUsd && p.comparePriceUsd > price ? p.comparePriceUsd : null);
+  if (!original || original <= price) return 0;
+  return Math.round(((original - price) / original) * 100);
+}
+
+
 
 // ============================ Component ============================
 
@@ -146,18 +219,32 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const selectedCount = selectedNonCurrent + 1;
   const canCompare = selectedNonCurrent >= 1 && selectedCount >= 2;
 
+  // Context used by the diff-chip resolver for every card.
+  const currentShipping = shippingFeeOf(currentProduct);
+  const currentDiscount = discountPctOf(currentProduct, currentPrice);
+  const currentFast = !!currentProduct.fastSelling;
 
   const handleToggle = useCallback(
-    (slug: string) => {
+    (slug: string, name?: string) => {
       if (slug === currentSlug) return;
       if (!has(slug) && isFull) {
         toast.message(`Maximum ${max} products`);
         return;
       }
+      const wasSelected = has(slug);
       toggle(slug);
+      // v8.0 — subtle success feedback only when adding, never on remove.
+      if (!wasSelected) {
+        toast.success("Added to comparison", {
+          description: name,
+          duration: 1500,
+          position: "bottom-center",
+        });
+      }
     },
     [currentSlug, has, isFull, max, toggle],
   );
+
 
   const handleCompare = () => {
     if (!canCompare || navigating) return;
@@ -240,28 +327,46 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background/95 to-transparent z-10" />
 
         <ul
-          className="flex overflow-x-auto gap-4 sm:gap-5 px-4 sm:px-1 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch" }}
+          className="flex overflow-x-auto snap-x gap-4 sm:gap-5 pl-4 pr-6 sm:pl-1 sm:pr-2 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          style={{
+            overscrollBehaviorX: "contain",
+            WebkitOverflowScrolling: "touch",
+            scrollPaddingLeft: "1rem",
+            scrollSnapType: "x proximity",
+          }}
         >
-          <li className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
+          <li className="shrink-0 snap-start w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
             <RailItem
               product={currentProduct}
               pinned
-              pill={pillFor(currentProduct, shippingFeeOf(currentProduct))}
+              pill={pillFor(currentProduct, currentShipping)}
               onPreview={() => setPreview(currentProduct)}
             />
           </li>
           {sortedSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
+            const price = priceOf(p) || 0;
+            const shipping = shippingFeeOf(p);
+            const chip = diffChipFor(p, {
+              curPrice: currentPrice,
+              curRating: currentProduct.rating || 0,
+              curReviews: currentProduct.reviews || 0,
+              curShipping: currentShipping,
+              curFastSelling: currentFast,
+              curDiscount: currentDiscount,
+              price,
+              shipping,
+              format,
+            });
             return (
-              <li key={p.slug} className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
+              <li key={p.slug} className="shrink-0 snap-start w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
                 <RailItem
                   product={p}
                   active={active}
                   disabled={disabled}
-                  pill={pillFor(p, shippingFeeOf(p))}
-                  onToggle={() => handleToggle(p.slug)}
+                  pill={chip}
+                  onToggle={() => handleToggle(p.slug, p.name)}
                   onPreview={() => setPreview(p)}
                 />
               </li>
@@ -270,6 +375,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           <div aria-hidden className="shrink-0 w-1" />
         </ul>
       </div>
+
 
       {sortedSuggestions.length >= VIEW_MORE_THRESHOLD && (
         <div className="mt-7 flex justify-center sm:justify-start px-1">
@@ -319,7 +425,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           {navigating ? (
             <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
           ) : (
-            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
+            <>{canCompare ? `Compare ${selectedCount} Products` : "Compare Products"} <ArrowRight className="size-3.5" aria-hidden /></>
+
           )}
         </button>
       </div>
@@ -336,7 +443,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         product={preview}
         onClose={() => setPreview(null)}
         pill={preview ? pillFor(preview, shippingFeeOf(preview)) : null}
-        onToggle={(slug) => handleToggle(slug)}
+        onToggle={(slug) => handleToggle(slug, preview?.name)}
+
         isSelected={preview ? preview.slug === currentSlug || has(preview.slug) : false}
         isPinned={preview ? preview.slug === currentSlug : false}
       />
@@ -403,7 +511,7 @@ function StickyCompareBar({
           {navigating ? (
             <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
           ) : (
-            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
+            <>Compare {count} Products <ArrowRight className="size-3.5" aria-hidden /></>
           )}
         </button>
       </div>
@@ -470,7 +578,7 @@ function RailItemImpl({
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-150 ease-out ${
+        className={`group/card relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color,transform,box-shadow] duration-150 ease-out hover:-translate-y-[1px] hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)] ${
           active && !pinned
             ? "border-accent/25 bg-accent/[0.012]"
             : "border-white/[0.06] bg-white/[0.015]"
@@ -498,8 +606,18 @@ function RailItemImpl({
                 −{discountPct}%
               </span>
             )}
+            {/* Quick Preview affordance — fades in on hover/focus, never on touch idle. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 grid place-items-center opacity-0 transition-opacity duration-150 ease-out group-hover/card:opacity-100 group-focus-within/card:opacity-100"
+            >
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/65 backdrop-blur px-2.5 py-1 text-[10.5px] font-medium text-white/95">
+                <Eye className="size-3" strokeWidth={2.25} /> Preview
+              </span>
+            </span>
           </div>
         </button>
+
 
         {/* Wishlist — top right of card */}
         <button
@@ -540,10 +658,10 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Price + savings */}
-          <div className="mt-3 min-h-[36px]">
+          {/* Price hierarchy — bold current, smaller strike, green Save label */}
+          <div className="mt-3 min-h-[46px]">
             <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-[14.5px] font-semibold text-foreground tabular-nums">
+              <span className="text-[16px] font-semibold text-foreground tabular-nums leading-none tracking-[-0.005em]">
                 {format(price)}
               </span>
               {originalRaw ? (
@@ -551,13 +669,14 @@ function RailItemImpl({
                   {format(originalRaw)}
                 </span>
               ) : null}
-              {discountPct >= 5 && (
-                <span className="text-[10.5px] font-medium text-emerald-300/85 tabular-nums">
-                  −{discountPct}%
-                </span>
-              )}
             </div>
+            {originalRaw && originalRaw > price && (
+              <div className="mt-1 text-[10.5px] font-medium text-emerald-300/85 tabular-nums leading-none">
+                Save {format(originalRaw - price)}
+              </div>
+            )}
           </div>
+
 
           {/* Single factual highlight (delivery / stock / status) */}
           <div className="mt-2 mb-3 flex h-[20px] items-center">

@@ -75,6 +75,79 @@ const pillClasses: Record<Pill["tone"], string> = {
   neutral: "text-white/60 bg-white/[0.035] border-white/10",
 };
 
+/**
+ * v8.0 — Quick Difference Chip.
+ * Returns ONE factual comparison relative to the currently-viewed product,
+ * priority: cheaper price > higher rating > better delivery > bigger discount
+ * > more reviews > best-seller / new-arrival status. Never marketing copy.
+ */
+function diffChipFor(
+  p: Product,
+  ctx: {
+    curPrice: number;
+    curRating: number;
+    curReviews: number;
+    curShipping: number;
+    curFastSelling: boolean;
+    curDiscount: number;
+    price: number;
+    shipping: number;
+    format: (n: number) => string;
+  },
+): Pill | null {
+  const { curPrice, curRating, curReviews, curShipping, curFastSelling, curDiscount, price, shipping, format } = ctx;
+
+  // Price cheaper (>=5% or ≥ ~small threshold)
+  if (curPrice > 0 && price > 0 && price < curPrice) {
+    const diff = curPrice - price;
+    if (diff / curPrice >= 0.05) {
+      return { label: `${format(diff)} Cheaper`, tone: "emerald" };
+    }
+  }
+
+  // Rating meaningfully higher
+  if ((p.rating || 0) >= (curRating || 0) + 0.3 && (p.rating || 0) > 0) {
+    const delta = ((p.rating || 0) - (curRating || 0)).toFixed(1);
+    return { label: `+${delta} Rating`, tone: "sky" };
+  }
+
+  // Delivery better
+  if (shipping === 0 && curShipping > 0) return { label: "Free Delivery", tone: "emerald" };
+  if (p.fastSelling && !curFastSelling) return { label: "Faster Delivery", tone: "sky" };
+
+  // Discount % bigger
+  const pDiscount = discountPctOf(p, price);
+  if (pDiscount >= curDiscount + 5) {
+    return { label: `${pDiscount - curDiscount}% More Discount`, tone: "emerald" };
+  }
+
+  // More reviews (meaningful only if there is decent volume)
+  if ((p.reviews || 0) >= 20 && (p.reviews || 0) >= (curReviews || 0) * 1.5 && (p.reviews || 0) > (curReviews || 0)) {
+    return { label: "More Reviews", tone: "sky" };
+  }
+
+  // Status fallbacks
+  if (p.bestseller) return { label: "Best Seller", tone: "violet" };
+  if (p.newArrival) return { label: "New Arrival", tone: "neutral" };
+  if (
+    p.inStock !== false &&
+    p.stockQuantity > 0 &&
+    p.lowStockThreshold > 0 &&
+    p.stockQuantity <= p.lowStockThreshold
+  ) return { label: "Limited Stock", tone: "amber" };
+
+  return null;
+}
+
+function discountPctOf(p: Product, price: number): number {
+  const original =
+    (p.comparePriceInr && p.comparePriceInr > price ? p.comparePriceInr : null) ??
+    (p.comparePriceUsd && p.comparePriceUsd > price ? p.comparePriceUsd : null);
+  if (!original || original <= price) return 0;
+  return Math.round(((original - price) / original) * 100);
+}
+
+
 
 // ============================ Component ============================
 

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Heart, Loader2, Star, Zap } from "lucide-react";
+import { ArrowRight, Check, Eye, Heart, Loader2, Star, Zap } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";

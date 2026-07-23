@@ -221,6 +221,16 @@
   --shadow-cta-lg: 0 10px 28px -10px rgba(255,138,42,0.55);
   /* Accent-high — brighter amber highlight used on labels/icons. */
   --accent-hi: #ff9f43;
+
+  /* UI Governance v1.2 — semantic interaction-state tokens.
+     Replace repeated bg-white/[0.0X] hover/active combos with these. */
+  --surface-hover: rgba(255,255,255,0.06);
+  --surface-active: rgba(255,255,255,0.09);
+  --surface-selected: rgba(255,138,42,0.10);
+  --icon-default: rgba(255,255,255,0.72);
+  --icon-hover: #ffffff;
+  --icon-danger: #ff6b6b;
+  --icon-accent: var(--accent-hi);
 }
 
 /* UI Governance v1 — shared glass utilities. Every glass chip, icon button,
@@ -239,9 +249,37 @@
   line-height: 1;
   white-space: nowrap;
 }
+/* v1.2 — compact metadata chip variant. */
+@utility glass-chip-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-chip);
+  background: rgba(255,255,255,0.04);
+  color: var(--color-muted-foreground);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+/* v1.2 — quiet surface for dialogs / subtle containers (default legacy alpha). */
+@utility glass-surface-soft {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
 @utility glass-surface {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+/* v1.2 — dominant Account/Home glass pattern. Becomes the default surface. */
+@utility glass-surface-strong {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }

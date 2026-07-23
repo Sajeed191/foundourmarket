@@ -3,21 +3,47 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Badge / Chip — Premium UI System v4.0
+ *
+ * Five canonical semantic variants used across the whole site:
+ *   neutral   — default surface chip
+ *   selected  — active state, orange
+ *   success   — emerald (in stock, verified, etc.)
+ *   warning   — amber (low stock, pending)
+ *   info      — blue (informational)
+ *
+ * Legacy variant names (default, secondary, destructive, outline) alias to
+ * these so existing call sites keep working.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1 rounded-[var(--radius-chip)] border px-2.5 py-0.5 text-xs font-medium transition-colors duration-[var(--duration-fast)]",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+        neutral:
+          "bg-[color:var(--chip-neutral-bg)] text-[color:var(--chip-neutral-fg)] border-[color:var(--chip-neutral-border)]",
+        selected:
+          "bg-[color:var(--chip-selected-bg)] text-[color:var(--chip-selected-fg)] border-[color:var(--chip-selected-border)]",
+        success:
+          "bg-[color:var(--chip-success-bg)] text-[color:var(--chip-success-fg)] border-[color:var(--chip-success-border)]",
+        warning:
+          "bg-[color:var(--chip-warning-bg)] text-[color:var(--chip-warning-fg)] border-[color:var(--chip-warning-border)]",
+        info:
+          "bg-[color:var(--chip-info-bg)] text-[color:var(--chip-info-fg)] border-[color:var(--chip-info-border)]",
+        // ── Aliases for legacy call sites ─────────────────────────────
+        default:
+          "bg-[color:var(--chip-selected-bg)] text-[color:var(--chip-selected-fg)] border-[color:var(--chip-selected-border)]",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-[color:var(--chip-neutral-bg)] text-[color:var(--chip-neutral-fg)] border-[color:var(--chip-neutral-border)]",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
+          "bg-destructive/15 text-destructive border-destructive/30",
+        outline:
+          "bg-transparent text-foreground border-[color:var(--border)]",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "neutral",
     },
   },
 );

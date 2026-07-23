@@ -157,6 +157,44 @@
   --input: rgba(255, 255, 255, 0.10);
   --ring: #ff8a2a;
 
+  /* ── Premium UI System v4.0 — canonical radii, spacing, motion ─────
+     Every primitive references these tokens so the entire site speaks
+     one visual language. Do not hardcode radii or durations in components. */
+  --radius-card: 24px;
+  --radius-input: 18px;
+  --radius-button: 16px;
+  --radius-chip: 9999px;
+  --radius-modal: 24px;
+  --radius-sheet-top: 28px;
+
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 240ms;
+
+  /* ── Chip system v4.0 — five semantic variants, reused everywhere ── */
+  --chip-neutral-bg: rgba(255, 255, 255, 0.06);
+  --chip-neutral-fg: #d6dae2;
+  --chip-neutral-border: rgba(255, 255, 255, 0.08);
+  --chip-selected-bg: rgba(255, 138, 42, 0.14);
+  --chip-selected-fg: #ffb37a;
+  --chip-selected-border: rgba(255, 138, 42, 0.35);
+  --chip-success-bg: rgba(34, 197, 94, 0.12);
+  --chip-success-fg: #6ee7a3;
+  --chip-success-border: rgba(34, 197, 94, 0.28);
+  --chip-warning-bg: rgba(245, 158, 11, 0.12);
+  --chip-warning-fg: #fbc06b;
+  --chip-warning-border: rgba(245, 158, 11, 0.28);
+  --chip-info-bg: rgba(59, 130, 246, 0.12);
+  --chip-info-fg: #8ab4ff;
+  --chip-info-border: rgba(59, 130, 246, 0.28);
+
+
   /* Reusable gradients & glows — Luxury Minimalism v3.0
      Orange reserved for true CTAs; ambient tokens are quieted to hairline
      traces so surfaces read as neutral premium dark. */

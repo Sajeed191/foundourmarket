@@ -283,7 +283,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 
   if (products.length === 0) return null;
 
-  if (suggestions.length === 0) {
+  if (suggestions.length < 2) {
     return (
       <section
         className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24"
@@ -292,7 +292,19 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
           Similar Products
         </h2>
-        <p className="mt-3 text-[13px] text-white/55">No similar products available right now.</p>
+        <p className="mt-3 text-[13px] text-white/55 leading-relaxed">
+          No similar products are available at the moment. Explore more products in this category.
+        </p>
+        {currentProduct.category && (
+          <Link
+            to="/category/$slug"
+            params={{ slug: currentProduct.category }}
+            className="mt-4 inline-flex items-center gap-1.5 h-11 text-[13.5px] font-medium text-foreground/80 hover:text-accent transition-colors duration-150"
+          >
+            Browse Category
+            <ArrowRight className="size-3.5" aria-hidden />
+          </Link>
+        )}
       </section>
     );
   }

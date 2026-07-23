@@ -7,7 +7,6 @@ import {
   Search,
   ShieldCheck,
   CheckCircle2,
-  Clock,
   ThumbsUp,
   MoreHorizontal,
   X,
@@ -16,7 +15,6 @@ import {
   Trash2,
   Reply,
   Pencil,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";

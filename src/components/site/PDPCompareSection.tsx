@@ -418,7 +418,6 @@ type RailItemProps = {
   disabled?: boolean;
   pinned?: boolean;
   pill?: Pill | null;
-  confidence?: Confidence | null;
   onToggle?: () => void;
   onPreview?: () => void;
 };
@@ -429,7 +428,6 @@ function RailItemImpl({
   disabled,
   pinned,
   pill,
-  confidence,
   onToggle,
   onPreview,
 }: RailItemProps) {
@@ -445,34 +443,22 @@ function RailItemImpl({
   const discountPct = originalRaw && originalRaw > price
     ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
 
-  // Header caption: Current (grey pill) > confidence label. Never both.
-  const caption: { label: string; tone: "current" | "accent" } | null =
-    pinned ? { label: "CURRENT", tone: "current" }
-    : confidence ? { label: confidence.label, tone: "accent" }
-    : null;
-
   return (
     <div className="flex h-full flex-col">
-      {/* Reserved caption slot */}
+      {/* Reserved caption slot — CURRENT pill only */}
       <div className="mb-2.5 h-[20px] px-0.5 flex items-center">
-        {caption && (
-          caption.tone === "current" ? (
-            <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
-              {caption.label}
-            </span>
-          ) : (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-300/90">
-              {caption.label}
-            </span>
-          )
+        {pinned && (
+          <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
+            CURRENT
+          </span>
         )}
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-200 ease-out ${
-          isSelected && !pinned
-            ? "border-accent/50 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_4px_18px_-14px_rgba(245,158,11,0.25)]"
-            : "border-white/[0.06]"
+        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-200 ease-out ${
+          active && !pinned
+            ? "border-accent/50 bg-accent/[0.025]"
+            : "border-white/[0.06] bg-white/[0.015]"
         }`}
       >
         {/* Image = primary interaction → open Quick Preview */}
@@ -558,59 +544,51 @@ function RailItemImpl({
             </div>
           </div>
 
-          {/* Pill */}
-          <div className="mt-2 flex h-[20px] items-center">
+          {/* Single factual highlight */}
+          <div className="mt-2 mb-3 flex h-[20px] items-center">
             {pill && (
               <span className={`inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-medium tracking-wide ${pillClasses[pill.tone]}`}>
                 {pill.label}
               </span>
             )}
           </div>
-
-          {/* Recommendation sentence — reserved 2 lines, never truncated mid-sentence */}
-          <div className="mt-2.5 mb-3 min-h-[28px]">
-            {confidence && !pinned && (
-              <p className="text-[10.5px] leading-[1.35] text-white/60 line-clamp-2">
-                {confidence.reason}
-              </p>
-            )}
-          </div>
         </div>
 
-        {/* Compare selector — soft divider, centered 48px row */}
+        {/* Compare selector — text + icon only, no button chrome */}
         <div className="mt-auto border-t border-white/[0.04]">
           {pinned ? (
-            // Current product cannot be selected — reserve equal footprint
-            <div className="h-[48px]" aria-hidden />
+            <div className="flex h-[44px] items-center justify-center px-3.5">
+              <span className="text-[12px] font-medium text-white/40 tracking-wide">
+                Current Product
+              </span>
+            </div>
           ) : (
             <button
               type="button"
               onClick={onToggle}
-              aria-pressed={!!isSelected}
+              aria-pressed={!!active}
               aria-label={
-                isSelected
+                active
                   ? `Remove ${product.name} from comparison`
                   : `Select ${product.name} for comparison`
               }
               disabled={disabled}
-              className="flex h-[48px] w-full items-center justify-center gap-2 px-3.5 rounded-b-2xl transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02]"
+              className="flex h-[44px] w-full items-center justify-center gap-1.5 px-3.5 rounded-b-2xl transition-colors duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02]"
             >
               <span
                 aria-hidden
-                className={`grid place-items-center size-[18px] rounded-full border transition-colors duration-200 ease-out ${
-                  isSelected
-                    ? "border-accent bg-accent text-accent-foreground"
-                    : "border-white/25 bg-transparent"
+                className={`transition-opacity duration-150 ease-out ${
+                  active ? "opacity-100 text-accent" : "opacity-0 w-0"
                 }`}
               >
-                {isSelected && <Check className="size-2.5" strokeWidth={3} />}
+                <Check className="size-3.5" strokeWidth={2.75} />
               </span>
               <span
-                className={`text-[14px] font-medium leading-none whitespace-nowrap transition-colors duration-200 ease-out ${
-                  isSelected ? "text-accent" : "text-white/65"
+                className={`text-[13.5px] font-medium leading-none whitespace-nowrap transition-colors duration-150 ease-out ${
+                  active ? "text-accent" : "text-white/65"
                 }`}
               >
-                {isSelected ? "Selected" : "Compare"}
+                {active ? "Selected" : "Compare"}
               </span>
             </button>
           )}

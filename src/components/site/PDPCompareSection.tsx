@@ -444,32 +444,46 @@ function RailItemImpl({
   const discountPct = originalRaw && originalRaw > price
     ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
 
+  const statusPill: { label: string; tone: "current" | "selected" } | null =
+    pinned ? { label: "Current Product", tone: "current" }
+    : active ? { label: "Selected", tone: "selected" }
+    : null;
+
   return (
     <div className="flex h-full flex-col">
-      {/* Reserved caption slot — CURRENT pill only */}
-      <div className="mb-2.5 h-[20px] px-0.5 flex items-center">
-        {pinned && (
-          <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
-            CURRENT
+      {/* Unified status pill slot — same visual system for every state */}
+      <div className="mb-2.5 h-[22px] px-0.5 flex items-center">
+        {statusPill && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-[3px] text-[10px] font-medium tracking-wide transition-colors duration-150 ease-out ${
+              statusPill.tone === "selected"
+                ? "border-accent/35 bg-accent/[0.08] text-accent"
+                : "border-white/[0.08] bg-white/[0.05] text-white/60"
+            }`}
+          >
+            {statusPill.tone === "selected" && (
+              <Check className="size-2.5" strokeWidth={3} aria-hidden />
+            )}
+            {statusPill.label}
           </span>
         )}
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-200 ease-out ${
+        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-150 ease-out ${
           active && !pinned
-            ? "border-accent/50 bg-accent/[0.025]"
+            ? "border-accent/25 bg-accent/[0.012]"
             : "border-white/[0.06] bg-white/[0.015]"
         }`}
       >
-        {/* Image = primary interaction → open Quick Preview */}
+        {/* Image = primary interaction → open Quick Preview. Padded so product breathes. */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreview?.(); }}
           aria-label={`Quick preview: ${product.name}`}
-          className="relative block w-full overflow-hidden rounded-t-2xl bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+          className="relative block w-full p-2.5 pb-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset rounded-t-2xl"
         >
-          <div className="aspect-square w-full">
+          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.03]">
             {product.image && (
               <img
                 src={resolveImage(product.image)}
@@ -479,21 +493,21 @@ function RailItemImpl({
                 className="h-full w-full object-cover transition-opacity duration-150"
               />
             )}
+            {discountPct >= 5 && !pinned && (
+              <span className="absolute left-2 top-2 rounded-full bg-black/60 backdrop-blur px-1.5 py-[2px] text-[10px] font-semibold text-white/90 tabular-nums">
+                −{discountPct}%
+              </span>
+            )}
           </div>
-          {discountPct >= 5 && !pinned && (
-            <span className="absolute left-2 top-2 rounded-full bg-black/60 backdrop-blur px-1.5 py-[2px] text-[10px] font-semibold text-white/90 tabular-nums">
-              −{discountPct}%
-            </span>
-          )}
         </button>
 
-        {/* Wishlist — top right of image */}
+        {/* Wishlist — top right of card */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.slug); }}
           aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
           aria-pressed={saved}
-          className={`absolute right-2 top-2 grid size-8 place-items-center rounded-full border backdrop-blur transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+          className={`absolute right-3.5 top-3.5 grid size-8 place-items-center rounded-full border backdrop-blur transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
             saved
               ? "border-accent/50 bg-black/50 text-accent"
               : "border-white/15 bg-black/40 text-white/75 hover:text-foreground hover:border-white/30"
@@ -503,7 +517,7 @@ function RailItemImpl({
         </button>
 
         {/* Content */}
-        <div className="flex flex-1 flex-col px-3.5 pt-4 pb-3">
+        <div className="flex flex-1 flex-col px-3.5 pt-3 pb-3">
 
           <Link
             to="/products/$slug"
@@ -526,7 +540,7 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Price */}
+          {/* Price + savings */}
           <div className="mt-3 min-h-[36px]">
             <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="text-[14.5px] font-semibold text-foreground tabular-nums">
@@ -545,7 +559,7 @@ function RailItemImpl({
             </div>
           </div>
 
-          {/* Single factual highlight */}
+          {/* Single factual highlight (delivery / stock / status) */}
           <div className="mt-2 mb-3 flex h-[20px] items-center">
             {pill && (
               <span className={`inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-medium tracking-wide ${pillClasses[pill.tone]}`}>
@@ -555,12 +569,12 @@ function RailItemImpl({
           </div>
         </div>
 
-        {/* Compare selector — text + icon only, no button chrome */}
-        <div className="mt-auto border-t border-white/[0.04]">
+        {/* Compare selector — hairline separator only */}
+        <div className="mt-auto border-t border-white/[0.03]">
           {pinned ? (
             <div className="flex h-[44px] items-center justify-center px-3.5">
-              <span className="text-[12px] font-medium text-white/40 tracking-wide">
-                Current Product
+              <span className="text-[12.5px] font-medium text-white/35 tracking-wide">
+                Current
               </span>
             </div>
           ) : (

@@ -345,7 +345,6 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     writeSort(v);
   };
 
-  const ctaLabel = "Compare Selected Products";
   const previewSlug = preview?.slug ?? null;
 
 

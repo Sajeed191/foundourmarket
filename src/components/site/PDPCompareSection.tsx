@@ -438,7 +438,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
             WebkitOverflowScrolling: "touch",
           }}
         >
-          <li className="shrink-0 w-[38%] min-[420px]:w-[34%] sm:w-[190px]">
+          <li className="shrink-0 w-[42%] min-[420px]:w-[38%] sm:w-[210px]">
             <RailItem
               product={currentProduct}
               pinned

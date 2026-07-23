@@ -157,22 +157,24 @@
   --input: rgba(255, 255, 255, 0.10);
   --ring: #ff8a2a;
 
-  /* Reusable gradients & glows — accent tuned to #ff8a2a, calmer alphas */
-  --gradient-ember: radial-gradient(ellipse at center, rgba(255, 138, 42, 0.22), transparent 70%);
-  --gradient-ember-soft: radial-gradient(circle at 30% 30%, rgba(255, 138, 42, 0.14), transparent 60%);
-  --gradient-violet: radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.14), transparent 65%);
+  /* Reusable gradients & glows — Luxury Minimalism v3.0
+     Orange reserved for true CTAs; ambient tokens are quieted to hairline
+     traces so surfaces read as neutral premium dark. */
+  --gradient-ember: radial-gradient(ellipse at center, rgba(255, 138, 42, 0.10), transparent 70%);
+  --gradient-ember-soft: radial-gradient(circle at 30% 30%, rgba(255, 138, 42, 0.06), transparent 60%);
+  --gradient-violet: radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.06), transparent 65%);
   --gradient-hero: radial-gradient(120% 80% at 50% 0%, #0d1015 0%, #0a0c11 42%, #050608 100%);
   /* Exact top tone of the hero surface — bridges the header spacer into the
      hero so no darker "gap band" appears between the nav and content. */
   --hero-top: #0d1015;
-  --gradient-mesh: conic-gradient(from 180deg at 50% 50%, rgba(255, 138, 42, 0.12), rgba(139, 92, 246, 0.10), rgba(255, 138, 42, 0.12));
-  --gradient-border: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 40%, rgba(255, 138, 42, 0.20));
-  --shadow-ember: 0 10px 40px -14px rgba(255, 138, 42, 0.30);
-  --shadow-card: 0 8px 32px -16px rgba(0, 0, 0, 0.7);
-  --shadow-float: 0 30px 80px -30px rgba(0, 0, 0, 0.8), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 0 1px rgba(255, 138, 42, 0.22), 0 12px 40px -12px rgba(255, 138, 42, 0.28);
+  --gradient-mesh: conic-gradient(from 180deg at 50% 50%, rgba(255, 138, 42, 0.05), rgba(139, 92, 246, 0.05), rgba(255, 138, 42, 0.05));
+  --gradient-border: linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0.06));
+  --shadow-ember: 0 10px 32px -18px rgba(255, 138, 42, 0.28), 0 6px 18px -10px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 8px 32px -16px rgba(0, 0, 0, 0.72);
+  --shadow-float: 0 30px 80px -30px rgba(0, 0, 0, 0.82), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 40px -18px rgba(0, 0, 0, 0.75);
   /* Single optimized shadow used across cards/categories/footer/nav on mobile */
-  --shadow-soft: 0 6px 20px -12px rgba(0, 0, 0, 0.6);
+  --shadow-soft: 0 6px 20px -12px rgba(0, 0, 0, 0.65);
 }
 
 /* ---------------------------------------------------------------

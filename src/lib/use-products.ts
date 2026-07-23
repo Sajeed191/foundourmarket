@@ -83,6 +83,36 @@ function bindRealtime() {
     }
   })();
 
+  // Customer-safe realtime: subscribe to UPDATE events on `products` for
+  // every session (products is readable under RLS by all visitors). We only
+  // patch the two fields that can change through the review/rating pipeline
+  // (rating, reviews) plus updated_at — no full refetch, no invalidation,
+  // no extra queries. Object references are preserved for every unchanged
+  // product so memoized cards do not re-render.
+  supabase
+    .channel("rt-products-ratings")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "products" },
+      (payload) => {
+        const row = (payload.new ?? {}) as {
+          id?: string;
+          rating?: number | string | null;
+          reviews?: number | string | null;
+          updated_at?: string | null;
+        };
+        if (!row.id) return;
+        const nextRating = Number(row.rating ?? 0) || 0;
+        const nextReviews = Number(row.reviews ?? 0) || 0;
+        applyProductPatch(row.id, {
+          rating: nextRating,
+          reviews: nextReviews,
+          updated_at: row.updated_at ?? undefined,
+        });
+      },
+    )
+    .subscribe();
+
   // All sessions (customer + admin) refresh on focus/visibility, so a
   // customer returning from a background tab always sees fresh pricing.
   const refreshFromBrowserEvent = () => refreshIfStale(false);
@@ -94,6 +124,37 @@ function bindRealtime() {
 let cache: Product[] | null = null;
 let inflight: Promise<Product[]> | null = null;
 const subscribers = new Set<(p: Product[]) => void>();
+const productSubscribers = new Set<(p: Product) => void>();
+
+/**
+ * Merge a rating/reviews patch into a single cached product without
+ * disturbing any other entry. Preserves object references for unchanged
+ * products (memoized cards stay put) and creates exactly one new object for
+ * the changed product so React sees the update. No-ops when nothing changed.
+ */
+function applyProductPatch(
+  id: string,
+  patch: { rating: number; reviews: number; updated_at?: string },
+) {
+  if (!cache) return;
+  const idx = cache.findIndex((p) => p.id === id);
+  if (idx === -1) return;
+  const prev = cache[idx];
+  if (prev.rating === patch.rating && prev.reviews === patch.reviews) return;
+  const nextProduct: Product = {
+    ...prev,
+    rating: patch.rating,
+    reviews: patch.reviews,
+    updated_at: patch.updated_at ?? prev.updated_at,
+  };
+  const nextCache = cache.slice();
+  nextCache[idx] = nextProduct;
+  cache = nextCache;
+  recordCacheEvent("patch", "products", { detail: `${prev.slug}:rating` });
+  subscribers.forEach((s) => s(nextCache));
+  productSubscribers.forEach((s) => s(nextProduct));
+}
+
 
 function fetchAndStore(): Promise<Product[]> {
   const start = typeof performance !== "undefined" ? performance.now() : Date.now();

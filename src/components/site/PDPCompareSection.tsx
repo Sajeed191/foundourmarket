@@ -501,54 +501,63 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       {savings > 0 && (
-        <p className="mt-6 text-[12.5px] text-emerald-300/85 px-1">
+        <p className="mt-8 text-[12.5px] text-emerald-300/85 px-1 tabular-nums">
           You could save {format(savings)} by choosing one of these alternatives.
         </p>
       )}
 
-      {decisionMessage && (
-        <p className="mt-6 text-[12.5px] text-white/70 px-1">{decisionMessage}</p>
+      {/* Decision helper — hidden once user is ready to compare */}
+      {!canCompare && (
+        <div className="mt-8 px-1">
+          <p className="text-[12.5px] font-medium text-foreground/85">
+            Need help choosing?
+          </p>
+          <p className="mt-1 text-[12px] text-white/55 leading-relaxed">
+            Compare specifications, ratings and price side by side before you buy.
+          </p>
+        </div>
+      )}
+      {canCompare && decisionMessage && (
+        <p className="mt-8 text-[12.5px] text-white/70 px-1">{decisionMessage}</p>
       )}
 
-      <div
-        className={`${decisionMessage ? "mt-3" : "mt-4"} pt-6 border-t border-white/[0.05] flex items-center justify-between gap-3 px-1`}
-      >
-        <span className="text-[12px] text-white/50 tabular-nums">
-          Selected: {selectedCount}
-        </span>
-        <button
-          type="button"
-          disabled={!canCompare || navigating}
-          onClick={handleCompare}
-          aria-label={
-            canCompare
-              ? "Compare selected products"
-              : "Select one more product to compare"
-          }
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[12px] font-medium tracking-wide transition-colors duration-150 ease-out min-h-[36px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
-            canCompare && !navigating
-              ? "border-white/20 text-white/85 hover:border-accent/50 hover:text-accent"
-              : "border-white/10 text-white/30 cursor-not-allowed"
-          }`}
-        >
-          {navigating ? (
-            <>
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-              Opening
-            </>
-          ) : (
-            <>
-              {ctaLabel}
-              <ArrowRight className="size-3.5" aria-hidden />
-            </>
-          )}
-        </button>
+      {/* CTA row */}
+      <div className="mt-5 pt-6 border-t border-white/[0.05] px-1">
+        <div className="flex items-center justify-between gap-4">
+          <span className={`text-[12.5px] tabular-nums ${canCompare ? "text-white/70" : "text-white/40"}`}>
+            {selectedNonCurrent === 0
+              ? "Select at least 2 products"
+              : `${selectedCount} products selected`}
+          </span>
+          <button
+            type="button"
+            disabled={!canCompare || navigating}
+            onClick={handleCompare}
+            aria-label={
+              canCompare
+                ? "Compare selected products"
+                : "Select one more product to compare"
+            }
+            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] font-semibold tracking-wide transition-colors duration-150 ease-out min-h-[40px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+              canCompare && !navigating
+                ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
+                : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
+            }`}
+          >
+            {navigating ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                Opening
+              </>
+            ) : (
+              <>
+                Compare Products
+                <ArrowRight className="size-3.5" aria-hidden />
+              </>
+            )}
+          </button>
+        </div>
       </div>
-      {!canCompare && (
-        <p className="mt-2 text-[11.5px] text-white/45 px-1 text-right">
-          Select one more product to compare.
-        </p>
-      )}
 
 
       <QuickPreviewSheet

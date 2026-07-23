@@ -570,13 +570,14 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Recommendation sentence — reserved */}
-          <div className="mt-2.5 min-h-[16px]">
+          {/* Recommendation sentence — reserved (12–16px gap before selector) */}
+          <div className="mt-2.5 mb-3 min-h-[16px]">
             {confidence && (
               <p className="text-[10.5px] leading-snug text-white/60 line-clamp-1">
                 {confidence.reason}
               </p>
             )}
+          </div>
         </div>
 
         {/* Compare selector — lightweight row, whole area clickable */}
@@ -620,12 +621,11 @@ function RailItemImpl({
             </span>
           </button>
         </div>
-
-        </div>
       </div>
     </div>
   );
 }
+
 
 const RailItem = memo(RailItemImpl);
 

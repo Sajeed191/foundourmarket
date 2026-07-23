@@ -110,28 +110,53 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         .map((f: unknown) => String(f).toLowerCase()),
     );
 
+    // Availability tier: In Stock (0) > Limited (1) > Pre-order (2) > OOS (3)
+    const availTier = (p: Product): number => {
+      if (p.status === "out_of_stock" || p.inStock === false) return 3;
+      if ((p as any).preorder || p.status === "preorder") return 2;
+      if ((p as any).limitedStock || (typeof p.stock === "number" && p.stock > 0 && p.stock <= 5)) return 1;
+      return 0;
+    };
+
+    // Normalize a product name to a "root" so colour/storage variants collapse.
+    // Strips common variant tokens (colours, storage, RAM, sizes, trailing parens).
+    const variantRoot = (p: Product): string => {
+      const raw = (p.name || "").toLowerCase();
+      const stripped = raw
+        .replace(/\([^)]*\)/g, " ")
+        .replace(/\b(black|white|silver|gold|rose|blue|green|red|graphite|grey|gray|titanium|purple|pink|yellow|beige|navy|cream|mint)\b/g, " ")
+        .replace(/\b\d+\s?(gb|tb|mb)\b/g, " ")
+        .replace(/\b\d+\s?(gb|tb)\s?ram\b/g, " ")
+        .replace(/\b(xs|s|m|l|xl|xxl|xxxl)\b/g, " ")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+      return `${p.brand ?? ""}|${stripped}`;
+    };
+    const currentRoot = variantRoot(cur);
+
     // Relevance-first ranking (spec priority):
     //   1 Same Brand  2 Same Product Type  3 Same Category
     //   4 Similar Price (tiered ±15% / ±30% / ±50%)  5 Shared Features
     //   6 Availability  7 Rating (secondary tiebreak only)
     const scored = products
-      .filter((p) => p.slug !== cur.slug && p.status !== "archived")
+      .filter((p) => p.slug !== cur.slug && p.status !== "archived" && !p.hideFromRecommendations)
       .map((p) => {
         let score = 0;
-        if (cur.brand && p.brand && p.brand === cur.brand) score += 40;
-        if (cur.productType && p.productType && p.productType === cur.productType) score += 30;
+        const brandMatch = !!(cur.brand && p.brand && p.brand === cur.brand);
+        const typeMatch = !!(cur.productType && p.productType && p.productType === cur.productType);
+        if (brandMatch) score += 40;
+        if (typeMatch) score += 30;
         const pCats = [p.category, ...(p.categories ?? [])].filter(Boolean);
         const catOverlap = pCats.some((c) => curCats.has(c));
         if (catOverlap) score += 20;
 
-        if (currentPrice > 0) {
-          const price = priceOf(p) || 0;
-          if (price > 0) {
-            const diff = Math.abs(price - currentPrice) / currentPrice;
-            if (diff <= 0.15) score += 12;
-            else if (diff <= 0.3) score += 7;
-            else if (diff <= 0.5) score += 2;
-          }
+        const price = priceOf(p) || 0;
+        let priceBand: "close" | "near" | "wide" | "far" = "far";
+        if (currentPrice > 0 && price > 0) {
+          const diff = Math.abs(price - currentPrice) / currentPrice;
+          if (diff <= 0.15) { score += 12; priceBand = "close"; }
+          else if (diff <= 0.3) { score += 7; priceBand = "near"; }
+          else if (diff <= 0.5) { score += 2; priceBand = "wide"; }
         }
 
         if (curFeatures.size) {
@@ -142,22 +167,53 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           if (overlap) score += Math.min(overlap, 4) * 2;
         }
 
-        if (p.inStock !== false && p.status !== "out_of_stock") score += 3;
+        // Availability weighted: prefer buyable; OOS pushed to the back
+        const tier = availTier(p);
+        score += [6, 2, 0, -20][tier];
+
         // Rating: tiny secondary nudge only — never overpowers relevance
         score += Math.min(p.rating || 0, 5) * 0.4;
 
-        const relevant =
-          catOverlap ||
-          (!!cur.brand && p.brand === cur.brand) ||
-          (!!cur.productType && p.productType === cur.productType);
-        return { p, score, relevant };
+        const relevant = catOverlap || brandMatch || typeMatch;
+        return { p, score, relevant, tier, price, priceBand, root: variantRoot(p) };
       })
-      .sort((a, b) => b.score - a.score);
+      .filter((x) => x.relevant) // Quality gate: never fill with unrelated products
+      .sort((a, b) => (a.tier - b.tier) || (b.score - a.score));
 
-    // Prefer truly relevant matches; fall back only if the rail would otherwise be too thin
-    const relevant = scored.filter((x) => x.relevant);
-    const pool = relevant.length >= 3 ? relevant : scored;
-    return pool.slice(0, VISIBLE_LIMIT).map((x) => x.p);
+    if (scored.length === 0) return [] as Product[];
+
+    // Diversity: collapse variant duplicates (same brand + same normalized root).
+    // Keep the strongest instance of each root, but never the current product's root.
+    const byRoot = new Map<string, typeof scored[number]>();
+    for (const item of scored) {
+      if (item.root === currentRoot) continue;
+      const existing = byRoot.get(item.root);
+      if (!existing || item.score > existing.score) byRoot.set(item.root, item);
+    }
+    const deduped = Array.from(byRoot.values()).sort((a, b) => (a.tier - b.tier) || (b.score - a.score));
+
+    // Price coverage: interleave across bands so the rail spans real budget options
+    // instead of clustering at one price. Preserves per-band relevance order.
+    const bands: Record<"close" | "near" | "wide" | "far", typeof deduped> = {
+      close: [], near: [], wide: [], far: [],
+    };
+    for (const it of deduped) bands[it.priceBand].push(it);
+    const bandOrder: Array<"close" | "near" | "wide" | "far"> = ["close", "near", "wide", "far"];
+    const interleaved: typeof deduped = [];
+    // Round-robin across bands until VISIBLE_LIMIT reached
+    let added = true;
+    while (added && interleaved.length < VISIBLE_LIMIT) {
+      added = false;
+      for (const b of bandOrder) {
+        const next = bands[b].shift();
+        if (next) { interleaved.push(next); added = true; }
+        if (interleaved.length >= VISIBLE_LIMIT) break;
+      }
+    }
+    // Re-stabilize by availability tier so in-stock always leads, without losing spread
+    interleaved.sort((a, b) => a.tier - b.tier);
+
+    return interleaved.map((x) => x.p);
   }, [products, currentProduct, currentPrice, priceOf]);
 
   const sortedSuggestions = useMemo(() => {

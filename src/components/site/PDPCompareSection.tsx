@@ -1,14 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Loader2, Star, X } from "lucide-react";
+import { ArrowRight, Check, Eye, Loader2, ShoppingBag, Star, X } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
-import { ProductCard } from "@/components/site/ProductCard";
 import { useProducts } from "@/lib/use-products";
-import { type Product } from "@/lib/products";
+import { resolveImage, type Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCompare } from "@/hooks/use-compare";
+import { useCartActions, useCartQty } from "@/lib/cart";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 /**

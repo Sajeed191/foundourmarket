@@ -454,7 +454,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
             return (
               <li
                 key={p.slug}
-                className="shrink-0 w-[38%] min-[420px]:w-[34%] sm:w-[190px]"
+                className="shrink-0 w-[42%] min-[420px]:w-[38%] sm:w-[210px]"
               >
                 <RailItem
                   product={p}

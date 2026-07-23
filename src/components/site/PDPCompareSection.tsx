@@ -355,7 +355,7 @@ function RailItemImpl({
   const { priceOf, format } = useRegion();
   const { toggle: toggleWishlist } = useWishlistActions();
   const saved = useWishlistSaved(product.slug);
-  const isSelected = !!(pinned || active);
+  
 
   const price = priceOf(product) || 0;
   const originalRaw =

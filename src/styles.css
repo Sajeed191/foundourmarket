@@ -459,8 +459,8 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   transition: box-shadow 0.4s var(--ease-out-expo), transform 0.4s var(--ease-out-expo);
 }
 .glow-border:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 0 0 1px oklch(0.74 0.19 49 / 0.4), 0 0 40px -10px oklch(0.74 0.19 49 / 0.45), 0 26px 60px -28px oklch(0 0 0 / 0.85);
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.10), 0 26px 60px -30px oklch(0 0 0 / 0.9);
 }
 
 /* Subtle film-grain noise texture overlay (use as ::before via .noise-layer) */

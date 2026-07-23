@@ -13,12 +13,14 @@ import { useBuyNow } from "@/lib/use-buy-now";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 /**
- * PDP — Similar Products (v9.0 · Minimal Premium Ecommerce)
+ * PDP — Similar Products (v9.1 · Final Micro-Polish)
  *
- * Apple/Stripe/Airbnb-inspired refinement. No new features — every card is
- * quiet, identical in height, and commits to a single primary action: a full
- * width "Compare / ✓ Added" pill. Business logic, compare store, sort tabs,
- * and routing are unchanged from v8.0.
+ * Freeze candidate. Feature-complete. This release focuses exclusively on
+ * micro-interaction quality and visual consistency: image skeleton + fade-in,
+ * tactile press feedback, fixed-width Compare pill, reserved price rhythm,
+ * standardized typography, edge-padded carousel, and a brief "flash → fade
+ * sticky bar → navigate" transition into the Compare page.
+ * No new features, no business logic, no backend changes.
  */
 
 const VISIBLE_LIMIT = 12;
@@ -50,10 +52,6 @@ function writeSort(v: SortKey) {
   try { sessionStorage.setItem(SORT_STORAGE_KEY, v); } catch { /* noop */ }
 }
 
-/**
- * v9.0 — Single short recommendation line. Never a sentence.
- * Priority mirrors previous diffChip logic but resolves to short labels.
- */
 function recommendationFor(
   p: Product,
   ctx: {
@@ -67,7 +65,6 @@ function recommendationFor(
   },
 ): string | null {
   const { curPrice, curRating, curReviews, curShipping, curFast, price, shipping } = ctx;
-
   if (curPrice > 0 && price > 0 && price < curPrice && (curPrice - price) / curPrice >= 0.05) {
     return "Lower price";
   }
@@ -93,6 +90,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const { slugs, toggle, has, isFull, max } = useCompare();
   const navigate = useNavigate();
   const [navigating, setNavigating] = useState(false);
+  const [flashing, setFlashing] = useState(false);
   const [sort, setSort] = useState<SortKey>(() => readSort());
   const [preview, setPreview] = useState<Product | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -181,7 +179,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const handleCompare = () => {
     if (!canCompare || navigating) return;
     setNavigating(true);
-    navigate({ to: "/compare" });
+    // v9.1 — brief highlight of selected cards + fade sticky bar, then navigate.
+    setFlashing(true);
+    window.setTimeout(() => {
+      navigate({ to: "/compare" });
+    }, 140);
   };
 
   const handleSort = (v: SortKey) => { setSort(v); writeSort(v); };
@@ -253,10 +255,10 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </div>
       </div>
 
-      {/* Carousel — larger cards, ~1.6 visible on mobile, first card aligned to page padding */}
+      {/* Carousel — first card aligned to page padding, last card gets breathing room */}
       <div className="relative -mx-4 sm:mx-0">
         <ul
-          className="flex overflow-x-auto snap-x gap-3.5 sm:gap-4 pl-4 pr-4 sm:pl-1 sm:pr-2 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex overflow-x-auto snap-x gap-3.5 sm:gap-4 pl-4 pr-3 sm:pl-1 sm:pr-2 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{
             overscrollBehaviorX: "contain",
             WebkitOverflowScrolling: "touch",
@@ -291,6 +293,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
                   product={p}
                   active={active}
                   disabled={disabled}
+                  flashing={active && flashing}
                   recommendation={recommendation}
                   freeDelivery={shipping === 0}
                   onToggle={() => handleToggle(p.slug, p.name)}
@@ -299,7 +302,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
               </li>
             );
           })}
-          <div aria-hidden className="shrink-0 w-2 sm:w-1" />
+          {/* trailing spacer so the last card isn't flush against the screen edge */}
+          <div aria-hidden className="shrink-0 w-3 sm:w-2" />
         </ul>
       </div>
 
@@ -325,7 +329,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           : `${selectedCount} products selected for comparison.`}
       </div>
 
-      {/* Inline compare summary — resting state, single clean row */}
+      {/* Inline compare summary — single clean row */}
       <div className="mt-7 flex items-center justify-between gap-3 border-t border-white/[0.05] pt-5">
         <span className={`text-[13px] font-medium tabular-nums ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
           {selectedNonCurrent === 0 ? "Select at least 1 more" : `${selectedCount} Selected`}
@@ -349,9 +353,9 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </button>
       </div>
 
-      {/* Sticky compare panel — only while the section is visible and at least one alt is selected */}
+      {/* Sticky compare panel — fades out during navigation for a seamless handoff */}
       <StickyCompareBar
-        visible={sectionVisible && canCompare}
+        visible={sectionVisible && canCompare && !flashing}
         count={selectedCount}
         navigating={navigating}
         onCompare={handleCompare}
@@ -442,6 +446,7 @@ type RailItemProps = {
   active?: boolean;
   disabled?: boolean;
   pinned?: boolean;
+  flashing?: boolean;
   recommendation?: string | null;
   freeDelivery?: boolean;
   onToggle?: () => void;
@@ -453,12 +458,15 @@ function RailItemImpl({
   active,
   disabled,
   pinned,
+  flashing,
   recommendation,
   freeDelivery,
   onToggle,
   onPreview,
 }: RailItemProps) {
   const { priceOf, format } = useRegion();
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   const price = priceOf(product) || 0;
   const originalRaw =
@@ -466,82 +474,108 @@ function RailItemImpl({
     (product.comparePriceUsd && product.comparePriceUsd > price ? product.comparePriceUsd : null);
   const savings = originalRaw && originalRaw > price ? originalRaw - price : 0;
 
+  // v9.1 — tactile card press. No zoom, no bounce, no glow. Subtle bg + border only.
+  const pressHandlers = {
+    onPointerDown: () => setPressed(true),
+    onPointerUp: () => setPressed(false),
+    onPointerCancel: () => setPressed(false),
+    onPointerLeave: () => setPressed(false),
+  };
+
   return (
-    <div className="flex h-full flex-col rounded-2xl bg-white/[0.02]">
-      {/* Image — ~58% of card, generous breathing room. Tap = Quick Preview. */}
+    <div
+      {...pressHandlers}
+      className={`flex h-full flex-col rounded-2xl border transition-[background-color,border-color] duration-150 ease-out ${
+        flashing
+          ? "bg-accent/[0.06] border-accent/40"
+          : pressed
+            ? "bg-white/[0.05] border-white/[0.14]"
+            : "bg-white/[0.02] border-white/[0.05]"
+      }`}
+    >
+      {/* Image — ~58% of card. Tap = Quick Preview. Skeleton until loaded. */}
       <button
         type="button"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreview?.(); }}
         aria-label={`Quick preview: ${product.name}`}
         className="block w-full p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset rounded-t-2xl"
       >
-        <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.03]">
+        <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.04]">
+          {/* Skeleton — soft pulse, exact final size */}
+          <div
+            aria-hidden
+            className={`absolute inset-0 bg-white/[0.04] transition-opacity duration-150 ease-out ${
+              imgLoaded ? "opacity-0" : "opacity-100 animate-pulse"
+            }`}
+          />
           {product.image && (
             <img
               src={resolveImage(product.image)}
               alt={product.name}
               loading="lazy"
               decoding="async"
-              className="h-full w-full object-cover"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgLoaded(true)}
+              className={`h-full w-full object-cover transition-opacity duration-150 ease-out ${
+                imgLoaded ? "opacity-100" : "opacity-0"
+              }`}
             />
           )}
         </div>
       </button>
 
-      {/* Content — fixed rhythm, identical across cards */}
+      {/* Content — standardized typography rhythm across every card */}
       <div className="flex flex-1 flex-col px-4 pb-4">
         <Link
           to="/products/$slug"
           params={{ slug: product.slug }}
-          className="line-clamp-2 min-h-[36px] text-[13px] leading-[1.4] text-foreground/90 hover:text-accent transition-colors duration-150"
+          className="line-clamp-2 min-h-[42px] text-[15px] font-semibold leading-[1.4] tracking-[-0.005em] text-foreground/90 hover:text-accent transition-colors duration-150"
         >
           {product.name}
         </Link>
 
-        {/* Rating — single line, reserved height */}
-        <div className="mt-2 flex h-[14px] items-center gap-1 text-[11.5px]">
+        {/* Rating — 13px, reserved height */}
+        <div className="mt-2.5 flex h-[16px] items-center gap-1 text-[13px]">
           {product.rating > 0 ? (
             <>
-              <Star className="size-3 fill-amber-400 text-amber-400" aria-hidden />
+              <Star className="size-3.5 fill-amber-400 text-amber-400" aria-hidden />
               <span className="tabular-nums text-white/80">{product.rating.toFixed(1)}</span>
             </>
           ) : (
-            <span className="text-white/35">New</span>
+            <span className="text-white/35 text-[12px]">New</span>
           )}
         </div>
 
-        {/* Price block — bold current, small strike, green Save */}
-        <div className="mt-3 min-h-[48px]">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-[16.5px] font-semibold text-foreground tabular-nums leading-none tracking-[-0.005em]">
+        {/* Price block — reserves current + original + save row, always. */}
+        <div className="mt-3">
+          {/* Row 1 — current + original */}
+          <div className="flex h-[22px] items-baseline gap-2 flex-wrap">
+            <span className="text-[18px] font-bold text-foreground tabular-nums leading-none tracking-[-0.01em]">
               {format(price)}
             </span>
-            {originalRaw ? (
-              <span className="text-[11.5px] text-white/40 line-through tabular-nums">
-                {format(originalRaw)}
-              </span>
-            ) : null}
+            <span className="text-[12px] text-white/40 line-through tabular-nums leading-none min-w-[1ch]">
+              {originalRaw ? format(originalRaw) : "\u00A0"}
+            </span>
           </div>
-          {savings > 0 && (
-            <div className="mt-1.5 text-[11px] font-medium text-emerald-300/85 tabular-nums leading-none">
-              Save {format(savings)}
-            </div>
-          )}
+          {/* Row 2 — savings slot, always reserved */}
+          <div className="mt-1.5 h-[14px] text-[12px] font-medium text-emerald-300/85 tabular-nums leading-none">
+            {savings > 0 ? `Save ${format(savings)}` : "\u00A0"}
+          </div>
         </div>
 
-        {/* Free delivery — single quiet line */}
-        <div className="mt-2 h-[14px] text-[11px] font-medium tabular-nums">
+        {/* Free delivery — quiet 12px */}
+        <div className="mt-2.5 h-[14px] text-[12px] font-medium tabular-nums leading-none">
           {freeDelivery && !pinned ? (
             <span className="text-emerald-300/80">Free delivery</span>
           ) : null}
         </div>
 
-        {/* Recommendation — one short line */}
-        <div className="mt-1.5 h-[14px] text-[11px] font-medium tracking-wide text-white/55">
+        {/* Recommendation — 11px, single short line */}
+        <div className="mt-1.5 h-[13px] text-[11px] font-medium tracking-wide text-white/55 leading-none">
           {!pinned && recommendation ? recommendation : null}
         </div>
 
-        {/* Selector — full-width rounded pill, 46px, "Compare" ↔ "✓ Added" */}
+        {/* Selector — full-width pill, fixed height, morphing icon+text only */}
         <div className="mt-4">
           {pinned ? (
             <div className="flex h-[46px] items-center justify-center rounded-full bg-white/[0.04] text-[12.5px] font-medium text-white/55 tracking-wide">
@@ -558,22 +592,29 @@ function RailItemImpl({
                   : `Select ${product.name} for comparison`
               }
               disabled={disabled}
-              className={`group/sel flex h-[46px] w-full items-center justify-center gap-1.5 rounded-full transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+              className={`relative flex h-[46px] w-full items-center justify-center rounded-full transition-colors duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
                 active
                   ? "bg-accent/[0.14] text-accent"
                   : "bg-white/[0.05] text-foreground/85 hover:bg-white/[0.08]"
               }`}
             >
+              {/* Absolutely-positioned label rows prevent any layout shift on morph */}
               <span
-                aria-hidden
-                className={`overflow-hidden transition-[width,opacity] duration-150 ease-out ${
-                  active ? "w-4 opacity-100" : "w-0 opacity-0"
+                aria-hidden={active}
+                className={`absolute inset-0 flex items-center justify-center text-[13px] font-semibold tracking-wide leading-none transition-opacity duration-150 ease-out ${
+                  active ? "opacity-0" : "opacity-100"
                 }`}
               >
-                <Check className="size-3.5" strokeWidth={3} />
+                Compare
               </span>
-              <span className="text-[13px] font-semibold leading-none whitespace-nowrap tracking-wide">
-                {active ? "Added" : "Compare"}
+              <span
+                aria-hidden={!active}
+                className={`absolute inset-0 flex items-center justify-center gap-1.5 text-[13px] font-semibold tracking-wide leading-none transition-opacity duration-150 ease-out ${
+                  active ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <Check className="size-3.5" strokeWidth={3} aria-hidden />
+                Added
               </span>
             </button>
           )}
@@ -722,21 +763,29 @@ function QuickPreviewSheet({
               type="button"
               onClick={() => onToggle(product.slug)}
               aria-pressed={isSelected}
-              className={`mt-5 flex h-[44px] w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-semibold tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+              className={`relative mt-5 flex h-[44px] w-full items-center justify-center rounded-full text-[13px] font-semibold tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
                 isSelected
                   ? "bg-accent/[0.14] text-accent"
                   : "bg-white/[0.05] text-foreground/85 hover:bg-white/[0.08]"
               }`}
             >
               <span
-                aria-hidden
-                className={`overflow-hidden transition-[width,opacity] duration-150 ease-out ${
-                  isSelected ? "w-4 opacity-100" : "w-0 opacity-0"
+                aria-hidden={isSelected}
+                className={`absolute inset-0 flex items-center justify-center transition-opacity duration-150 ease-out ${
+                  isSelected ? "opacity-0" : "opacity-100"
                 }`}
               >
-                <Check className="size-3.5" strokeWidth={3} />
+                Compare
               </span>
-              {isSelected ? "Added" : "Compare"}
+              <span
+                aria-hidden={!isSelected}
+                className={`absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150 ease-out ${
+                  isSelected ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <Check className="size-3.5" strokeWidth={3} aria-hidden />
+                Added
+              </span>
             </button>
           )}
 

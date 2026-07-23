@@ -168,6 +168,13 @@ export function useProduct(slug: string) {
     if (full) {
       setProduct(full);
       setLoading(false);
+      // Stale-while-revalidate at the record level: if the surrounding
+      // products cache is past its SWR window, kick a background refresh so
+      // any server-side rating / review / catalog update on this product
+      // propagates without requiring a manual page refresh.
+      if (Date.now() - cacheLoadedAt > SWR_TTL) {
+        fetchProduct(slug).then((p) => { if (active && p) setProduct(p); }).catch(() => {});
+      }
       return;
     }
     // No full record cached (either missing or only a lean list entry) — fetch

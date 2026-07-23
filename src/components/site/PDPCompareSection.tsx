@@ -572,61 +572,59 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Recommendation sentence — reserved (12–16px gap before selector) */}
-          <div className="mt-2.5 mb-3 min-h-[16px]">
-            {confidence && (
-              <p className="text-[10.5px] leading-snug text-white/60 line-clamp-1">
+          {/* Recommendation sentence — reserved 2 lines, never truncated mid-sentence */}
+          <div className="mt-2.5 mb-3 min-h-[28px]">
+            {confidence && !pinned && (
+              <p className="text-[10.5px] leading-[1.35] text-white/60 line-clamp-2">
                 {confidence.reason}
               </p>
             )}
           </div>
         </div>
 
-        {/* Compare selector — lightweight row, whole area clickable */}
-        <div className="mt-auto border-t border-white/[0.05]">
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-pressed={isSelected}
-            aria-label={
-              pinned
-                ? `${product.name} is the current product`
-                : isSelected
+        {/* Compare selector — soft divider, centered 48px row */}
+        <div className="mt-auto border-t border-white/[0.04]">
+          {pinned ? (
+            // Current product cannot be selected — reserve equal footprint
+            <div className="h-[48px]" aria-hidden />
+          ) : (
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-pressed={!!isSelected}
+              aria-label={
+                isSelected
                   ? `Remove ${product.name} from comparison`
                   : `Select ${product.name} for comparison`
-            }
-            disabled={pinned || disabled}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 px-3.5 py-2.5 rounded-b-2xl transition-colors duration-150 ease-out disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02] disabled:hover:bg-transparent"
-          >
-            <span
-              aria-hidden
-              className={`grid place-items-center size-[18px] rounded-full border transition-colors duration-150 ease-out ${
-                pinned
-                  ? "border-white/15 bg-transparent"
-                  : isSelected
+              }
+              disabled={disabled}
+              className="flex h-[48px] w-full items-center justify-center gap-2 px-3.5 rounded-b-2xl transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02]"
+            >
+              <span
+                aria-hidden
+                className={`grid place-items-center size-[18px] rounded-full border transition-colors duration-200 ease-out ${
+                  isSelected
                     ? "border-accent bg-accent text-accent-foreground"
-                    : "border-white/30 bg-transparent"
-              }`}
-            >
-              {isSelected && !pinned && <Check className="size-2.5" strokeWidth={3} />}
-            </span>
-            <span
-              className={`text-[14px] font-medium leading-none whitespace-nowrap transition-colors duration-150 ease-out ${
-                pinned
-                  ? "text-white/35"
-                  : isSelected
-                    ? "text-accent"
-                    : "text-white/60"
-              }`}
-            >
-              {pinned ? "Current" : isSelected ? "Selected" : "Compare"}
-            </span>
-          </button>
+                    : "border-white/25 bg-transparent"
+                }`}
+              >
+                {isSelected && <Check className="size-2.5" strokeWidth={3} />}
+              </span>
+              <span
+                className={`text-[14px] font-medium leading-none whitespace-nowrap transition-colors duration-200 ease-out ${
+                  isSelected ? "text-accent" : "text-white/65"
+                }`}
+              >
+                {isSelected ? "Selected" : "Compare"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
 
 
 const RailItem = memo(RailItemImpl);

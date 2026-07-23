@@ -57,6 +57,13 @@ type Question = {
 
 type Sort = "newest" | "oldest" | "helpful" | "answered" | "unanswered";
 
+type QuestionDraft = {
+  id?: string;
+  question: string;
+  details: string;
+  is_anonymous: boolean;
+};
+
 /* ----------------------------- Utils ----------------------------- */
 
 const AVATAR_PALETTE = [
@@ -84,6 +91,14 @@ function relDate(iso: string) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function friendlyError(err: unknown, fallback: string) {
+  const msg = String((err as { message?: string })?.message ?? "");
+  if (/row-level security|permission denied|policy/i.test(msg)) {
+    return "You don't have permission to perform this action.";
+  }
+  return fallback;
+}
+
 function Avatar({ name, url, size = 36 }: { name: string; url?: string | null; size?: number }) {
   const swatch = avatarSwatch(name);
   return (
@@ -100,21 +115,24 @@ function Avatar({ name, url, size = 36 }: { name: string; url?: string | null; s
   );
 }
 
-/* ------------------------ Ask Question Modal ---------------------- */
+/* --------------------- Ask / Edit Question Modal ------------------ */
 
-function AskQuestionModal({
+function QuestionModal({
   open,
   onClose,
   productSlug,
+  initial,
   onSubmitted,
 }: {
   open: boolean;
   onClose: () => void;
   productSlug: string;
+  initial: QuestionDraft | null;
   onSubmitted: () => void;
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isEdit = !!initial?.id;
   const [question, setQuestion] = useState("");
   const [details, setDetails] = useState("");
   const [anon, setAnon] = useState(false);
@@ -123,13 +141,14 @@ function AskQuestionModal({
 
   useEffect(() => {
     if (!open) {
-      setQuestion("");
-      setDetails("");
-      setAnon(false);
       setBusy(false);
       submittingRef.current = false;
+      return;
     }
-  }, [open]);
+    setQuestion(initial?.question ?? "");
+    setDetails(initial?.details ?? "");
+    setAnon(initial?.is_anonymous ?? false);
+  }, [open, initial]);
 
   if (!open) return null;
 
@@ -145,23 +164,38 @@ function AskQuestionModal({
     }
     submittingRef.current = true;
     setBusy(true);
-    const { error } = await supabase.from("product_questions").insert({
-      product_slug: productSlug,
-      user_id: user.id,
-      question: text,
-      details: details.trim() || null,
-      is_anonymous: anon,
-    });
-    submittingRef.current = false;
-    setBusy(false);
-    if (error) {
-      console.error("[QA] ask failed", error);
-      toast.error("Couldn't submit your question.");
-      return;
+    try {
+      if (isEdit && initial?.id) {
+        const { error } = await supabase
+          .from("product_questions")
+          .update({
+            question: text,
+            details: details.trim() || null,
+            is_anonymous: anon,
+          })
+          .eq("id", initial.id);
+        if (error) throw error;
+        toast.success("Question updated");
+      } else {
+        const { error } = await supabase.from("product_questions").insert({
+          product_slug: productSlug,
+          user_id: user.id,
+          question: text,
+          details: details.trim() || null,
+          is_anonymous: anon,
+        });
+        if (error) throw error;
+        toast.success("Question submitted");
+      }
+      onSubmitted();
+      onClose();
+    } catch (err) {
+      console.error("[QA] submit failed", err);
+      toast.error(friendlyError(err, isEdit ? "Couldn't update your question." : "Couldn't submit your question."));
+    } finally {
+      submittingRef.current = false;
+      setBusy(false);
     }
-    toast.success("Question submitted");
-    onSubmitted();
-    onClose();
   }
 
   return (
@@ -175,8 +209,12 @@ function AskQuestionModal({
           <X className="size-4" />
         </button>
         <div className="mb-4">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-accent mb-2">Ask the community</p>
-          <h3 className="text-lg font-display font-semibold">Have a question about this product?</h3>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-accent mb-2">
+            {isEdit ? "Edit your question" : "Ask the community"}
+          </p>
+          <h3 className="text-lg font-display font-semibold">
+            {isEdit ? "Update your question" : "Have a question about this product?"}
+          </h3>
         </div>
         <label className="block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5">Your question</label>
         <textarea
@@ -213,10 +251,76 @@ function AskQuestionModal({
             className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50"
           >
             {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-            {busy ? "Submitting…" : user ? "Submit" : "Sign in to submit"}
+            {busy ? "Saving…" : isEdit ? "Save changes" : user ? "Submit" : "Sign in to submit"}
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+/* ------------------------ Question actions menu ------------------- */
+
+function QuestionMenu({
+  isAdmin,
+  isMine,
+  onEdit,
+  onDelete,
+  onReply,
+  onHide,
+}: {
+  isAdmin: boolean;
+  isMine: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  onReply?: () => void;
+  onHide?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  // Nothing to show
+  if (!isAdmin && !isMine) return null;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Question actions"
+        className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+      >
+        <MoreHorizontal className="size-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-48 rounded-xl border border-border bg-card shadow-xl z-10 overflow-hidden text-sm">
+          {(isMine || isAdmin) && (
+            <button onClick={() => { setOpen(false); onEdit(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
+              <Pencil className="size-3.5" /> Edit
+            </button>
+          )}
+          {isAdmin && onReply && (
+            <button onClick={() => { setOpen(false); onReply(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
+              <Reply className="size-3.5" /> Reply
+            </button>
+          )}
+          {isAdmin && onHide && (
+            <button onClick={() => { setOpen(false); onHide(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
+              <EyeOff className="size-3.5" /> Hide
+            </button>
+          )}
+          {(isMine || isAdmin) && (
+            <button onClick={() => { setOpen(false); onDelete(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left text-destructive border-t border-border">
+              <Trash2 className="size-3.5" /> Delete
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -258,6 +362,8 @@ function AnswerRow({
   const name = answer.author_name || (answer.is_store_response ? "FoundOurMarket" : "Customer");
   const store = answer.is_store_response;
   const official = answer.is_official;
+  // Answers are ONLY editable/deletable/moderated by admins (customers can't answer at all).
+  const canManage = isAdmin;
 
   return (
     <div
@@ -303,53 +409,41 @@ function AnswerRow({
               <span>{answer.helpful_count > 0 ? answer.helpful_count : "Helpful"}</span>
             </button>
 
-            {!isReply && onReply && (
+            {isAdmin && !isReply && onReply && (
               <button onClick={onReply} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-mono border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition">
                 <Reply className="size-3" /> Reply
               </button>
             )}
 
-            <div ref={menuRef} className="relative ml-auto">
-              <button
-                onClick={() => setMenuOpen((v) => !v)}
-                aria-label="More"
-                className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
-              >
-                <MoreHorizontal className="size-4" />
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-48 rounded-xl border border-border bg-card shadow-xl z-10 overflow-hidden text-sm">
-                  {answer.is_mine && (
-                    <>
-                      <button onClick={() => { setMenuOpen(false); onEdit(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
-                        <Pencil className="size-3.5" /> Edit
+            {canManage && (
+              <div ref={menuRef} className="relative ml-auto">
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-label="More"
+                  className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+                >
+                  <MoreHorizontal className="size-4" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-48 rounded-xl border border-border bg-card shadow-xl z-10 overflow-hidden text-sm">
+                    <button onClick={() => { setMenuOpen(false); onEdit(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
+                      <Pencil className="size-3.5" /> Edit
+                    </button>
+                    {!isReply && onMarkOfficial && (
+                      <button onClick={() => { setMenuOpen(false); onMarkOfficial(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
+                        <Pin className="size-3.5" /> {official ? "Unpin official" : "Mark official"}
                       </button>
-                      <button onClick={() => { setMenuOpen(false); onDelete(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left text-destructive">
-                        <Trash2 className="size-3.5" /> Delete
-                      </button>
-                    </>
-                  )}
-                  {isAdmin && (
-                    <div className="border-t border-border">
-                      <p className="px-3 pt-2 pb-1 text-[9px] font-mono uppercase tracking-widest text-muted-foreground">Moderation</p>
-                      {!isReply && onMarkOfficial && (
-                        <button onClick={() => { setMenuOpen(false); onMarkOfficial(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
-                          <Pin className="size-3.5" /> {official ? "Unpin official" : "Mark official"}
-                        </button>
-                      )}
-                      <button onClick={() => { setMenuOpen(false); onHide(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
-                        <EyeOff className="size-3.5" /> Hide
-                      </button>
-                      {!answer.is_mine && (
-                        <button onClick={() => { setMenuOpen(false); onDelete(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left text-destructive">
-                          <Trash2 className="size-3.5" /> Delete
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    )}
+                    <button onClick={() => { setMenuOpen(false); onHide(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left">
+                      <EyeOff className="size-3.5" /> Hide
+                    </button>
+                    <button onClick={() => { setMenuOpen(false); onDelete(); }} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left text-destructive border-t border-border">
+                      <Trash2 className="size-3.5" /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -370,6 +464,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<Sort>("newest");
   const [askOpen, setAskOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<QuestionDraft | null>(null);
   const [replyOpen, setReplyOpen] = useState<{ answerId: string; questionId: string } | null>(null);
   const [answerOpen, setAnswerOpen] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -409,7 +504,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       .then(({ data }) => setIsAdmin((data?.length ?? 0) > 0));
   }, [user]);
 
-  // Realtime: refresh on any change to questions/answers/votes for this slug
+  // Realtime: refresh on any change to questions/answers for this slug
   useEffect(() => {
     const ch = supabase
       .channel(`qa-${productSlug}`)
@@ -446,48 +541,64 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
 
   async function postAnswer(questionId: string, parentAnswerId: string | null) {
     const text = draft.trim();
-    if (!text || !user) return;
-    const { error } = await supabase.from("product_answers").insert({
-      question_id: questionId,
-      parent_answer_id: parentAnswerId,
-      user_id: user.id,
-      body: text,
-      is_store_response: isAdmin && asStore && !parentAnswerId,
-    });
-    if (error) {
-      console.error("[QA] answer failed", error);
-      toast.error("Couldn't post your answer.");
-      return;
+    if (!text) return;
+    if (!user) { toast.message("Sign in to answer."); return; }
+    if (!isAdmin) { toast.error("Only administrators can answer questions."); return; }
+    try {
+      const { error } = await supabase.from("product_answers").insert({
+        question_id: questionId,
+        parent_answer_id: parentAnswerId,
+        user_id: user.id,
+        body: text,
+        is_store_response: asStore && !parentAnswerId,
+      });
+      if (error) throw error;
+      setDraft("");
+      setAnswerOpen(null);
+      setReplyOpen(null);
+      toast.success("Answer posted");
+      void load();
+    } catch (err) {
+      console.error("[QA] answer failed", err);
+      toast.error(friendlyError(err, "Couldn't post your answer."));
     }
-    setDraft("");
-    setAnswerOpen(null);
-    setReplyOpen(null);
-    toast.success("Answer posted");
-    void load();
   }
 
   async function saveEdit() {
     if (!editing) return;
     const body = editing.body.trim();
     if (!body) return;
-    const { error } = await supabase.from("product_answers").update({ body }).eq("id", editing.id);
-    if (error) { toast.error("Couldn't update answer."); return; }
-    setEditing(null);
-    void load();
+    try {
+      const { error } = await supabase.from("product_answers").update({ body }).eq("id", editing.id);
+      if (error) throw error;
+      setEditing(null);
+      void load();
+    } catch (err) {
+      toast.error(friendlyError(err, "Couldn't update answer."));
+    }
   }
 
   async function deleteAnswer(id: string) {
-    if (!confirm("Delete this answer?")) return;
-    const { error } = await supabase.from("product_answers").delete().eq("id", id);
-    if (error) { toast.error("Couldn't delete."); return; }
-    toast.success("Deleted");
-    void load();
+    if (!isAdmin) { toast.error("Only administrators can delete answers."); return; }
+    if (!confirm("Delete this answer? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase.from("product_answers").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Answer deleted");
+      void load();
+    } catch (err) {
+      toast.error(friendlyError(err, "Couldn't delete."));
+    }
   }
 
   async function hideAnswer(id: string) {
-    const { error } = await supabase.from("product_answers").update({ status: "hidden" }).eq("id", id);
-    if (error) { toast.error("Couldn't hide."); return; }
-    void load();
+    try {
+      const { error } = await supabase.from("product_answers").update({ status: "hidden" }).eq("id", id);
+      if (error) throw error;
+      void load();
+    } catch (err) {
+      toast.error(friendlyError(err, "Couldn't hide."));
+    }
   }
 
   async function toggleVote(id: string) {
@@ -507,21 +618,62 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
   }
 
   async function markOfficial(questionId: string, answerId: string, currentlyOfficial: boolean) {
-    const { error } = await supabase.rpc("mark_official_answer", {
-      _question_id: questionId,
-      _answer_id: (currentlyOfficial ? null : answerId) as string,
-    });
-    if (error) { toast.error("Couldn't update official answer."); return; }
-    toast.success(currentlyOfficial ? "Unpinned" : "Marked as official");
-    void load();
+    if (!isAdmin) { toast.error("Only administrators can mark official answers."); return; }
+    try {
+      const { error } = await supabase.rpc("mark_official_answer", {
+        _question_id: questionId,
+        _answer_id: (currentlyOfficial ? null : answerId) as string,
+      });
+      if (error) throw error;
+      toast.success(currentlyOfficial ? "Unpinned" : "Marked as official");
+      void load();
+    } catch (err) {
+      toast.error(friendlyError(err, "Couldn't update official answer."));
+    }
   }
 
-  async function deleteQuestion(id: string) {
-    if (!confirm("Delete this question?")) return;
-    const { error } = await supabase.from("product_questions").update({ status: "deleted", deleted_at: new Date().toISOString() }).eq("id", id);
-    if (error) { toast.error("Couldn't delete."); return; }
-    toast.success("Deleted");
-    void load();
+  async function deleteQuestion(q: Question) {
+    if (!(q.is_mine || isAdmin)) {
+      toast.error("You can only delete your own question.");
+      return;
+    }
+    if (!confirm("Delete this question? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase
+        .from("product_questions")
+        .update({ status: "deleted", deleted_at: new Date().toISOString() })
+        .eq("id", q.id);
+      if (error) throw error;
+      toast.success("Question deleted");
+      // Remove locally so scroll position stays put; realtime will confirm.
+      setItems((prev) => prev.filter((x) => x.id !== q.id));
+    } catch (err) {
+      toast.error(friendlyError(err, q.is_mine ? "You can only delete your own question." : "Couldn't delete question."));
+    }
+  }
+
+  async function hideQuestion(q: Question) {
+    if (!isAdmin) return;
+    try {
+      const { error } = await supabase.from("product_questions").update({ status: "hidden" }).eq("id", q.id);
+      if (error) throw error;
+      toast.success("Question hidden");
+    } catch (err) {
+      toast.error(friendlyError(err, "Couldn't hide question."));
+    }
+  }
+
+  function startEditQuestion(q: Question) {
+    if (!(q.is_mine || isAdmin)) {
+      toast.error("You can only edit your own question.");
+      return;
+    }
+    setEditingQuestion({
+      id: q.id,
+      question: q.question,
+      details: q.details ?? "",
+      is_anonymous: q.is_anonymous,
+    });
   }
 
   return (
@@ -616,14 +768,17 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                     </div>
                     {q.details && <p className="mt-1 text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap">{q.details}</p>}
                     <p className="mt-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                      Asked by {asker} · {relDate(q.created_at)}
+                      Asked by {asker} · {relDate(q.created_at)} · {q.answers.length} answer{q.answers.length === 1 ? "" : "s"}
                     </p>
                   </div>
-                  {(isAdmin || q.is_mine) && (
-                    <button onClick={() => deleteQuestion(q.id)} aria-label="Delete question" className="text-muted-foreground hover:text-destructive transition p-1">
-                      <Trash2 className="size-4" />
-                    </button>
-                  )}
+                  <QuestionMenu
+                    isAdmin={isAdmin}
+                    isMine={q.is_mine}
+                    onEdit={() => startEditQuestion(q)}
+                    onDelete={() => deleteQuestion(q)}
+                    onReply={isAdmin ? () => { setAnswerOpen(q.id); setDraft(""); } : undefined}
+                    onHide={isAdmin ? () => hideQuestion(q) : undefined}
+                  />
                 </div>
 
                 {/* Answers */}
@@ -653,7 +808,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                             onDelete={() => deleteAnswer(a.id)}
                             onEdit={() => setEditing({ id: a.id, body: a.body })}
                             onMarkOfficial={() => markOfficial(q.id, a.id, a.is_official)}
-                            onReply={() => { setReplyOpen({ answerId: a.id, questionId: q.id }); setDraft(""); }}
+                            onReply={isAdmin ? () => { setReplyOpen({ answerId: a.id, questionId: q.id }); setDraft(""); } : undefined}
                             onHide={() => hideAnswer(a.id)}
                           />
                         )}
@@ -670,7 +825,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                             onHide={() => hideAnswer(r.id)}
                           />
                         ))}
-                        {replyOpen?.answerId === a.id && (
+                        {isAdmin && replyOpen?.answerId === a.id && (
                           <div className="ml-8 flex gap-2">
                             <input
                               value={draft}
@@ -687,8 +842,8 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                   </div>
                 )}
 
-                {/* Answer composer */}
-                {user ? (
+                {/* Answer composer — ADMIN ONLY. Customers cannot answer questions. */}
+                {isAdmin && (
                   answerOpen === q.id ? (
                     <div className="mt-3">
                       <textarea
@@ -699,12 +854,10 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                         className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-accent resize-none"
                       />
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
-                        {isAdmin && (
-                          <label className="inline-flex items-center gap-2 text-[11px] font-mono text-muted-foreground cursor-pointer select-none">
-                            <input type="checkbox" checked={asStore} onChange={(e) => setAsStore(e.target.checked)} className="size-3.5 accent-accent" />
-                            Post as Store Response
-                          </label>
-                        )}
+                        <label className="inline-flex items-center gap-2 text-[11px] font-mono text-muted-foreground cursor-pointer select-none">
+                          <input type="checkbox" checked={asStore} onChange={(e) => setAsStore(e.target.checked)} className="size-3.5 accent-accent" />
+                          Post as Store Response
+                        </label>
                         <div className="ml-auto flex gap-2">
                           <button onClick={() => { setAnswerOpen(null); setDraft(""); }} className="px-3 py-1.5 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition">Cancel</button>
                           <button onClick={() => postAnswer(q.id, null)} disabled={!draft.trim()} className="bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50">Post answer</button>
@@ -716,8 +869,6 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                       + Add answer
                     </button>
                   )
-                ) : (
-                  <p className="mt-3 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Sign in to answer</p>
                 )}
               </li>
             );
@@ -733,7 +884,20 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
         </div>
       )}
 
-      <AskQuestionModal open={askOpen} onClose={() => setAskOpen(false)} productSlug={productSlug} onSubmitted={load} />
+      <QuestionModal
+        open={askOpen}
+        onClose={() => setAskOpen(false)}
+        productSlug={productSlug}
+        initial={null}
+        onSubmitted={load}
+      />
+      <QuestionModal
+        open={!!editingQuestion}
+        onClose={() => setEditingQuestion(null)}
+        productSlug={productSlug}
+        initial={editingQuestion}
+        onSubmitted={load}
+      />
     </section>
   );
 }

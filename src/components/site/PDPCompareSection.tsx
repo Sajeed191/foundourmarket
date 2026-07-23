@@ -511,7 +511,7 @@ function StickyCompareBar({
           {navigating ? (
             <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
           ) : (
-            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
+            <>Compare {count} Products <ArrowRight className="size-3.5" aria-hidden /></>
           )}
         </button>
       </div>

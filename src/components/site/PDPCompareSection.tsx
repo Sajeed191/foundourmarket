@@ -253,7 +253,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   if (suggestions.length === 0) {
     return (
       <section
-        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-36 sm:mt-40"
+        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24"
         aria-labelledby="pdp-ymal-heading"
       >
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
@@ -266,11 +266,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 
   return (
     <section
-      className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-36 sm:mt-40"
+      className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24"
       data-pdp-compare
       aria-labelledby="pdp-ymal-heading"
     >
-      <div className="mb-8 sm:mb-10">
+      <div className="mb-6 sm:mb-8">
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
           Similar Products
         </h2>
@@ -283,7 +283,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       <div
         role="tablist"
         aria-label="Sort similar products"
-        className="relative mb-6 -mx-4 sm:mx-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="relative mb-5 -mx-4 sm:mx-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         <div className="flex items-center gap-1 px-4 sm:px-0 min-w-max border-b border-white/[0.06]">
           {SORT_TABS.map((t) => {
@@ -312,7 +312,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </div>
       </div>
 
-      {/* Carousel */}
+      {/* Carousel — ~2.2 cards on mobile */}
       <div className="relative -mx-4 sm:mx-0">
         <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background/95 to-transparent z-10" />
         <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background/95 to-transparent z-10" />
@@ -321,7 +321,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           className="flex overflow-x-auto gap-4 sm:gap-5 px-4 sm:px-1 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch" }}
         >
-          <li className="shrink-0 w-[40%] min-[420px]:w-[36%] sm:w-[200px]">
+          <li className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
             <RailItem
               product={currentProduct}
               pinned
@@ -332,15 +332,13 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           {sortedSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
-            const conf = confidenceMap.get(p.slug) ?? null;
             return (
-              <li key={p.slug} className="shrink-0 w-[40%] min-[420px]:w-[36%] sm:w-[200px]">
+              <li key={p.slug} className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
                 <RailItem
                   product={p}
                   active={active}
                   disabled={disabled}
                   pill={pillFor(p, shippingFeeOf(p))}
-                  confidence={conf}
                   onToggle={() => handleToggle(p.slug)}
                   onPreview={() => setPreview(p)}
                 />
@@ -352,7 +350,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       {sortedSuggestions.length >= VIEW_MORE_THRESHOLD && (
-        <div className="mt-8 px-1">
+        <div className="mt-5 px-1">
           <Link
             to="/category/$slug"
             params={{ slug: currentProduct.category || "all" }}
@@ -371,13 +369,18 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       {/* Compare summary bar */}
-      <div className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
+      <div className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
         <div className="flex items-center justify-between gap-3">
-          <span className={`text-[12.5px] tabular-nums ${canCompare ? "text-foreground/85" : "text-white/45"}`}>
-            {selectedNonCurrent === 0
-              ? "Select at least 1 more"
-              : `${selectedCount} products selected`}
-          </span>
+          <div className="min-w-0">
+            <div className={`text-[13px] font-medium tabular-nums leading-tight ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
+              {selectedNonCurrent === 0
+                ? "Select at least 1 more"
+                : `${selectedCount} products selected`}
+            </div>
+            <div className="mt-1 text-[11.5px] text-white/45 leading-tight">
+              {canCompare ? "Compare features side by side" : "Tap Compare on any card"}
+            </div>
+          </div>
           <button
             type="button"
             disabled={!canCompare || navigating}

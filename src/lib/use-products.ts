@@ -224,6 +224,15 @@ export function useProduct(slug: string) {
   const [loading, setLoading] = useState(!cachedFull);
   useEffect(() => {
     let active = true;
+    // Realtime rating/reviews patches into the shared cache also flow here,
+    // so the detail page updates in place with no refetch and no flicker.
+    const patchSub = (p: Product) => {
+      if (!active || p.slug !== slug) return;
+      setProduct((prev) =>
+        prev ? { ...prev, rating: p.rating, reviews: p.reviews } : prev,
+      );
+    };
+    productSubscribers.add(patchSub);
     const full = cache?.find((p) => p.slug === slug && !p.__lean) ?? null;
     if (full) {
       setProduct(full);
@@ -235,13 +244,13 @@ export function useProduct(slug: string) {
       if (Date.now() - cacheLoadedAt > SWR_TTL) {
         fetchProduct(slug).then((p) => { if (active && p) setProduct(p); }).catch(() => {});
       }
-      return;
+      return () => { active = false; productSubscribers.delete(patchSub); };
     }
     // No full record cached (either missing or only a lean list entry) — fetch
     // the complete product so detail-only fields are present.
     setLoading(true);
     fetchProduct(slug).then((p) => { if (active) { setProduct(p); setLoading(false); } });
-    return () => { active = false; };
+    return () => { active = false; productSubscribers.delete(patchSub); };
   }, [slug]);
   return { product, loading };
 }

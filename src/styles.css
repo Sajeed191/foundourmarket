@@ -124,51 +124,55 @@
   --z-modal-overlay: 2000;
   --z-modal-dialog: 2100;
 
-  /* Deep charcoal noir */
-  --background: oklch(0.115 0.008 260);
-  --foreground: oklch(0.985 0 0);
+  /* Premium Dark Theme v2.0 — luxury calm palette
+     Orange is reserved as an accent (<15% of the screen). Surfaces, borders and
+     text use a quiet neutral system inspired by Apple/Stripe/Linear/Aesop. */
+  --background: #050608;
+  --foreground: #ffffff;
 
-  --card: oklch(0.16 0.01 260);
-  --card-foreground: oklch(0.985 0 0);
+  --card: #12151c;
+  --card-foreground: #ffffff;
 
-  --popover: oklch(0.16 0.01 260);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover: #181c24;
+  --popover-foreground: #ffffff;
 
-  --primary: oklch(0.74 0.19 49);
-  --primary-foreground: oklch(0.13 0 0);
+  /* Secondary surface (raised panels, chips, subtle fills) */
+  --secondary: #0d1015;
+  --secondary-foreground: #ffffff;
 
-  --secondary: oklch(0.21 0.012 260);
-  --secondary-foreground: oklch(0.985 0 0);
+  /* Muted surface + secondary text */
+  --muted: #12151c;
+  --muted-foreground: #b9bec8;
 
-  --muted: oklch(0.21 0.012 260);
-  --muted-foreground: oklch(0.7 0.018 260);
+  --primary: #ff8a2a;
+  --primary-foreground: #050608;
 
-  --accent: oklch(0.74 0.19 49);
-  --accent-foreground: oklch(0.13 0 0);
+  --accent: #ff8a2a;
+  --accent-foreground: #050608;
 
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.98 0 0);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 
-  --border: oklch(1 0 0 / 7%);
-  --input: oklch(1 0 0 / 11%);
-  --ring: oklch(0.74 0.19 49);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.10);
+  --ring: #ff8a2a;
 
-  /* Reusable gradients & glows */
-  --gradient-ember: radial-gradient(ellipse at center, oklch(0.74 0.19 49 / 0.28), transparent 70%);
-  --gradient-ember-soft: radial-gradient(circle at 30% 30%, oklch(0.74 0.19 49 / 0.20), transparent 60%);
-  --gradient-violet: radial-gradient(circle at 70% 70%, oklch(0.55 0.18 290 / 0.22), transparent 65%);
-  --gradient-hero: radial-gradient(120% 80% at 50% 0%, oklch(0.165 0.01 262) 0%, oklch(0.13 0.009 261) 42%, oklch(0.10 0.008 260) 100%);
-  /* Exact top tone of the hero surface — used to bridge the header spacer into
-     the hero so no darker "gap band" appears between the nav and content. */
-  --hero-top: oklch(0.165 0.01 262);
-  --gradient-mesh: conic-gradient(from 180deg at 50% 50%, oklch(0.74 0.19 49 / 0.18), oklch(0.55 0.18 290 / 0.14), oklch(0.74 0.19 49 / 0.18));
-  --gradient-border: linear-gradient(135deg, oklch(1 0 0 / 0.18), oklch(1 0 0 / 0.02) 40%, oklch(0.74 0.19 49 / 0.28));
-  --shadow-ember: 0 10px 60px -10px oklch(0.74 0.19 49 / 0.45);
-  --shadow-card: 0 8px 32px -12px oklch(0 0 0 / 0.6);
-  --shadow-float: 0 30px 80px -30px oklch(0 0 0 / 0.7), 0 8px 24px -12px oklch(0 0 0 / 0.5);
-  --shadow-glow: 0 0 0 1px oklch(0.74 0.19 49 / 0.3), 0 12px 40px -8px oklch(0.74 0.19 49 / 0.4);
+  /* Reusable gradients & glows — accent tuned to #ff8a2a, calmer alphas */
+  --gradient-ember: radial-gradient(ellipse at center, rgba(255, 138, 42, 0.22), transparent 70%);
+  --gradient-ember-soft: radial-gradient(circle at 30% 30%, rgba(255, 138, 42, 0.14), transparent 60%);
+  --gradient-violet: radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.14), transparent 65%);
+  --gradient-hero: radial-gradient(120% 80% at 50% 0%, #0d1015 0%, #0a0c11 42%, #050608 100%);
+  /* Exact top tone of the hero surface — bridges the header spacer into the
+     hero so no darker "gap band" appears between the nav and content. */
+  --hero-top: #0d1015;
+  --gradient-mesh: conic-gradient(from 180deg at 50% 50%, rgba(255, 138, 42, 0.12), rgba(139, 92, 246, 0.10), rgba(255, 138, 42, 0.12));
+  --gradient-border: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 40%, rgba(255, 138, 42, 0.20));
+  --shadow-ember: 0 10px 40px -14px rgba(255, 138, 42, 0.30);
+  --shadow-card: 0 8px 32px -16px rgba(0, 0, 0, 0.7);
+  --shadow-float: 0 30px 80px -30px rgba(0, 0, 0, 0.8), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 0 1px rgba(255, 138, 42, 0.22), 0 12px 40px -12px rgba(255, 138, 42, 0.28);
   /* Single optimized shadow used across cards/categories/footer/nav on mobile */
-  --shadow-soft: 0 6px 20px -10px oklch(0 0 0 / 0.55);
+  --shadow-soft: 0 6px 20px -12px rgba(0, 0, 0, 0.6);
 }
 
 /* ---------------------------------------------------------------
@@ -187,23 +191,23 @@
      Text secondary  #B8C1D1
    --------------------------------------------------------------- */
 [data-product-page] {
-  --background: #05070d;
+  --background: #050608;
   --foreground: #ffffff;
-  --card: #0f172a;
+  --card: #12151c;
   --card-foreground: #ffffff;
-  --popover: #0f172a;
+  --popover: #181c24;
   --popover-foreground: #ffffff;
-  --secondary: #0f172a;
+  --secondary: #0d1015;
   --secondary-foreground: #ffffff;
-  --muted: #0f172a;
-  --muted-foreground: #b8c1d1;
-  --primary: #ff8a1f;
-  --primary-foreground: #05070d;
-  --accent: #ff8a1f;
-  --accent-foreground: #05070d;
-  --ring: #ff8a1f;
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
+  --muted: #12151c;
+  --muted-foreground: #b9bec8;
+  --primary: #ff8a2a;
+  --primary-foreground: #050608;
+  --accent: #ff8a2a;
+  --accent-foreground: #050608;
+  --ring: #ff8a2a;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.10);
   /* Gold highlight token available to the page for emphasis accents. */
   --gold: #ffc857;
 }

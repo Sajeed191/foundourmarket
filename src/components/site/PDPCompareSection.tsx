@@ -75,85 +75,6 @@ const pillClasses: Record<Pill["tone"], string> = {
   neutral: "text-white/60 bg-white/[0.035] border-white/10",
 };
 
-// ---------------- Confidence labels (one per card, at most) ----------------
-
-type ConfidenceKey =
-  | "highly"     // strongest pick
-  | "recommend"  // solid alternative
-  | "premium"   // clear upgrade
-  | "budget"    // clear savings
-  | "top_rated"; // rating leader
-
-type Confidence = { key: ConfidenceKey; label: string; reason: string };
-
-const CONFIDENCE_META: Record<ConfidenceKey, { label: string; reason: string }> = {
-  highly:    { label: "Highly Recommended",  reason: "Most customers choose this." },
-  recommend: { label: "Recommended",         reason: "Excellent value for everyday use." },
-  premium:   { label: "Best Premium Choice", reason: "Premium upgrade." },
-  budget:    { label: "Budget Choice",       reason: "Lower price with similar features." },
-  top_rated: { label: "Best Rated",          reason: "Best rated in this category." },
-};
-
-/**
- * Assign at most one confidence label per suggestion. Deterministic — driven
- * only by rating, reviews, sold count, price signals. Never fabricates.
- */
-function buildConfidenceMap(
-  list: Product[],
-  priceOf: (p: Product) => number,
-): Map<string, Confidence> {
-  const out = new Map<string, Confidence>();
-  if (list.length === 0) return out;
-
-  const priced = list.filter((p) => (priceOf(p) || 0) > 0);
-  const prices = priced.map((p) => priceOf(p));
-  const minPrice = prices.length ? Math.min(...prices) : 0;
-  const maxPrice = prices.length ? Math.max(...prices) : 0;
-
-  // Highly Recommended — strongest overall combined signal.
-  const strong = list
-    .filter((p) => (p.rating || 0) >= 4.3 && (p.reviews || 0) >= 10)
-    .sort((a, b) => {
-      const sa = (a.rating || 0) * 20 + Math.log10(1 + (a.reviews || 0)) * 10 + Math.log10(1 + (a.soldCount || 0)) * 5;
-      const sb = (b.rating || 0) * 20 + Math.log10(1 + (b.reviews || 0)) * 10 + Math.log10(1 + (b.soldCount || 0)) * 5;
-      return sb - sa;
-    })[0];
-  if (strong) out.set(strong.slug, { key: "highly", ...CONFIDENCE_META.highly });
-
-  // Budget Choice — cheapest with credible rating, meaningfully below median.
-  if (priced.length >= 2 && minPrice > 0 && maxPrice > minPrice * 1.15) {
-    const budget = priced
-      .filter((p) => (p.rating || 0) >= 4 && !out.has(p.slug))
-      .sort((a, b) => priceOf(a) - priceOf(b))[0];
-    if (budget && priceOf(budget) <= minPrice * 1.05) {
-      out.set(budget.slug, { key: "budget", ...CONFIDENCE_META.budget });
-    }
-  }
-
-  // Best Premium Choice — priciest with strong rating; must clearly exceed median.
-  if (priced.length >= 2 && maxPrice > minPrice * 1.25) {
-    const premium = priced
-      .filter((p) => (p.rating || 0) >= 4.4 && (p.reviews || 0) >= 10 && !out.has(p.slug))
-      .sort((a, b) => priceOf(b) - priceOf(a))[0];
-    if (premium && priceOf(premium) >= maxPrice * 0.95) {
-      out.set(premium.slug, { key: "premium", ...CONFIDENCE_META.premium });
-    }
-  }
-
-  // Best Rated — highest rating with credible reviews.
-  const rated = list
-    .filter((p) => (p.reviews || 0) >= 15 && !out.has(p.slug))
-    .sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
-  if (rated && (rated.rating || 0) >= 4.6) {
-    out.set(rated.slug, { key: "top_rated", ...CONFIDENCE_META.top_rated });
-  }
-
-  // Recommended — fallback for the next strongest unlabeled card.
-  const fallback = list.find((p) => !out.has(p.slug) && (p.rating || 0) >= 4);
-  if (fallback) out.set(fallback.slug, { key: "recommend", ...CONFIDENCE_META.recommend });
-
-  return out;
-}
 
 // ============================ Component ============================
 
@@ -223,10 +144,6 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const selectedCount = selectedNonCurrent + 1;
   const canCompare = selectedNonCurrent >= 1 && selectedCount >= 2;
 
-  const confidenceMap = useMemo(
-    () => buildConfidenceMap(sortedSuggestions, priceOf),
-    [sortedSuggestions, priceOf],
-  );
 
   const handleToggle = useCallback(
     (slug: string) => {
@@ -253,7 +170,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   if (suggestions.length === 0) {
     return (
       <section
-        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-36 sm:mt-40"
+        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24"
         aria-labelledby="pdp-ymal-heading"
       >
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
@@ -266,11 +183,11 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 
   return (
     <section
-      className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-36 sm:mt-40"
+      className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24"
       data-pdp-compare
       aria-labelledby="pdp-ymal-heading"
     >
-      <div className="mb-8 sm:mb-10">
+      <div className="mb-6 sm:mb-8">
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
           Similar Products
         </h2>
@@ -283,7 +200,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       <div
         role="tablist"
         aria-label="Sort similar products"
-        className="relative mb-6 -mx-4 sm:mx-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="relative mb-5 -mx-4 sm:mx-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         <div className="flex items-center gap-1 px-4 sm:px-0 min-w-max border-b border-white/[0.06]">
           {SORT_TABS.map((t) => {
@@ -312,7 +229,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </div>
       </div>
 
-      {/* Carousel */}
+      {/* Carousel — ~2.2 cards on mobile */}
       <div className="relative -mx-4 sm:mx-0">
         <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background/95 to-transparent z-10" />
         <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background/95 to-transparent z-10" />
@@ -321,7 +238,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           className="flex overflow-x-auto gap-4 sm:gap-5 px-4 sm:px-1 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{ overscrollBehaviorX: "contain", WebkitOverflowScrolling: "touch" }}
         >
-          <li className="shrink-0 w-[40%] min-[420px]:w-[36%] sm:w-[200px]">
+          <li className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
             <RailItem
               product={currentProduct}
               pinned
@@ -332,15 +249,13 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           {sortedSuggestions.map((p) => {
             const active = has(p.slug);
             const disabled = !active && isFull;
-            const conf = confidenceMap.get(p.slug) ?? null;
             return (
-              <li key={p.slug} className="shrink-0 w-[40%] min-[420px]:w-[36%] sm:w-[200px]">
+              <li key={p.slug} className="shrink-0 w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
                 <RailItem
                   product={p}
                   active={active}
                   disabled={disabled}
                   pill={pillFor(p, shippingFeeOf(p))}
-                  confidence={conf}
                   onToggle={() => handleToggle(p.slug)}
                   onPreview={() => setPreview(p)}
                 />
@@ -352,7 +267,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       {sortedSuggestions.length >= VIEW_MORE_THRESHOLD && (
-        <div className="mt-8 px-1">
+        <div className="mt-5 px-1">
           <Link
             to="/category/$slug"
             params={{ slug: currentProduct.category || "all" }}
@@ -371,13 +286,18 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       {/* Compare summary bar */}
-      <div className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
+      <div className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
         <div className="flex items-center justify-between gap-3">
-          <span className={`text-[12.5px] tabular-nums ${canCompare ? "text-foreground/85" : "text-white/45"}`}>
-            {selectedNonCurrent === 0
-              ? "Select at least 1 more"
-              : `${selectedCount} products selected`}
-          </span>
+          <div className="min-w-0">
+            <div className={`text-[13px] font-medium tabular-nums leading-tight ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
+              {selectedNonCurrent === 0
+                ? "Select at least 1 more"
+                : `${selectedCount} products selected`}
+            </div>
+            <div className="mt-1 text-[11.5px] text-white/45 leading-tight">
+              {canCompare ? "Compare features side by side" : "Tap Compare on any card"}
+            </div>
+          </div>
           <button
             type="button"
             disabled={!canCompare || navigating}
@@ -419,7 +339,6 @@ type RailItemProps = {
   disabled?: boolean;
   pinned?: boolean;
   pill?: Pill | null;
-  confidence?: Confidence | null;
   onToggle?: () => void;
   onPreview?: () => void;
 };
@@ -430,14 +349,13 @@ function RailItemImpl({
   disabled,
   pinned,
   pill,
-  confidence,
   onToggle,
   onPreview,
 }: RailItemProps) {
   const { priceOf, format } = useRegion();
   const { toggle: toggleWishlist } = useWishlistActions();
   const saved = useWishlistSaved(product.slug);
-  const isSelected = !!(pinned || active);
+  
 
   const price = priceOf(product) || 0;
   const originalRaw =
@@ -446,34 +364,22 @@ function RailItemImpl({
   const discountPct = originalRaw && originalRaw > price
     ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
 
-  // Header caption: Current (grey pill) > confidence label. Never both.
-  const caption: { label: string; tone: "current" | "accent" } | null =
-    pinned ? { label: "CURRENT", tone: "current" }
-    : confidence ? { label: confidence.label, tone: "accent" }
-    : null;
-
   return (
     <div className="flex h-full flex-col">
-      {/* Reserved caption slot */}
+      {/* Reserved caption slot — CURRENT pill only */}
       <div className="mb-2.5 h-[20px] px-0.5 flex items-center">
-        {caption && (
-          caption.tone === "current" ? (
-            <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
-              {caption.label}
-            </span>
-          ) : (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-300/90">
-              {caption.label}
-            </span>
-          )
+        {pinned && (
+          <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
+            CURRENT
+          </span>
         )}
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-200 ease-out ${
-          isSelected && !pinned
-            ? "border-accent/50 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_4px_18px_-14px_rgba(245,158,11,0.25)]"
-            : "border-white/[0.06]"
+        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-200 ease-out ${
+          active && !pinned
+            ? "border-accent/50 bg-accent/[0.025]"
+            : "border-white/[0.06] bg-white/[0.015]"
         }`}
       >
         {/* Image = primary interaction → open Quick Preview */}
@@ -559,59 +465,51 @@ function RailItemImpl({
             </div>
           </div>
 
-          {/* Pill */}
-          <div className="mt-2 flex h-[20px] items-center">
+          {/* Single factual highlight */}
+          <div className="mt-2 mb-3 flex h-[20px] items-center">
             {pill && (
               <span className={`inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-medium tracking-wide ${pillClasses[pill.tone]}`}>
                 {pill.label}
               </span>
             )}
           </div>
-
-          {/* Recommendation sentence — reserved 2 lines, never truncated mid-sentence */}
-          <div className="mt-2.5 mb-3 min-h-[28px]">
-            {confidence && !pinned && (
-              <p className="text-[10.5px] leading-[1.35] text-white/60 line-clamp-2">
-                {confidence.reason}
-              </p>
-            )}
-          </div>
         </div>
 
-        {/* Compare selector — soft divider, centered 48px row */}
+        {/* Compare selector — text + icon only, no button chrome */}
         <div className="mt-auto border-t border-white/[0.04]">
           {pinned ? (
-            // Current product cannot be selected — reserve equal footprint
-            <div className="h-[48px]" aria-hidden />
+            <div className="flex h-[44px] items-center justify-center px-3.5">
+              <span className="text-[12px] font-medium text-white/40 tracking-wide">
+                Current Product
+              </span>
+            </div>
           ) : (
             <button
               type="button"
               onClick={onToggle}
-              aria-pressed={!!isSelected}
+              aria-pressed={!!active}
               aria-label={
-                isSelected
+                active
                   ? `Remove ${product.name} from comparison`
                   : `Select ${product.name} for comparison`
               }
               disabled={disabled}
-              className="flex h-[48px] w-full items-center justify-center gap-2 px-3.5 rounded-b-2xl transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02]"
+              className="flex h-[44px] w-full items-center justify-center gap-1.5 px-3.5 rounded-b-2xl transition-colors duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02]"
             >
               <span
                 aria-hidden
-                className={`grid place-items-center size-[18px] rounded-full border transition-colors duration-200 ease-out ${
-                  isSelected
-                    ? "border-accent bg-accent text-accent-foreground"
-                    : "border-white/25 bg-transparent"
+                className={`transition-opacity duration-150 ease-out ${
+                  active ? "opacity-100 text-accent" : "opacity-0 w-0"
                 }`}
               >
-                {isSelected && <Check className="size-2.5" strokeWidth={3} />}
+                <Check className="size-3.5" strokeWidth={2.75} />
               </span>
               <span
-                className={`text-[14px] font-medium leading-none whitespace-nowrap transition-colors duration-200 ease-out ${
-                  isSelected ? "text-accent" : "text-white/65"
+                className={`text-[13.5px] font-medium leading-none whitespace-nowrap transition-colors duration-150 ease-out ${
+                  active ? "text-accent" : "text-white/65"
                 }`}
               >
-                {isSelected ? "Selected" : "Compare"}
+                {active ? "Selected" : "Compare"}
               </span>
             </button>
           )}

@@ -191,23 +191,23 @@
      Text secondary  #B8C1D1
    --------------------------------------------------------------- */
 [data-product-page] {
-  --background: #05070d;
+  --background: #050608;
   --foreground: #ffffff;
-  --card: #0f172a;
+  --card: #12151c;
   --card-foreground: #ffffff;
-  --popover: #0f172a;
+  --popover: #181c24;
   --popover-foreground: #ffffff;
-  --secondary: #0f172a;
+  --secondary: #0d1015;
   --secondary-foreground: #ffffff;
-  --muted: #0f172a;
-  --muted-foreground: #b8c1d1;
-  --primary: #ff8a1f;
-  --primary-foreground: #05070d;
-  --accent: #ff8a1f;
-  --accent-foreground: #05070d;
-  --ring: #ff8a1f;
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
+  --muted: #12151c;
+  --muted-foreground: #b9bec8;
+  --primary: #ff8a2a;
+  --primary-foreground: #050608;
+  --accent: #ff8a2a;
+  --accent-foreground: #050608;
+  --ring: #ff8a2a;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.10);
   /* Gold highlight token available to the page for emphasis accents. */
   --gold: #ffc857;
 }

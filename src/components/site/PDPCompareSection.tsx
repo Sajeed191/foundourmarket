@@ -185,10 +185,13 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 
   return (
     <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
       className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24"
       data-pdp-compare
       aria-labelledby="pdp-ymal-heading"
     >
+      <SectionVisibility onChange={setSectionVisible} target={sectionRef} />
+
       <div className="mb-6 sm:mb-8">
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
           Similar Products
@@ -269,14 +272,17 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       {sortedSuggestions.length >= VIEW_MORE_THRESHOLD && (
-        <div className="mt-5 px-1">
+        <div className="mt-7 flex justify-center sm:justify-start px-1">
           <Link
             to="/category/$slug"
             params={{ slug: currentProduct.category || "all" }}
-            className="inline-flex items-center gap-1 text-[13px] text-white/60 hover:text-accent transition-colors duration-150"
+            className="group inline-flex items-center gap-1.5 h-11 px-2 -mx-2 text-[13.5px] font-medium text-foreground/80 hover:text-accent transition-colors duration-150"
           >
             View all similar products
-            <ArrowRight className="size-3.5" aria-hidden />
+            <ArrowRight
+              className="size-3.5 transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-active:translate-x-1"
+              aria-hidden
+            />
           </Link>
         </div>
       )}
@@ -287,39 +293,44 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           : `${selectedCount} products selected for comparison.`}
       </div>
 
-      {/* Compare summary bar */}
-      <div className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className={`text-[13px] font-medium tabular-nums leading-tight ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
-              {selectedNonCurrent === 0
-                ? "Select at least 1 more"
-                : `${selectedCount} products selected`}
-            </div>
-            <div className="mt-1 text-[11.5px] text-white/45 leading-tight">
-              {canCompare ? "Compare features side by side" : "Tap Compare on any card"}
-            </div>
+      {/* Inline compare summary — resting state */}
+      <div className="mt-6 flex items-center justify-between gap-3 border-t border-white/[0.05] pt-5">
+        <div className="min-w-0">
+          <div className={`text-[13px] font-medium tabular-nums leading-tight ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
+            {selectedNonCurrent === 0
+              ? "Select at least 1 more"
+              : `${selectedCount} products selected`}
           </div>
-          <button
-            type="button"
-            disabled={!canCompare || navigating}
-            onClick={handleCompare}
-            aria-label={canCompare ? "Compare selected products" : "Select one more product to compare"}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-full border h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
-              canCompare && !navigating
-                ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
-                : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
-            }`}
-          >
-            {navigating ? (
-              <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
-            ) : (
-              <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
-            )}
-          </button>
+          <div className="mt-1 text-[11.5px] text-white/45 leading-tight">
+            {canCompare ? "Compare features side by side" : "Tap Compare on any card"}
+          </div>
         </div>
+        <button
+          type="button"
+          disabled={!canCompare || navigating}
+          onClick={handleCompare}
+          aria-label={canCompare ? "Compare selected products" : "Select one more product to compare"}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-full border h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+            canCompare && !navigating
+              ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
+              : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
+          }`}
+        >
+          {navigating ? (
+            <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
+          ) : (
+            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
+          )}
+        </button>
       </div>
 
+      {/* Sticky compare panel — shows only when the section is on-screen AND at least one alt is selected */}
+      <StickyCompareBar
+        visible={sectionVisible && canCompare}
+        count={selectedCount}
+        navigating={navigating}
+        onCompare={handleCompare}
+      />
 
       <QuickPreviewSheet
         product={preview}
@@ -330,6 +341,73 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         isPinned={preview ? preview.slug === currentSlug : false}
       />
     </section>
+  );
+}
+
+// ============================ Section visibility observer ============================
+
+function SectionVisibility({
+  target,
+  onChange,
+}: {
+  target: React.RefObject<HTMLElement | null>;
+  onChange: (visible: boolean) => void;
+}) {
+  useEffect(() => {
+    const el = target.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => onChange(entry.isIntersecting && entry.intersectionRatio > 0.05),
+      { threshold: [0, 0.05, 0.25] },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [target, onChange]);
+  return null;
+}
+
+// ============================ Sticky compare bar ============================
+
+function StickyCompareBar({
+  visible,
+  count,
+  navigating,
+  onCompare,
+}: {
+  visible: boolean;
+  count: number;
+  navigating: boolean;
+  onCompare: () => void;
+}) {
+  return (
+    <div
+      aria-hidden={!visible}
+      className={`fixed inset-x-0 bottom-3 z-40 px-3 pointer-events-none transition-opacity duration-150 ease-out ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div
+        className={`pointer-events-auto mx-auto max-w-[420px] flex items-center justify-between gap-3 rounded-full border border-white/[0.08] bg-black/70 backdrop-blur-xl px-4 py-2 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.6)] transition-transform duration-150 ease-out ${
+          visible ? "translate-y-0" : "translate-y-3"
+        }`}
+      >
+        <span className="text-[12.5px] font-medium text-foreground/85 tabular-nums">
+          {count} selected
+        </span>
+        <button
+          type="button"
+          disabled={navigating}
+          onClick={onCompare}
+          className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground h-9 px-4 text-[12.5px] font-semibold tracking-wide transition-[filter] duration-150 ease-out hover:brightness-110 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+        >
+          {navigating ? (
+            <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
+          ) : (
+            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 

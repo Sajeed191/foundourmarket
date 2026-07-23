@@ -386,10 +386,17 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       return;
     }
     const row = Array.isArray(data) ? data[0] : data;
-    const qs = (row?.questions ?? []) as Question[];
+    const rawQs = (row?.questions ?? []) as Array<Question | null>;
+    const qs: Question[] = (Array.isArray(rawQs) ? rawQs : [])
+      .filter((q): q is Question => !!q && typeof q === "object" && !!q.id)
+      .map((q) => ({
+        ...q,
+        answers: (Array.isArray(q.answers) ? q.answers : [])
+          .filter((a): a is Answer => !!a && typeof a === "object" && !!a.id),
+      }));
     const votes = (row?.my_answer_votes ?? []) as string[];
     setItems(qs);
-    setVoted(new Set(votes));
+    setVoted(new Set(Array.isArray(votes) ? votes : []));
     setLoading(false);
   }, [productSlug]);
 

@@ -219,18 +219,32 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const selectedCount = selectedNonCurrent + 1;
   const canCompare = selectedNonCurrent >= 1 && selectedCount >= 2;
 
+  // Context used by the diff-chip resolver for every card.
+  const currentShipping = shippingFeeOf(currentProduct);
+  const currentDiscount = discountPctOf(currentProduct, currentPrice);
+  const currentFast = !!currentProduct.fastSelling;
 
   const handleToggle = useCallback(
-    (slug: string) => {
+    (slug: string, name?: string) => {
       if (slug === currentSlug) return;
       if (!has(slug) && isFull) {
         toast.message(`Maximum ${max} products`);
         return;
       }
+      const wasSelected = has(slug);
       toggle(slug);
+      // v8.0 — subtle success feedback only when adding, never on remove.
+      if (!wasSelected) {
+        toast.success("Added to comparison", {
+          description: name,
+          duration: 1500,
+          position: "bottom-center",
+        });
+      }
     },
     [currentSlug, has, isFull, max, toggle],
   );
+
 
   const handleCompare = () => {
     if (!canCompare || navigating) return;

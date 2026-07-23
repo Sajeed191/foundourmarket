@@ -471,7 +471,13 @@ function RailItemImpl({
         )}
       </div>
 
-      <div className="relative flex flex-1 flex-col rounded-2xl border border-white/[0.06] bg-white/[0.015] transition-colors duration-150 ease-out">
+      <div
+        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-150 ease-out ${
+          isSelected && !pinned
+            ? "border-accent/70 shadow-[0_0_0_1px_rgba(245,158,11,0.12),0_8px_24px_-16px_rgba(245,158,11,0.35)]"
+            : "border-white/[0.06]"
+        }`}
+      >
         {/* Image = primary interaction → open Quick Preview */}
         <button
           type="button"
@@ -513,7 +519,8 @@ function RailItemImpl({
         </button>
 
         {/* Content */}
-        <div className="flex flex-1 flex-col px-3.5 pt-4 pb-4">
+        <div className="flex flex-1 flex-col px-3.5 pt-4 pb-3">
+
           <Link
             to="/products/$slug"
             params={{ slug: product.slug }}
@@ -563,16 +570,18 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Recommendation sentence — reserved */}
-          <div className="mt-2.5 min-h-[16px]">
+          {/* Recommendation sentence — reserved (12–16px gap before selector) */}
+          <div className="mt-2.5 mb-3 min-h-[16px]">
             {confidence && (
               <p className="text-[10.5px] leading-snug text-white/60 line-clamp-1">
                 {confidence.reason}
               </p>
             )}
           </div>
+        </div>
 
-          {/* Compare — the only bottom action. Segmented selector. */}
+        {/* Compare selector — lightweight row, whole area clickable */}
+        <div className="mt-auto border-t border-white/[0.05]">
           <button
             type="button"
             onClick={onToggle}
@@ -585,35 +594,38 @@ function RailItemImpl({
                   : `Select ${product.name} for comparison`
             }
             disabled={pinned || disabled}
-            className={`mt-4 inline-flex h-[40px] w-full items-center justify-center gap-1.5 rounded-full border text-[11.5px] font-medium tracking-wide transition-colors duration-150 ease-out disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
-              pinned
-                ? "border-white/[0.05] bg-transparent text-white/30"
-                : isSelected
-                  ? "border-accent/70 bg-transparent text-accent"
-                  : "border-white/12 bg-transparent text-white/70 hover:border-white/25 hover:text-foreground"
-            }`}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 px-3.5 py-2.5 rounded-b-2xl transition-colors duration-150 ease-out disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02] disabled:hover:bg-transparent"
           >
             <span
               aria-hidden
-              className={`grid place-items-center size-4 rounded-full border transition-colors duration-150 ${
-                isSelected && !pinned
-                  ? "border-accent bg-accent text-accent-foreground"
-                  : "border-white/25 bg-transparent"
+              className={`grid place-items-center size-[18px] rounded-full border transition-colors duration-150 ease-out ${
+                pinned
+                  ? "border-white/15 bg-transparent"
+                  : isSelected
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-white/30 bg-transparent"
               }`}
             >
               {isSelected && !pinned && <Check className="size-2.5" strokeWidth={3} />}
             </span>
-            {pinned
-              ? "Current product"
-              : isSelected
-                ? "Selected for Comparison"
-                : "Compare Product"}
+            <span
+              className={`text-[14px] font-medium leading-none whitespace-nowrap transition-colors duration-150 ease-out ${
+                pinned
+                  ? "text-white/35"
+                  : isSelected
+                    ? "text-accent"
+                    : "text-white/60"
+              }`}
+            >
+              {pinned ? "Current" : isSelected ? "Selected" : "Compare"}
+            </span>
           </button>
         </div>
       </div>
     </div>
   );
 }
+
 
 const RailItem = memo(RailItemImpl);
 

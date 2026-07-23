@@ -443,7 +443,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         product={preview}
         onClose={() => setPreview(null)}
         pill={preview ? pillFor(preview, shippingFeeOf(preview)) : null}
-        onToggle={(slug) => handleToggle(slug)}
+        onToggle={(slug) => handleToggle(slug, preview?.name)}
+
         isSelected={preview ? preview.slug === currentSlug || has(preview.slug) : false}
         isPinned={preview ? preview.slug === currentSlug : false}
       />

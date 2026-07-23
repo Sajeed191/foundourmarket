@@ -1114,7 +1114,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
           </IconButton>
         </div>
 
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+        <div className="glass-surface-strong mt-4 flex items-center gap-3 rounded-2xl p-3">
           <div className="size-11 rounded-2xl overflow-hidden grid place-items-center bg-secondary ring-1 ring-accent/30 shrink-0">
             {avatarUrl ? <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <img loading="lazy" decoding="async" src={logoSrc} alt="" className="w-full h-full object-cover" />}
           </div>

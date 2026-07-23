@@ -103,24 +103,61 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     if (!products.length) return [] as Product[];
     const cur = currentProduct;
     const curCats = new Set([cur.category, ...(cur.categories ?? [])].filter(Boolean));
-    return products
-      .filter((p) => p.slug !== cur.slug && p.status !== "archived" && p.inStock !== false)
+    const curFeatures = new Set(
+      ((cur as any).features ?? [])
+        .concat((cur as any).tags ?? [])
+        .filter(Boolean)
+        .map((f: unknown) => String(f).toLowerCase()),
+    );
+
+    // Relevance-first ranking (spec priority):
+    //   1 Same Brand  2 Same Product Type  3 Same Category
+    //   4 Similar Price (tiered ±15% / ±30% / ±50%)  5 Shared Features
+    //   6 Availability  7 Rating (secondary tiebreak only)
+    const scored = products
+      .filter((p) => p.slug !== cur.slug && p.status !== "archived")
       .map((p) => {
         let score = 0;
-        if (cur.brand && p.brand && p.brand === cur.brand) score += 4;
-        if (cur.productType && p.productType && p.productType === cur.productType) score += 3;
+        if (cur.brand && p.brand && p.brand === cur.brand) score += 40;
+        if (cur.productType && p.productType && p.productType === cur.productType) score += 30;
         const pCats = [p.category, ...(p.categories ?? [])].filter(Boolean);
-        if (pCats.some((c) => curCats.has(c))) score += 2;
+        const catOverlap = pCats.some((c) => curCats.has(c));
+        if (catOverlap) score += 20;
+
         if (currentPrice > 0) {
-          const diff = Math.abs((priceOf(p) || 0) - currentPrice) / currentPrice;
-          if (diff <= 0.25) score += 1;
+          const price = priceOf(p) || 0;
+          if (price > 0) {
+            const diff = Math.abs(price - currentPrice) / currentPrice;
+            if (diff <= 0.15) score += 12;
+            else if (diff <= 0.3) score += 7;
+            else if (diff <= 0.5) score += 2;
+          }
         }
-        return { p, score };
+
+        if (curFeatures.size) {
+          const pFeat = ((p as any).features ?? [])
+            .concat((p as any).tags ?? [])
+            .map((f: unknown) => String(f).toLowerCase());
+          const overlap = pFeat.filter((f: string) => curFeatures.has(f)).length;
+          if (overlap) score += Math.min(overlap, 4) * 2;
+        }
+
+        if (p.inStock !== false && p.status !== "out_of_stock") score += 3;
+        // Rating: tiny secondary nudge only — never overpowers relevance
+        score += Math.min(p.rating || 0, 5) * 0.4;
+
+        const relevant =
+          catOverlap ||
+          (!!cur.brand && p.brand === cur.brand) ||
+          (!!cur.productType && p.productType === cur.productType);
+        return { p, score, relevant };
       })
-      .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, VISIBLE_LIMIT)
-      .map((x) => x.p);
+      .sort((a, b) => b.score - a.score);
+
+    // Prefer truly relevant matches; fall back only if the rail would otherwise be too thin
+    const relevant = scored.filter((x) => x.relevant);
+    const pool = relevant.length >= 3 ? relevant : scored;
+    return pool.slice(0, VISIBLE_LIMIT).map((x) => x.p);
   }, [products, currentProduct, currentPrice, priceOf]);
 
   const sortedSuggestions = useMemo(() => {

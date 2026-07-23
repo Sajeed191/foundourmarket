@@ -86,6 +86,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const [navigating, setNavigating] = useState(false);
   const [sort, setSort] = useState<SortKey>(() => readSort());
   const [preview, setPreview] = useState<Product | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [sectionVisible, setSectionVisible] = useState(false);
 
   const currentSlug = currentProduct.slug;
   const currentPrice = priceOf(currentProduct) || 0;
@@ -183,10 +185,13 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
 
   return (
     <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
       className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24"
       data-pdp-compare
       aria-labelledby="pdp-ymal-heading"
     >
+      <SectionVisibility onChange={setSectionVisible} target={sectionRef} />
+
       <div className="mb-6 sm:mb-8">
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
           Similar Products
@@ -267,14 +272,17 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       </div>
 
       {sortedSuggestions.length >= VIEW_MORE_THRESHOLD && (
-        <div className="mt-5 px-1">
+        <div className="mt-7 flex justify-center sm:justify-start px-1">
           <Link
             to="/category/$slug"
             params={{ slug: currentProduct.category || "all" }}
-            className="inline-flex items-center gap-1 text-[13px] text-white/60 hover:text-accent transition-colors duration-150"
+            className="group inline-flex items-center gap-1.5 h-11 px-2 -mx-2 text-[13.5px] font-medium text-foreground/80 hover:text-accent transition-colors duration-150"
           >
             View all similar products
-            <ArrowRight className="size-3.5" aria-hidden />
+            <ArrowRight
+              className="size-3.5 transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-active:translate-x-1"
+              aria-hidden
+            />
           </Link>
         </div>
       )}
@@ -285,39 +293,44 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           : `${selectedCount} products selected for comparison.`}
       </div>
 
-      {/* Compare summary bar */}
-      <div className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className={`text-[13px] font-medium tabular-nums leading-tight ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
-              {selectedNonCurrent === 0
-                ? "Select at least 1 more"
-                : `${selectedCount} products selected`}
-            </div>
-            <div className="mt-1 text-[11.5px] text-white/45 leading-tight">
-              {canCompare ? "Compare features side by side" : "Tap Compare on any card"}
-            </div>
+      {/* Inline compare summary — resting state */}
+      <div className="mt-6 flex items-center justify-between gap-3 border-t border-white/[0.05] pt-5">
+        <div className="min-w-0">
+          <div className={`text-[13px] font-medium tabular-nums leading-tight ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
+            {selectedNonCurrent === 0
+              ? "Select at least 1 more"
+              : `${selectedCount} products selected`}
           </div>
-          <button
-            type="button"
-            disabled={!canCompare || navigating}
-            onClick={handleCompare}
-            aria-label={canCompare ? "Compare selected products" : "Select one more product to compare"}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-full border h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
-              canCompare && !navigating
-                ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
-                : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
-            }`}
-          >
-            {navigating ? (
-              <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
-            ) : (
-              <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
-            )}
-          </button>
+          <div className="mt-1 text-[11.5px] text-white/45 leading-tight">
+            {canCompare ? "Compare features side by side" : "Tap Compare on any card"}
+          </div>
         </div>
+        <button
+          type="button"
+          disabled={!canCompare || navigating}
+          onClick={handleCompare}
+          aria-label={canCompare ? "Compare selected products" : "Select one more product to compare"}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-full border h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+            canCompare && !navigating
+              ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
+              : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
+          }`}
+        >
+          {navigating ? (
+            <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
+          ) : (
+            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
+          )}
+        </button>
       </div>
 
+      {/* Sticky compare panel — shows only when the section is on-screen AND at least one alt is selected */}
+      <StickyCompareBar
+        visible={sectionVisible && canCompare}
+        count={selectedCount}
+        navigating={navigating}
+        onCompare={handleCompare}
+      />
 
       <QuickPreviewSheet
         product={preview}
@@ -328,6 +341,73 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         isPinned={preview ? preview.slug === currentSlug : false}
       />
     </section>
+  );
+}
+
+// ============================ Section visibility observer ============================
+
+function SectionVisibility({
+  target,
+  onChange,
+}: {
+  target: React.RefObject<HTMLElement | null>;
+  onChange: (visible: boolean) => void;
+}) {
+  useEffect(() => {
+    const el = target.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => onChange(entry.isIntersecting && entry.intersectionRatio > 0.05),
+      { threshold: [0, 0.05, 0.25] },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [target, onChange]);
+  return null;
+}
+
+// ============================ Sticky compare bar ============================
+
+function StickyCompareBar({
+  visible,
+  count,
+  navigating,
+  onCompare,
+}: {
+  visible: boolean;
+  count: number;
+  navigating: boolean;
+  onCompare: () => void;
+}) {
+  return (
+    <div
+      aria-hidden={!visible}
+      className={`fixed inset-x-0 bottom-3 z-40 px-3 pointer-events-none transition-opacity duration-150 ease-out ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div
+        className={`pointer-events-auto mx-auto max-w-[420px] flex items-center justify-between gap-3 rounded-full border border-white/[0.08] bg-black/70 backdrop-blur-xl px-4 py-2 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.6)] transition-transform duration-150 ease-out ${
+          visible ? "translate-y-0" : "translate-y-3"
+        }`}
+      >
+        <span className="text-[12.5px] font-medium text-foreground/85 tabular-nums">
+          {count} selected
+        </span>
+        <button
+          type="button"
+          disabled={navigating}
+          onClick={onCompare}
+          className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground h-9 px-4 text-[12.5px] font-semibold tracking-wide transition-[filter] duration-150 ease-out hover:brightness-110 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+        >
+          {navigating ? (
+            <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
+          ) : (
+            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -364,32 +444,46 @@ function RailItemImpl({
   const discountPct = originalRaw && originalRaw > price
     ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
 
+  const statusPill: { label: string; tone: "current" | "selected" } | null =
+    pinned ? { label: "Current Product", tone: "current" }
+    : active ? { label: "Selected", tone: "selected" }
+    : null;
+
   return (
     <div className="flex h-full flex-col">
-      {/* Reserved caption slot — CURRENT pill only */}
-      <div className="mb-2.5 h-[20px] px-0.5 flex items-center">
-        {pinned && (
-          <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
-            CURRENT
+      {/* Unified status pill slot — same visual system for every state */}
+      <div className="mb-2.5 h-[22px] px-0.5 flex items-center">
+        {statusPill && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-[3px] text-[10px] font-medium tracking-wide transition-colors duration-150 ease-out ${
+              statusPill.tone === "selected"
+                ? "border-accent/35 bg-accent/[0.08] text-accent"
+                : "border-white/[0.08] bg-white/[0.05] text-white/60"
+            }`}
+          >
+            {statusPill.tone === "selected" && (
+              <Check className="size-2.5" strokeWidth={3} aria-hidden />
+            )}
+            {statusPill.label}
           </span>
         )}
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-200 ease-out ${
+        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-150 ease-out ${
           active && !pinned
-            ? "border-accent/50 bg-accent/[0.025]"
+            ? "border-accent/25 bg-accent/[0.012]"
             : "border-white/[0.06] bg-white/[0.015]"
         }`}
       >
-        {/* Image = primary interaction → open Quick Preview */}
+        {/* Image = primary interaction → open Quick Preview. Padded so product breathes. */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreview?.(); }}
           aria-label={`Quick preview: ${product.name}`}
-          className="relative block w-full overflow-hidden rounded-t-2xl bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+          className="relative block w-full p-2.5 pb-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset rounded-t-2xl"
         >
-          <div className="aspect-square w-full">
+          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.03]">
             {product.image && (
               <img
                 src={resolveImage(product.image)}
@@ -399,21 +493,21 @@ function RailItemImpl({
                 className="h-full w-full object-cover transition-opacity duration-150"
               />
             )}
+            {discountPct >= 5 && !pinned && (
+              <span className="absolute left-2 top-2 rounded-full bg-black/60 backdrop-blur px-1.5 py-[2px] text-[10px] font-semibold text-white/90 tabular-nums">
+                −{discountPct}%
+              </span>
+            )}
           </div>
-          {discountPct >= 5 && !pinned && (
-            <span className="absolute left-2 top-2 rounded-full bg-black/60 backdrop-blur px-1.5 py-[2px] text-[10px] font-semibold text-white/90 tabular-nums">
-              −{discountPct}%
-            </span>
-          )}
         </button>
 
-        {/* Wishlist — top right of image */}
+        {/* Wishlist — top right of card */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.slug); }}
           aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
           aria-pressed={saved}
-          className={`absolute right-2 top-2 grid size-8 place-items-center rounded-full border backdrop-blur transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+          className={`absolute right-3.5 top-3.5 grid size-8 place-items-center rounded-full border backdrop-blur transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
             saved
               ? "border-accent/50 bg-black/50 text-accent"
               : "border-white/15 bg-black/40 text-white/75 hover:text-foreground hover:border-white/30"
@@ -423,7 +517,7 @@ function RailItemImpl({
         </button>
 
         {/* Content */}
-        <div className="flex flex-1 flex-col px-3.5 pt-4 pb-3">
+        <div className="flex flex-1 flex-col px-3.5 pt-3 pb-3">
 
           <Link
             to="/products/$slug"
@@ -446,7 +540,7 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Price */}
+          {/* Price + savings */}
           <div className="mt-3 min-h-[36px]">
             <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="text-[14.5px] font-semibold text-foreground tabular-nums">
@@ -465,7 +559,7 @@ function RailItemImpl({
             </div>
           </div>
 
-          {/* Single factual highlight */}
+          {/* Single factual highlight (delivery / stock / status) */}
           <div className="mt-2 mb-3 flex h-[20px] items-center">
             {pill && (
               <span className={`inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-medium tracking-wide ${pillClasses[pill.tone]}`}>
@@ -475,12 +569,12 @@ function RailItemImpl({
           </div>
         </div>
 
-        {/* Compare selector — text + icon only, no button chrome */}
-        <div className="mt-auto border-t border-white/[0.04]">
+        {/* Compare selector — hairline separator only */}
+        <div className="mt-auto border-t border-white/[0.03]">
           {pinned ? (
             <div className="flex h-[44px] items-center justify-center px-3.5">
-              <span className="text-[12px] font-medium text-white/40 tracking-wide">
-                Current Product
+              <span className="text-[12.5px] font-medium text-white/35 tracking-wide">
+                Current
               </span>
             </div>
           ) : (

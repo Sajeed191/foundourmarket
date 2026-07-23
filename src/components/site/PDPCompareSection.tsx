@@ -578,7 +578,7 @@ function RailItemImpl({
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color] duration-150 ease-out ${
+        className={`group/card relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color,transform,box-shadow] duration-150 ease-out hover:-translate-y-[1px] hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)] ${
           active && !pinned
             ? "border-accent/25 bg-accent/[0.012]"
             : "border-white/[0.06] bg-white/[0.015]"
@@ -606,8 +606,18 @@ function RailItemImpl({
                 −{discountPct}%
               </span>
             )}
+            {/* Quick Preview affordance — fades in on hover/focus, never on touch idle. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 grid place-items-center opacity-0 transition-opacity duration-150 ease-out group-hover/card:opacity-100 group-focus-within/card:opacity-100"
+            >
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/65 backdrop-blur px-2.5 py-1 text-[10.5px] font-medium text-white/95">
+                <Eye className="size-3" strokeWidth={2.25} /> Preview
+              </span>
+            </span>
           </div>
         </button>
+
 
         {/* Wishlist — top right of card */}
         <button

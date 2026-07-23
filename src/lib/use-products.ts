@@ -8,12 +8,14 @@ let lastFreshAt = 0;
 const FRESH_TTL = 2_000; // only de-dupe rapid duplicate events; never keep stale admin shipping
 
 // Stale-while-revalidate window for the browse/catalog cache. Within this
-// window the in-memory cache is served instantly with NO network call (repeat
-// visits, back/forward, cross-page navigation). Past it, the cached data is
-// still returned immediately but a background refresh is kicked off so the next
-// read is fresh. Catalog data only — pricing/stock shown here is advisory; the
-// authoritative price/stock is always re-read live at cart/checkout/payment.
-const SWR_TTL = 60_000;
+// window the in-memory cache is served instantly with NO network call. Past
+// it, the cached data is still returned immediately but a background refresh
+// is kicked off so the next read is fresh. Kept intentionally short (5s) so
+// server-side changes — rating recovery, review add/edit/delete/moderation,
+// admin edits — propagate to every open surface within one navigation
+// without requiring a manual page refresh. Catalog data only; pricing/stock
+// shown here is advisory and is always re-read live at cart/checkout.
+const SWR_TTL = 5_000;
 let cacheLoadedAt = 0;
 
 /** Force a fresh products fetch, throttled, so stale prices/shipping refresh. */
@@ -166,6 +168,13 @@ export function useProduct(slug: string) {
     if (full) {
       setProduct(full);
       setLoading(false);
+      // Stale-while-revalidate at the record level: if the surrounding
+      // products cache is past its SWR window, kick a background refresh so
+      // any server-side rating / review / catalog update on this product
+      // propagates without requiring a manual page refresh.
+      if (Date.now() - cacheLoadedAt > SWR_TTL) {
+        fetchProduct(slug).then((p) => { if (active && p) setProduct(p); }).catch(() => {});
+      }
       return;
     }
     // No full record cached (either missing or only a lean list entry) — fetch

@@ -86,6 +86,8 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const [navigating, setNavigating] = useState(false);
   const [sort, setSort] = useState<SortKey>(() => readSort());
   const [preview, setPreview] = useState<Product | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [sectionVisible, setSectionVisible] = useState(false);
 
   const currentSlug = currentProduct.slug;
   const currentPrice = priceOf(currentProduct) || 0;

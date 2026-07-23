@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Eye, Heart, Loader2, Star, Zap } from "lucide-react";
+import { ArrowRight, Check, Loader2, Star, Zap } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -9,17 +9,16 @@ import { resolveImage, type Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCompare } from "@/hooks/use-compare";
 import { useCartActions } from "@/lib/cart";
-import { useWishlistActions, useWishlistSaved } from "@/lib/wishlist";
 import { useBuyNow } from "@/lib/use-buy-now";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 /**
- * PDP — Similar Products (v8.0 · Premium Recommendation Experience)
+ * PDP — Similar Products (v9.0 · Minimal Premium Ecommerce)
  *
- * Focused shopping-assistant surface. Every card commits to a single primary
- * action (compare), delegates purchase intent to the Quick Preview, and shows
- * ONE data-backed confidence label so customers can scan and decide.
- * Algorithm, compare store, sort tabs, and routing are unchanged.
+ * Apple/Stripe/Airbnb-inspired refinement. No new features — every card is
+ * quiet, identical in height, and commits to a single primary action: a full
+ * width "Compare / ✓ Added" pill. Business logic, compare store, sort tabs,
+ * and routing are unchanged from v8.0.
  */
 
 const VISIBLE_LIMIT = 12;
@@ -51,109 +50,46 @@ function writeSort(v: SortKey) {
   try { sessionStorage.setItem(SORT_STORAGE_KEY, v); } catch { /* noop */ }
 }
 
-type Pill = { label: string; tone: "emerald" | "sky" | "amber" | "violet" | "neutral" };
-
-function pillFor(p: Product, shipping: number): Pill | null {
-  if (shipping === 0) return { label: "Free delivery", tone: "emerald" };
-  if (p.fastSelling) return { label: "Fast delivery", tone: "sky" };
-  if (
-    p.inStock !== false &&
-    p.stockQuantity > 0 &&
-    p.lowStockThreshold > 0 &&
-    p.stockQuantity <= p.lowStockThreshold
-  ) return { label: "Limited stock", tone: "amber" };
-  if (p.bestseller) return { label: "Best seller", tone: "violet" };
-  if (p.newArrival) return { label: "New arrival", tone: "neutral" };
-  return null;
-}
-
-const pillClasses: Record<Pill["tone"], string> = {
-  emerald: "text-emerald-300/85 bg-emerald-400/[0.06] border-emerald-400/15",
-  sky: "text-white/65 bg-white/[0.035] border-white/10",
-  amber: "text-white/65 bg-white/[0.035] border-white/10",
-  violet: "text-white/65 bg-white/[0.035] border-white/10",
-  neutral: "text-white/60 bg-white/[0.035] border-white/10",
-};
-
 /**
- * v8.0 — Quick Difference Chip.
- * Returns ONE factual comparison relative to the currently-viewed product,
- * priority: cheaper price > higher rating > better delivery > bigger discount
- * > more reviews > best-seller / new-arrival status. Never marketing copy.
+ * v9.0 — Single short recommendation line. Never a sentence.
+ * Priority mirrors previous diffChip logic but resolves to short labels.
  */
-function diffChipFor(
+function recommendationFor(
   p: Product,
   ctx: {
     curPrice: number;
     curRating: number;
     curReviews: number;
     curShipping: number;
-    curFastSelling: boolean;
-    curDiscount: number;
+    curFast: boolean;
     price: number;
     shipping: number;
-    format: (n: number) => string;
   },
-): Pill | null {
-  const { curPrice, curRating, curReviews, curShipping, curFastSelling, curDiscount, price, shipping, format } = ctx;
+): string | null {
+  const { curPrice, curRating, curReviews, curShipping, curFast, price, shipping } = ctx;
 
-  // Price cheaper (>=5% or ≥ ~small threshold)
-  if (curPrice > 0 && price > 0 && price < curPrice) {
-    const diff = curPrice - price;
-    if (diff / curPrice >= 0.05) {
-      return { label: `${format(diff)} Cheaper`, tone: "emerald" };
-    }
+  if (curPrice > 0 && price > 0 && price < curPrice && (curPrice - price) / curPrice >= 0.05) {
+    return "Lower price";
   }
-
-  // Rating meaningfully higher
   if ((p.rating || 0) >= (curRating || 0) + 0.3 && (p.rating || 0) > 0) {
-    const delta = ((p.rating || 0) - (curRating || 0)).toFixed(1);
-    return { label: `+${delta} Rating`, tone: "sky" };
+    return "Higher rating";
   }
-
-  // Delivery better
-  if (shipping === 0 && curShipping > 0) return { label: "Free Delivery", tone: "emerald" };
-  if (p.fastSelling && !curFastSelling) return { label: "Faster Delivery", tone: "sky" };
-
-  // Discount % bigger
-  const pDiscount = discountPctOf(p, price);
-  if (pDiscount >= curDiscount + 5) {
-    return { label: `${pDiscount - curDiscount}% More Discount`, tone: "emerald" };
+  if (shipping === 0 && curShipping > 0) return "Free delivery";
+  if (p.fastSelling && !curFast) return "Fast delivery";
+  if ((p.reviews || 0) >= 20 && (p.reviews || 0) >= (curReviews || 0) * 1.5) {
+    return "Most popular";
   }
-
-  // More reviews (meaningful only if there is decent volume)
-  if ((p.reviews || 0) >= 20 && (p.reviews || 0) >= (curReviews || 0) * 1.5 && (p.reviews || 0) > (curReviews || 0)) {
-    return { label: "More Reviews", tone: "sky" };
-  }
-
-  // Status fallbacks
-  if (p.bestseller) return { label: "Best Seller", tone: "violet" };
-  if (p.newArrival) return { label: "New Arrival", tone: "neutral" };
-  if (
-    p.inStock !== false &&
-    p.stockQuantity > 0 &&
-    p.lowStockThreshold > 0 &&
-    p.stockQuantity <= p.lowStockThreshold
-  ) return { label: "Limited Stock", tone: "amber" };
-
+  if (p.bestseller) return "Best seller";
+  if (p.newArrival) return "Newest arrival";
   return null;
 }
-
-function discountPctOf(p: Product, price: number): number {
-  const original =
-    (p.comparePriceInr && p.comparePriceInr > price ? p.comparePriceInr : null) ??
-    (p.comparePriceUsd && p.comparePriceUsd > price ? p.comparePriceUsd : null);
-  if (!original || original <= price) return 0;
-  return Math.round(((original - price) / original) * 100);
-}
-
 
 
 // ============================ Component ============================
 
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
   const { products } = useProducts();
-  const { priceOf, shippingFeeOf, format } = useRegion();
+  const { priceOf, shippingFeeOf } = useRegion();
   const { slugs, toggle, has, isFull, max } = useCompare();
   const navigate = useNavigate();
   const [navigating, setNavigating] = useState(false);
@@ -219,9 +155,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
   const selectedCount = selectedNonCurrent + 1;
   const canCompare = selectedNonCurrent >= 1 && selectedCount >= 2;
 
-  // Context used by the diff-chip resolver for every card.
   const currentShipping = shippingFeeOf(currentProduct);
-  const currentDiscount = discountPctOf(currentProduct, currentPrice);
   const currentFast = !!currentProduct.fastSelling;
 
   const handleToggle = useCallback(
@@ -233,7 +167,6 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       }
       const wasSelected = has(slug);
       toggle(slug);
-      // v8.0 — subtle success feedback only when adding, never on remove.
       if (!wasSelected) {
         toast.success("Added to comparison", {
           description: name,
@@ -244,7 +177,6 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     },
     [currentSlug, has, isFull, max, toggle],
   );
-
 
   const handleCompare = () => {
     if (!canCompare || navigating) return;
@@ -292,7 +224,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       <div
         role="tablist"
         aria-label="Sort similar products"
-        className="relative mb-5 -mx-4 sm:mx-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="relative mb-6 -mx-4 sm:mx-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         <div className="flex items-center gap-1 px-4 sm:px-0 min-w-max border-b border-white/[0.06]">
           {SORT_TABS.map((t) => {
@@ -321,25 +253,21 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         </div>
       </div>
 
-      {/* Carousel — ~2.2 cards on mobile */}
+      {/* Carousel — larger cards, ~1.6 visible on mobile, first card aligned to page padding */}
       <div className="relative -mx-4 sm:mx-0">
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background/95 to-transparent z-10" />
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background/95 to-transparent z-10" />
-
         <ul
-          className="flex overflow-x-auto snap-x gap-4 sm:gap-5 pl-4 pr-6 sm:pl-1 sm:pr-2 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex overflow-x-auto snap-x gap-3.5 sm:gap-4 pl-4 pr-4 sm:pl-1 sm:pr-2 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{
             overscrollBehaviorX: "contain",
             WebkitOverflowScrolling: "touch",
             scrollPaddingLeft: "1rem",
-            scrollSnapType: "x proximity",
+            scrollSnapType: "x mandatory",
           }}
         >
-          <li className="shrink-0 snap-start w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
+          <li className="shrink-0 snap-start w-[62%] min-[420px]:w-[52%] sm:w-[240px]">
             <RailItem
               product={currentProduct}
               pinned
-              pill={pillFor(currentProduct, currentShipping)}
               onPreview={() => setPreview(currentProduct)}
             />
           </li>
@@ -348,34 +276,32 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
             const disabled = !active && isFull;
             const price = priceOf(p) || 0;
             const shipping = shippingFeeOf(p);
-            const chip = diffChipFor(p, {
+            const recommendation = recommendationFor(p, {
               curPrice: currentPrice,
               curRating: currentProduct.rating || 0,
               curReviews: currentProduct.reviews || 0,
               curShipping: currentShipping,
-              curFastSelling: currentFast,
-              curDiscount: currentDiscount,
+              curFast: currentFast,
               price,
               shipping,
-              format,
             });
             return (
-              <li key={p.slug} className="shrink-0 snap-start w-[44%] min-[420px]:w-[40%] sm:w-[220px]">
+              <li key={p.slug} className="shrink-0 snap-start w-[62%] min-[420px]:w-[52%] sm:w-[240px]">
                 <RailItem
                   product={p}
                   active={active}
                   disabled={disabled}
-                  pill={chip}
+                  recommendation={recommendation}
+                  freeDelivery={shipping === 0}
                   onToggle={() => handleToggle(p.slug, p.name)}
                   onPreview={() => setPreview(p)}
                 />
               </li>
             );
           })}
-          <div aria-hidden className="shrink-0 w-1" />
+          <div aria-hidden className="shrink-0 w-2 sm:w-1" />
         </ul>
       </div>
-
 
       {sortedSuggestions.length >= VIEW_MORE_THRESHOLD && (
         <div className="mt-7 flex justify-center sm:justify-start px-1">
@@ -399,39 +325,31 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           : `${selectedCount} products selected for comparison.`}
       </div>
 
-      {/* Inline compare summary — resting state */}
-      <div className="mt-6 flex items-center justify-between gap-3 border-t border-white/[0.05] pt-5">
-        <div className="min-w-0">
-          <div className={`text-[13px] font-medium tabular-nums leading-tight ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
-            {selectedNonCurrent === 0
-              ? "Select at least 1 more"
-              : `${selectedCount} products selected`}
-          </div>
-          <div className="mt-1 text-[11.5px] text-white/45 leading-tight">
-            {canCompare ? "Compare features side by side" : "Tap Compare on any card"}
-          </div>
-        </div>
+      {/* Inline compare summary — resting state, single clean row */}
+      <div className="mt-7 flex items-center justify-between gap-3 border-t border-white/[0.05] pt-5">
+        <span className={`text-[13px] font-medium tabular-nums ${canCompare ? "text-foreground/90" : "text-white/50"}`}>
+          {selectedNonCurrent === 0 ? "Select at least 1 more" : `${selectedCount} Selected`}
+        </span>
         <button
           type="button"
           disabled={!canCompare || navigating}
           onClick={handleCompare}
           aria-label={canCompare ? "Compare selected products" : "Select one more product to compare"}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-full border h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-full h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
             canCompare && !navigating
-              ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
-              : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
+              ? "bg-accent text-accent-foreground hover:brightness-110"
+              : "bg-white/[0.04] text-white/35 cursor-not-allowed"
           }`}
         >
           {navigating ? (
             <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
           ) : (
-            <>{canCompare ? `Compare ${selectedCount} Products` : "Compare Products"} <ArrowRight className="size-3.5" aria-hidden /></>
-
+            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
           )}
         </button>
       </div>
 
-      {/* Sticky compare panel — shows only when the section is on-screen AND at least one alt is selected */}
+      {/* Sticky compare panel — only while the section is visible and at least one alt is selected */}
       <StickyCompareBar
         visible={sectionVisible && canCompare}
         count={selectedCount}
@@ -442,9 +360,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
       <QuickPreviewSheet
         product={preview}
         onClose={() => setPreview(null)}
-        pill={preview ? pillFor(preview, shippingFeeOf(preview)) : null}
         onToggle={(slug) => handleToggle(slug, preview?.name)}
-
         isSelected={preview ? preview.slug === currentSlug || has(preview.slug) : false}
         isPinned={preview ? preview.slug === currentSlug : false}
       />
@@ -495,12 +411,12 @@ function StickyCompareBar({
       }`}
     >
       <div
-        className={`pointer-events-auto mx-auto max-w-[420px] flex items-center justify-between gap-3 rounded-full border border-white/[0.08] bg-black/70 backdrop-blur-xl px-4 py-2 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.6)] transition-transform duration-150 ease-out ${
+        className={`pointer-events-auto mx-auto max-w-[420px] flex items-center justify-between gap-3 rounded-full bg-black/75 backdrop-blur-xl pl-5 pr-2 h-12 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.6)] transition-transform duration-150 ease-out ${
           visible ? "translate-y-0" : "translate-y-3"
         }`}
       >
-        <span className="text-[12.5px] font-medium text-foreground/85 tabular-nums">
-          {count} selected
+        <span className="text-[13px] font-medium text-foreground/90 tabular-nums">
+          {count} Selected
         </span>
         <button
           type="button"
@@ -511,7 +427,7 @@ function StickyCompareBar({
           {navigating ? (
             <><Loader2 className="size-3.5 animate-spin" aria-hidden /> Opening</>
           ) : (
-            <>Compare {count} Products <ArrowRight className="size-3.5" aria-hidden /></>
+            <>Compare Products <ArrowRight className="size-3.5" aria-hidden /></>
           )}
         </button>
       </div>
@@ -526,7 +442,8 @@ type RailItemProps = {
   active?: boolean;
   disabled?: boolean;
   pinned?: boolean;
-  pill?: Pill | null;
+  recommendation?: string | null;
+  freeDelivery?: boolean;
   onToggle?: () => void;
   onPreview?: () => void;
 };
@@ -536,165 +453,99 @@ function RailItemImpl({
   active,
   disabled,
   pinned,
-  pill,
+  recommendation,
+  freeDelivery,
   onToggle,
   onPreview,
 }: RailItemProps) {
   const { priceOf, format } = useRegion();
-  const { toggle: toggleWishlist } = useWishlistActions();
-  const saved = useWishlistSaved(product.slug);
-  
 
   const price = priceOf(product) || 0;
   const originalRaw =
     (product.comparePriceInr && product.comparePriceInr > price ? product.comparePriceInr : null) ??
     (product.comparePriceUsd && product.comparePriceUsd > price ? product.comparePriceUsd : null);
-  const discountPct = originalRaw && originalRaw > price
-    ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
-
-  const statusPill: { label: string; tone: "current" | "selected" } | null =
-    pinned ? { label: "Current Product", tone: "current" }
-    : active ? { label: "Selected", tone: "selected" }
-    : null;
+  const savings = originalRaw && originalRaw > price ? originalRaw - price : 0;
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Unified status pill slot — same visual system for every state */}
-      <div className="mb-2.5 h-[22px] px-0.5 flex items-center">
-        {statusPill && (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full border px-2 py-[3px] text-[10px] font-medium tracking-wide transition-colors duration-150 ease-out ${
-              statusPill.tone === "selected"
-                ? "border-accent/35 bg-accent/[0.08] text-accent"
-                : "border-white/[0.08] bg-white/[0.05] text-white/60"
-            }`}
-          >
-            {statusPill.tone === "selected" && (
-              <Check className="size-2.5" strokeWidth={3} aria-hidden />
-            )}
-            {statusPill.label}
-          </span>
-        )}
-      </div>
-
-      <div
-        className={`group/card relative flex flex-1 flex-col rounded-2xl border transition-[border-color,background-color,transform,box-shadow] duration-150 ease-out hover:-translate-y-[1px] hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.55)] ${
-          active && !pinned
-            ? "border-accent/25 bg-accent/[0.012]"
-            : "border-white/[0.06] bg-white/[0.015]"
-        }`}
+    <div className="flex h-full flex-col rounded-2xl bg-white/[0.02]">
+      {/* Image — ~58% of card, generous breathing room. Tap = Quick Preview. */}
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreview?.(); }}
+        aria-label={`Quick preview: ${product.name}`}
+        className="block w-full p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset rounded-t-2xl"
       >
-        {/* Image = primary interaction → open Quick Preview. Padded so product breathes. */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPreview?.(); }}
-          aria-label={`Quick preview: ${product.name}`}
-          className="relative block w-full p-2.5 pb-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset rounded-t-2xl"
+        <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.03]">
+          {product.image && (
+            <img
+              src={resolveImage(product.image)}
+              alt={product.name}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          )}
+        </div>
+      </button>
+
+      {/* Content — fixed rhythm, identical across cards */}
+      <div className="flex flex-1 flex-col px-4 pb-4">
+        <Link
+          to="/products/$slug"
+          params={{ slug: product.slug }}
+          className="line-clamp-2 min-h-[36px] text-[13px] leading-[1.4] text-foreground/90 hover:text-accent transition-colors duration-150"
         >
-          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white/[0.03]">
-            {product.image && (
-              <img
-                src={resolveImage(product.image)}
-                alt={product.name}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover transition-opacity duration-150"
-              />
-            )}
-            {discountPct >= 5 && !pinned && (
-              <span className="absolute left-2 top-2 rounded-full bg-black/60 backdrop-blur px-1.5 py-[2px] text-[10px] font-semibold text-white/90 tabular-nums">
-                −{discountPct}%
-              </span>
-            )}
-            {/* Quick Preview affordance — fades in on hover/focus, never on touch idle. */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 grid place-items-center opacity-0 transition-opacity duration-150 ease-out group-hover/card:opacity-100 group-focus-within/card:opacity-100"
-            >
-              <span className="inline-flex items-center gap-1 rounded-full bg-black/65 backdrop-blur px-2.5 py-1 text-[10.5px] font-medium text-white/95">
-                <Eye className="size-3" strokeWidth={2.25} /> Preview
-              </span>
-            </span>
-          </div>
-        </button>
+          {product.name}
+        </Link>
 
-
-        {/* Wishlist — top right of card */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.slug); }}
-          aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
-          aria-pressed={saved}
-          className={`absolute right-3.5 top-3.5 grid size-8 place-items-center rounded-full border backdrop-blur transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
-            saved
-              ? "border-accent/50 bg-black/50 text-accent"
-              : "border-white/15 bg-black/40 text-white/75 hover:text-foreground hover:border-white/30"
-          }`}
-        >
-          <Heart className={`size-3.5 ${saved ? "fill-accent" : ""}`} aria-hidden />
-        </button>
-
-        {/* Content */}
-        <div className="flex flex-1 flex-col px-3.5 pt-3 pb-3">
-
-          <Link
-            to="/products/$slug"
-            params={{ slug: product.slug }}
-            className="line-clamp-2 min-h-[34px] text-[12.5px] leading-[1.35] text-foreground/90 hover:text-accent transition-colors duration-150"
-          >
-            {product.name}
-          </Link>
-
-          {/* Rating */}
-          <div className="mt-2 flex h-[14px] items-center gap-1 text-[11px] text-white/55">
-            {product.rating > 0 ? (
-              <>
-                <Star className="size-3 fill-amber-400 text-amber-400" aria-hidden />
-                <span className="tabular-nums text-white/75">{product.rating.toFixed(1)}</span>
-                <span className="tabular-nums text-white/40">({product.reviews ?? 0})</span>
-              </>
-            ) : (
-              <span className="text-white/35">New</span>
-            )}
-          </div>
-
-          {/* Price hierarchy — bold current, smaller strike, green Save label */}
-          <div className="mt-3 min-h-[46px]">
-            <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-[16px] font-semibold text-foreground tabular-nums leading-none tracking-[-0.005em]">
-                {format(price)}
-              </span>
-              {originalRaw ? (
-                <span className="text-[11px] text-white/40 line-through tabular-nums">
-                  {format(originalRaw)}
-                </span>
-              ) : null}
-            </div>
-            {originalRaw && originalRaw > price && (
-              <div className="mt-1 text-[10.5px] font-medium text-emerald-300/85 tabular-nums leading-none">
-                Save {format(originalRaw - price)}
-              </div>
-            )}
-          </div>
-
-
-          {/* Single factual highlight (delivery / stock / status) */}
-          <div className="mt-2 mb-3 flex h-[20px] items-center">
-            {pill && (
-              <span className={`inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-medium tracking-wide ${pillClasses[pill.tone]}`}>
-                {pill.label}
-              </span>
-            )}
-          </div>
+        {/* Rating — single line, reserved height */}
+        <div className="mt-2 flex h-[14px] items-center gap-1 text-[11.5px]">
+          {product.rating > 0 ? (
+            <>
+              <Star className="size-3 fill-amber-400 text-amber-400" aria-hidden />
+              <span className="tabular-nums text-white/80">{product.rating.toFixed(1)}</span>
+            </>
+          ) : (
+            <span className="text-white/35">New</span>
+          )}
         </div>
 
-        {/* Compare selector — hairline separator only */}
-        <div className="mt-auto border-t border-white/[0.03]">
-          {pinned ? (
-            <div className="flex h-[44px] items-center justify-center px-3.5">
-              <span className="text-[12.5px] font-medium text-white/35 tracking-wide">
-                Current
+        {/* Price block — bold current, small strike, green Save */}
+        <div className="mt-3 min-h-[48px]">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-[16.5px] font-semibold text-foreground tabular-nums leading-none tracking-[-0.005em]">
+              {format(price)}
+            </span>
+            {originalRaw ? (
+              <span className="text-[11.5px] text-white/40 line-through tabular-nums">
+                {format(originalRaw)}
               </span>
+            ) : null}
+          </div>
+          {savings > 0 && (
+            <div className="mt-1.5 text-[11px] font-medium text-emerald-300/85 tabular-nums leading-none">
+              Save {format(savings)}
+            </div>
+          )}
+        </div>
+
+        {/* Free delivery — single quiet line */}
+        <div className="mt-2 h-[14px] text-[11px] font-medium tabular-nums">
+          {freeDelivery && !pinned ? (
+            <span className="text-emerald-300/80">Free delivery</span>
+          ) : null}
+        </div>
+
+        {/* Recommendation — one short line */}
+        <div className="mt-1.5 h-[14px] text-[11px] font-medium tracking-wide text-white/55">
+          {!pinned && recommendation ? recommendation : null}
+        </div>
+
+        {/* Selector — full-width rounded pill, 46px, "Compare" ↔ "✓ Added" */}
+        <div className="mt-4">
+          {pinned ? (
+            <div className="flex h-[46px] items-center justify-center rounded-full bg-white/[0.04] text-[12.5px] font-medium text-white/55 tracking-wide">
+              Current Product
             </div>
           ) : (
             <button
@@ -707,22 +558,22 @@ function RailItemImpl({
                   : `Select ${product.name} for comparison`
               }
               disabled={disabled}
-              className="flex h-[44px] w-full items-center justify-center gap-1.5 px-3.5 rounded-b-2xl transition-colors duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02]"
+              className={`group/sel flex h-[46px] w-full items-center justify-center gap-1.5 rounded-full transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+                active
+                  ? "bg-accent/[0.14] text-accent"
+                  : "bg-white/[0.05] text-foreground/85 hover:bg-white/[0.08]"
+              }`}
             >
               <span
                 aria-hidden
-                className={`transition-opacity duration-150 ease-out ${
-                  active ? "opacity-100 text-accent" : "opacity-0 w-0"
+                className={`overflow-hidden transition-[width,opacity] duration-150 ease-out ${
+                  active ? "w-4 opacity-100" : "w-0 opacity-0"
                 }`}
               >
-                <Check className="size-3.5" strokeWidth={2.75} />
+                <Check className="size-3.5" strokeWidth={3} />
               </span>
-              <span
-                className={`text-[13.5px] font-medium leading-none whitespace-nowrap transition-colors duration-150 ease-out ${
-                  active ? "text-accent" : "text-white/65"
-                }`}
-              >
-                {active ? "Selected" : "Compare"}
+              <span className="text-[13px] font-semibold leading-none whitespace-nowrap tracking-wide">
+                {active ? "Added" : "Compare"}
               </span>
             </button>
           )}
@@ -732,8 +583,6 @@ function RailItemImpl({
   );
 }
 
-
-
 const RailItem = memo(RailItemImpl);
 
 // ============================ Quick Preview ============================
@@ -741,19 +590,17 @@ const RailItem = memo(RailItemImpl);
 function QuickPreviewSheet({
   product,
   onClose,
-  pill,
   onToggle,
   isSelected,
   isPinned,
 }: {
   product: Product | null;
   onClose: () => void;
-  pill: Pill | null;
   onToggle: (slug: string) => void;
   isSelected: boolean;
   isPinned: boolean;
 }) {
-  const { priceOf, format } = useRegion();
+  const { priceOf, format, shippingFeeOf } = useRegion();
   const { add } = useCartActions();
   const buyNow = useBuyNow();
   const scrollRef = useRef<number>(0);
@@ -775,8 +622,8 @@ function QuickPreviewSheet({
   const originalRaw =
     (compareInr && compareInr > price ? compareInr : null) ??
     (compareUsd && compareUsd > price ? compareUsd : null);
-  const discountPct = originalRaw && originalRaw > price
-    ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
+  const savings = originalRaw && originalRaw > price ? originalRaw - price : 0;
+  const shipping = shippingFeeOf(product);
 
   const specEntries = Object.entries(product.specifications ?? {}).slice(0, 6);
   const inStock = product.inStock !== false && product.stockQuantity > 0;
@@ -806,7 +653,6 @@ function QuickPreviewSheet({
       >
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/15" aria-hidden />
         <div className="overflow-y-auto max-h-[calc(90dvh-1rem)] px-5 pb-6 pt-3">
-          {/* Large image */}
           <div className="mt-1 rounded-xl overflow-hidden bg-white/[0.03] border border-white/[0.05]">
             <img
               src={resolveImage(product.image)}
@@ -834,28 +680,24 @@ function QuickPreviewSheet({
               {format(price)}
             </span>
             {originalRaw && (
-              <>
-                <span className="text-[12.5px] text-white/40 line-through tabular-nums">
-                  {format(originalRaw)}
-                </span>
-                {discountPct >= 5 && (
-                  <span className="text-[11.5px] font-medium text-emerald-300/85 tabular-nums">
-                    Save {format(originalRaw - price)} · −{discountPct}%
-                  </span>
-                )}
-              </>
+              <span className="text-[12.5px] text-white/40 line-through tabular-nums">
+                {format(originalRaw)}
+              </span>
+            )}
+            {savings > 0 && (
+              <span className="text-[11.5px] font-medium text-emerald-300/85 tabular-nums">
+                Save {format(savings)}
+              </span>
             )}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {pill && (
-              <span className={`inline-flex items-center rounded-full border px-2 py-[2px] text-[10.5px] font-medium tracking-wide ${pillClasses[pill.tone]}`}>
-                {pill.label}
-              </span>
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11.5px] tabular-nums">
+            {shipping === 0 && (
+              <span className="text-emerald-300/85 font-medium">Free delivery</span>
             )}
-            <span className={`text-[11.5px] tabular-nums ${
+            <span className={
               !inStock ? "text-red-300/80" : lowStock ? "text-amber-300/85" : "text-emerald-300/85"
-            }`}>
+            }>
               {!inStock
                 ? "Currently unavailable"
                 : lowStock
@@ -875,32 +717,30 @@ function QuickPreviewSheet({
             </dl>
           )}
 
-          {/* Compare toggle */}
           {!isPinned && (
             <button
               type="button"
               onClick={() => onToggle(product.slug)}
               aria-pressed={isSelected}
-              className={`mt-5 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12px] transition-colors duration-150 ease-out min-h-[38px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+              className={`mt-5 flex h-[44px] w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-semibold tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
                 isSelected
-                  ? "border-accent/70 text-accent"
-                  : "border-white/15 text-white/80 hover:border-white/25 hover:text-foreground"
+                  ? "bg-accent/[0.14] text-accent"
+                  : "bg-white/[0.05] text-foreground/85 hover:bg-white/[0.08]"
               }`}
             >
               <span
                 aria-hidden
-                className={`grid place-items-center size-3.5 rounded-[3.5px] border transition-colors duration-150 ${
-                  isSelected ? "border-accent bg-accent text-accent-foreground" : "border-white/25"
+                className={`overflow-hidden transition-[width,opacity] duration-150 ease-out ${
+                  isSelected ? "w-4 opacity-100" : "w-0 opacity-0"
                 }`}
               >
-                {isSelected && <Check className="size-2.5" strokeWidth={3} />}
+                <Check className="size-3.5" strokeWidth={3} />
               </span>
-              {isSelected ? "Selected for comparison" : "Add to comparison"}
+              {isSelected ? "Added" : "Compare"}
             </button>
           )}
 
-          {/* Primary actions */}
-          <div className="mt-5 grid grid-cols-2 gap-2.5">
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
             <button
               type="button"
               disabled={!inStock || adding}

@@ -471,7 +471,13 @@ function RailItemImpl({
         )}
       </div>
 
-      <div className="relative flex flex-1 flex-col rounded-2xl border border-white/[0.06] bg-white/[0.015] transition-colors duration-150 ease-out">
+      <div
+        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-150 ease-out ${
+          isSelected && !pinned
+            ? "border-accent/70 shadow-[0_0_0_1px_rgba(245,158,11,0.12),0_8px_24px_-16px_rgba(245,158,11,0.35)]"
+            : "border-white/[0.06]"
+        }`}
+      >
         {/* Image = primary interaction → open Quick Preview */}
         <button
           type="button"

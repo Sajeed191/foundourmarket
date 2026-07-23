@@ -145,12 +145,11 @@ function applyProductPatch(
     ...prev,
     rating: patch.rating,
     reviews: patch.reviews,
-    updated_at: patch.updated_at ?? prev.updated_at,
   };
   const nextCache = cache.slice();
   nextCache[idx] = nextProduct;
   cache = nextCache;
-  recordCacheEvent("patch", "products", { detail: `${prev.slug}:rating` });
+  recordCacheEvent("revalidate", "products", { detail: `${prev.slug}:rating-patch` });
   subscribers.forEach((s) => s(nextCache));
   productSubscribers.forEach((s) => s(nextProduct));
 }

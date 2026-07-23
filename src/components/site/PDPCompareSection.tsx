@@ -450,31 +450,33 @@ function RailItemImpl({
   const discountPct = originalRaw && originalRaw > price
     ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
 
-  // Header caption: Current > confidence label. Never both, never orange for Current.
-  const caption: { label: string; tone: "muted" | "accent" } | null =
-    pinned ? { label: "Current", tone: "muted" }
+  // Header caption: Current (grey pill) > confidence label. Never both.
+  const caption: { label: string; tone: "current" | "accent" } | null =
+    pinned ? { label: "CURRENT", tone: "current" }
     : confidence ? { label: confidence.label, tone: "accent" }
     : null;
 
   return (
     <div className="flex h-full flex-col">
       {/* Reserved caption slot */}
-      <div className="mb-2.5 h-[14px] px-0.5 flex items-center">
+      <div className="mb-2.5 h-[20px] px-0.5 flex items-center">
         {caption && (
-          <span
-            className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${
-              caption.tone === "accent" ? "text-amber-300/90" : "text-white/40"
-            }`}
-          >
-            {caption.label}
-          </span>
+          caption.tone === "current" ? (
+            <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
+              {caption.label}
+            </span>
+          ) : (
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-300/90">
+              {caption.label}
+            </span>
+          )
         )}
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-150 ease-out ${
+        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-200 ease-out ${
           isSelected && !pinned
-            ? "border-accent/70 shadow-[0_0_0_1px_rgba(245,158,11,0.12),0_8px_24px_-16px_rgba(245,158,11,0.35)]"
+            ? "border-accent/50 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_4px_18px_-14px_rgba(245,158,11,0.25)]"
             : "border-white/[0.06]"
         }`}
       >

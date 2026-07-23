@@ -25,6 +25,7 @@ import { useCart } from "@/lib/cart";
 import { ProductCard } from "@/components/site/ProductCard";
 import { CarouselViewAllCard } from "@/components/site/CarouselViewAllCard";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { IconButton } from "@/components/ui/IconButton";
 import { type Product, discountPercent } from "@/lib/products";
 import { isProductVisible } from "@/lib/product-availability";
 import { PolicyCrossLinks } from "@/components/site/PolicyLinks";
@@ -1064,9 +1065,9 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
             <p className="font-display font-semibold text-base leading-tight">Help &amp; Support</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">{online ? "We're online now" : "Support hours: 9 AM–9 PM"}</p>
           </div>
-          <button onClick={() => setSupportOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
+          <IconButton onClick={() => setSupportOpen(false)} aria-label="Close" variant="ghost" size="sm">
             <X className="size-4" />
-          </button>
+          </IconButton>
         </div>
         <div className="mt-4 space-y-2">
           <SheetOption icon={MessageCircle} label="Live Chat" desc={online ? `Usually replies in under ${minutes} min` : "Leave us a message"} onClick={() => { setSupportOpen(false); openLiveChat(); }} />
@@ -1084,9 +1085,9 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
             <p className="font-display font-semibold text-base leading-tight">Contact us</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">Support hours: Mon–Sun · 9 AM–9 PM</p>
           </div>
-          <button onClick={() => setContactOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
+          <IconButton onClick={() => setContactOpen(false)} aria-label="Close" variant="ghost" size="sm">
             <X className="size-4" />
-          </button>
+          </IconButton>
         </div>
         {online && (
           <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-emerald-400 ring-1 ring-emerald-500/20">
@@ -1108,9 +1109,9 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
       <Sheet open={accountOpen} onClose={() => setAccountOpen(false)} lowMotion={lowMotion}>
         <div className="flex items-center justify-between">
           <p className="font-display font-semibold text-base">Profile &amp; Security</p>
-          <button onClick={() => setAccountOpen(false)} aria-label="Close" className="size-8 grid place-items-center rounded-full hover:bg-white/10 text-muted-foreground">
+          <IconButton onClick={() => setAccountOpen(false)} aria-label="Close" variant="ghost" size="sm">
             <X className="size-4" />
-          </button>
+          </IconButton>
         </div>
 
         <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">

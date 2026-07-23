@@ -449,7 +449,7 @@ function PriceRangeSlider({
         className="relative flex w-full touch-none select-none items-center"
       >
         <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-white/10">
-          <SliderPrimitive.Range className="absolute h-full rounded-full bg-gradient-to-r from-[#FFA52E] to-[#FF7A18]" />
+          <SliderPrimitive.Range className="absolute h-full rounded-full bg-gradient-primary" />
         </SliderPrimitive.Track>
         {[0, 1].map((i) => (
           <SliderPrimitive.Thumb

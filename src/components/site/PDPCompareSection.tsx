@@ -114,7 +114,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
     const availTier = (p: Product): number => {
       if (p.status === "out_of_stock" || p.inStock === false) return 3;
       if ((p as any).preorder || p.status === "preorder") return 2;
-      if ((p as any).limitedStock || (typeof p.stock === "number" && p.stock > 0 && p.stock <= 5)) return 1;
+      if ((p as any).limitedStock || (typeof (p as any).stock === "number" && (p as any).stock > 0 && (p as any).stock <= 5)) return 1;
       return 0;
     };
 

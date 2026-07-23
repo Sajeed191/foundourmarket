@@ -589,18 +589,25 @@ function RailItemImpl({
   recommendedBadge,
   recommendedReason,
 }: RailItemProps) {
+  const { priceOf, format } = useRegion();
+  const { add } = useCartActions();
+  const inCart = useCartQty(product.slug) > 0;
   const isSelected = !!(pinned || active);
-  // Border priority: preview-selected (orange) wins over compare-selected accent.
-  const borderClass = previewSelected
-    ? "border-accent"
-    : isSelected && !pinned
-      ? "border-accent/60"
-      : "border-transparent";
+
+  const price = priceOf(product) || 0;
+  const originalRaw =
+    (product.comparePriceInr && product.comparePriceInr > price ? product.comparePriceInr : null) ??
+    (product.comparePriceUsd && product.comparePriceUsd > price ? product.comparePriceUsd : null);
+  const discountPct =
+    originalRaw && originalRaw > price
+      ? Math.round(((originalRaw - price) / originalRaw) * 100)
+      : 0;
+  const savings = originalRaw && originalRaw > price ? originalRaw - price : 0;
 
   // Caption slot priority: Current > Selected > Recommended.
   let caption: { label: string; tone: "muted" | "accent" | "recommend" } | null = null;
   if (pinned) caption = { label: "Current", tone: "muted" };
-  else if (previewSelected) caption = { label: "Selected", tone: "accent" };
+  else if (previewSelected || active) caption = { label: "Selected", tone: "accent" };
   else if (recommendedBadge) caption = { label: recommendedBadge, tone: "recommend" };
 
   const captionClass =
@@ -610,13 +617,31 @@ function RailItemImpl({
         ? "text-amber-300/90"
         : "text-white/40";
 
+  // Selection styling: subtle accent border + soft glow. No scale/bounce.
+  const cardBorder = pinned
+    ? "border-white/[0.07]"
+    : isSelected
+      ? "border-accent/70 shadow-[0_0_0_1px_rgba(255,153,51,0.18),0_8px_24px_-12px_rgba(255,153,51,0.35)]"
+      : "border-white/[0.06] hover:border-white/[0.14]";
+
+  const handleAddToCart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!product.inStock) return;
+      add(product.slug, 1);
+      toast.success("Added to cart", { description: product.name });
+    },
+    [add, product.slug, product.name, product.inStock],
+  );
+
   return (
     <div className="flex h-full flex-col">
       {/* Reserved caption slot so cards align regardless of tag */}
-      <div className="mb-1.5 h-[14px] px-0.5 flex items-center">
+      <div className="mb-2 h-[14px] px-0.5 flex items-center">
         {caption && (
           <span
-            className={`text-[10px] font-medium uppercase tracking-widest ${captionClass}`}
+            className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${captionClass}`}
           >
             {caption.label}
           </span>
@@ -624,71 +649,181 @@ function RailItemImpl({
       </div>
 
       <div
-        className={`relative rounded-2xl border transition-colors duration-150 ${borderClass}`}
+        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-colors duration-150 ease-out ${cardBorder}`}
       >
-        <ProductCard product={product} compact hideBadges={pinned} />
-
-        {/* Invisible tap-to-preview overlay covering only the image area */}
-        {onPreview && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onPreview();
-            }}
-            aria-label={`Quick preview: ${product.name}`}
-            className="absolute inset-x-0 top-0 aspect-square z-20 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
-          />
-        )}
-      </div>
-
-      {/* Reserved slot for a single metadata pill — never expands the card */}
-      <div className="mt-2 h-[18px] px-0.5 flex items-center">
-        {pill && (
-          <span
-            className={`inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-medium tracking-wide ${pillClasses[pill.tone]}`}
-          >
-            {pill.label}
-          </span>
-        )}
-      </div>
-
-      {/* "Why we recommend it" — factual, single line, recommended card only */}
-      {recommendedReason && (
-        <p className="mt-1 px-0.5 text-[11px] leading-snug text-white/60 line-clamp-2">
-          {recommendedReason}
-        </p>
-      )}
-
-
-      <div className="mt-1 px-0.5">
+        {/* Image slot — fixed square, tap for preview */}
         <button
           type="button"
-          onClick={onToggle}
-          aria-pressed={isSelected}
-          aria-label={
-            pinned
-              ? `${product.name} is the current product`
-              : isSelected
-                ? `Remove ${product.name} from comparison`
-                : `Add ${product.name} to comparison`
-          }
-          disabled={pinned || disabled}
-          className="inline-flex items-center gap-1.5 py-1.5 pr-2 pl-0.5 text-[11px] font-medium text-white/70 disabled:cursor-not-allowed disabled:opacity-60 min-h-[44px] sm:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded-md"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onPreview?.();
+          }}
+          aria-label={`Quick preview: ${product.name}`}
+          className="relative block w-full overflow-hidden rounded-t-2xl bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
         >
-          <span
-            aria-hidden
-            className={`grid place-items-center size-3.5 rounded-[3.5px] border transition-colors duration-150 ${
-              isSelected
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-white/25 bg-transparent"
+          <div className="aspect-square w-full">
+            {product.image && (
+              <img
+                src={resolveImage(product.image)}
+                alt={product.name}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover transition-opacity duration-150"
+              />
+            )}
+          </div>
+          {discountPct >= 5 && !pinned && (
+            <span className="absolute left-2 top-2 rounded-full bg-black/60 backdrop-blur px-1.5 py-[2px] text-[10px] font-semibold text-white/90 tabular-nums">
+              −{discountPct}%
+            </span>
+          )}
+        </button>
+
+        {/* Content slot — fixed rhythm */}
+        <div className="flex flex-1 flex-col px-3 pt-3 pb-3">
+          {/* Title — reserved 2 lines */}
+          <Link
+            to="/products/$slug"
+            params={{ slug: product.slug }}
+            className="line-clamp-2 min-h-[34px] text-[12.5px] leading-[1.35] text-foreground/90 hover:text-accent transition-colors duration-150"
+          >
+            {product.name}
+          </Link>
+
+          {/* Rating — reserved slot */}
+          <div className="mt-1.5 flex h-[14px] items-center gap-1 text-[11px] text-white/55">
+            {product.rating > 0 ? (
+              <>
+                <Star className="size-3 fill-amber-400 text-amber-400" aria-hidden />
+                <span className="tabular-nums text-white/75">{product.rating.toFixed(1)}</span>
+                <span className="tabular-nums text-white/40">({product.reviews ?? 0})</span>
+              </>
+            ) : (
+              <span className="text-white/35">New</span>
+            )}
+          </div>
+
+          {/* Price — original + save */}
+          <div className="mt-2 min-h-[36px]">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[14px] font-semibold text-foreground tabular-nums">
+                {format(price)}
+              </span>
+              {originalRaw ? (
+                <span className="text-[11px] text-white/40 line-through tabular-nums">
+                  {format(originalRaw)}
+                </span>
+              ) : null}
+            </div>
+            {savings > 0 ? (
+              <div className="mt-0.5 text-[10.5px] font-medium text-emerald-300/85 tabular-nums">
+                Save {format(savings)}
+              </div>
+            ) : (
+              <div className="mt-0.5 h-[13px]" aria-hidden />
+            )}
+          </div>
+
+          {/* Delivery / metadata pill — reserved slot */}
+          <div className="mt-1 flex h-[20px] items-center">
+            {pill && (
+              <span
+                className={`inline-flex items-center rounded-full border px-1.5 py-[1px] text-[10px] font-medium tracking-wide ${pillClasses[pill.tone]}`}
+              >
+                {pill.label}
+              </span>
+            )}
+          </div>
+
+          {/* Recommendation reason — reserved (2 lines) so cards align */}
+          <div className="mt-1.5 min-h-[26px]">
+            {recommendedReason && (
+              <p className="text-[10.5px] leading-snug text-white/60 line-clamp-2">
+                {recommendedReason}
+              </p>
+            )}
+          </div>
+
+          {/* Compact action row — icon buttons, never dominates */}
+          <div className="mt-3 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={!product.inStock}
+              aria-label={inCart ? `${product.name} added to cart` : `Add ${product.name} to cart`}
+              className={`inline-flex h-[38px] flex-1 items-center justify-center gap-1.5 rounded-full border text-[11.5px] font-medium tracking-wide transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed disabled:opacity-40 ${
+                inCart
+                  ? "border-emerald-400/40 bg-emerald-400/[0.06] text-emerald-200"
+                  : "border-white/12 bg-transparent text-white/80 hover:border-accent/50 hover:text-accent"
+              }`}
+            >
+              {inCart ? (
+                <>
+                  <Check className="size-3.5" aria-hidden />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="size-3.5" aria-hidden />
+                  Cart
+                </>
+              )}
+            </button>
+            {onPreview && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onPreview();
+                }}
+                aria-label={`Preview ${product.name}`}
+                className="inline-flex h-[38px] w-[38px] items-center justify-center rounded-full border border-white/12 text-white/70 transition-colors duration-150 ease-out hover:border-white/25 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+              >
+                <Eye className="size-3.5" aria-hidden />
+              </button>
+            )}
+          </div>
+
+          {/* Selectable state — clear, full-width */}
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-pressed={isSelected}
+            aria-label={
+              pinned
+                ? `${product.name} is the current product`
+                : isSelected
+                  ? `Remove ${product.name} from comparison`
+                  : `Select ${product.name} for comparison`
+            }
+            disabled={pinned || disabled}
+            className={`mt-1.5 inline-flex h-[38px] w-full items-center justify-center gap-1.5 rounded-full text-[11.5px] font-medium tracking-wide transition-colors duration-150 ease-out disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+              pinned
+                ? "text-white/35"
+                : isSelected
+                  ? "bg-accent/[0.09] text-accent"
+                  : "text-white/60 hover:text-white/90"
             }`}
           >
-            {isSelected && <Check className="size-2.5" strokeWidth={3} />}
-          </span>
-          Compare
-        </button>
+            <span
+              aria-hidden
+              className={`grid place-items-center size-4 rounded-[4px] border transition-colors duration-150 ${
+                isSelected
+                  ? "border-accent bg-accent text-accent-foreground"
+                  : "border-white/25 bg-transparent"
+              }`}
+            >
+              {isSelected && <Check className="size-2.5" strokeWidth={3} />}
+            </span>
+            {pinned
+              ? "Current product"
+              : isSelected
+                ? "Selected for Comparison"
+                : "Compare"}
+          </button>
+        </div>
       </div>
     </div>
   );

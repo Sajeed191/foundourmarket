@@ -453,14 +453,10 @@ function QuestionModalShell({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:w-[560px] sm:max-w-[560px] max-h-[92dvh] flex flex-col"
+        className="w-full sm:w-[560px] sm:max-w-[560px] max-h-[92dvh] flex flex-col rounded-t-[28px] sm:rounded-[24px]"
         style={{
           background: "#121316",
           border: "1px solid rgba(255,255,255,0.08)",
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
-          borderBottomLeftRadius: typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches ? 24 : 0,
-          borderBottomRightRadius: typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches ? 24 : 0,
           boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
           transform: mounted ? "translateY(0) scale(1)" : "translateY(24px) scale(0.98)",
           opacity: mounted ? 1 : 0,

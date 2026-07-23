@@ -5,51 +5,52 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Button — Premium UI System v4.0
+ * Button — Premium UI System v4.0 · UI Governance v1
  *
  * Three canonical variants:
  *   • primary   — orange gradient CTA (also the shadcn default alias)
  *   • secondary — dark surface with hairline border
  *   • ghost     — text only, subtle hover
  *
+ * All color, gradient, and shadow values resolve through design tokens
+ * (--gradient-primary, --shadow-cta, --card, --border, etc.). No raw hex
+ * lives in this file.
+ *
  * Legacy variant names (hero, ember, luxury, glass, outline, neon, link,
  * destructive) are preserved so no call site breaks. In development they
  * emit a one-time console warning so we can gradually migrate.
  */
+const PRIMARY_CLASSES =
+  "bg-gradient-primary text-primary-foreground shadow-[var(--shadow-cta)] hover:brightness-105 active:brightness-95";
+const SECONDARY_CLASSES =
+  "bg-[color-mix(in_oklab,var(--card)_92%,white_2%)] text-foreground border border-[color:var(--border)] hover:bg-[color-mix(in_oklab,var(--card)_82%,white_6%)]";
+const GHOST_CLASSES = "bg-transparent text-foreground hover:bg-white/[0.04]";
+const GLASS_CLASSES =
+  "glass-surface text-foreground hover:bg-white/[0.08]";
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium cursor-pointer select-none transition-all duration-[var(--duration-normal)] ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        primary:
-          "bg-gradient-to-b from-[#ff9a3d] to-[#f57a1f] text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.18)_inset,0_6px_18px_-8px_rgba(255,138,42,0.55)] hover:brightness-105 active:brightness-95",
-        secondary:
-          "bg-[color-mix(in_oklab,var(--card)_92%,white_2%)] text-foreground border border-[color:var(--border)] hover:bg-[color-mix(in_oklab,var(--card)_82%,white_6%)]",
-        ghost:
-          "bg-transparent text-foreground hover:bg-white/[0.04]",
+        primary: PRIMARY_CLASSES,
+        secondary: SECONDARY_CLASSES,
+        ghost: GHOST_CLASSES,
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        link:
-          "bg-transparent text-primary underline-offset-4 hover:underline p-0 h-auto",
-        // ── Deprecated aliases (kept for compatibility) ───────────────
-        default:
-          "bg-gradient-to-b from-[#ff9a3d] to-[#f57a1f] text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.18)_inset,0_6px_18px_-8px_rgba(255,138,42,0.55)] hover:brightness-105 active:brightness-95",
-        outline:
-          "bg-[color-mix(in_oklab,var(--card)_92%,white_2%)] text-foreground border border-[color:var(--border)] hover:bg-[color-mix(in_oklab,var(--card)_82%,white_6%)]",
-        hero:
-          "bg-gradient-to-b from-[#ff9a3d] to-[#f57a1f] text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.18)_inset,0_6px_18px_-8px_rgba(255,138,42,0.55)] hover:brightness-105 active:brightness-95",
-        ember:
-          "bg-gradient-to-b from-[#ff9a3d] to-[#f57a1f] text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.18)_inset,0_6px_18px_-8px_rgba(255,138,42,0.55)] hover:brightness-105 active:brightness-95",
-        luxury:
-          "bg-gradient-to-b from-[#ff9a3d] to-[#f57a1f] text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.18)_inset,0_6px_18px_-8px_rgba(255,138,42,0.55)] hover:brightness-105 active:brightness-95",
-        glass:
-          "bg-white/[0.04] text-foreground border border-white/[0.08] backdrop-blur-md hover:bg-white/[0.08]",
-        neon:
-          "bg-gradient-to-b from-[#ff9a3d] to-[#f57a1f] text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.18)_inset,0_6px_18px_-8px_rgba(255,138,42,0.55)] hover:brightness-105 active:brightness-95",
+        link: "bg-transparent text-primary underline-offset-4 hover:underline p-0 h-auto",
+        // ── Deprecated aliases (all resolve through tokens) ───────────
+        default: PRIMARY_CLASSES,
+        outline: SECONDARY_CLASSES,
+        hero: PRIMARY_CLASSES,
+        ember: PRIMARY_CLASSES,
+        luxury: PRIMARY_CLASSES,
+        glass: GLASS_CLASSES,
+        neon: PRIMARY_CLASSES,
       },
       size: {
         default: "h-11 px-5 text-sm rounded-[var(--radius-button)]",
-        sm: "h-9 px-3.5 text-xs rounded-[12px]",
+        sm: "h-9 px-3.5 text-xs rounded-[var(--radius-button)]",
         lg: "h-12 px-6 text-sm rounded-[var(--radius-button)]",
         icon: "h-11 w-11 rounded-[var(--radius-button)]",
       },

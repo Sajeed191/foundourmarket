@@ -1626,7 +1626,7 @@ function SmartActions({
           {buyingAgain ? <Loader2 className="size-3.5 animate-spin" /> : <Repeat className="size-3.5" />} Buy Again
         </button>
         <button onClick={onAsk} className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent">
-          <HelpCircle className="size-3.5" /> Ask Question
+          Ask a Question
         </button>
         <button onClick={onSave} className={cn("inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-all", isSaved ? "border-accent/40 bg-accent/10 text-accent" : "border-white/15 text-foreground hover:border-accent/40 hover:text-accent")}>
           <Bookmark className={cn("size-3.5", isSaved && "fill-accent")} /> {isSaved ? "Saved" : "Save"}

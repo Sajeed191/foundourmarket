@@ -7,7 +7,6 @@ import {
   Search,
   ShieldCheck,
   CheckCircle2,
-  Clock,
   ThumbsUp,
   MoreHorizontal,
   X,
@@ -16,7 +15,6 @@ import {
   Trash2,
   Reply,
   Pencil,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -676,49 +674,64 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
     });
   }
 
+  const askButton = (fullWidth = false) => (
+    <button
+      onClick={() => setAskOpen(true)}
+      className={`inline-flex items-center justify-center h-12 rounded-[15px] px-6 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgba(234,88,12,0.55)] bg-gradient-to-b from-[hsl(28_95%_58%)] to-[hsl(20_90%_48%)] hover:brightness-[1.06] active:scale-[0.98] transition-all duration-200 ${fullWidth ? "w-full sm:w-auto" : ""}`}
+    >
+      Ask a Question
+    </button>
+  );
+
   return (
     <section className="max-w-7xl mx-auto pt-2 pb-16">
       {/* Header */}
-      <div className="flex items-end justify-between gap-4 mb-6 flex-wrap">
-        <div>
-          <p className="text-sm text-muted-foreground">Have a question? Ask the community or our team.</p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-[22px] sm:text-[26px] font-display font-semibold tracking-tight text-foreground">
+            Questions &amp; Answers
+          </h2>
+          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+            Ask questions and get answers from shoppers and our team.
+          </p>
           {items.length > 0 && (
-            <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              {items.length} question{items.length === 1 ? "" : "s"} · {answered} answered
-            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                <span className="text-foreground font-semibold">{items.length}</span> {items.length === 1 ? "Question" : "Questions"}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-3 py-1 text-[11px] font-medium text-emerald-300">
+                <span className="font-semibold">{answered}</span> Answered
+              </span>
+            </div>
           )}
         </div>
-        <button
-          onClick={() => setAskOpen(true)}
-          className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition"
-        >
-          <Sparkles className="size-3.5" /> Ask Question
-        </button>
+        <div className="shrink-0">{askButton(true)}</div>
       </div>
 
       {/* Controls */}
       {items.length > 0 && (
-        <div className="flex gap-2 mb-5 flex-wrap">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search questions…"
-              className="w-full bg-card border border-border rounded-full pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-accent"
-            />
+        <div className="sticky top-16 z-20 -mx-4 sm:mx-0 mb-5 px-4 sm:px-0 py-2 bg-background/85 backdrop-blur-xl">
+          <div className="flex gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search questions and answers…"
+                className="w-full h-11 bg-card border border-border rounded-full pl-11 pr-4 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/10 transition"
+              />
+            </div>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as Sort)}
+              className="h-11 bg-card border border-border rounded-full px-4 pr-9 text-sm font-medium focus:outline-none focus:border-accent/60 transition cursor-pointer"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="answered">Most Answered</option>
+              <option value="unanswered">Unanswered</option>
+            </select>
           </div>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            className="bg-card border border-border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-accent"
-          >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="helpful">Most Helpful</option>
-            <option value="answered">Answered</option>
-            <option value="unanswered">Unanswered</option>
-          </select>
         </div>
       )}
 
@@ -726,50 +739,57 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
       {loading ? (
         <div className="py-12 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
       ) : items.length === 0 ? (
-        <div className="py-14 px-6 text-center rounded-[18px] border border-white/10 bg-card/40">
-          <div className="mx-auto mb-4 size-14 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
-            <MessageCircleQuestion className="size-6" />
+        <div className="py-16 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
+          <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
+            <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
           </div>
-          <p className="text-base font-display mb-1">No questions yet</p>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-5">Be the first to ask about this product.</p>
-          <button onClick={() => setAskOpen(true)} className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-5 py-2.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition">
-            <Sparkles className="size-3.5" /> Ask Question
-          </button>
+          <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">Be the first to ask about this product.</p>
+          <div className="max-w-xs mx-auto">{askButton(true)}</div>
         </div>
       ) : filtered.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No questions match your filters.</p>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {filtered.slice(0, visible).map((q) => {
             const asker = q.is_anonymous ? "Anonymous" : (q.author_name || "Customer");
             const roots = q.answers.filter((a) => !a.parent_answer_id);
             const repliesOf = (aid: string) => q.answers.filter((a) => a.parent_answer_id === aid);
             const officialExists = q.answers.some((a) => a.is_official);
+            const count = q.answers.length;
+
+            let statusPill: React.ReactNode;
+            if (officialExists) {
+              statusPill = (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/[0.12] text-sky-300 px-2.5 py-1 text-[11px] font-medium">
+                  <span className="size-1.5 rounded-full bg-sky-400" /> Official Reply
+                </span>
+              );
+            } else if (count > 0) {
+              statusPill = (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/[0.12] text-emerald-300 px-2.5 py-1 text-[11px] font-medium">
+                  <span className="size-1.5 rounded-full bg-emerald-400" /> Answered
+                </span>
+              );
+            } else {
+              statusPill = (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/[0.12] text-amber-300 px-2.5 py-1 text-[11px] font-medium">
+                  <span className="size-1.5 rounded-full bg-amber-400" /> Awaiting Answer
+                </span>
+              );
+            }
+
             return (
-              <li key={q.id} className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5">
+              <li
+                key={q.id}
+                className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5 animate-fade-in transition-colors hover:border-white/15"
+              >
+                {/* Header row: avatar + name + time + menu */}
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 size-9 rounded-full bg-accent/10 text-accent border border-accent/20 grid place-items-center">
-                    <MessageCircleQuestion className="size-4" />
-                  </div>
+                  <Avatar name={asker} url={q.is_anonymous ? null : q.author_avatar} size={42} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-base font-display font-semibold leading-snug">{q.question}</p>
-                      {officialExists ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
-                          <CheckCircle2 className="size-2.5" /> Official
-                        </span>
-                      ) : q.answers.length > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Answered</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider text-amber-400">
-                          <Clock className="size-2.5" /> Unanswered
-                        </span>
-                      )}
-                    </div>
-                    {q.details && <p className="mt-1 text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap">{q.details}</p>}
-                    <p className="mt-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                      Asked by {asker} · {relDate(q.created_at)} · {q.answers.length} answer{q.answers.length === 1 ? "" : "s"}
-                    </p>
+                    <p className="text-[15px] font-display font-semibold text-foreground truncate">{asker}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{relDate(q.created_at)}</p>
                   </div>
                   <QuestionMenu
                     isAdmin={isAdmin}
@@ -779,6 +799,22 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
                     onReply={isAdmin ? () => { setAnswerOpen(q.id); setDraft(""); } : undefined}
                     onHide={isAdmin ? () => hideQuestion(q) : undefined}
                   />
+                </div>
+
+                {/* Question body */}
+                <p className="mt-3 text-[17px] sm:text-[18px] font-semibold leading-snug text-foreground break-words line-clamp-3 hover:line-clamp-none transition-all">
+                  {q.question}
+                </p>
+                {q.details && (
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap">{q.details}</p>
+                )}
+
+                {/* Meta row */}
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  {statusPill}
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {count} {count === 1 ? "Answer" : "Answers"}
+                  </span>
                 </div>
 
                 {/* Answers */}
@@ -883,6 +919,7 @@ export function ProductQA({ productSlug }: { productSlug: string }) {
           </button>
         </div>
       )}
+
 
       <QuestionModal
         open={askOpen}

@@ -370,17 +370,12 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           : `${selectedCount} products selected for comparison.`}
       </div>
 
-      {/* Shopping guidance + CTA summary */}
-      <div className="mt-10 rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5 sm:p-6">
-        <p className="text-[12.5px] leading-relaxed text-white/60">
-          {canCompare
-            ? "Ready to compare your selected products."
-            : "Compare up to 4 similar products to see differences in price, ratings and specifications."}
-        </p>
-        <div className="mt-4 flex items-center justify-between gap-4">
-          <span className={`text-[12.5px] tabular-nums ${canCompare ? "text-foreground/85" : "text-white/40"}`}>
+      {/* Compare summary bar */}
+      <div className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.015] px-4 py-4 sm:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <span className={`text-[12.5px] tabular-nums ${canCompare ? "text-foreground/85" : "text-white/45"}`}>
             {selectedNonCurrent === 0
-              ? "Select at least 2 products"
+              ? "Select at least 1 more"
               : `${selectedCount} products selected`}
           </span>
           <button
@@ -388,7 +383,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
             disabled={!canCompare || navigating}
             onClick={handleCompare}
             aria-label={canCompare ? "Compare selected products" : "Select one more product to compare"}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[12.5px] font-semibold tracking-wide transition-colors duration-150 ease-out min-h-[40px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+            className={`inline-flex items-center justify-center gap-1.5 rounded-full border h-11 px-5 text-[13px] font-semibold tracking-wide transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
               canCompare && !navigating
                 ? "border-accent bg-accent text-accent-foreground hover:brightness-110"
                 : "border-white/10 bg-white/[0.02] text-white/30 cursor-not-allowed"
@@ -402,6 +397,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
           </button>
         </div>
       </div>
+
 
       <QuickPreviewSheet
         product={preview}
@@ -450,31 +446,33 @@ function RailItemImpl({
   const discountPct = originalRaw && originalRaw > price
     ? Math.round(((originalRaw - price) / originalRaw) * 100) : 0;
 
-  // Header caption: Current > confidence label. Never both, never orange for Current.
-  const caption: { label: string; tone: "muted" | "accent" } | null =
-    pinned ? { label: "Current", tone: "muted" }
+  // Header caption: Current (grey pill) > confidence label. Never both.
+  const caption: { label: string; tone: "current" | "accent" } | null =
+    pinned ? { label: "CURRENT", tone: "current" }
     : confidence ? { label: confidence.label, tone: "accent" }
     : null;
 
   return (
     <div className="flex h-full flex-col">
       {/* Reserved caption slot */}
-      <div className="mb-2.5 h-[14px] px-0.5 flex items-center">
+      <div className="mb-2.5 h-[20px] px-0.5 flex items-center">
         {caption && (
-          <span
-            className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${
-              caption.tone === "accent" ? "text-amber-300/90" : "text-white/40"
-            }`}
-          >
-            {caption.label}
-          </span>
+          caption.tone === "current" ? (
+            <span className="inline-flex items-center rounded-full bg-white/[0.06] border border-white/[0.08] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-white/55">
+              {caption.label}
+            </span>
+          ) : (
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-300/90">
+              {caption.label}
+            </span>
+          )
         )}
       </div>
 
       <div
-        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-150 ease-out ${
+        className={`relative flex flex-1 flex-col rounded-2xl border bg-white/[0.015] transition-[border-color,box-shadow] duration-200 ease-out ${
           isSelected && !pinned
-            ? "border-accent/70 shadow-[0_0_0_1px_rgba(245,158,11,0.12),0_8px_24px_-16px_rgba(245,158,11,0.35)]"
+            ? "border-accent/50 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_4px_18px_-14px_rgba(245,158,11,0.25)]"
             : "border-white/[0.06]"
         }`}
       >
@@ -570,61 +568,59 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Recommendation sentence — reserved (12–16px gap before selector) */}
-          <div className="mt-2.5 mb-3 min-h-[16px]">
-            {confidence && (
-              <p className="text-[10.5px] leading-snug text-white/60 line-clamp-1">
+          {/* Recommendation sentence — reserved 2 lines, never truncated mid-sentence */}
+          <div className="mt-2.5 mb-3 min-h-[28px]">
+            {confidence && !pinned && (
+              <p className="text-[10.5px] leading-[1.35] text-white/60 line-clamp-2">
                 {confidence.reason}
               </p>
             )}
           </div>
         </div>
 
-        {/* Compare selector — lightweight row, whole area clickable */}
-        <div className="mt-auto border-t border-white/[0.05]">
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-pressed={isSelected}
-            aria-label={
-              pinned
-                ? `${product.name} is the current product`
-                : isSelected
+        {/* Compare selector — soft divider, centered 48px row */}
+        <div className="mt-auto border-t border-white/[0.04]">
+          {pinned ? (
+            // Current product cannot be selected — reserve equal footprint
+            <div className="h-[48px]" aria-hidden />
+          ) : (
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-pressed={!!isSelected}
+              aria-label={
+                isSelected
                   ? `Remove ${product.name} from comparison`
                   : `Select ${product.name} for comparison`
-            }
-            disabled={pinned || disabled}
-            className="flex min-h-[44px] w-full items-center justify-center gap-2 px-3.5 py-2.5 rounded-b-2xl transition-colors duration-150 ease-out disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02] disabled:hover:bg-transparent"
-          >
-            <span
-              aria-hidden
-              className={`grid place-items-center size-[18px] rounded-full border transition-colors duration-150 ease-out ${
-                pinned
-                  ? "border-white/15 bg-transparent"
-                  : isSelected
+              }
+              disabled={disabled}
+              className="flex h-[48px] w-full items-center justify-center gap-2 px-3.5 rounded-b-2xl transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-inset hover:bg-white/[0.02]"
+            >
+              <span
+                aria-hidden
+                className={`grid place-items-center size-[18px] rounded-full border transition-colors duration-200 ease-out ${
+                  isSelected
                     ? "border-accent bg-accent text-accent-foreground"
-                    : "border-white/30 bg-transparent"
-              }`}
-            >
-              {isSelected && !pinned && <Check className="size-2.5" strokeWidth={3} />}
-            </span>
-            <span
-              className={`text-[14px] font-medium leading-none whitespace-nowrap transition-colors duration-150 ease-out ${
-                pinned
-                  ? "text-white/35"
-                  : isSelected
-                    ? "text-accent"
-                    : "text-white/60"
-              }`}
-            >
-              {pinned ? "Current" : isSelected ? "Selected" : "Compare"}
-            </span>
-          </button>
+                    : "border-white/25 bg-transparent"
+                }`}
+              >
+                {isSelected && <Check className="size-2.5" strokeWidth={3} />}
+              </span>
+              <span
+                className={`text-[14px] font-medium leading-none whitespace-nowrap transition-colors duration-200 ease-out ${
+                  isSelected ? "text-accent" : "text-white/65"
+                }`}
+              >
+                {isSelected ? "Selected" : "Compare"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
 
 
 const RailItem = memo(RailItemImpl);

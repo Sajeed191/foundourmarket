@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  X, Check, ShoppingBag, Scale, Plus, ChevronDown, ChevronUp,
-  Trophy, Star, DollarSign, Percent, Package, Truck, Award,
+  X, Check, ShoppingBag, Scale, Plus, Trophy, Star,
+  DollarSign, Package, Truck, Shield, Sparkles, GitCompareArrows,
 } from "lucide-react";
 import { StarRating } from "@/components/site/StarRating";
 import { useCompare } from "@/hooks/use-compare";
@@ -14,22 +14,18 @@ export const Route = createFileRoute("/compare")({
   head: () => ({
     meta: [
       { title: "Compare products — FoundOurMarket™" },
-      { name: "description", content: "Compare features, price and specifications side-by-side before purchasing." },
+      { name: "description", content: "Compare products side by side and confidently choose the best one." },
       { property: "og:title", content: "Compare products — FoundOurMarket™" },
-      { property: "og:description", content: "Compare features, price and specifications before purchasing." },
+      { property: "og:description", content: "Compare products side by side and confidently choose the best one." },
     ],
   }),
   component: ComparePage,
 });
 
-/* --------------------------------- Types --------------------------------- */
-
-type SpecRow = { key: string; label: string; values: (string | number | null)[] };
-type SpecGroup = { id: string; label: string; icon: React.ComponentType<{ className?: string }>; rows: SpecRow[] };
-
 /* -------------------------------- Helpers -------------------------------- */
 
 const priceOf = (p: Product) => (p.discount ? p.price * (1 - p.discount / 100) : p.price);
+const fmt = (n: number) => `$${n.toFixed(2)}`;
 
 function normalize(v: string | number | null | undefined): string {
   if (v === null || v === undefined || v === "") return "—";
@@ -37,124 +33,141 @@ function normalize(v: string | number | null | undefined): string {
   return v;
 }
 
-function hasDifference(row: SpecRow) {
-  const vals = row.values.map((v) => normalize(v).toLowerCase());
-  return new Set(vals).size > 1;
-}
+/* ---------------------------- Winner (single) --------------------------- */
 
-function bestIndex<T>(items: T[], score: (t: T) => number, prefer: "max" | "min" = "max"): number {
-  return items.reduce((best, cur, i) => {
-    const a = score(cur), b = score(items[best]);
-    return prefer === "max" ? (a > b ? i : best) : (a < b ? i : best);
-  }, 0);
-}
+type WinnerReason = "Best Value" | "Lowest Price" | "Highest Rated" | "Most Popular";
 
-/* ---------------------------- Winners / summary --------------------------- */
-
-type WinnerKey = "bestValue" | "lowestPrice" | "highestRated" | "bestDiscount";
-
-function computeWinners(items: Product[]) {
-  if (items.length < 2) return {} as Record<WinnerKey, number | undefined>;
-  const lowest = bestIndex(items, priceOf, "min");
-  const rated = bestIndex(items, (p) => p.rating ?? 0, "max");
-  const disc = bestIndex(items, (p) => p.discount ?? 0, "max");
-
-  // Best value = normalized (rating / price), require rating > 0
-  const valueScores = items.map((p) => (p.rating ?? 0) > 0 ? (p.rating ?? 0) / Math.max(priceOf(p), 0.01) : 0);
-  const value = valueScores.some((s) => s > 0)
-    ? valueScores.indexOf(Math.max(...valueScores))
-    : lowest;
-
-  return {
-    bestValue: value,
-    lowestPrice: lowest,
-    highestRated: (items[rated].rating ?? 0) > 0 ? rated : undefined,
-    bestDiscount: (items[disc].discount ?? 0) > 0 ? disc : undefined,
-  };
-}
-
-/* ------------------------------ Spec builder ------------------------------ */
-
-function buildGroups(items: Product[]): SpecGroup[] {
-  const pricing: SpecRow[] = [
-    { key: "price", label: "Current price", values: items.map((p) => `$${priceOf(p).toFixed(2)}`) },
-    { key: "orig", label: "Original price", values: items.map((p) => (p.discount ? `$${p.price.toFixed(2)}` : "—")) },
-    { key: "discount", label: "Discount", values: items.map((p) => (p.discount ? `${p.discount}% off` : "—")) },
-    { key: "save", label: "You save", values: items.map((p) => (p.discount ? `$${(p.price - priceOf(p)).toFixed(2)}` : "—")) },
-  ];
-
-  const ratings: SpecRow[] = [
-    { key: "rating", label: "Rating", values: items.map((p) => (p.rating > 0 ? `${p.rating.toFixed(1)} / 5` : "—")) },
-    { key: "reviews", label: "Reviews", values: items.map((p) => p.reviews ?? 0) },
-  ];
-
-  const shipping: SpecRow[] = [
-    { key: "stock", label: "Availability", values: items.map((p) => (p.inStock ? "Available" : "Out of stock")) },
-    { key: "shipInr", label: "Shipping (INR)", values: items.map((p) => (p.shippingFeeInr ? `₹${p.shippingFeeInr}` : "Free")) },
-    { key: "shipUsd", label: "Shipping (USD)", values: items.map((p) => (p.shippingFeeUsd ? `$${p.shippingFeeUsd}` : "Free")) },
-    { key: "warranty", label: "Warranty", values: items.map((p) => p.warranty || "—") },
-  ];
-
-  const general: SpecRow[] = [
-    { key: "brand", label: "Brand", values: items.map((p) => p.brand ?? "—") },
-    { key: "category", label: "Category", values: items.map((p) => p.category) },
-    { key: "sku", label: "SKU", values: items.map((p) => p.sku ?? "—") },
-  ];
-
-  const specKeys = new Set<string>();
-  const attrKeys = new Set<string>();
-  items.forEach((p) => {
-    Object.keys(p.specifications ?? {}).forEach((k) => specKeys.add(k));
-    Object.keys(p.attributes ?? {}).forEach((k) => attrKeys.add(k));
+function pickBestOverall(items: Product[]): { index: number; reason: WinnerReason } | null {
+  if (items.length < 2) return null;
+  // Score: value = rating / price (rating>0), then reviews, then discount
+  const scored = items.map((p, i) => {
+    const price = Math.max(priceOf(p), 0.01);
+    const r = p.rating ?? 0;
+    const rev = p.reviews ?? 0;
+    const value = r > 0 ? (r / price) * 100 + Math.min(rev, 500) * 0.02 : 0;
+    return { i, value, price, r, rev, discount: p.discount ?? 0 };
   });
-  const specRows: SpecRow[] = Array.from(specKeys).sort().map((k) => ({
-    key: `spec:${k}`, label: k, values: items.map((p) => (p.specifications ?? {})[k] ?? "—"),
-  }));
-  const attrRows: SpecRow[] = Array.from(attrKeys).sort().map((k) => ({
-    key: `attr:${k}`, label: k, values: items.map((p) => (p.attributes ?? {})[k] ?? "—"),
-  }));
-
-  const groups: SpecGroup[] = [
-    { id: "pricing", label: "Pricing", icon: DollarSign, rows: pricing },
-    { id: "ratings", label: "Ratings & Reviews", icon: Star, rows: ratings },
-    { id: "shipping", label: "Shipping & Warranty", icon: Truck, rows: shipping },
-    { id: "general", label: "General", icon: Package, rows: general },
-  ];
-  if (specRows.length) groups.push({ id: "specifications", label: "Specifications", icon: Award, rows: specRows });
-  if (attrRows.length) groups.push({ id: "attributes", label: "Attributes", icon: Award, rows: attrRows });
-  return groups;
+  const anyRated = scored.some((s) => s.r > 0);
+  if (anyRated) {
+    const best = scored.reduce((a, b) => (b.value > a.value ? b : a));
+    // Pick reason label based on what stands out
+    const cheapest = scored.reduce((a, b) => (b.price < a.price ? b : a));
+    const topRated = scored.reduce((a, b) => (b.r > a.r ? b : a));
+    const mostRev = scored.reduce((a, b) => (b.rev > a.rev ? b : a));
+    let reason: WinnerReason = "Best Value";
+    if (best.i === topRated.i && best.r >= 4.5) reason = "Highest Rated";
+    else if (best.i === mostRev.i && best.rev >= 100) reason = "Most Popular";
+    else if (best.i === cheapest.i) reason = "Lowest Price";
+    return { index: best.i, reason };
+  }
+  // No ratings — pick lowest price
+  const cheapest = scored.reduce((a, b) => (b.price < a.price ? b : a));
+  return { index: cheapest.i, reason: "Lowest Price" };
 }
 
-/* -------------------------- Description with Read More -------------------------- */
+/* ------------------------------ Highlights ------------------------------- */
 
-function ExpandableText({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-  if (!text || text === "—") return <span className="text-muted-foreground">—</span>;
-  const isLong = text.length > 220;
-  const shown = open || !isLong ? text : text.slice(0, 220).trimEnd() + "…";
+function highlightsFor(p: Product): string[] {
+  const explicit = (p as any).highlights;
+  if (Array.isArray(explicit) && explicit.length) return explicit.slice(0, 6).map(String);
+  const text = p.description || "";
+  if (!text) return [];
+  // Split by lines/bullets/periods, prefer bullet-like lines
+  const lines = text
+    .split(/\r?\n|•|●|\*/)
+    .map((s) => s.replace(/^[-–—\s]+/, "").trim())
+    .filter((s) => s.length >= 8 && s.length <= 120);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const l of lines) {
+    const k = l.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(l.replace(/[.;]+$/, ""));
+    if (out.length >= 5) break;
+  }
+  if (out.length >= 3) return out;
+  // Fallback: split by sentence
+  const sents = text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter((s) => s.length >= 12 && s.length <= 140);
+  return sents.slice(0, 5);
+}
+
+/* ----------------------------- Rows / difference ----------------------------- */
+
+type Row = { label: string; values: string[]; winner?: number; tone?: "green" | "amber" | "sky" };
+
+function differsOnly(rows: Row[]): Row[] {
+  return rows.filter((r) => new Set(r.values.map((v) => v.toLowerCase())).size > 1);
+}
+
+/* -------------------------------- Section -------------------------------- */
+
+function SectionCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="text-sm text-foreground/85 leading-relaxed">
-      <p className="whitespace-pre-wrap break-words">{shown}</p>
-      {isLong && (
-        <button
-          onClick={() => setOpen((v) => !v)}
-          className="mt-1.5 text-[11px] font-mono uppercase tracking-widest text-accent hover:brightness-125"
-        >
-          {open ? "Read less" : "Read more"}
-        </button>
-      )}
+    <section className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5">
+      <div className="flex items-center gap-2 mb-3.5">
+        <Icon className="size-4 text-muted-foreground" />
+        <h2 className="text-[13px] font-display font-semibold tracking-tight">{title}</h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function RowGrid({
+  items,
+  rows,
+  colWidth = "minmax(110px, 150px)",
+}: {
+  items: Product[];
+  rows: Row[];
+  colWidth?: string;
+}) {
+  if (!rows.length) return <p className="text-xs text-muted-foreground">No differences.</p>;
+  return (
+    <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+      <div className="space-y-1.5 min-w-[520px] sm:min-w-0">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="grid gap-3 items-center py-2 border-b border-border/40 last:border-b-0"
+            style={{ gridTemplateColumns: `${colWidth} repeat(${items.length}, minmax(0, 1fr))` }}
+          >
+            <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              {row.label}
+            </div>
+            {row.values.map((v, i) => {
+              const isWin = row.winner === i;
+              const toneCls =
+                row.tone === "amber"
+                  ? "text-amber-300"
+                  : row.tone === "sky"
+                    ? "text-sky-300"
+                    : "text-emerald-300";
+              return (
+                <div key={i} className="text-sm min-w-0 break-words">
+                  <span className={isWin ? `${toneCls} font-medium` : "text-foreground/85"}>
+                    {v}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 /* ---------------------------------- Page ---------------------------------- */
-
-const WINNER_META: Record<WinnerKey, { label: string; icon: React.ComponentType<{ className?: string }>; tone: string }> = {
-  bestValue:    { label: "Best Value",    icon: Trophy,  tone: "text-amber-300 border-amber-400/30 bg-amber-400/10" },
-  lowestPrice:  { label: "Lowest Price",  icon: DollarSign, tone: "text-emerald-300 border-emerald-400/30 bg-emerald-400/10" },
-  highestRated: { label: "Highest Rated", icon: Star,    tone: "text-sky-300 border-sky-400/30 bg-sky-400/10" },
-  bestDiscount: { label: "Best Discount", icon: Percent, tone: "text-fuchsia-300 border-fuchsia-400/30 bg-fuchsia-400/10" },
-};
 
 function ComparePage() {
   const { slugs, remove, clear, isFull, max } = useCompare();
@@ -185,14 +198,122 @@ function ComparePage() {
     [slugs, products, full],
   );
 
-  const winners = useMemo(() => computeWinners(items), [items]);
-  const groups = useMemo(() => (items.length ? buildGroups(items) : []), [items]);
+  const winner = useMemo(() => pickBestOverall(items), [items]);
+  const highlights = useMemo(() => items.map(highlightsFor), [items]);
 
-  const [open, setOpen] = useState<Record<string, boolean>>({
-    pricing: true, ratings: true, shipping: true, general: false, specifications: false, attributes: false,
-  });
+  /* -------------------- Derived comparison rows -------------------- */
 
-  // Sticky compact header — appears once product cards scroll past
+  const priceRows = useMemo<Row[]>(() => {
+    if (!items.length) return [];
+    const finals = items.map(priceOf);
+    const lowest = finals.indexOf(Math.min(...finals));
+    const discounts = items.map((p) => p.discount ?? 0);
+    const bestDisc = discounts.indexOf(Math.max(...discounts));
+    const saved = items.map((p) => (p.discount ? p.price - priceOf(p) : 0));
+    const bestSave = saved.indexOf(Math.max(...saved));
+    const value = items.map((p) => ((p.rating ?? 0) > 0 ? (p.rating ?? 0) / Math.max(priceOf(p), 0.01) : 0));
+    const bestVal = value.some((v) => v > 0) ? value.indexOf(Math.max(...value)) : -1;
+    return [
+      { label: "Current price", values: finals.map(fmt), winner: lowest, tone: "green" },
+      {
+        label: "Discount",
+        values: items.map((p) => (p.discount ? `${p.discount}% off` : "—")),
+        winner: discounts[bestDisc] > 0 ? bestDisc : undefined,
+        tone: "green",
+      },
+      {
+        label: "Money saved",
+        values: items.map((p) => (p.discount ? fmt(p.price - priceOf(p)) : "—")),
+        winner: saved[bestSave] > 0 ? bestSave : undefined,
+        tone: "green",
+      },
+      {
+        label: "Value score",
+        values: value.map((v) => (v > 0 ? v.toFixed(2) : "—")),
+        winner: bestVal >= 0 ? bestVal : undefined,
+        tone: "amber",
+      },
+    ];
+  }, [items]);
+
+  const ratingRows = useMemo<Row[]>(() => {
+    if (!items.length) return [];
+    const ratings = items.map((p) => p.rating ?? 0);
+    const reviews = items.map((p) => p.reviews ?? 0);
+    const bestR = ratings.indexOf(Math.max(...ratings));
+    const bestRev = reviews.indexOf(Math.max(...reviews));
+    return [
+      {
+        label: "Rating",
+        values: ratings.map((r) => (r > 0 ? `${r.toFixed(1)} / 5` : "—")),
+        winner: ratings[bestR] > 0 ? bestR : undefined,
+        tone: "amber",
+      },
+      {
+        label: "Reviews",
+        values: reviews.map((n) => String(n)),
+        winner: reviews[bestRev] > 0 ? bestRev : undefined,
+        tone: "amber",
+      },
+      {
+        label: "Popularity",
+        values: reviews.map((n) => (n >= 500 ? "Very high" : n >= 100 ? "High" : n >= 20 ? "Moderate" : n > 0 ? "New" : "—")),
+      },
+    ];
+  }, [items]);
+
+  const availabilityRows = useMemo<Row[]>(() => {
+    if (!items.length) return [];
+    return [
+      { label: "Stock", values: items.map((p) => (p.inStock ? "Available" : "Out of stock")) },
+      {
+        label: "Delivery",
+        values: items.map((p) => (p.shippingFeeUsd ? `${fmt(p.shippingFeeUsd)} shipping` : "Free shipping")),
+        winner: (() => {
+          const idx = items.findIndex((p) => !p.shippingFeeUsd);
+          return idx >= 0 ? idx : undefined;
+        })(),
+        tone: "green",
+      },
+      { label: "Warranty", values: items.map((p) => p.warranty || "—") },
+      { label: "Returns", values: items.map((p) => (p as any).returnPolicy || (p as any).returns || "Standard 7 days") },
+    ];
+  }, [items]);
+
+  const detailRows = useMemo<Row[]>(() => {
+    if (!items.length) return [];
+    const keys: { label: string; get: (p: Product) => string }[] = [
+      { label: "Brand", get: (p) => p.brand || "—" },
+      { label: "Category", get: (p) => p.category || "—" },
+    ];
+    const specKeys = ["Model", "Material", "Color", "Weight", "Dimensions", "Country", "Country of origin", "Origin"];
+    for (const k of specKeys) {
+      keys.push({
+        label: k,
+        get: (p) => {
+          const s = p.specifications || {};
+          const a = (p as any).attributes || {};
+          const hit =
+            s[k] ??
+            s[k.toLowerCase()] ??
+            a[k] ??
+            a[k.toLowerCase()] ??
+            "—";
+          return normalize(hit);
+        },
+      });
+    }
+    const rows = keys.map((k) => ({ label: k.label, values: items.map(k.get) }));
+    // Only keep rows where at least one product has a value
+    return rows.filter((r) => r.values.some((v) => v !== "—"));
+  }, [items]);
+
+  const differences = useMemo<Row[]>(() => {
+    return differsOnly([...priceRows, ...ratingRows, ...availabilityRows, ...detailRows]);
+  }, [priceRows, ratingRows, availabilityRows, detailRows]);
+
+  /* -------------------- Sticky header shadow -------------------- */
+
   const cardsRef = useRef<HTMLDivElement>(null);
   const [stuck, setStuck] = useState(false);
   useEffect(() => {
@@ -207,44 +328,44 @@ function ComparePage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [items.length]);
 
-  const addAll = () => items.forEach((p) => p.inStock && add(p.slug, 1));
+  const addBest = () => {
+    if (!winner) return;
+    const p = items[winner.index];
+    if (p?.inStock) add(p.slug, 1);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-14 pb-32 sm:pb-16">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-14 pb-32 sm:pb-24">
+      {/* Premium header */}
       <header className="mb-8 sm:mb-10">
         <p className="text-[10px] font-mono uppercase tracking-[0.32em] text-accent mb-3 inline-flex items-center gap-2">
-          <Scale className="size-3" /> Side by side
+          <GitCompareArrows className="size-3" /> Decision center
         </p>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight">Compare products</h1>
-            <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-              Compare features, price and specifications before purchasing.
-            </p>
-          </div>
-          {items.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
-                {items.length} of {max} selected
-              </span>
-              <button
-                onClick={clear}
-                className="text-[11px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border hover:border-accent/50 hover:text-accent transition"
+        <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight">Compare Products</h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-xl">
+          Compare products side by side and confidently choose the best one.
+        </p>
+        {items.length > 0 && (
+          <div className="mt-4 flex items-center gap-3">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+              {items.length} Product{items.length === 1 ? "" : "s"} Selected
+            </span>
+            <button
+              onClick={clear}
+              className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent transition"
+            >
+              Clear all
+            </button>
+            {!isFull && (
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-accent transition"
               >
-                Clear all
-              </button>
-              {!isFull && (
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-border hover:border-accent/50 hover:text-accent transition"
-                >
-                  <Plus className="size-3" /> Add
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
+                <Plus className="size-3" /> Add ({max - items.length} left)
+              </Link>
+            )}
+          </div>
+        )}
       </header>
 
       {items.length === 0 ? (
@@ -260,7 +381,7 @@ function ComparePage() {
             to="/"
             className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-bold hover:brightness-110 transition-all"
           >
-            Browse Products
+            Browse products
           </Link>
         </div>
       ) : (
@@ -269,10 +390,7 @@ function ComparePage() {
           {stuck && (
             <div className="fixed top-0 inset-x-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl animate-fade-in">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5">
-                <div
-                  className="grid gap-3"
-                  style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
-                >
+                <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
                   {items.map((p) => (
                     <Link
                       to="/products/$slug"
@@ -287,7 +405,7 @@ function ComparePage() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[11px] leading-tight truncate">{p.name}</p>
-                        <p className="text-[11px] font-mono text-accent">${priceOf(p).toFixed(2)}</p>
+                        <p className="text-[11px] font-mono text-accent">{fmt(priceOf(p))}</p>
                       </div>
                     </Link>
                   ))}
@@ -304,13 +422,15 @@ function ComparePage() {
             >
               {items.map((p, i) => {
                 const finalPrice = priceOf(p);
-                const cardWinners = (Object.entries(winners) as [WinnerKey, number | undefined][])
-                  .filter(([, idx]) => idx === i)
-                  .map(([k]) => k);
+                const isBest = winner?.index === i;
                 return (
                   <div
                     key={p.id ?? p.slug}
-                    className="snap-start shrink-0 sm:shrink w-[78vw] sm:w-auto bg-card border border-border rounded-[18px] p-4 relative flex flex-col"
+                    className={`snap-start shrink-0 sm:shrink w-[78vw] sm:w-auto bg-card rounded-[18px] p-4 relative flex flex-col transition-all ${
+                      isBest
+                        ? "border border-amber-400/50 shadow-[0_10px_40px_-15px_rgba(251,191,36,0.35)]"
+                        : "border border-border"
+                    }`}
                   >
                     <button
                       onClick={() => remove(p.slug)}
@@ -320,21 +440,11 @@ function ComparePage() {
                       <X className="size-3.5" />
                     </button>
 
-                    {/* Winner badges */}
-                    {cardWinners.length > 0 && (
-                      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-                        {cardWinners.map((w) => {
-                          const meta = WINNER_META[w];
-                          const Icon = meta.icon;
-                          return (
-                            <span
-                              key={w}
-                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${meta.tone}`}
-                            >
-                              <Icon className="size-2.5" /> {meta.label}
-                            </span>
-                          );
-                        })}
+                    {isBest && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/10 text-amber-300 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest">
+                          <Trophy className="size-2.5" /> Best Overall
+                        </span>
                       </div>
                     )}
 
@@ -350,10 +460,7 @@ function ComparePage() {
                           />
                         )}
                       </div>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground capitalize">
-                        {p.category}
-                      </p>
-                      <h3 className="text-sm font-medium leading-snug mt-1 line-clamp-2 min-h-[2.5rem]">{p.name}</h3>
+                      <h3 className="text-sm font-medium leading-snug line-clamp-2 min-h-[2.5rem]">{p.name}</h3>
                     </Link>
 
                     <div className="mt-2">
@@ -367,12 +474,10 @@ function ComparePage() {
                     </div>
 
                     <div className="mt-2.5 flex items-baseline gap-2 flex-wrap">
-                      <span className="font-mono text-base text-accent font-semibold">${finalPrice.toFixed(2)}</span>
+                      <span className="font-mono text-base text-accent font-semibold">{fmt(finalPrice)}</span>
                       {p.discount ? (
                         <>
-                          <span className="text-muted-foreground font-mono text-xs line-through">
-                            ${p.price.toFixed(2)}
-                          </span>
+                          <span className="text-muted-foreground font-mono text-xs line-through">{fmt(p.price)}</span>
                           <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">
                             {p.discount}% off
                           </span>
@@ -380,20 +485,7 @@ function ComparePage() {
                       ) : null}
                     </div>
 
-                    <div className="mt-2 flex items-center gap-2 text-[11px] font-mono">
-                      {p.inStock ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-400">
-                          <Check className="size-3" /> Available
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Out of stock</span>
-                      )}
-                      <span className="text-muted-foreground">
-                        · {p.shippingFeeUsd ? `Ships $${p.shippingFeeUsd}` : "Free shipping"}
-                      </span>
-                    </div>
-
-                    <div className="mt-auto pt-3 flex flex-col gap-2">
+                    <div className="mt-auto pt-3">
                       <button
                         onClick={() => p.inStock && add(p.slug, 1)}
                         disabled={!p.inStock}
@@ -401,13 +493,6 @@ function ComparePage() {
                       >
                         <ShoppingBag className="size-3.5" /> Add to cart
                       </button>
-                      <Link
-                        to="/products/$slug"
-                        params={{ slug: p.slug }}
-                        className="w-full inline-flex items-center justify-center px-3 py-2 rounded-full border border-border text-[11px] font-mono uppercase tracking-widest hover:border-accent/50 hover:text-accent transition"
-                      >
-                        View product
-                      </Link>
                     </div>
                   </div>
                 );
@@ -426,176 +511,123 @@ function ComparePage() {
             </div>
           </div>
 
-          {/* Decision summary */}
-          {items.length >= 2 && (
-            <section className="mb-8 rounded-[18px] border border-border bg-gradient-to-br from-card/80 to-card/40 p-5 sm:p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="size-4 text-amber-300" />
-                <h2 className="text-sm font-display font-semibold uppercase tracking-widest">Decision summary</h2>
-              </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {(Object.keys(WINNER_META) as WinnerKey[]).map((k) => {
-                  const idx = winners[k];
-                  const meta = WINNER_META[k];
-                  const Icon = meta.icon;
-                  const p = idx !== undefined ? items[idx] : undefined;
-                  return (
-                    <div key={k} className="rounded-2xl border border-border bg-background/40 p-3.5">
-                      <div className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${meta.tone}`}>
-                        <Icon className="size-2.5" /> {meta.label}
-                      </div>
-                      {p ? (
-                        <Link
-                          to="/products/$slug"
-                          params={{ slug: p.slug }}
-                          className="mt-2.5 flex items-center gap-2.5 group"
-                        >
-                          <div className="size-11 shrink-0 rounded-lg overflow-hidden bg-card border border-border">
-                            {p.image && (
-                              <img src={resolveImage(p.image)} alt="" className="w-full h-full object-cover" loading="lazy" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium leading-tight line-clamp-2 group-hover:text-accent transition">
-                              {p.name}
-                            </p>
-                            <p className="text-[11px] font-mono text-accent mt-0.5">${priceOf(p).toFixed(2)}</p>
-                          </div>
-                        </Link>
-                      ) : (
-                        <p className="mt-2.5 text-xs text-muted-foreground">Not enough data</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* Grouped spec accordions */}
+          {/* Comparison sections */}
           <div className="space-y-3">
-            {groups.map((g) => {
-              const isOpen = open[g.id] ?? false;
-              const Icon = g.icon;
-              const diffCount = g.rows.filter(hasDifference).length;
-              return (
-                <div key={g.id} className="bg-card/60 border border-border rounded-[18px] overflow-hidden">
-                  <button
-                    onClick={() => setOpen((s) => ({ ...s, [g.id]: !isOpen }))}
-                    className="w-full flex items-center justify-between px-4 sm:px-5 py-4 hover:bg-white/[0.02] transition"
-                  >
-                    <span className="inline-flex items-center gap-2.5">
-                      <Icon className="size-4 text-muted-foreground" />
-                      <span className="text-sm font-display font-semibold tracking-tight">{g.label}</span>
-                      {diffCount > 0 && (
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-amber-300/90">
-                          {diffCount} differ{diffCount === 1 ? "s" : ""}
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {isOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <div className="border-t border-border overflow-x-auto">
-                      {g.rows.map((row) => {
-                        const diff = items.length > 1 && hasDifference(row);
-                        return (
-                          <div
-                            key={row.key}
-                            className={`grid px-3 sm:px-5 py-3.5 gap-3 border-b border-border/60 last:border-b-0 transition-colors ${diff ? "bg-amber-500/[0.035]" : ""}`}
-                            style={{ gridTemplateColumns: `minmax(120px, 170px) repeat(${items.length}, minmax(0, 1fr))` }}
-                          >
-                            <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground self-start pt-0.5">
-                              {row.label}
-                            </div>
-                            {row.values.map((val, i) => {
-                              const str = normalize(val);
-                              return (
-                                <div key={i} className="text-sm text-foreground/90 min-w-0">
-                                  {str === "Available" ? (
-                                    <span className="inline-flex items-center gap-1 text-emerald-400 text-xs font-mono uppercase tracking-widest">
-                                      <Check className="size-3" /> Available
-                                    </span>
-                                  ) : str === "Out of stock" ? (
-                                    <span className="text-muted-foreground text-xs font-mono uppercase tracking-widest">— Not available</span>
-                                  ) : (
-                                    <span className="break-words whitespace-pre-wrap">{str}</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            <SectionCard icon={DollarSign} title="Price">
+              <RowGrid items={items} rows={priceRows} />
+            </SectionCard>
 
-            {/* Description group — bespoke expand */}
-            <div className="bg-card/60 border border-border rounded-[18px] overflow-hidden">
-              <button
-                onClick={() => setOpen((s) => ({ ...s, description: !(s.description ?? true) }))}
-                className="w-full flex items-center justify-between px-4 sm:px-5 py-4 hover:bg-white/[0.02] transition"
+            <SectionCard icon={Star} title="Ratings">
+              <RowGrid items={items} rows={ratingRows} />
+            </SectionCard>
+
+            <SectionCard icon={Package} title="Availability">
+              <RowGrid items={items} rows={availabilityRows} />
+            </SectionCard>
+
+            {detailRows.length > 0 && (
+              <SectionCard icon={Shield} title="Product details">
+                <RowGrid items={items} rows={detailRows} />
+              </SectionCard>
+            )}
+
+            {/* Highlights */}
+            <SectionCard icon={Sparkles} title="Product highlights">
+              <div
+                className="grid gap-4"
+                style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
               >
-                <span className="inline-flex items-center gap-2.5">
-                  <Award className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-display font-semibold tracking-tight">Description</span>
-                </span>
-                <span className="text-muted-foreground">
-                  {(open.description ?? true) ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                </span>
-              </button>
-              {(open.description ?? true) && (
-                <div className="border-t border-border p-4 sm:p-5">
-                  <div
-                    className="grid gap-4"
-                    style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
-                  >
-                    {items.map((p) => (
-                      <div key={`desc-${p.slug}`} className="min-w-0">
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2 line-clamp-1">
-                          {p.name}
-                        </p>
-                        <ExpandableText text={p.description || ""} />
-                      </div>
-                    ))}
+                {items.map((p, i) => (
+                  <div key={`h-${p.slug}`} className="min-w-0">
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2 line-clamp-1">
+                      {p.name}
+                    </p>
+                    {highlights[i].length ? (
+                      <ul className="space-y-1.5">
+                        {highlights[i].map((h, k) => (
+                          <li key={k} className="flex gap-2 text-xs text-foreground/85 leading-relaxed">
+                            <Check className="size-3 mt-0.5 shrink-0 text-emerald-400" />
+                            <span className="break-words">{h}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No highlights available.</p>
+                    )}
                   </div>
+                ))}
+              </div>
+            </SectionCard>
+
+            {/* What's different */}
+            {items.length >= 2 && (
+              <SectionCard icon={GitCompareArrows} title="What's different">
+                {differences.length ? (
+                  <RowGrid items={items} rows={differences} />
+                ) : (
+                  <p className="text-xs text-muted-foreground">These products share the same key attributes.</p>
+                )}
+              </SectionCard>
+            )}
+
+            {/* Recommendation */}
+            {winner && (
+              <section className="rounded-[18px] border border-amber-400/30 bg-gradient-to-br from-amber-400/[0.06] to-transparent p-5">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Trophy className="size-4 text-amber-300" />
+                  <h2 className="text-[13px] font-display font-semibold tracking-tight">Recommended choice</h2>
                 </div>
-              )}
-            </div>
+                <Link
+                  to="/products/$slug"
+                  params={{ slug: items[winner.index].slug }}
+                  className="flex items-center gap-3 group"
+                >
+                  <div className="size-14 shrink-0 rounded-xl overflow-hidden bg-card border border-border">
+                    {items[winner.index].image && (
+                      <img
+                        src={resolveImage(items[winner.index].image)}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium line-clamp-1 group-hover:text-accent transition">
+                      {items[winner.index].name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {winner.reason} — best balance of price, ratings, and value based on the products you're comparing.
+                    </p>
+                  </div>
+                  <span className="ml-auto font-mono text-sm text-accent">{fmt(priceOf(items[winner.index]))}</span>
+                </Link>
+              </section>
+            )}
           </div>
 
           {/* Sticky bottom action bar */}
           <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/90 backdrop-blur-xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2 justify-between">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground hidden sm:block">
-                {items.length} product{items.length === 1 ? "" : "s"} · Total ${items.reduce((s, p) => s + priceOf(p), 0).toFixed(2)}
-              </span>
+              <div className="hidden sm:flex flex-col">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {items.length} Product{items.length === 1 ? "" : "s"} · Compare Complete
+                </span>
+              </div>
               <div className="flex items-center gap-2 ml-auto">
-                <button
-                  onClick={clear}
+                <Link
+                  to="/"
                   className="px-3 py-2 rounded-full border border-border text-[11px] font-mono uppercase tracking-widest hover:border-accent/50 hover:text-accent transition"
                 >
-                  Clear
-                </button>
-                {!isFull && (
-                  <Link
-                    to="/"
-                    className="px-3 py-2 rounded-full border border-border text-[11px] font-mono uppercase tracking-widest hover:border-accent/50 hover:text-accent transition"
-                  >
-                    Compare another
-                  </Link>
-                )}
+                  Continue shopping
+                </Link>
                 <button
-                  onClick={addAll}
-                  disabled={!items.some((p) => p.inStock)}
+                  onClick={addBest}
+                  disabled={!winner || !items[winner.index]?.inStock}
                   className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest hover:brightness-110 transition disabled:opacity-40"
                 >
-                  <ShoppingBag className="size-3.5" /> Add all to cart
+                  <ShoppingBag className="size-3.5" />
+                  {winner ? "Add best choice" : "Add to cart"}
                 </button>
               </div>
             </div>

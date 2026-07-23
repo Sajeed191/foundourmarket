@@ -229,8 +229,219 @@ function QuestionModal({
   }
 
   return (
+    <QuestionModalShell open={open} mounted={mounted} onClose={onClose}>
+      <form onSubmit={submit} className="flex flex-col h-full">
+        {/* Header */}
+        <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute top-3 right-3 grid place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground transition"
+            style={{ width: 44, height: 44 }}
+          >
+            <X className="size-[18px]" />
+          </button>
+          <h3 className="text-[20px] font-display font-semibold text-foreground leading-tight pr-10">
+            {isEdit ? "Edit Question" : "Ask a Question"}
+          </h3>
+          <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed pr-10">
+            {isEdit
+              ? "Update your question before saving."
+              : "Ask the community or our team — we usually reply within a day."}
+          </p>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 pb-2 min-h-0">
+          <div className="relative">
+            <textarea
+              ref={taRef}
+              autoFocus
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              maxLength={500}
+              placeholder={isEdit ? "What would you like to update?" : "What would you like to know about this product?"}
+              aria-label={isEdit ? "Edit your question" : "Your question"}
+              aria-invalid={!!validationMsg}
+              className="w-full text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none transition-colors"
+              style={{
+                minHeight: 160,
+                background: "#0E1116",
+                border: `1px solid ${validationMsg ? "rgba(239,68,68,0.45)" : "rgba(255,255,255,0.08)"}`,
+                borderRadius: 18,
+                padding: 18,
+                paddingBottom: question.length > 0 ? 32 : 18,
+                fontSize: 16,
+                lineHeight: 1.7,
+              }}
+              onFocus={(e) => {
+                if (!validationMsg) e.currentTarget.style.borderColor = "var(--color-accent)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = validationMsg
+                  ? "rgba(239,68,68,0.45)"
+                  : "rgba(255,255,255,0.08)";
+              }}
+            />
+            {question.length > 0 && (
+              <div className="pointer-events-none absolute right-4 bottom-3 text-[11px] tabular-nums text-muted-foreground/70">
+                {question.length} / 500
+              </div>
+            )}
+          </div>
+
+          {validationMsg && (
+            <p className="mt-2 text-[12px]" style={{ color: "#f97a7a" }}>{validationMsg}</p>
+          )}
+
+          {/* Only editing the question is allowed in edit mode (v2 spec). */}
+          {!isEdit && (
+            <div className="mt-3">
+              <textarea
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                rows={2}
+                maxLength={500}
+                placeholder="Add any context that would help someone answer (optional)…"
+                aria-label="Optional details"
+                className="w-full text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none"
+                style={{
+                  background: "#0E1116",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 14,
+                  padding: 14,
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                }}
+              />
+            </div>
+          )}
+
+          {/* Anonymous — premium setting card w/ iOS switch */}
+          <div
+            className="mt-5 flex items-start gap-4 p-4"
+            style={{
+              background: "#0E1116",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 16,
+            }}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] text-foreground font-medium leading-tight">Hide my name</div>
+              <div className="mt-1 text-[12px] text-muted-foreground leading-snug">
+                Other customers won't see your profile. Admins can still identify the author.
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={anon}
+              aria-label="Hide my name from other customers"
+              onClick={() => setAnon((v) => !v)}
+              className="relative shrink-0 rounded-full transition-colors"
+              style={{
+                width: 46,
+                height: 28,
+                background: anon ? "var(--color-accent)" : "rgba(255,255,255,0.14)",
+              }}
+            >
+              <span
+                className="absolute top-[3px] rounded-full bg-white transition-all"
+                style={{
+                  width: 22,
+                  height: 22,
+                  left: anon ? 21 : 3,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
+                }}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Sticky footer */}
+        <div
+          className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3"
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center px-5 rounded-2xl text-[14px] font-medium text-foreground/85 hover:text-foreground transition-colors"
+            style={{ height: 46, minWidth: 96, border: "1px solid rgba(255,255,255,0.10)", background: "transparent" }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            aria-label={isEdit ? "Save changes" : "Submit question"}
+            className="inline-flex items-center justify-center gap-2 px-6 text-[14px] font-semibold transition disabled:cursor-not-allowed"
+            style={{
+              height: 46,
+              minWidth: 132,
+              borderRadius: 16,
+              color: canSubmit ? "#050608" : "rgba(255,255,255,0.55)",
+              background: canSubmit
+                ? "linear-gradient(135deg,#ff9f43 0%, #ff8a2a 55%, #f07d00 100%)"
+                : "rgba(255,255,255,0.08)",
+              boxShadow: canSubmit ? "0 10px 26px -16px rgba(255,138,42,0.55)" : "none",
+            }}
+          >
+            {busy && (
+              <span
+                className="inline-block rounded-full animate-spin"
+                style={{
+                  width: 14,
+                  height: 14,
+                  border: "2px solid rgba(5,6,8,0.35)",
+                  borderTopColor: "#050608",
+                }}
+              />
+            )}
+            {busy ? "Saving…" : isEdit ? "Save Changes" : user ? "Submit" : "Sign in to submit"}
+          </button>
+        </div>
+      </form>
+    </QuestionModalShell>
+  );
+}
+
+/* Shell: mobile bottom sheet on small screens, centered dialog on desktop.
+   Handles body-scroll lock, ESC-to-close, and safe-area rounding. */
+function QuestionModalShell({
+  open,
+  mounted,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  mounted: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  return (
     <div
-      className="fixed inset-0 z-[80] grid place-items-center p-4"
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[80] flex sm:items-center items-end justify-center sm:p-4"
       onClick={onClose}
       style={{
         background: "rgba(5,6,8,0.72)",
@@ -240,150 +451,24 @@ function QuestionModal({
         transition: "opacity 180ms ease-out",
       }}
     >
-      <form
-        onSubmit={submit}
+      <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:w-[560px] max-w-[560px] relative"
+        className="w-full sm:w-[560px] sm:max-w-[560px] max-h-[92dvh] flex flex-col"
         style={{
           background: "#121316",
           border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 24,
-          padding: 24,
-          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.8), 0 8px 24px -14px rgba(0,0,0,0.6)",
-          transform: mounted ? "scale(1)" : "scale(0.96)",
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          borderBottomLeftRadius: typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches ? 24 : 0,
+          borderBottomRightRadius: typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches ? 24 : 0,
+          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
+          transform: mounted ? "translateY(0) scale(1)" : "translateY(24px) scale(0.98)",
           opacity: mounted ? 1 : 0,
-          transition: "transform 180ms ease-out, opacity 180ms ease-out",
+          transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), opacity 180ms ease-out",
         }}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute top-3 right-3 p-1.5 rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground transition"
-        >
-          <X className="size-4" />
-        </button>
-
-        <div className="mb-5">
-          <h3 className="text-[20px] font-display font-semibold text-foreground leading-tight">
-            {isEdit ? "Edit Question" : "Ask a Question"}
-          </h3>
-          <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">
-            {isEdit
-              ? "Make your question clear and easy for other shoppers to understand."
-              : "Ask the community or our team — we usually reply within a day."}
-          </p>
-        </div>
-
-        <div className="relative">
-          <textarea
-            ref={taRef}
-            autoFocus
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            maxLength={500}
-            placeholder="What would you like to know about this product?"
-            className="w-full text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none transition-colors"
-            style={{
-              minHeight: 140,
-              background: "#181a1f",
-              border: `1px solid ${validationMsg ? "rgba(239,68,68,0.55)" : "rgba(255,255,255,0.08)"}`,
-              borderRadius: 18,
-              padding: 18,
-              paddingBottom: 34,
-              fontSize: 16,
-              lineHeight: 1.6,
-            }}
-            onFocus={(e) => {
-              if (!validationMsg) e.currentTarget.style.borderColor = "var(--color-accent)";
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = validationMsg
-                ? "rgba(239,68,68,0.55)"
-                : "rgba(255,255,255,0.08)";
-            }}
-          />
-          <div className="pointer-events-none absolute right-4 bottom-3 text-[11px] tabular-nums text-muted-foreground">
-            {question.length} / 500
-          </div>
-        </div>
-
-        {validationMsg && (
-          <p className="mt-2 text-[12px] text-destructive">{validationMsg}</p>
-        )}
-
-        {/* Only editing the question is allowed in edit mode (v2 spec). */}
-        {!isEdit && (
-          <div className="mt-3">
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              rows={2}
-              maxLength={500}
-              placeholder="Add any context that would help someone answer (optional)…"
-              className="w-full text-foreground placeholder:text-muted-foreground/70 resize-none focus:outline-none"
-              style={{
-                background: "#181a1f",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 14,
-                padding: 14,
-                fontSize: 14,
-                lineHeight: 1.55,
-              }}
-            />
-          </div>
-        )}
-
-        <label className="mt-4 flex items-start gap-3 select-none cursor-pointer group">
-          <span className="relative mt-0.5 inline-grid place-items-center size-[18px] rounded-[6px] border transition-colors"
-            style={{
-              borderColor: anon ? "var(--color-accent)" : "rgba(255,255,255,0.18)",
-              background: anon ? "var(--color-accent)" : "transparent",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={anon}
-              onChange={(e) => setAnon(e.target.checked)}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              aria-label="Hide my name from other customers"
-            />
-            {anon && (
-              <svg viewBox="0 0 20 20" className="size-[12px] text-accent-foreground" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="4 10 8.5 14.5 16 6" />
-              </svg>
-            )}
-          </span>
-          <span className="flex flex-col">
-            <span className="text-[14px] text-foreground font-medium leading-tight">Hide my name from other customers</span>
-            <span className="mt-0.5 text-[12px] text-muted-foreground leading-snug">Your profile won't be shown publicly. Only admins can see the author.</span>
-          </span>
-        </label>
-
-        <div className="mt-6 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex items-center justify-center px-5 rounded-full text-[14px] font-medium text-foreground/85 hover:text-foreground transition-colors"
-            style={{ height: 46, border: "1px solid rgba(255,255,255,0.10)", background: "transparent" }}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className="inline-flex items-center justify-center px-6 rounded-full text-[14px] font-bold transition disabled:opacity-45 disabled:cursor-not-allowed"
-            style={{
-              height: 46,
-              color: "#050608",
-              background: "linear-gradient(135deg,#ff9f43 0%, #ff8a2a 55%, #f07d00 100%)",
-              boxShadow: canSubmit ? "0 10px 26px -14px rgba(255,138,42,0.55)" : "none",
-            }}
-          >
-            {busy ? "Saving…" : isEdit ? "Save Changes" : user ? "Submit" : "Sign in to submit"}
-          </button>
-        </div>
-      </form>
+        {children}
+      </div>
     </div>
   );
 }

@@ -658,10 +658,10 @@ function RailItemImpl({
             )}
           </div>
 
-          {/* Price + savings */}
-          <div className="mt-3 min-h-[36px]">
+          {/* Price hierarchy — bold current, smaller strike, green Save label */}
+          <div className="mt-3 min-h-[46px]">
             <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-[14.5px] font-semibold text-foreground tabular-nums">
+              <span className="text-[16px] font-semibold text-foreground tabular-nums leading-none tracking-[-0.005em]">
                 {format(price)}
               </span>
               {originalRaw ? (
@@ -669,13 +669,14 @@ function RailItemImpl({
                   {format(originalRaw)}
                 </span>
               ) : null}
-              {discountPct >= 5 && (
-                <span className="text-[10.5px] font-medium text-emerald-300/85 tabular-nums">
-                  −{discountPct}%
-                </span>
-              )}
             </div>
+            {originalRaw && originalRaw > price && (
+              <div className="mt-1 text-[10.5px] font-medium text-emerald-300/85 tabular-nums leading-none">
+                Save {format(originalRaw - price)}
+              </div>
+            )}
           </div>
+
 
           {/* Single factual highlight (delivery / stock / status) */}
           <div className="mt-2 mb-3 flex h-[20px] items-center">

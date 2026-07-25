@@ -610,7 +610,7 @@ function QuestionModal({
         >
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             className="inline-flex items-center justify-center px-5 rounded-2xl text-[14px] font-medium text-foreground/85 hover:text-foreground transition-colors"
             style={{ height: 46, minWidth: 96, border: "1px solid rgba(255,255,255,0.10)", background: "transparent" }}
           >

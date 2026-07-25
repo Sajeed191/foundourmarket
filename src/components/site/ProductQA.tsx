@@ -779,7 +779,7 @@ function DiscardDraftConfirm({
   onContinue,
   onDiscard,
 }: {
-  continueRef: React.RefObject<HTMLButtonElement>;
+  continueRef: React.RefObject<HTMLButtonElement | null>;
   onContinue: () => void;
   onDiscard: () => void;
 }) {

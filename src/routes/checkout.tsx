@@ -19,6 +19,7 @@ import { computeCheckoutState, type CheckoutState, type DeliveryStatus } from "@
 import { CheckoutProgress } from "@/components/site/CheckoutProgress";
 import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 import { CheckoutSummaryDrawer } from "@/components/site/CheckoutSummaryDrawer";
+import { SavingsBadge } from "@/components/site/SavingsBadge";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { AddressForm } from "@/components/site/AddressForm";
 import { SavedAddressRail } from "@/components/site/SavedAddressRail";

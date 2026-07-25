@@ -1639,20 +1639,8 @@ export function ProductQA({
                     <p className="text-[14px] font-display font-semibold text-foreground truncate">{asker}</p>
                     <p className="text-[11px] text-muted-foreground/80 mt-0.5">{relDate(q.created_at)}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const url = `${window.location.origin}${window.location.pathname}#q-${q.id}`;
-                      try {
-                        if (navigator.share) await navigator.share({ url, title: q.question });
-                        else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
-                      } catch { /* user cancelled */ }
-                    }}
-                    aria-label="Share question"
-                    className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
-                  >
-                    <Link2 className="size-4" />
-                  </button>
+                  {/* v7.x — Share link removed per design; menu remains for owner/admin actions. */}
+
                   <QuestionMenu
                     isAdmin={isAdmin}
                     isMine={q.is_mine}

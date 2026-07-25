@@ -857,28 +857,19 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                     >
                       {m.type === "video" ? (
                         <>
-                          {m.poster ? (
-                            <img
-                              src={m.poster}
-                              alt=""
-                              loading="lazy"
-                              decoding="async"
-                              className="absolute inset-0 size-full object-cover"
-                            />
-                          ) : (
-                            <video
-                              src={m.url}
-                              muted
-                              playsInline
-                              preload="metadata"
-                              className="absolute inset-0 size-full object-cover"
-                            />
-                          )}
+                          <video
+                            src={m.url}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            className="absolute inset-0 size-full object-cover"
+                          />
                           <span className="absolute inset-0 grid place-items-center bg-black/30">
                             <Play className="size-4 text-white fill-white/90" />
                           </span>
                         </>
                       ) : (
+
                         <img
                           src={m.url}
                           alt=""

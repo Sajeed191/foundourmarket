@@ -853,6 +853,68 @@ function AnswerRow({
   );
 }
 
+/* v6.8 — CollapsibleAnswerBody: collapse long official/team answers past
+   ~6 lines with a smooth Read more / Show less toggle. Short answers stay
+   fully visible. Pure presentation — no data or realtime side effects. */
+const COLLAPSED_MAX_PX = 132; // ~6 lines at 14px / leading-relaxed
+function CollapsibleAnswerBody({ body }: { body: string }) {
+  const ref = React.useRef<HTMLParagraphElement | null>(null);
+  const [overflow, setOverflow] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [naturalHeight, setNaturalHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const h = el.scrollHeight;
+      setNaturalHeight(h);
+      setOverflow(h - 2 > COLLAPSED_MAX_PX);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [body]);
+
+  const maxHeight = !overflow
+    ? "none"
+    : expanded
+      ? `${naturalHeight ?? 9999}px`
+      : `${COLLAPSED_MAX_PX}px`;
+
+  return (
+    <div className="mt-1.5">
+      <div
+        className="relative overflow-hidden transition-[max-height] duration-400 ease-out"
+        style={{ maxHeight }}
+      >
+        <p
+          ref={ref}
+          className="text-sm leading-relaxed break-words whitespace-pre-wrap"
+        >
+          {body}
+        </p>
+        {overflow && !expanded && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background/90 to-transparent"
+          />
+        )}
+      </div>
+      {overflow && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1 text-[12px] font-mono uppercase tracking-[0.18em] text-accent hover:text-accent/80 transition"
+        >
+          {expanded ? "Show less" : "Read more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* v6.7 — AnswerReveal: smooth no-layout-pop expansion for realtime-arriving
    answers. Uses grid-template-rows 0fr→1fr + opacity/translateY so the
    surrounding page grows fluidly instead of snapping. Answers already

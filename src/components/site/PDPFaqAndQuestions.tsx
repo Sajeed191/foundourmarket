@@ -81,15 +81,11 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
     <section className="max-w-7xl mx-auto pt-2 pb-16">
       {/* Unified premium header — the ONLY heading in this section */}
       <div className="mb-5 sm:mb-6">
-        <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground/80">
-          <Sparkles className="size-3.5 text-accent" />
-          Help & Answers
-        </div>
-        <h2 className="mt-2 text-[24px] sm:text-[28px] font-display font-semibold tracking-tight text-foreground">
+        <h2 className="text-[24px] sm:text-[28px] font-display font-semibold tracking-tight text-foreground">
           FAQ &amp; Questions
         </h2>
         <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-          Find answers instantly or ask a new question.
+          Browse official answers or ask our team about this product.
         </p>
       </div>
 

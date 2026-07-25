@@ -131,6 +131,10 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteDialogRef = useRef<HTMLDivElement | null>(null);
+  const keepReviewRef = useRef<HTMLButtonElement | null>(null);
+
   const [deleteMode, setDeleteMode] = useState<"customer" | "admin_soft" | "admin_hard">("customer");
   const [deleteReason, setDeleteReason] = useState("");
   const [restoringId, setRestoringId] = useState<string | null>(null);

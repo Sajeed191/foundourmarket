@@ -1054,23 +1054,17 @@ export function ProductQA({
       ) : (
         <ul className="space-y-3">
           {filtered.slice(0, visible).map((q) => {
-            const asker = q.is_anonymous ? "Anonymous" : (q.author_name || "Customer");
+            const asker = q.author_name || "Customer";
             const roots = q.answers.filter((a) => !a.parent_answer_id);
             const repliesOf = (aid: string) => q.answers.filter((a) => a.parent_answer_id === aid);
-            const officialExists = q.answers.some((a) => a.is_official);
+            const officialExists = q.answers.some((a) => a.is_official || a.is_store_response);
             const count = q.answers.length;
 
             let statusPill: React.ReactNode;
-            if (officialExists) {
+            if (officialExists || count > 0) {
               statusPill = (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/[0.12] text-accent px-2.5 py-1 text-[11px] font-medium">
                   <span className="size-1.5 rounded-full bg-accent" /> Officially Answered
-                </span>
-              );
-            } else if (count > 0) {
-              statusPill = (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/[0.12] text-sky-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-sky-400" /> Community Answered
                 </span>
               );
             } else {

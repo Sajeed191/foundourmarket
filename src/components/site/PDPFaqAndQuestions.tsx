@@ -68,6 +68,21 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
   const hasQuestions = (questionCount ?? 0) > 0;
   const isEmpty = !faqLoading && !hasFaqs && questionCount === 0;
 
+  // v6.8 — Smooth empty-state → first-question transition. We keep the empty
+  // state mounted briefly while it fades out, then unmount it so the incoming
+  // question card can fade in without a layout jump.
+  const [emptyVisible, setEmptyVisible] = useState(isEmpty);
+  useEffect(() => {
+    if (isEmpty) {
+      setEmptyVisible(true);
+      return;
+    }
+    if (!emptyVisible) return;
+    const t = setTimeout(() => setEmptyVisible(false), 320);
+    return () => clearTimeout(t);
+  }, [isEmpty, emptyVisible]);
+  const emptyFading = emptyVisible && !isEmpty;
+
   const AskCta = ({ full = false }: { full?: boolean }) => (
     <button
       onClick={() => setAskOpen(true)}
@@ -198,33 +213,42 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </div>
       )}
 
-      {/* Community Q&A — always mounted (owns realtime + posting). */}
-      <IsolatedBoundary name="product-qa">
-        <Suspense
-          fallback={
-            <div className="py-10 grid place-items-center text-xs text-muted-foreground">
-              <MessageCircleQuestion className="size-5 opacity-60" />
-            </div>
-          }
+      {/* Community Q&A — always mounted (owns realtime + posting). When the
+          section transitions from empty → has questions, gently fade in so
+          the first card doesn't pop against the fading empty state. */}
+      <div className={emptyFading ? "animate-fade-in" : ""}>
+        <IsolatedBoundary name="product-qa">
+          <Suspense
+            fallback={
+              <div className="py-10 grid place-items-center text-xs text-muted-foreground">
+                <MessageCircleQuestion className="size-5 opacity-60" />
+              </div>
+            }
+          >
+            <ProductQA
+              productSlug={productSlug}
+              hideHeader
+              externalSearch={search}
+              hideAskCta
+              hideEmptyState
+              askOpen={askOpen}
+              onAskOpenChange={setAskOpen}
+              onCountChange={setQuestionCount}
+              faqs={faqs}
+            />
+          </Suspense>
+        </IsolatedBoundary>
+      </div>
+
+      {/* Unified premium empty state — smooth fade out when the first
+          question is submitted so the incoming card can fade in. */}
+      {emptyVisible && (
+        <div
+          className={`py-16 px-6 text-center rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent transition-all duration-300 ease-out ${
+            emptyFading ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"
+          }`}
+          aria-hidden={emptyFading}
         >
-          <ProductQA
-            productSlug={productSlug}
-            hideHeader
-            externalSearch={search}
-            hideAskCta
-            hideEmptyState
-            askOpen={askOpen}
-            onAskOpenChange={setAskOpen}
-            onCountChange={setQuestionCount}
-            faqs={faqs}
-          />
-
-        </Suspense>
-      </IsolatedBoundary>
-
-      {/* Unified premium empty state — no FAQs AND no community questions */}
-      {isEmpty && (
-        <div className="py-16 px-6 text-center rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
           <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
             <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
           </div>

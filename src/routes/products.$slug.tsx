@@ -247,6 +247,7 @@ function ProductPage() {
   // element's viewport visibility (only one purchase section shows at a time).
   const inlinePurchaseRef = useRef<HTMLDivElement>(null);
   const [titleExpanded, setTitleExpanded] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
 
   // ── AI Shopping Context (v1.3) ──────────────────────────────────────────
   const currentVariant = variants.find((v) => v.id === variantId) ?? null;

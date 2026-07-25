@@ -20,6 +20,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import type { ProductFaq } from "@/lib/product-faqs";
+
 
 /* ----------------------------- Types ----------------------------- */
 
@@ -146,6 +148,31 @@ function relDate(iso: string) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/** v6.3 — answer timestamps: "Answered today", "Answered N days ago", "Answered Jul 25". */
+function answeredOn(iso: string) {
+  const d = new Date(iso);
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const days = Math.floor((startOfToday.getTime() - d.getTime()) / (86400 * 1000));
+  if (days <= 0) return "Answered today";
+  if (days === 1) return "Answered yesterday";
+  if (days < 7) return `Answered ${days} days ago`;
+  return `Answered ${d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+}
+
+/** v6.3 — lightweight token-overlap scorer for FAQ/duplicate suggestions. */
+const STOP = new Set(["the","a","an","is","are","of","for","on","in","to","and","or","with","this","that","it","do","does","can","i","my","me","you","your","have","has","how","what","when","where","why","if","be","will"]);
+function scoreOverlap(query: string, text: string): number {
+  const q = query.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !STOP.has(w));
+  if (!q.length) return 0;
+  const t = text.toLowerCase();
+  let hits = 0;
+  for (const w of q) if (t.includes(w)) hits += 1;
+  return hits / q.length;
+}
+
+
+
 function friendlyError(err: unknown, fallback: string) {
   const msg = String((err as { message?: string })?.message ?? "");
   if (/row-level security|permission denied|policy/i.test(msg)) {
@@ -178,13 +205,22 @@ function QuestionModal({
   productSlug,
   initial,
   onSubmitted,
+  faqSuggestions = [],
+  questionSuggestions = [],
+  onFaqSuggestionSelect,
+  onQuestionSuggestionSelect,
 }: {
   open: boolean;
   onClose: () => void;
   productSlug: string;
   initial: QuestionDraft | null;
   onSubmitted: () => void;
+  faqSuggestions?: ProductFaq[];
+  questionSuggestions?: Question[];
+  onFaqSuggestionSelect?: (id: string) => void;
+  onQuestionSuggestionSelect?: (id: string) => void;
 }) {
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const isEdit = !!initial?.id;
@@ -352,6 +388,67 @@ function QuestionModal({
             <p className="mt-2 text-[12px]" style={{ color: "#f97a7a" }}>{validationMsg}</p>
           )}
 
+          {/* v6.3 — live FAQ auto-link + duplicate detection (customer-only, not shown while editing) */}
+          {!isEdit && trimmed.length >= 5 && (() => {
+            const faqs = faqSuggestions
+              .map((f) => ({ f, s: Math.max(scoreOverlap(trimmed, f.question), scoreOverlap(trimmed, f.answer) * 0.6) }))
+              .filter((x) => x.s >= 0.4)
+              .sort((a, b) => b.s - a.s)
+              .slice(0, 3);
+            const dupes = questionSuggestions
+              .map((q) => ({ q, s: scoreOverlap(trimmed, q.question) }))
+              .filter((x) => x.s >= 0.5 && x.q.answers.length > 0)
+              .sort((a, b) => b.s - a.s)
+              .slice(0, 3);
+            if (faqs.length === 0 && dupes.length === 0) return null;
+            return (
+              <div className="mt-3 space-y-3">
+                {faqs.length > 0 && (
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3.5">
+                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-emerald-300/90 mb-2">
+                      You may already have your answer
+                    </p>
+                    <ul className="space-y-1.5">
+                      {faqs.map(({ f }) => (
+                        <li key={f.id}>
+                          <button
+                            type="button"
+                            onClick={() => { onFaqSuggestionSelect?.(f.id); onClose(); }}
+                            className="w-full text-left flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-emerald-500/[0.08] transition text-[13px] leading-snug text-foreground"
+                          >
+                            <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-400" />
+                            <span className="min-w-0">{f.question}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {dupes.length > 0 && (
+                  <div className="rounded-2xl border border-accent/20 bg-accent/[0.05] p-3.5">
+                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-accent mb-2">
+                      Similar questions already answered
+                    </p>
+                    <ul className="space-y-1.5">
+                      {dupes.map(({ q }) => (
+                        <li key={q.id}>
+                          <button
+                            type="button"
+                            onClick={() => { onQuestionSuggestionSelect?.(q.id); onClose(); }}
+                            className="w-full text-left flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-accent/[0.08] transition text-[13px] leading-snug text-foreground"
+                          >
+                            <MessageCircleQuestion className="mt-0.5 size-3.5 shrink-0 text-accent" />
+                            <span className="min-w-0">{q.question}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Only editing the question is allowed in edit mode (v2 spec). */}
           {!isEdit && (
             <div className="mt-3">
@@ -376,6 +473,7 @@ function QuestionModal({
           )}
 
         </div>
+
 
         {/* Sticky footer */}
         <div
@@ -616,8 +714,9 @@ function AnswerRow({
             <span className="text-sm font-display truncate">{name}</span>
             {badge && <PlatformBadge kind={badge} />}
             <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground shrink-0">
-              {relDate(answer.created_at)}
+              {answeredOn(answer.created_at)}
             </span>
+
           </div>
           <p className="text-sm leading-relaxed mt-1.5 break-words whitespace-pre-wrap">{answer.body}</p>
 
@@ -689,6 +788,7 @@ export function ProductQA({
   askOpen: askOpenProp,
   onAskOpenChange,
   onCountChange,
+  faqs = [],
 }: {
   productSlug: string;
   /** Hide internal heading/subtitle/chips/top ask button (used when embedded in a unified section). */
@@ -704,7 +804,11 @@ export function ProductQA({
   onAskOpenChange?: (open: boolean) => void;
   /** Notifies parent of the current question count (post-filter-source, pre-search). */
   onCountChange?: (count: number) => void;
+  /** v6.3 — Product FAQs, used inside the Ask modal for auto-link suggestions. */
+  faqs?: ProductFaq[];
 }) {
+
+
 
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -1085,8 +1189,11 @@ export function ProductQA({
                 <div className="flex items-start gap-3">
                   <Avatar name={asker} url={q.author_avatar} size={42} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-display font-semibold text-foreground truncate">{asker}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{relDate(q.created_at)}</p>
+                    <p className="text-[13px] text-muted-foreground truncate">
+                      Asked by <span className="font-display font-semibold text-foreground">{asker}</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground/80 mt-0.5">Asked {relDate(q.created_at)}</p>
+
                   </div>
                   <button
                     type="button"
@@ -1123,10 +1230,14 @@ export function ProductQA({
                 {/* Meta row */}
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   {statusPill}
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {count} {count === 1 ? "Answer" : "Answers"}
-                  </span>
+                  {count > 0 && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <ShieldCheck className="size-3 text-accent/80" />
+                      Responded by FoundOurMarket™
+                    </span>
+                  )}
                 </div>
+
 
                 {/* Answers */}
                 {roots.length > 0 && (
@@ -1238,7 +1349,22 @@ export function ProductQA({
         productSlug={productSlug}
         initial={null}
         onSubmitted={load}
+        faqSuggestions={faqs}
+        questionSuggestions={items}
+        onFaqSuggestionSelect={(id) => {
+          if (typeof window === "undefined") return;
+          const el = document.getElementById(`faq-${id}`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          else window.location.hash = `#faq-${id}`;
+        }}
+        onQuestionSuggestionSelect={(id) => {
+          if (typeof window === "undefined") return;
+          const el = document.getElementById(`q-${id}`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          else window.location.hash = `#q-${id}`;
+        }}
       />
+
       <QuestionModal
         open={!!editingQuestion}
         onClose={() => setEditingQuestion(null)}

@@ -779,7 +779,7 @@ function QuestionModalShell({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[80] flex sm:items-center items-stretch justify-center sm:p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
       onClick={onClose}
       style={{
         background: "rgba(5,6,8,0.72)",
@@ -791,13 +791,12 @@ function QuestionModalShell({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full h-[100dvh] sm:h-auto sm:w-[560px] sm:max-w-[560px] sm:max-h-[92dvh] flex flex-col rounded-none sm:rounded-[24px]"
+        className="w-[92vw] max-w-[520px] max-h-[85dvh] flex flex-col rounded-[26px] overflow-hidden"
         style={{
           background: "#121316",
           border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
-          paddingTop: "env(safe-area-inset-top, 0px)",
-          transform: mounted ? "translateY(0) scale(1)" : "translateY(24px) scale(0.995)",
+          transform: mounted ? "translateY(0) scale(1)" : "translateY(8px) scale(0.95)",
           opacity: mounted ? 1 : 0,
           transition: "transform 250ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease-out",
         }}
@@ -807,6 +806,7 @@ function QuestionModalShell({
     </div>
   );
 }
+
 
 /* PDP v7.0 — confirmation shown when the customer attempts to dismiss the
    Ask a Question modal with unsaved text. Layers above the modal shell,

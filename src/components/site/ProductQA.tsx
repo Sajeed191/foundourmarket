@@ -650,6 +650,28 @@ function QuestionModal({
         </div>
       </form>
       )}
+      {showDiscardConfirm && (
+        <DiscardDraftConfirm
+          continueRef={continueBtnRef}
+          onContinue={() => {
+            setShowDiscardConfirm(false);
+            // Restore focus + cursor to the textarea where the user left it.
+            requestAnimationFrame(() => {
+              const el = taRef.current;
+              if (el) {
+                const pos = el.value.length;
+                el.focus();
+                try { el.setSelectionRange(pos, pos); } catch { /* noop */ }
+              }
+            });
+          }}
+          onDiscard={() => {
+            setShowDiscardConfirm(false);
+            setQuestion("");
+            onClose();
+          }}
+        />
+      )}
     </QuestionModalShell>
   );
 }

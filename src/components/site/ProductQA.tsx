@@ -745,6 +745,9 @@ function AnswerReveal({ animate, children }: { animate: boolean; children: React
       <div className="overflow-hidden min-h-0">{children}</div>
     </div>
   );
+}
+
+
 
 
 /* ---------------------------- Main component ---------------------- */

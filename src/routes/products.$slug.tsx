@@ -1273,9 +1273,13 @@ function ProductPage() {
               <>
                 <span className="fom-price-current text-[17px] font-display whitespace-nowrap leading-tight">{format(effectivePrice * Math.max(1, cartQty))}</span>
                 {savingsAmount > 0 ? (
-                  <span className="text-[10px] font-semibold text-emerald-300/90 leading-tight whitespace-nowrap">
-                    Save {format(savingsAmount * Math.max(1, cartQty))}{discountPct ? ` · ${discountPct}%` : ""}
-                  </span>
+                  <SavingsBadge
+                    variant="line"
+                    label="Save"
+                    amount={format(savingsAmount * Math.max(1, cartQty))}
+                    suffix={discountPct ? ` · ${discountPct}%` : undefined}
+                    className="text-[10px] leading-tight whitespace-nowrap"
+                  />
                 ) : originalPrice && originalPrice > effectivePrice ? (
                   <span className="text-[11px] font-mono line-through text-muted-foreground/70 leading-tight">{format(originalPrice * Math.max(1, cartQty))}</span>
                 ) : null}

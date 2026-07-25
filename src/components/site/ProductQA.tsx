@@ -1476,6 +1476,18 @@ export function ProductQA({
         productSlug={productSlug}
         initial={null}
         onSubmitted={load}
+        onOptimisticInsert={(q) => {
+          setItems((prev) => (prev.some((x) => x.id === q.id) ? prev : [q, ...prev]));
+        }}
+        onViewQuestion={(id) => {
+          if (typeof window === "undefined") return;
+          const scrollTo = () => {
+            const el = document.getElementById(`q-${id}`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            else window.location.hash = `#q-${id}`;
+          };
+          requestAnimationFrame(() => requestAnimationFrame(scrollTo));
+        }}
         faqSuggestions={faqs}
         questionSuggestions={items}
         onFaqSuggestionSelect={(id) => {
@@ -1491,6 +1503,7 @@ export function ProductQA({
           else window.location.hash = `#q-${id}`;
         }}
       />
+
 
       <QuestionModal
         open={!!editingQuestion}

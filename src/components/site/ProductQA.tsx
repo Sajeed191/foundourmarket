@@ -1251,30 +1251,33 @@ export function ProductQA({
                             </div>
                           </div>
                         ) : (
-                          <AnswerRow
-                            answer={a}
-                            isAdmin={isAdmin}
-                            voted={voted.has(a.id)}
-                            onVote={() => toggleVote(a.id)}
-                            onDelete={() => deleteAnswer(a.id)}
-                            onEdit={() => setEditing({ id: a.id, body: a.body })}
-                            onMarkOfficial={() => markOfficial(q.id, a.id, a.is_official)}
-                            onReply={isAdmin ? () => { setReplyOpen({ answerId: a.id, questionId: q.id }); setDraft(""); } : undefined}
-                            onHide={() => hideAnswer(a.id)}
-                          />
+                          <AnswerReveal animate={isNewAnswer(a.id)}>
+                            <AnswerRow
+                              answer={a}
+                              isAdmin={isAdmin}
+                              voted={voted.has(a.id)}
+                              onVote={() => toggleVote(a.id)}
+                              onDelete={() => deleteAnswer(a.id)}
+                              onEdit={() => setEditing({ id: a.id, body: a.body })}
+                              onMarkOfficial={() => markOfficial(q.id, a.id, a.is_official)}
+                              onReply={isAdmin ? () => { setReplyOpen({ answerId: a.id, questionId: q.id }); setDraft(""); } : undefined}
+                              onHide={() => hideAnswer(a.id)}
+                            />
+                          </AnswerReveal>
                         )}
                         {repliesOf(a.id).map((r) => (
-                          <AnswerRow
-                            key={r.id}
-                            answer={r}
-                            isAdmin={isAdmin}
-                            isReply
-                            voted={voted.has(r.id)}
-                            onVote={() => toggleVote(r.id)}
-                            onDelete={() => deleteAnswer(r.id)}
-                            onEdit={() => setEditing({ id: r.id, body: r.body })}
-                            onHide={() => hideAnswer(r.id)}
-                          />
+                          <AnswerReveal key={r.id} animate={isNewAnswer(r.id)}>
+                            <AnswerRow
+                              answer={r}
+                              isAdmin={isAdmin}
+                              isReply
+                              voted={voted.has(r.id)}
+                              onVote={() => toggleVote(r.id)}
+                              onDelete={() => deleteAnswer(r.id)}
+                              onEdit={() => setEditing({ id: r.id, body: r.body })}
+                              onHide={() => hideAnswer(r.id)}
+                            />
+                          </AnswerReveal>
                         ))}
                         {isAdmin && replyOpen?.answerId === a.id && (
                           <div className="ml-8 flex gap-2">

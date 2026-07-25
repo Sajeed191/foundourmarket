@@ -1349,7 +1349,22 @@ export function ProductQA({
         productSlug={productSlug}
         initial={null}
         onSubmitted={load}
+        faqSuggestions={faqs}
+        questionSuggestions={items}
+        onFaqSuggestionSelect={(id) => {
+          if (typeof window === "undefined") return;
+          const el = document.getElementById(`faq-${id}`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          else window.location.hash = `#faq-${id}`;
+        }}
+        onQuestionSuggestionSelect={(id) => {
+          if (typeof window === "undefined") return;
+          const el = document.getElementById(`q-${id}`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          else window.location.hash = `#q-${id}`;
+        }}
       />
+
       <QuestionModal
         open={!!editingQuestion}
         onClose={() => setEditingQuestion(null)}

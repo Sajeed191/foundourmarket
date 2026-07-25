@@ -648,8 +648,10 @@ function ProductPage() {
     let cancelled = false;
     void import("@/lib/floating-stack").then(({ setBuyBarLift }) => {
       if (cancelled) return;
-      // Dock CSS: --product-dock-height ≈ 5rem (80px) + 16px breathing room.
-      setBuyBarLift(showPurchaseDock ? 96 : 0);
+      // Dock CSS: --product-dock-height ≈ 5rem (80px) + 24px breathing room +
+      // 16px extra safety so the Live Chat orb never overlaps the sticky bar.
+      setBuyBarLift(showPurchaseDock ? 120 : 0);
+
     });
     return () => {
       cancelled = true;

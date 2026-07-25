@@ -722,13 +722,28 @@ export function ProductQA({
   productSlug,
   hideHeader = false,
   externalSearch,
+  hideAskCta = false,
+  hideEmptyState = false,
+  askOpen: askOpenProp,
+  onAskOpenChange,
+  onCountChange,
 }: {
   productSlug: string;
   /** Hide internal heading/subtitle/chips/top ask button (used when embedded in a unified section). */
   hideHeader?: boolean;
   /** When provided, ProductQA uses this search string and hides its own search input. */
   externalSearch?: string;
+  /** Suppress internal Ask CTA (parent renders the single CTA). */
+  hideAskCta?: boolean;
+  /** Suppress internal empty state (parent renders a unified empty state). */
+  hideEmptyState?: boolean;
+  /** Controlled Ask modal open state. */
+  askOpen?: boolean;
+  onAskOpenChange?: (open: boolean) => void;
+  /** Notifies parent of the current question count (post-filter-source, pre-search). */
+  onCountChange?: (count: number) => void;
 }) {
+
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState<Question[]>([]);
@@ -747,7 +762,13 @@ export function ProductQA({
   useEffect(() => {
     if (typeof window !== "undefined") window.sessionStorage.setItem(sortKey, sort);
   }, [sort, sortKey]);
-  const [askOpen, setAskOpen] = useState(false);
+  const [askOpenInternal, setAskOpenInternal] = useState(false);
+  const askOpen = askOpenProp ?? askOpenInternal;
+  const setAskOpen = useCallback((v: boolean) => {
+    if (askOpenProp === undefined) setAskOpenInternal(v);
+    onAskOpenChange?.(v);
+  }, [askOpenProp, onAskOpenChange]);
+
   const [editingQuestion, setEditingQuestion] = useState<QuestionDraft | null>(null);
   const [replyOpen, setReplyOpen] = useState<{ answerId: string; questionId: string } | null>(null);
   const [answerOpen, setAnswerOpen] = useState<string | null>(null);
@@ -780,6 +801,11 @@ export function ProductQA({
   }, [productSlug]);
 
   useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => {
+    if (!loading) onCountChange?.(items.length);
+  }, [items.length, loading, onCountChange]);
+
 
   // Deep-link: after items render, scroll the target question into view.
   const scrolledForHash = useRef<string | null>(null);
@@ -1011,7 +1037,7 @@ export function ProductQA({
               </div>
             )}
           </div>
-          <div className="shrink-0">{askButton(true)}</div>
+          {!hideAskCta && <div className="shrink-0">{askButton(true)}</div>}
         </div>
       )}
 
@@ -1050,16 +1076,19 @@ export function ProductQA({
       {loading ? (
         <div className="py-12 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
       ) : items.length === 0 ? (
-        <div className="py-16 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
-          <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
-            <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
+        hideEmptyState ? null : (
+          <div className="py-16 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
+            <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
+              <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
+            </div>
+            <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">Be the first to ask about this product.</p>
+            {!hideAskCta && <div className="max-w-xs mx-auto">{askButton(true)}</div>}
           </div>
-          <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">Be the first to ask about this product.</p>
-          <div className="max-w-xs mx-auto">{askButton(true)}</div>
-        </div>
+        )
       ) : filtered.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No questions match your filters.</p>
+
       ) : (
         <ul className="space-y-3">
           {filtered.slice(0, visible).map((q) => {

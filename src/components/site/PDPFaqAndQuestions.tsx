@@ -8,22 +8,25 @@ const ProductQA = lazy(() =>
 );
 
 /**
- * PDP v6.0 — Unified "FAQ & Questions" section.
+ * PDP v6.1.1 — Unified "FAQ & Questions" section (single source of heading,
+ * search, empty state and Ask CTA).
  *
- * Combines admin-managed Product FAQs (top) with the community Q&A component
- * (bottom) under a single premium heading and one shared search input.
- *
- * - Reuses existing admin FAQs via `fetchActiveFaqs` (no new table).
- * - Delegates all Q&A behavior to <ProductQA /> with `hideHeader` +
- *   `externalSearch` so nothing about permissions, moderation, realtime or
- *   posting changes.
- * - Empty states follow the v6.0 spec (FAQ-only, Q&A-only, or neither).
+ * - One heading + subtitle.
+ * - One search input (applied to both FAQs and community questions).
+ * - One Ask a Question CTA (below the search).
+ * - Single premium empty state when NO admin FAQs AND NO community questions.
+ * - FAQ accordion is hidden entirely when the product has no admin FAQs.
+ * - All Q&A behavior (permissions, moderation, realtime, posting) still lives
+ *   inside <ProductQA />; this wrapper only owns presentation and the Ask
+ *   modal open state (controlled from here so we can render a single CTA).
  */
 export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
   const [faqs, setFaqs] = useState<ProductFaq[]>([]);
   const [faqLoading, setFaqLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [askOpen, setAskOpen] = useState(false);
+  const [questionCount, setQuestionCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,7 +35,6 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
       .then((rows) => {
         if (cancelled) return;
         setFaqs(rows);
-        // Deep-link: open+scroll the FAQ if #faq-<id> is present, else open first.
         const hash = typeof window !== "undefined" ? window.location.hash : "";
         const target = hash.startsWith("#faq-") ? hash.slice(5) : null;
         const matched = target && rows.some((r) => r.id === target) ? target : null;
@@ -58,17 +60,26 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
     const q = search.trim().toLowerCase();
     if (!q) return faqs;
     return faqs.filter(
-      (f) =>
-        f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q),
+      (f) => f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q),
     );
   }, [faqs, search]);
 
-  const hasAnyFaqs = faqs.length > 0;
-  const showSearch = hasAnyFaqs; // ProductQA still renders its own search when empty
+  const hasFaqs = faqs.length > 0;
+  const hasQuestions = (questionCount ?? 0) > 0;
+  const isEmpty = !faqLoading && !hasFaqs && questionCount === 0;
+
+  const AskCta = ({ full = false }: { full?: boolean }) => (
+    <button
+      onClick={() => setAskOpen(true)}
+      className={`inline-flex items-center justify-center h-12 rounded-[15px] px-6 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgba(234,88,12,0.55)] bg-gradient-to-b from-[hsl(28_95%_58%)] to-[hsl(20_90%_48%)] hover:brightness-[1.06] active:scale-[0.98] transition-all duration-200 ${full ? "w-full sm:w-auto" : ""}`}
+    >
+      Ask a Question
+    </button>
+  );
 
   return (
     <section className="max-w-7xl mx-auto pt-2 pb-16">
-      {/* Unified premium header */}
+      {/* Unified premium header — the ONLY heading in this section */}
       <div className="mb-5 sm:mb-6">
         <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.22em] text-muted-foreground/80">
           <Sparkles className="size-3.5 text-accent" />
@@ -82,9 +93,9 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </p>
       </div>
 
-      {/* Unified search — searches both FAQs and Questions */}
-      {showSearch && (
-        <div className="mb-5">
+      {/* Unified search — hidden only when the whole section is empty */}
+      {!isEmpty && (
+        <div className="mb-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <input
@@ -97,8 +108,15 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </div>
       )}
 
-      {/* Product FAQ (admin) — accordion */}
-      {hasAnyFaqs && (
+      {/* Single primary CTA — beneath the search bar */}
+      {!isEmpty && (
+        <div className="mb-6 flex justify-end">
+          <AskCta />
+        </div>
+      )}
+
+      {/* Admin FAQs — accordion only rendered when data exists */}
+      {hasFaqs && (
         <div className="mb-8">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-[13px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
@@ -156,8 +174,8 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </div>
       )}
 
-      {/* Customer Questions */}
-      {hasAnyFaqs && (
+      {/* Community Questions section label (only when both FAQs and Qs exist) */}
+      {hasFaqs && hasQuestions && (
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-[13px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
             Customer Questions
@@ -165,6 +183,7 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </div>
       )}
 
+      {/* Community Q&A — always mounted (owns realtime + posting). */}
       <IsolatedBoundary name="product-qa">
         <Suspense
           fallback={
@@ -175,13 +194,41 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         >
           <ProductQA
             productSlug={productSlug}
-            hideHeader={hasAnyFaqs}
-            externalSearch={hasAnyFaqs ? search : undefined}
+            hideHeader
+            externalSearch={search}
+            hideAskCta
+            hideEmptyState
+            askOpen={askOpen}
+            onAskOpenChange={setAskOpen}
+            onCountChange={setQuestionCount}
           />
         </Suspense>
       </IsolatedBoundary>
 
-      {/* Screen-reader hint while FAQs are still loading */}
+      {/* Unified premium empty state — no FAQs AND no community questions */}
+      {isEmpty && (
+        <div className="py-16 px-6 text-center rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
+          <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
+            <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
+          </div>
+          <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">
+            Be the first to ask about this product.
+          </p>
+          <div className="max-w-xs mx-auto">
+            <AskCta full />
+          </div>
+        </div>
+      )}
+
+      {/* Repeat CTA at end of a long list (never duplicated within the viewport
+          because it sits after the paginated list). */}
+      {!isEmpty && hasQuestions && (questionCount ?? 0) >= 4 && (
+        <div className="mt-8 flex justify-center">
+          <AskCta />
+        </div>
+      )}
+
       {faqLoading && <span className="sr-only">Loading FAQs…</span>}
     </section>
   );

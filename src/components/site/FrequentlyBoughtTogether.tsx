@@ -7,6 +7,7 @@ import { useRegion } from "@/lib/region";
 import { LazyMount } from "./LazyMount";
 import { recordImpression, recordClick } from "@/lib/recommendations/performance";
 import type { Product } from "@/lib/products";
+import { SavingsBadge } from "./SavingsBadge";
 
 /**
  * Frequently Bought Together — the highest-converting PDP block.
@@ -153,9 +154,12 @@ export function FrequentlyBoughtTogether({
                 </span>
               </div>
               {savings > 0 && (
-                <p className="text-[11px] sm:text-xs text-emerald-500 font-medium mt-0.5">
-                  You save {format(savings)}
-                </p>
+                <SavingsBadge
+                  variant="line"
+                  label="You save"
+                  amount={format(savings)}
+                  className="mt-0.5"
+                />
               )}
             </div>
             <button

@@ -20,6 +20,7 @@ import { ProductReviews } from "@/components/site/ProductReviews";
 import { PDPFaqAndQuestions } from "@/components/site/PDPFaqAndQuestions";
 import { StarRating } from "@/components/site/StarRating";
 import { PDPCompareSection } from "@/components/site/PDPCompareSection";
+import { SavingsBadge } from "@/components/site/SavingsBadge";
 import { PDPStickyIntel } from "@/components/site/PDPStickyIntel";
 import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent, type ProductImage, type ProductVariant } from "@/lib/products";
@@ -990,9 +991,15 @@ function ProductPage() {
                     )}
                   </div>
                   {originalPrice && originalPrice > effectivePrice && (
-                    <p className="mt-2 text-[13px] text-emerald-300/90">
-                      You save <span className="font-semibold">{format(originalPrice - effectivePrice)}</span>
-                    </p>
+                    <div className="mt-2">
+                      <SavingsBadge
+                        variant="inline"
+                        label="You save"
+                        amount={format(originalPrice - effectivePrice)}
+                        size="md"
+                        suffix={discountPct ? ` · ${discountPct}% off` : undefined}
+                      />
+                    </div>
                   )}
                 </>
               ) : (
@@ -1266,9 +1273,13 @@ function ProductPage() {
               <>
                 <span className="fom-price-current text-[17px] font-display whitespace-nowrap leading-tight">{format(effectivePrice * Math.max(1, cartQty))}</span>
                 {savingsAmount > 0 ? (
-                  <span className="text-[10px] font-semibold text-emerald-300/90 leading-tight whitespace-nowrap">
-                    Save {format(savingsAmount * Math.max(1, cartQty))}{discountPct ? ` · ${discountPct}%` : ""}
-                  </span>
+                  <SavingsBadge
+                    variant="line"
+                    label="Save"
+                    amount={format(savingsAmount * Math.max(1, cartQty))}
+                    suffix={discountPct ? ` · ${discountPct}%` : undefined}
+                    className="text-[10px] leading-tight whitespace-nowrap"
+                  />
                 ) : originalPrice && originalPrice > effectivePrice ? (
                   <span className="text-[11px] font-mono line-through text-muted-foreground/70 leading-tight">{format(originalPrice * Math.max(1, cartQty))}</span>
                 ) : null}

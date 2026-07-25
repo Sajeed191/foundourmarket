@@ -19,6 +19,7 @@ import { computeCheckoutState, type CheckoutState, type DeliveryStatus } from "@
 import { CheckoutProgress } from "@/components/site/CheckoutProgress";
 import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 import { CheckoutSummaryDrawer } from "@/components/site/CheckoutSummaryDrawer";
+import { SavingsBadge } from "@/components/site/SavingsBadge";
 import { useStoreSettings } from "@/lib/use-store-settings";
 import { AddressForm } from "@/components/site/AddressForm";
 import { SavedAddressRail } from "@/components/site/SavedAddressRail";
@@ -1010,11 +1011,14 @@ function CheckoutPage() {
                 </ul>
 
                 {savingsINR > 0 && (
-                  <div className="mb-4 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2.5">
-                    <span className="text-xs font-medium text-emerald-400 inline-flex items-center gap-1.5"><BadgePercent className="size-3.5" /> You saved</span>
-                    <span className="font-mono text-sm text-emerald-400">{fmt(savingsINR)}</span>
-                  </div>
+                  <SavingsBadge
+                    variant="row"
+                    label="You saved"
+                    amount={fmt(savingsINR)}
+                    className="mb-4"
+                  />
                 )}
+
 
                 {detailed.length > 0 && (
                   <div className="mb-4">

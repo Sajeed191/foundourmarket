@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import {
   Minus, Plus, X, ArrowRight, ShoppingBag, Bookmark, RotateCcw, Heart,
   Truck, ShieldCheck, ChevronDown, Lock, MapPin, Clock,
-  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles, BadgePercent, Share2, Star, Check,
+  AlertTriangle, CheckCircle2, Loader2, Undo2, Share2, Star, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
@@ -17,6 +17,7 @@ import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { estimateShipping } from "@/lib/cart.functions";
 import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 import { VariantSwitcher } from "@/components/site/VariantSwitcher";
+import { SavingsBadge } from "@/components/site/SavingsBadge";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -199,7 +200,12 @@ function CartPage() {
             <h1 className="text-fluid-2xl font-display font-semibold">Your Cart</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {count} {count === 1 ? "item" : "items"} · Subtotal <span className="text-foreground font-mono">{format(subtotalUSD)}</span>
-              {savings > 0 && <span className="text-accent"> · You save {format(savings)}</span>}
+              {savings > 0 && (
+                <>
+                  {" · "}
+                  <SavingsBadge variant="line" label="You save" amount={format(savings)} />
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -314,7 +320,7 @@ function CartPage() {
                           )}
                           <span className="fom-price-current block text-sm font-mono">{format(pr.sale * item.qty)}</span>
                           {pr.save > 0 && (
-                            <span className="block text-[10px] font-semibold text-accent">You save {format(pr.save * item.qty)}</span>
+                            <SavingsBadge variant="line" label="You save" amount={format(pr.save * item.qty)} className="mt-0.5" />
                           )}
                         </div>
                       </div>
@@ -407,12 +413,9 @@ function CartPage() {
               {totalSavings > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 flex items-center justify-between rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-2.5"
+                  className="mb-4"
                 >
-                  <span className="text-xs font-medium inline-flex items-center gap-1.5 text-accent">
-                    <BadgePercent className="size-3.5" /> Total savings
-                  </span>
-                  <span className="font-mono text-sm font-semibold text-accent">{format(totalSavings)}</span>
+                  <SavingsBadge variant="row" label="Total savings" amount={format(totalSavings)} />
                 </motion.div>
               )}
 
@@ -686,11 +689,8 @@ function SavingsPill({ value, format }: { value: number; format: (n: number) => 
     prev.current = value;
   }, [value, controls]);
   return (
-    <motion.span
-      animate={controls}
-      className="inline-flex items-center rounded-full bg-emerald-500/12 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 will-change-transform"
-    >
-      Save {format(value)}
+    <motion.span animate={controls} className="inline-block will-change-transform">
+      <SavingsBadge variant="pill" label="Save" amount={format(value)} />
     </motion.span>
   );
 }

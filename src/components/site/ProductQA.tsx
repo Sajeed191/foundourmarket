@@ -1480,16 +1480,18 @@ export function ProductQA({
       return;
     }
     if (!confirm("Delete this question? This cannot be undone.")) return;
+    // Optimistic removal
+    const prevItems = items;
+    setItems((prev) => prev.filter((x) => x.id !== q.id));
     try {
       const { error } = await supabase
         .from("product_questions")
-        .update({ status: "deleted", deleted_at: new Date().toISOString() })
+        .delete()
         .eq("id", q.id);
       if (error) throw error;
       toast.success("Question deleted");
-      // Remove locally so scroll position stays put; realtime will confirm.
-      setItems((prev) => prev.filter((x) => x.id !== q.id));
     } catch (err) {
+      setItems(prevItems);
       toast.error(friendlyError(err, q.is_mine ? "You can only delete your own question." : "Couldn't delete question."));
     }
   }

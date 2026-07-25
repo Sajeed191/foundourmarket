@@ -305,7 +305,7 @@ function QuestionModal({
           <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed pr-10">
             {isEdit
               ? "Update your question before saving."
-              : "Ask the community or our team — we usually reply within a day."}
+              : "Our FoundOurMarket™ team typically responds within 24–48 hours."}
           </p>
         </div>
 

@@ -818,6 +818,12 @@ export function ProductQA({
       const bv = b.answers.reduce((s, x) => s + x.helpful_count, 0);
       return bv - av;
     });
+    else if (sort === "official") sorted.sort((a, b) => {
+      const ao = a.answers.some((x) => x.is_official || x.is_store_response) ? 1 : 0;
+      const bo = b.answers.some((x) => x.is_official || x.is_store_response) ? 1 : 0;
+      if (ao !== bo) return bo - ao;
+      return +new Date(b.created_at) - +new Date(a.created_at);
+    });
     return sorted;
   }, [items, search, sort]);
 

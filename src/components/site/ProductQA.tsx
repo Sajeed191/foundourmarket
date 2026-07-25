@@ -148,6 +148,31 @@ function relDate(iso: string) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/** v6.3 — answer timestamps: "Answered today", "Answered N days ago", "Answered Jul 25". */
+function answeredOn(iso: string) {
+  const d = new Date(iso);
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const days = Math.floor((startOfToday.getTime() - d.getTime()) / (86400 * 1000));
+  if (days <= 0) return "Answered today";
+  if (days === 1) return "Answered yesterday";
+  if (days < 7) return `Answered ${days} days ago`;
+  return `Answered ${d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+}
+
+/** v6.3 — lightweight token-overlap scorer for FAQ/duplicate suggestions. */
+const STOP = new Set(["the","a","an","is","are","of","for","on","in","to","and","or","with","this","that","it","do","does","can","i","my","me","you","your","have","has","how","what","when","where","why","if","be","will"]);
+function scoreOverlap(query: string, text: string): number {
+  const q = query.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !STOP.has(w));
+  if (!q.length) return 0;
+  const t = text.toLowerCase();
+  let hits = 0;
+  for (const w of q) if (t.includes(w)) hits += 1;
+  return hits / q.length;
+}
+
+
+
 function friendlyError(err: unknown, fallback: string) {
   const msg = String((err as { message?: string })?.message ?? "");
   if (/row-level security|permission denied|policy/i.test(msg)) {

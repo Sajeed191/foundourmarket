@@ -722,6 +722,34 @@ function AnswerRow({
   );
 }
 
+/* v6.7 — AnswerReveal: smooth no-layout-pop expansion for realtime-arriving
+   answers. Uses grid-template-rows 0fr→1fr + opacity/translateY so the
+   surrounding page grows fluidly instead of snapping. Answers already
+   present on initial load render fully expanded (no animation). */
+function AnswerReveal({ animate, children }: { animate: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(!animate);
+  useEffect(() => {
+    if (!animate) return;
+    const id = requestAnimationFrame(() => setOpen(true));
+    return () => cancelAnimationFrame(id);
+  }, [animate]);
+  return (
+    <div
+      className="grid transition-[grid-template-rows,opacity,transform] duration-500 ease-out"
+      style={{
+        gridTemplateRows: open ? "1fr" : "0fr",
+        opacity: open ? 1 : 0,
+        transform: open ? "translateY(0)" : "translateY(-6px)",
+      }}
+    >
+      <div className="overflow-hidden min-h-0">{children}</div>
+    </div>
+  );
+}
+
+
+
+
 /* ---------------------------- Main component ---------------------- */
 
 const PAGE_SIZE = 8;
@@ -790,6 +818,14 @@ export function ProductQA({
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
+  // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
+  // answers get the smooth reveal animation.
+  const seenAnswerIdsRef = useRef<Set<string> | null>(null);
+  const isNewAnswer = useCallback((id: string) => {
+    const seen = seenAnswerIdsRef.current;
+    return !!seen && !seen.has(id);
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.rpc("get_product_qa", { _slug: productSlug });
@@ -810,6 +846,21 @@ export function ProductQA({
     const votes = (row?.my_answer_votes ?? []) as string[];
     setItems(qs);
     setVoted(new Set(Array.isArray(votes) ? votes : []));
+    // Seed seen-answer set on first successful load; keep it stable afterwards
+    // so incoming realtime answers are correctly detected as "new".
+    if (seenAnswerIdsRef.current === null) {
+      const seen = new Set<string>();
+      for (const q of qs) for (const a of q.answers) seen.add(a.id);
+      seenAnswerIdsRef.current = seen;
+    } else {
+      // Fold any freshly-seen IDs in *after* one paint so they still animate
+      // this cycle, but subsequent re-renders treat them as seen.
+      requestAnimationFrame(() => {
+        const seen = seenAnswerIdsRef.current;
+        if (!seen) return;
+        for (const q of qs) for (const a of q.answers) seen.add(a.id);
+      });
+    }
     setLoading(false);
   }, [productSlug]);
 
@@ -1200,30 +1251,33 @@ export function ProductQA({
                             </div>
                           </div>
                         ) : (
-                          <AnswerRow
-                            answer={a}
-                            isAdmin={isAdmin}
-                            voted={voted.has(a.id)}
-                            onVote={() => toggleVote(a.id)}
-                            onDelete={() => deleteAnswer(a.id)}
-                            onEdit={() => setEditing({ id: a.id, body: a.body })}
-                            onMarkOfficial={() => markOfficial(q.id, a.id, a.is_official)}
-                            onReply={isAdmin ? () => { setReplyOpen({ answerId: a.id, questionId: q.id }); setDraft(""); } : undefined}
-                            onHide={() => hideAnswer(a.id)}
-                          />
+                          <AnswerReveal animate={isNewAnswer(a.id)}>
+                            <AnswerRow
+                              answer={a}
+                              isAdmin={isAdmin}
+                              voted={voted.has(a.id)}
+                              onVote={() => toggleVote(a.id)}
+                              onDelete={() => deleteAnswer(a.id)}
+                              onEdit={() => setEditing({ id: a.id, body: a.body })}
+                              onMarkOfficial={() => markOfficial(q.id, a.id, a.is_official)}
+                              onReply={isAdmin ? () => { setReplyOpen({ answerId: a.id, questionId: q.id }); setDraft(""); } : undefined}
+                              onHide={() => hideAnswer(a.id)}
+                            />
+                          </AnswerReveal>
                         )}
                         {repliesOf(a.id).map((r) => (
-                          <AnswerRow
-                            key={r.id}
-                            answer={r}
-                            isAdmin={isAdmin}
-                            isReply
-                            voted={voted.has(r.id)}
-                            onVote={() => toggleVote(r.id)}
-                            onDelete={() => deleteAnswer(r.id)}
-                            onEdit={() => setEditing({ id: r.id, body: r.body })}
-                            onHide={() => hideAnswer(r.id)}
-                          />
+                          <AnswerReveal key={r.id} animate={isNewAnswer(r.id)}>
+                            <AnswerRow
+                              answer={r}
+                              isAdmin={isAdmin}
+                              isReply
+                              voted={voted.has(r.id)}
+                              onVote={() => toggleVote(r.id)}
+                              onDelete={() => deleteAnswer(r.id)}
+                              onEdit={() => setEditing({ id: r.id, body: r.body })}
+                              onHide={() => hideAnswer(r.id)}
+                            />
+                          </AnswerReveal>
                         ))}
                         {isAdmin && replyOpen?.answerId === a.id && (
                           <div className="ml-8 flex gap-2">

@@ -435,7 +435,7 @@ function QuestionModal({
   }
 
   return (
-    <QuestionModalShell open={open} mounted={mounted} onClose={onClose}>
+    <QuestionModalShell open={open} mounted={mounted} onClose={requestClose}>
       {successId ? (
         <div className="flex flex-col h-full">
           <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4">

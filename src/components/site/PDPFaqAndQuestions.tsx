@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { ChevronDown, MessageCircleQuestion, Search, Sparkles } from "lucide-react";
+import { ChevronDown, MessageCircleQuestion, Search } from "lucide-react";
 import { fetchActiveFaqs, type ProductFaq } from "@/lib/product-faqs";
 import IsolatedBoundary from "@/components/site/IsolatedBoundary";
 

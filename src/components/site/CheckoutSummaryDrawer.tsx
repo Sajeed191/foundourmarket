@@ -1,7 +1,8 @@
-import { BadgePercent, PackageCheck, X } from "lucide-react";
+import { PackageCheck, X } from "lucide-react";
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose, DrawerTrigger,
 } from "@/components/ui/drawer";
+import { SavingsBadge } from "@/components/site/SavingsBadge";
 
 type Line = { slug: string; name: string; image: string; qty: number; lineTotal: number };
 

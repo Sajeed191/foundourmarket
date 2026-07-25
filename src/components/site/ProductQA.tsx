@@ -1076,16 +1076,19 @@ export function ProductQA({
       {loading ? (
         <div className="py-12 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
       ) : items.length === 0 ? (
-        <div className="py-16 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
-          <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
-            <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
+        hideEmptyState ? null : (
+          <div className="py-16 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
+            <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
+              <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
+            </div>
+            <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">Be the first to ask about this product.</p>
+            {!hideAskCta && <div className="max-w-xs mx-auto">{askButton(true)}</div>}
           </div>
-          <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">Be the first to ask about this product.</p>
-          <div className="max-w-xs mx-auto">{askButton(true)}</div>
-        </div>
+        )
       ) : filtered.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No questions match your filters.</p>
+
       ) : (
         <ul className="space-y-3">
           {filtered.slice(0, visible).map((q) => {

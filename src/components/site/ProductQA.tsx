@@ -225,11 +225,12 @@ function QuestionModal({
   const navigate = useNavigate();
   const isEdit = !!initial?.id;
   const [question, setQuestion] = useState("");
-  const [details, setDetails] = useState("");
   const [anon, setAnon] = useState(false);
   const [busy, setBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [initialSnapshot, setInitialSnapshot] = useState<{ q: string; anon: boolean }>({ q: "", anon: false });
+  const [dupeMatch, setDupeMatch] = useState<Question | null>(null);
+  const [confirmedDupe, setConfirmedDupe] = useState(false);
   const submittingRef = useRef(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -237,27 +238,32 @@ function QuestionModal({
     if (!open) {
       setBusy(false);
       setMounted(false);
+      setDupeMatch(null);
+      setConfirmedDupe(false);
       submittingRef.current = false;
       return;
     }
     const q = initial?.question ?? "";
     const a = initial?.is_anonymous ?? false;
     setQuestion(q);
-    setDetails(initial?.details ?? "");
     setAnon(a);
     setInitialSnapshot({ q, anon: a });
-    // Trigger open animation on next frame
     const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
   }, [open, initial]);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = taRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = Math.max(140, el.scrollHeight) + "px";
   }, [question, open]);
+
+  // Clear the duplicate hint whenever the user edits the question.
+  useEffect(() => {
+    setDupeMatch(null);
+    setConfirmedDupe(false);
+  }, [question]);
 
   if (!open) return null;
 
@@ -287,12 +293,26 @@ function QuestionModal({
       onClose();
       return;
     }
+
+    // v6.6 — silent duplicate check on submit. If a strong match exists
+    // among already-answered questions, surface a single inline hint
+    // instead of showing suggestions while typing. A second Submit sends it.
+    if (!isEdit && !confirmedDupe) {
+      const best = questionSuggestions
+        .map((q) => ({ q, s: scoreOverlap(text, q.question) }))
+        .filter((x) => x.s >= 0.6 && x.q.answers.length > 0)
+        .sort((a, b) => b.s - a.s)[0];
+      if (best) {
+        setDupeMatch(best.q);
+        setConfirmedDupe(true);
+        return;
+      }
+    }
+
     submittingRef.current = true;
     setBusy(true);
     try {
       if (isEdit && initial?.id) {
-        // Edit mode: only question + anonymous flag. Existing details in the DB
-        // are preserved untouched (not editable here per v2 spec).
         const { error } = await supabase
           .from("product_questions")
           .update({ question: text, is_anonymous: false })
@@ -304,7 +324,7 @@ function QuestionModal({
           product_slug: productSlug,
           user_id: user.id,
           question: text,
-          details: details.trim() || null,
+          details: null,
           is_anonymous: false,
         });
         if (error) throw error;

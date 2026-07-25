@@ -213,29 +213,32 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </div>
       )}
 
-      {/* Community Q&A — always mounted (owns realtime + posting). */}
-      <IsolatedBoundary name="product-qa">
-        <Suspense
-          fallback={
-            <div className="py-10 grid place-items-center text-xs text-muted-foreground">
-              <MessageCircleQuestion className="size-5 opacity-60" />
-            </div>
-          }
-        >
-          <ProductQA
-            productSlug={productSlug}
-            hideHeader
-            externalSearch={search}
-            hideAskCta
-            hideEmptyState
-            askOpen={askOpen}
-            onAskOpenChange={setAskOpen}
-            onCountChange={setQuestionCount}
-            faqs={faqs}
-          />
-
-        </Suspense>
-      </IsolatedBoundary>
+      {/* Community Q&A — always mounted (owns realtime + posting). When the
+          section transitions from empty → has questions, gently fade in so
+          the first card doesn't pop against the fading empty state. */}
+      <div className={emptyFading ? "animate-fade-in" : ""}>
+        <IsolatedBoundary name="product-qa">
+          <Suspense
+            fallback={
+              <div className="py-10 grid place-items-center text-xs text-muted-foreground">
+                <MessageCircleQuestion className="size-5 opacity-60" />
+              </div>
+            }
+          >
+            <ProductQA
+              productSlug={productSlug}
+              hideHeader
+              externalSearch={search}
+              hideAskCta
+              hideEmptyState
+              askOpen={askOpen}
+              onAskOpenChange={setAskOpen}
+              onCountChange={setQuestionCount}
+              faqs={faqs}
+            />
+          </Suspense>
+        </IsolatedBoundary>
+      </div>
 
       {/* Unified premium empty state — smooth fade out when the first
           question is submitted so the incoming card can fade in. */}

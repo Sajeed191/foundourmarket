@@ -507,8 +507,9 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
 
   async function confirmDelete() {
     const id = confirmDeleteId;
-    if (!id) return;
+    if (!id || deleting) return;
     setDeleting(true);
+    setDeleteError(null);
     const prevList = reviews;
     const prevMine = myReview;
     // Optimistic: customer & admin_hard delete → remove row entirely (full
@@ -535,19 +536,27 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
       toast.success(
         deleteMode === "admin_hard" ? "Review permanently deleted"
         : deleteMode === "admin_soft" ? "Review deleted (archived)"
-        : "Review deleted",
+        : "Review deleted successfully.",
       );
+      setConfirmDeleteId(null);
+      setDeleteReason("");
       if (!r.queued) { await load(); onAggregateChange?.(); }
     } catch (e) {
       setReviews(prevList);
       setMyReview(prevMine);
-      toast.error(e instanceof Error ? e.message : "Action failed");
+      if (deleteMode === "customer") {
+        // Keep the dialog open so the customer can retry.
+        setDeleteError("Couldn't delete your review. Please try again.");
+      } else {
+        toast.error(e instanceof Error ? e.message : "Action failed");
+        setConfirmDeleteId(null);
+        setDeleteReason("");
+      }
     } finally {
       setDeleting(false);
-      setConfirmDeleteId(null);
-      setDeleteReason("");
     }
   }
+
 
   function requestDelete(id: string, mode: "customer" | "admin_soft" | "admin_hard" = "customer") {
     setDeleteMode(mode);

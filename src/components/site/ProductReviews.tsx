@@ -561,11 +561,37 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     }
   }
 
+  // Delete dialog a11y: focus the safe action, trap focus, close on Escape.
+  useEffect(() => {
+    if (!confirmDeleteId) return;
+    const t = window.setTimeout(() => keepReviewRef.current?.focus(), 40);
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (!deleting) setConfirmDeleteId(null);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const root = deleteDialogRef.current;
+      if (!root) return;
+      const nodes = Array.from(
+        root.querySelectorAll<HTMLElement>('button:not([disabled]),textarea,[href],input,[tabindex]:not([tabindex="-1"])'),
+      ).filter((el) => el.offsetParent !== null);
+      if (!nodes.length) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => { window.clearTimeout(t); document.removeEventListener("keydown", onKey); };
+  }, [confirmDeleteId, deleting]);
 
   function requestDelete(id: string, mode: "customer" | "admin_soft" | "admin_hard" = "customer") {
     setDeleteMode(mode);
     setDeleteReason("");
+    setDeleteError(null);
     setConfirmDeleteId(id);
+
   }
 
   async function restoreReview(id: string) {

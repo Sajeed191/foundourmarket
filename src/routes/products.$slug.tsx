@@ -615,7 +615,7 @@ function ProductPage() {
   const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
   const discountPct = discountPercent(effectivePrice, originalPrice);
   const savingsAmount = originalPrice && originalPrice > effectivePrice ? originalPrice - effectivePrice : 0;
-  const isComingSoon = product.status === "scheduled" || product.status === "coming_soon";
+  const isComingSoon = product.status === "scheduled";
   const isPreorder = !!product.preorder || product.status === "preorder";
   // Context-aware primary CTA label for the sticky purchase dock.
   const primaryCtaLabel = isComingSoon

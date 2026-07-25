@@ -264,12 +264,26 @@ function QuestionModal({
     return () => cancelAnimationFrame(id);
   }, [open, initial]);
 
+  // Auto-grow the textarea from a compact 5–6 line start up to ~40% of the
+  // viewport height; beyond that the textarea itself scrolls internally so the
+  // modal never stretches into a giant empty canvas.
   useEffect(() => {
     const el = taRef.current;
     if (!el) return;
-    el.style.height = "auto";
-    el.style.height = Math.max(140, el.scrollHeight) + "px";
+    const resize = () => {
+      el.style.height = "auto";
+      const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+      const cap = Math.round(vh * 0.4);
+      const next = Math.min(cap, Math.max(132, el.scrollHeight));
+      el.style.height = next + "px";
+      el.style.overflowY = el.scrollHeight > cap ? "auto" : "hidden";
+    };
+    resize();
+    if (typeof window === "undefined") return;
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
   }, [question, open, successId]);
+
 
   // Clear the duplicate hint and error whenever the user edits the question.
   useEffect(() => {
@@ -506,9 +520,9 @@ function QuestionModal({
           </div>
         </div>
       ) : (
-      <form onSubmit={submit} className="flex flex-col h-full">
+      <form onSubmit={submit} className="flex flex-col h-full animate-fade-in">
         {/* Header */}
-        <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
+        <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-3">
           <button
             type="button"
             onClick={requestClose}
@@ -528,7 +542,7 @@ function QuestionModal({
           </p>
         </div>
 
-        {/* Body — v6.6: single textarea, character counter, no extra UI. */}
+        {/* Body — compact top-aligned block; textarea auto-grows up to 40vh. */}
         <div className="flex-1 overflow-y-auto px-5 sm:px-6 pb-2 min-h-0">
           <div className="relative">
             <textarea
@@ -537,34 +551,57 @@ function QuestionModal({
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               maxLength={500}
-              placeholder="Type your question…"
+              placeholder="Ask about product features, size, compatibility, warranty, delivery, or anything else…"
               aria-label={isEdit ? "Edit your question" : "Your question"}
               aria-invalid={!!validationMsg}
-              className="w-full text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none transition-colors"
+              className="w-full text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none transition-[border-color,box-shadow] duration-200"
               style={{
-                minHeight: 160,
+                minHeight: 132,
                 background: "#0E1116",
                 border: `1px solid ${validationMsg ? "rgba(239,68,68,0.45)" : "rgba(255,255,255,0.08)"}`,
                 borderRadius: 18,
-                padding: 18,
+                padding: 16,
                 fontSize: 16,
-                lineHeight: 1.7,
+                lineHeight: 1.6,
               }}
               onFocus={(e) => {
-                if (!validationMsg) e.currentTarget.style.borderColor = "var(--color-accent)";
+                if (!validationMsg) {
+                  e.currentTarget.style.borderColor = "var(--color-accent)";
+                  e.currentTarget.style.boxShadow = "0 0 0 4px rgba(255,138,42,0.10)";
+                }
               }}
               onBlur={(e) => {
                 e.currentTarget.style.borderColor = validationMsg
                   ? "rgba(239,68,68,0.45)"
                   : "rgba(255,255,255,0.08)";
+                e.currentTarget.style.boxShadow = "none";
               }}
             />
           </div>
 
-          <div className="mt-2 flex items-center justify-between text-[11px] tabular-nums text-muted-foreground/70">
-            <span className={validationMsg ? "text-[#f97a7a]" : ""}>{validationMsg}</span>
-            <span>{question.length} / 500</span>
+          <div className="mt-2 flex items-center justify-between gap-3 text-[11px] tabular-nums">
+            <span className={validationMsg ? "text-[#f97a7a]" : "text-muted-foreground/70"}>
+              {validationMsg}
+            </span>
+            <span
+              className={
+                question.length >= 500
+                  ? "text-[#f97a7a]"
+                  : question.length > 400
+                    ? "text-accent"
+                    : "text-muted-foreground/70"
+              }
+            >
+              {question.length} / 500
+            </span>
           </div>
+
+          {/* Subtle helper text — sets expectations without cluttering the field. */}
+          <ul className="mt-3 space-y-1 text-[12px] leading-relaxed text-muted-foreground/70">
+            <li>• FoundOurMarket™ will respond as soon as possible.</li>
+            <li>• Do not include personal information.</li>
+            <li>• Keep your question product-related.</li>
+          </ul>
 
           {/* v6.6 — single inline duplicate hint. */}
           {dupeMatch && !isEdit && (
@@ -600,9 +637,9 @@ function QuestionModal({
         </div>
 
 
-        {/* Sticky footer */}
+        {/* Sticky footer — pinned above the safe area on all devices. */}
         <div
-          className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3"
+          className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3 bg-background/95 backdrop-blur-sm"
           style={{
             borderTop: "1px solid rgba(255,255,255,0.06)",
             paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))",
@@ -621,10 +658,10 @@ function QuestionModal({
             disabled={!canSubmit}
             aria-label={isEdit ? "Save changes" : "Submit question"}
             aria-busy={busy}
-            className="inline-flex items-center justify-center gap-2 px-6 text-[14px] font-semibold transition disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-6 text-[14px] font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100"
             style={{
               height: 46,
-              minWidth: 132,
+              minWidth: 152,
               borderRadius: 16,
               color: canSubmit || busy ? "#050608" : "rgba(255,255,255,0.55)",
               background: canSubmit || busy
@@ -645,10 +682,11 @@ function QuestionModal({
                 }}
               />
             )}
-            {busy ? "Submitting…" : isEdit ? "Save Changes" : user ? "Submit" : "Sign in to submit"}
+            {busy ? "Submitting…" : isEdit ? "Save Changes" : user ? "Submit Question" : "Sign in to submit"}
           </button>
         </div>
       </form>
+
       )}
       {showDiscardConfirm && (
         <DiscardDraftConfirm

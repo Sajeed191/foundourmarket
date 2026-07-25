@@ -1,4 +1,4 @@
-import { Sparkles, PackageCheck, X } from "lucide-react";
+import { BadgePercent, PackageCheck, X } from "lucide-react";
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose, DrawerTrigger,
 } from "@/components/ui/drawer";

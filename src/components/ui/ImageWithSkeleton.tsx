@@ -1,19 +1,20 @@
-import { forwardRef, useState, type ImgHTMLAttributes } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState, type ImgHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * ImageWithSkeleton — PDP v5.4 (Focused Patch A)
+ * ImageWithSkeleton — PDP v7.x (Initial Render Fix)
  *
  * Renders an <img> that fades in on load, with a subtle shimmer skeleton
- * sitting underneath while the image is decoding. The parent controls the box
- * dimensions (aspect-ratio / fixed size) so there is zero layout shift.
+ * underneath while decoding. The parent controls dimensions so there is zero
+ * layout shift.
  *
- * Behavior:
- *   • Skeleton fades out and image fades in over ~180ms.
- *   • Skeleton resets whenever `src` changes (via keyed state).
- *   • Preserves the caller's onLoad / onError handlers.
- *   • Skeleton stays hidden when the image errors, so the caller's onError
- *     fallback shows immediately.
+ * Robustness rules:
+ *   • Cached / already-decoded images: if `img.complete && naturalWidth > 0`
+ *     at mount (or after a src swap), we mark loaded synchronously — otherwise
+ *     React's onLoad may never fire for images the browser already has,
+ *     leaving a blank area after refresh / back-forward / deep-link.
+ *   • Errored images: skeleton hides so caller's onError fallback shows.
+ *   • Skeleton state resets whenever `src` changes.
  */
 type Props = ImgHTMLAttributes<HTMLImageElement> & {
   imgClassName?: string;
@@ -25,10 +26,54 @@ export const ImageWithSkeleton = forwardRef<HTMLImageElement, Props>(
     { src, className, imgClassName, skeletonClassName, onLoad, onError, style, ...rest },
     ref,
   ) {
-    // Keyed by src so navigating to a new image restarts the skeleton.
+    const key = String(src ?? "");
+    const localRef = useRef<HTMLImageElement | null>(null);
+
+    // Synchronously seed loaded=true when the browser already has the bitmap
+    // (SSR-served, cached, back-forward nav). Prevents a permanent opacity:0
+    // state when onLoad never fires post-hydration.
+    const computeInitialLoaded = () => {
+      if (typeof window === "undefined") return false;
+      const img = localRef.current;
+      return !!(img && img.complete && img.naturalWidth > 0);
+    };
+
     const [loaded, setLoaded] = useState(false);
     const [errored, setErrored] = useState(false);
-    const key = String(src ?? "");
+
+    // Reset visual state on src change.
+    useEffect(() => {
+      setLoaded(false);
+      setErrored(false);
+    }, [key]);
+
+    // Cached-image guard — runs after mount and after every src change.
+    useEffect(() => {
+      const img = localRef.current;
+      if (!img) return;
+      if (img.complete) {
+        if (img.naturalWidth > 0) setLoaded(true);
+        else if (key) setErrored(true);
+      }
+    }, [key]);
+
+    const setRefs = useCallback(
+      (node: HTMLImageElement | null) => {
+        localRef.current = node;
+        // Same-tick check for images already decoded before React attached
+        // its onLoad handler (common on refresh & deep-link).
+        if (node && node.complete && node.naturalWidth > 0) {
+          setLoaded(true);
+        }
+        if (typeof ref === "function") ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLImageElement | null>).current = node;
+      },
+      [ref],
+    );
+
+    // Reference computeInitialLoaded so TS treats it as intentionally-declared
+    // documentation for the pattern; the ref-callback covers the actual timing.
+    void computeInitialLoaded;
 
     return (
       <span className={cn("absolute inset-0 block", className)} style={style}>
@@ -52,7 +97,7 @@ export const ImageWithSkeleton = forwardRef<HTMLImageElement, Props>(
         <img
           {...rest}
           key={key}
-          ref={ref}
+          ref={setRefs}
           src={src}
           onLoad={(e) => {
             setLoaded(true);

@@ -614,6 +614,24 @@ function ProductPage() {
   const missingVariant = requiresVariant && !variantId;
   const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
   const discountPct = discountPercent(effectivePrice, originalPrice);
+  const savingsAmount = originalPrice && originalPrice > effectivePrice ? originalPrice - effectivePrice : 0;
+  const isComingSoon = product.status === "scheduled" || product.status === "coming_soon";
+  const isPreorder = !!product.preorder || product.status === "preorder";
+  // Context-aware primary CTA label for the sticky purchase dock.
+  const primaryCtaLabel = isComingSoon
+    ? "Coming Soon"
+    : missingVariant
+      ? "Select Options"
+      : isOOS
+        ? "Notify Me"
+        : isPreorder
+          ? "Pre-order"
+          : "Buy Now";
+  const primaryCtaDisabled = isComingSoon || (isOOS && !isPreorder);
+  const scrollToVariants = () => {
+    const el = document.querySelector<HTMLElement>("[data-product-variants]");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   // Unified hero badge list — merchandising badges plus the sale/low-stock
   // pills, in priority order. The gallery renders at most 2 and collapses the

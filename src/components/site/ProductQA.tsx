@@ -781,6 +781,19 @@ export function ProductQA({
 
   useEffect(() => { void load(); }, [load]);
 
+  // Deep-link: after items render, scroll the target question into view.
+  const scrolledForHash = useRef<string | null>(null);
+  useEffect(() => {
+    if (loading || items.length === 0 || typeof window === "undefined") return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#q-") || scrolledForHash.current === hash) return;
+    const el = document.getElementById(hash.slice(1));
+    if (el) {
+      scrolledForHash.current = hash;
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [loading, items]);
+
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase.from("user_roles").select("role").eq("user_id", user.id)

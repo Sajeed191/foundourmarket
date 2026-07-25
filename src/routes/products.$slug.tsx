@@ -44,6 +44,8 @@ const AdminImageManager = lazy(() =>
   import("@/components/admin/AdminImageManager").then((m) => ({ default: m.AdminImageManager })),
 );
 import { ImageLightbox, type LightboxMedia } from "@/components/site/ImageLightbox";
+import { ImageWithSkeleton } from "@/components/ui/ImageWithSkeleton";
+
 import { resizedStorageImage } from "@/lib/storage-image";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { LazyMount } from "@/components/site/LazyMount";

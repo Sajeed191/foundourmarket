@@ -7,6 +7,7 @@ import { useRegion } from "@/lib/region";
 import { LazyMount } from "./LazyMount";
 import { recordImpression, recordClick } from "@/lib/recommendations/performance";
 import type { Product } from "@/lib/products";
+import { SavingsBadge } from "./SavingsBadge";
 
 /**
  * Frequently Bought Together — the highest-converting PDP block.

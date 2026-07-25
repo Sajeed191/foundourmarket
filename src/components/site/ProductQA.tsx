@@ -324,7 +324,11 @@ function QuestionModal({
     if (!open) return;
     const marker = { __qaModal: true, ts: Date.now() };
     try { window.history.pushState(marker, ""); } catch { /* noop */ }
-    const onPop = () => { closeIntentRef.current(); };
+    const onPop = () => {
+      // Re-arm the sentinel so a "Continue Editing" choice keeps the guard.
+      try { window.history.pushState({ __qaModal: true }, ""); } catch { /* noop */ }
+      closeIntentRef.current();
+    };
     window.addEventListener("popstate", onPop);
     return () => {
       window.removeEventListener("popstate", onPop);

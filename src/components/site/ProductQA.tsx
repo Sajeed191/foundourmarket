@@ -251,6 +251,7 @@ function QuestionModal({
       setConfirmedDupe(false);
       setErrorMsg(null);
       setSuccessId(null);
+      setShowDiscardConfirm(false);
       submittingRef.current = false;
       return;
     }

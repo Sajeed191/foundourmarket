@@ -68,6 +68,21 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
   const hasQuestions = (questionCount ?? 0) > 0;
   const isEmpty = !faqLoading && !hasFaqs && questionCount === 0;
 
+  // v6.8 — Smooth empty-state → first-question transition. We keep the empty
+  // state mounted briefly while it fades out, then unmount it so the incoming
+  // question card can fade in without a layout jump.
+  const [emptyVisible, setEmptyVisible] = useState(isEmpty);
+  useEffect(() => {
+    if (isEmpty) {
+      setEmptyVisible(true);
+      return;
+    }
+    if (!emptyVisible) return;
+    const t = setTimeout(() => setEmptyVisible(false), 320);
+    return () => clearTimeout(t);
+  }, [isEmpty, emptyVisible]);
+  const emptyFading = emptyVisible && !isEmpty;
+
   const AskCta = ({ full = false }: { full?: boolean }) => (
     <button
       onClick={() => setAskOpen(true)}

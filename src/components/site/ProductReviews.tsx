@@ -827,13 +827,83 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
             </div>
           )}
 
-          {/* Aggregate customer photo strip removed in Reviews v3.1:
-              review media must remain isolated per-review. */}
+          {/* ── Customer photos & videos strip (v5.4) ────────────────────
+              Per-review isolation preserved: tapping an item opens the
+              ReviewMediaViewer scoped to that review's media only. */}
+          {expanded && mediaStripEntries.length > 0 && (
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Customer photos &amp; videos
+                </p>
+                <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
+                  {mediaStripEntries.length}
+                </span>
+              </div>
+              <div
+                className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {mediaStripEntries.slice(0, 10).map((entry, i) => {
+                  const { m, review, indexInReview } = entry;
+                  const isLastVisible = i === 9 && mediaStripEntries.length > 10;
+                  const extra = mediaStripEntries.length - 10;
+                  return (
+                    <button
+                      key={`${review.id}:${indexInReview}`}
+                      onClick={() => openLightbox(review.media ?? [], indexInReview)}
+                      aria-label={m.type === "video" ? "Play customer video" : "Open customer photo"}
+                      className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-[14px] border border-white/10 bg-white/[0.03] transition-transform active:scale-95 hover:border-white/25"
+                    >
+                      {m.type === "video" ? (
+                        <>
+                          {m.poster ? (
+                            <img
+                              src={m.poster}
+                              alt=""
+                              loading="lazy"
+                              decoding="async"
+                              className="absolute inset-0 size-full object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={m.url}
+                              muted
+                              playsInline
+                              preload="metadata"
+                              className="absolute inset-0 size-full object-cover"
+                            />
+                          )}
+                          <span className="absolute inset-0 grid place-items-center bg-black/30">
+                            <Play className="size-4 text-white fill-white/90" />
+                          </span>
+                        </>
+                      ) : (
+                        <img
+                          src={m.url}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 size-full object-cover"
+                        />
+                      )}
+                      {isLastVisible && (
+                        <span className="absolute inset-0 grid place-items-center bg-black/60 text-sm font-medium text-white">
+                          +{extra}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
 
           {/* Search + filters + sort */}
           {expanded && (
           <div className="mb-8 space-y-3">
+
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <input

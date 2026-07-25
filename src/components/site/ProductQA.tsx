@@ -205,13 +205,22 @@ function QuestionModal({
   productSlug,
   initial,
   onSubmitted,
+  faqSuggestions = [],
+  questionSuggestions = [],
+  onFaqSuggestionSelect,
+  onQuestionSuggestionSelect,
 }: {
   open: boolean;
   onClose: () => void;
   productSlug: string;
   initial: QuestionDraft | null;
   onSubmitted: () => void;
+  faqSuggestions?: ProductFaq[];
+  questionSuggestions?: Question[];
+  onFaqSuggestionSelect?: (id: string) => void;
+  onQuestionSuggestionSelect?: (id: string) => void;
 }) {
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const isEdit = !!initial?.id;

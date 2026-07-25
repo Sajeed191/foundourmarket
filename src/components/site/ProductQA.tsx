@@ -858,7 +858,7 @@ function AnswerRow({
    fully visible. Pure presentation — no data or realtime side effects. */
 const COLLAPSED_MAX_PX = 132; // ~6 lines at 14px / leading-relaxed
 function CollapsibleAnswerBody({ body }: { body: string }) {
-  const ref = React.useRef<HTMLParagraphElement | null>(null);
+  const ref = useRef<HTMLParagraphElement | null>(null);
   const [overflow, setOverflow] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [naturalHeight, setNaturalHeight] = useState<number | null>(null);

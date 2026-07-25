@@ -1024,6 +1024,8 @@ export function ProductQA({
             >
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
+              <option value="helpful">Most Helpful</option>
+              <option value="official">Official Answers First</option>
               <option value="answered">Most Answered</option>
               <option value="unanswered">Unanswered</option>
             </select>

@@ -665,13 +665,25 @@ function AnswerRow({
 
 const PAGE_SIZE = 8;
 
-export function ProductQA({ productSlug }: { productSlug: string }) {
+export function ProductQA({
+  productSlug,
+  hideHeader = false,
+  externalSearch,
+}: {
+  productSlug: string;
+  /** Hide internal heading/subtitle/chips/top ask button (used when embedded in a unified section). */
+  hideHeader?: boolean;
+  /** When provided, ProductQA uses this search string and hides its own search input. */
+  externalSearch?: string;
+}) {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState<Question[]>([]);
   const [voted, setVoted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
+  const search = externalSearch ?? internalSearch;
+  const setSearch = (v: string) => setInternalSearch(v);
   const [sort, setSort] = useState<Sort>("newest");
   const [askOpen, setAskOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionDraft | null>(null);

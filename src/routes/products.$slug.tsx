@@ -991,9 +991,15 @@ function ProductPage() {
                     )}
                   </div>
                   {originalPrice && originalPrice > effectivePrice && (
-                    <p className="mt-2 text-[13px] text-emerald-300/90">
-                      You save <span className="font-semibold">{format(originalPrice - effectivePrice)}</span>
-                    </p>
+                    <div className="mt-2">
+                      <SavingsBadge
+                        variant="inline"
+                        label="You save"
+                        amount={format(originalPrice - effectivePrice)}
+                        size="md"
+                        suffix={discountPct ? ` · ${discountPct}% off` : undefined}
+                      />
+                    </div>
                   )}
                 </>
               ) : (

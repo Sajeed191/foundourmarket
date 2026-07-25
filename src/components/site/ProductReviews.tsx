@@ -1232,19 +1232,6 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                                           <Flag className="size-3.5" /> Reported
                                         </div>
                                       )}
-                                      <button
-                                        onClick={() => {
-                                          setMoreOpenId(null);
-                                          try {
-                                            const url = `${window.location.origin}${window.location.pathname}#review-${r.id}`;
-                                            navigator.clipboard?.writeText(url);
-                                            toast.success("Link copied");
-                                          } catch { /* noop */ }
-                                        }}
-                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-foreground hover:bg-white/5"
-                                      >
-                                        <ArrowRight className="size-3.5 rotate-[-45deg]" /> Copy link
-                                      </button>
                                     </div>
                                   </>
                                 )}

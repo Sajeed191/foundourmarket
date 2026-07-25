@@ -17,6 +17,7 @@ import { RecentlyViewed } from "@/components/site/RecentlyViewed";
 import { estimateShipping } from "@/lib/cart.functions";
 import { CouponInput, type AppliedCoupon } from "@/components/site/CouponInput";
 import { VariantSwitcher } from "@/components/site/VariantSwitcher";
+import { SavingsBadge } from "@/components/site/SavingsBadge";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({

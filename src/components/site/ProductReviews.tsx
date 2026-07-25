@@ -754,6 +754,33 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
             </motion.div>
           )}
 
+          {/* ── Baseline rating (no customer reviews yet) ─────────────────
+              PDP Reviews v7.0 — every product always shows a rating. When
+              there are 0 approved customer reviews, `avg` comes from the
+              admin `initial_rating` via the DB trigger. We show it with a
+              clear "Initial Product Rating" label and deliberately omit
+              the distribution bars so we never fabricate percentages. */}
+          {!hasReviews && avg > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22 }}
+              className="mb-10 flex flex-col items-start gap-3 pb-8 border-b border-border/60"
+            >
+              <div className="flex items-baseline gap-3">
+                <p className="text-[44px] leading-none font-display text-foreground">{avg.toFixed(1)}</p>
+                <StarRating rating={avg} starClassName="size-4" />
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/[0.06] px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-accent">
+                <BadgeCheck className="size-3.5" />
+                FoundOurMarket™ Initial Product Rating
+              </div>
+              <p className="text-[12.5px] text-muted-foreground leading-relaxed max-w-md">
+                This is our baseline quality rating. It updates automatically the moment verified customers start reviewing.
+              </p>
+            </motion.div>
+          )}
+
           {/* ── Single smart action card ─────────────────────────────────── */}
           {expanded && (
           <div className="mb-8 rounded-3xl border border-white/10 bg-card/50 backdrop-blur-xl p-5 sm:p-7 relative overflow-hidden">

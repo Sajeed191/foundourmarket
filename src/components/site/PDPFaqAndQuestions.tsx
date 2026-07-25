@@ -209,7 +209,7 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
           </div>
           <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">
-            Be the first to ask about this product.
+            Have a question about this product? Ask us and our team will respond.
           </p>
           <div className="max-w-xs mx-auto">
             <AskCta full />

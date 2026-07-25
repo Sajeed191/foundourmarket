@@ -722,13 +722,28 @@ export function ProductQA({
   productSlug,
   hideHeader = false,
   externalSearch,
+  hideAskCta = false,
+  hideEmptyState = false,
+  askOpen: askOpenProp,
+  onAskOpenChange,
+  onCountChange,
 }: {
   productSlug: string;
   /** Hide internal heading/subtitle/chips/top ask button (used when embedded in a unified section). */
   hideHeader?: boolean;
   /** When provided, ProductQA uses this search string and hides its own search input. */
   externalSearch?: string;
+  /** Suppress internal Ask CTA (parent renders the single CTA). */
+  hideAskCta?: boolean;
+  /** Suppress internal empty state (parent renders a unified empty state). */
+  hideEmptyState?: boolean;
+  /** Controlled Ask modal open state. */
+  askOpen?: boolean;
+  onAskOpenChange?: (open: boolean) => void;
+  /** Notifies parent of the current question count (post-filter-source, pre-search). */
+  onCountChange?: (count: number) => void;
 }) {
+
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState<Question[]>([]);

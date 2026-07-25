@@ -1701,8 +1701,6 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
               </span>
             </motion.div>
           </motion.div>
-
-          </motion.div>
         )}
       </AnimatePresence>
     </section>

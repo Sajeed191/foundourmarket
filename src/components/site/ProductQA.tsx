@@ -1059,20 +1059,20 @@ export function ProductQA({
             let statusPill: React.ReactNode;
             if (officialExists) {
               statusPill = (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/[0.12] text-sky-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-sky-400" /> Official Reply
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/[0.12] text-accent px-2.5 py-1 text-[11px] font-medium">
+                  <span className="size-1.5 rounded-full bg-accent" /> Officially Answered
                 </span>
               );
             } else if (count > 0) {
               statusPill = (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/[0.12] text-emerald-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-emerald-400" /> Answered
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/[0.12] text-sky-300 px-2.5 py-1 text-[11px] font-medium">
+                  <span className="size-1.5 rounded-full bg-sky-400" /> Community Answered
                 </span>
               );
             } else {
               statusPill = (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/[0.12] text-amber-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-amber-400" /> Awaiting Answer
+                  <span className="size-1.5 rounded-full bg-amber-400" /> Awaiting Response
                 </span>
               );
             }

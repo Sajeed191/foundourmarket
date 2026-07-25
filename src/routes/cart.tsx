@@ -199,7 +199,12 @@ function CartPage() {
             <h1 className="text-fluid-2xl font-display font-semibold">Your Cart</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {count} {count === 1 ? "item" : "items"} · Subtotal <span className="text-foreground font-mono">{format(subtotalUSD)}</span>
-              {savings > 0 && <span className="text-accent"> · You save {format(savings)}</span>}
+              {savings > 0 && (
+                <>
+                  {" · "}
+                  <SavingsBadge variant="line" label="You save" amount={format(savings)} />
+                </>
+              )}
             </p>
           </div>
         </div>

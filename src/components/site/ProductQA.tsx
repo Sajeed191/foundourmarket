@@ -1080,7 +1080,8 @@ export function ProductQA({
             return (
               <li
                 key={q.id}
-                className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5 animate-fade-in transition-colors hover:border-white/15"
+                id={`q-${q.id}`}
+                className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5 animate-fade-in transition-colors hover:border-white/15 scroll-mt-24 target:border-accent/40"
               >
                 {/* Header row: avatar + name + time + menu */}
                 <div className="flex items-start gap-3">
@@ -1089,6 +1090,20 @@ export function ProductQA({
                     <p className="text-[15px] font-display font-semibold text-foreground truncate">{asker}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{relDate(q.created_at)}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const url = `${window.location.origin}${window.location.pathname}#q-${q.id}`;
+                      try {
+                        if (navigator.share) await navigator.share({ url, title: q.question });
+                        else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
+                      } catch { /* user cancelled */ }
+                    }}
+                    aria-label="Share question"
+                    className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+                  >
+                    <Link2 className="size-4" />
+                  </button>
                   <QuestionMenu
                     isAdmin={isAdmin}
                     isMine={q.is_mine}

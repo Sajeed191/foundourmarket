@@ -259,7 +259,7 @@ function QuestionModal({
         // are preserved untouched (not editable here per v2 spec).
         const { error } = await supabase
           .from("product_questions")
-          .update({ question: text, is_anonymous: anon })
+          .update({ question: text, is_anonymous: false })
           .eq("id", initial.id);
         if (error) throw error;
         toast.success("Question updated successfully.");
@@ -269,7 +269,7 @@ function QuestionModal({
           user_id: user.id,
           question: text,
           details: details.trim() || null,
-          is_anonymous: anon,
+          is_anonymous: false,
         });
         if (error) throw error;
         toast.success("Question submitted");

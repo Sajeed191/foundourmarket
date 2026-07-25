@@ -1037,7 +1037,7 @@ export function ProductQA({
               </div>
             )}
           </div>
-          <div className="shrink-0">{askButton(true)}</div>
+          {!hideAskCta && <div className="shrink-0">{askButton(true)}</div>}
         </div>
       )}
 

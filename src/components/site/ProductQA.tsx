@@ -54,7 +54,62 @@ type Question = {
   answers: Answer[];
 };
 
-type Sort = "newest" | "oldest" | "helpful" | "answered" | "unanswered";
+type Sort = "newest" | "oldest" | "helpful" | "official" | "answered" | "unanswered";
+
+/* --------------------- Platform identity badges ---------------------
+ * v6.1 — FoundOurMarket™ is currently first-party only. Answers surface
+ * ONE primary identity badge, priority:
+ *   1. FoundOurMarket™ Official  (admin-marked official pinned answer)
+ *   2. Product Team              (reserved — future role split)
+ *   3. Customer Care             (reserved — future role split)
+ *   4. Verified Buyer            (reserved — future purchase check)
+ *   5. Community                 (non-store answers, future)
+ * Today the schema only tells us `is_official` / `is_store_response`, so
+ * store/official answers collapse to the FoundOurMarket™ Official badge.
+ * Extra vendor badges can be added later without touching this contract.
+ */
+type BadgeKind = "official" | "product_team" | "customer_care" | "verified_buyer" | "community";
+
+function pickAnswerBadge(a: Answer): BadgeKind | null {
+  if (a.is_official || a.is_store_response) return "official";
+  return "community";
+}
+
+function PlatformBadge({ kind }: { kind: BadgeKind }) {
+  const map = {
+    official: {
+      label: "FoundOurMarket™ Official",
+      cls: "border-accent/30 bg-accent/12 text-accent",
+      icon: <ShieldCheck className="size-2.5" />,
+    },
+    product_team: {
+      label: "Product Team",
+      cls: "border-sky-500/25 bg-sky-500/10 text-sky-300",
+      icon: <ShieldCheck className="size-2.5" />,
+    },
+    customer_care: {
+      label: "Customer Care",
+      cls: "border-violet-500/25 bg-violet-500/10 text-violet-300",
+      icon: <ShieldCheck className="size-2.5" />,
+    },
+    verified_buyer: {
+      label: "Verified Buyer",
+      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-300",
+      icon: <CheckCircle2 className="size-2.5" />,
+    },
+    community: {
+      label: "Community",
+      cls: "border-white/10 bg-white/[0.04] text-muted-foreground",
+      icon: <MessageCircleQuestion className="size-2.5" />,
+    },
+  } as const;
+  const b = map[kind];
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${b.cls}`}>
+      {b.icon} {b.label}
+    </span>
+  );
+}
 
 type QuestionDraft = {
   id?: string;

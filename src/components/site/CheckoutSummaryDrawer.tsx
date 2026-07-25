@@ -1,4 +1,4 @@
-import { Sparkles, PackageCheck, X } from "lucide-react";
+import { BadgePercent, PackageCheck, X } from "lucide-react";
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose, DrawerTrigger,
 } from "@/components/ui/drawer";
@@ -61,7 +61,7 @@ export function CheckoutSummaryDrawer({
 
           {savings > 0 && (
             <div className="mb-3 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2.5">
-              <span className="text-xs font-medium text-emerald-400 inline-flex items-center gap-1.5"><Sparkles className="size-3.5" /> You saved</span>
+              <span className="text-xs font-medium text-emerald-400 inline-flex items-center gap-1.5"><BadgePercent className="size-3.5" /> You saved</span>
               <span className="font-mono text-sm text-emerald-400">{fmt(savings)}</span>
             </div>
           )}

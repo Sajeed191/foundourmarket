@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import {
   Minus, Plus, X, ArrowRight, ShoppingBag, Bookmark, RotateCcw, Heart,
   Truck, ShieldCheck, ChevronDown, Lock, MapPin, Clock,
-  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles, Share2, Star, Check,
+  AlertTriangle, CheckCircle2, Loader2, Undo2, Sparkles, BadgePercent, Share2, Star, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
@@ -410,7 +410,7 @@ function CartPage() {
                   className="mb-4 flex items-center justify-between rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-2.5"
                 >
                   <span className="text-xs font-medium inline-flex items-center gap-1.5 text-accent">
-                    <Sparkles className="size-3.5" /> Total savings
+                    <BadgePercent className="size-3.5" /> Total savings
                   </span>
                   <span className="font-mono text-sm font-semibold text-accent">{format(totalSavings)}</span>
                 </motion.div>

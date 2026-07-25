@@ -617,17 +617,51 @@ function QuestionModalShell({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  // PDP v6.9 — Full-screen Ask a Question experience.
+  // - Lock background scroll and preserve scroll position.
+  // - Hide every floating chrome element via body[data-qa-modal-open] (CSS).
+  // - Hide LiveChat/admin widgets that subscribe to the floating-stack context.
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    // iOS-friendly scroll lock that preserves position.
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.setAttribute("data-qa-modal-open", "true");
+
+    let restoreContext = () => {};
+    // Best-effort: hide LiveChat / admin floating widgets that opt into the
+    // shared floating-stack context. Loaded dynamically to avoid a hard dep.
+    import("@/lib/floating-stack")
+      .then((m) => {
+        m.setContextHidden(true);
+        restoreContext = () => m.setContextHidden(false);
+      })
+      .catch(() => {});
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
+
     return () => {
-      document.body.style.overflow = prev;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.removeAttribute("data-qa-modal-open");
+      window.scrollTo(0, scrollY);
       window.removeEventListener("keydown", onKey);
+      restoreContext();
     };
   }, [open, onClose]);
 
@@ -635,26 +669,27 @@ function QuestionModalShell({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[80] flex sm:items-center items-end justify-center sm:p-4"
+      className="fixed inset-0 z-[80] flex sm:items-center items-stretch justify-center sm:p-4"
       onClick={onClose}
       style={{
         background: "rgba(5,6,8,0.72)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
         opacity: mounted ? 1 : 0,
-        transition: "opacity 180ms ease-out",
+        transition: "opacity 220ms ease-out",
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:w-[560px] sm:max-w-[560px] max-h-[92dvh] flex flex-col rounded-t-[28px] sm:rounded-[24px]"
+        className="w-full h-[100dvh] sm:h-auto sm:w-[560px] sm:max-w-[560px] sm:max-h-[92dvh] flex flex-col rounded-none sm:rounded-[24px]"
         style={{
           background: "#121316",
           border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
-          transform: mounted ? "translateY(0) scale(1)" : "translateY(24px) scale(0.98)",
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          transform: mounted ? "translateY(0) scale(1)" : "translateY(24px) scale(0.995)",
           opacity: mounted ? 1 : 0,
-          transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), opacity 180ms ease-out",
+          transition: "transform 250ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease-out",
         }}
       >
         {children}
@@ -662,6 +697,7 @@ function QuestionModalShell({
     </div>
   );
 }
+
 
 /* ------------------------ Question actions menu ------------------- */
 

@@ -1184,8 +1184,11 @@ export function ProductQA({
                 <div className="flex items-start gap-3">
                   <Avatar name={asker} url={q.author_avatar} size={42} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-display font-semibold text-foreground truncate">{asker}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{relDate(q.created_at)}</p>
+                    <p className="text-[13px] text-muted-foreground truncate">
+                      Asked by <span className="font-display font-semibold text-foreground">{asker}</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground/80 mt-0.5">Asked {relDate(q.created_at)}</p>
+
                   </div>
                   <button
                     type="button"

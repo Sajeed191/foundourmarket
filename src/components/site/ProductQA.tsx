@@ -722,6 +722,31 @@ function AnswerRow({
   );
 }
 
+/* v6.7 — AnswerReveal: smooth no-layout-pop expansion for realtime-arriving
+   answers. Uses grid-template-rows 0fr→1fr + opacity/translateY so the
+   surrounding page grows fluidly instead of snapping. Answers already
+   present on initial load render fully expanded (no animation). */
+function AnswerReveal({ animate, children }: { animate: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(!animate);
+  useEffect(() => {
+    if (!animate) return;
+    const id = requestAnimationFrame(() => setOpen(true));
+    return () => cancelAnimationFrame(id);
+  }, [animate]);
+  return (
+    <div
+      className="grid transition-[grid-template-rows,opacity,transform] duration-500 ease-out"
+      style={{
+        gridTemplateRows: open ? "1fr" : "0fr",
+        opacity: open ? 1 : 0,
+        transform: open ? "translateY(0)" : "translateY(-6px)",
+      }}
+    >
+      <div className="overflow-hidden min-h-0">{children}</div>
+    </div>
+  );
+
+
 /* ---------------------------- Main component ---------------------- */
 
 const PAGE_SIZE = 8;

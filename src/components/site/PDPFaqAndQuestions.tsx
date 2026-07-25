@@ -216,7 +216,9 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
             askOpen={askOpen}
             onAskOpenChange={setAskOpen}
             onCountChange={setQuestionCount}
+            faqs={faqs}
           />
+
         </Suspense>
       </IsolatedBoundary>
 

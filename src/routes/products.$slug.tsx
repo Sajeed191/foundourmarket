@@ -20,6 +20,7 @@ import { ProductReviews } from "@/components/site/ProductReviews";
 import { PDPFaqAndQuestions } from "@/components/site/PDPFaqAndQuestions";
 import { StarRating } from "@/components/site/StarRating";
 import { PDPCompareSection } from "@/components/site/PDPCompareSection";
+import { PDPStickyIntel } from "@/components/site/PDPStickyIntel";
 import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent, type ProductImage, type ProductVariant } from "@/lib/products";
 import { fetchPublicColorGalleries, type VariantImage } from "@/lib/variant-images";

@@ -72,7 +72,8 @@ type BadgeKind = "official" | "product_team" | "customer_care" | "verified_buyer
 
 function pickAnswerBadge(a: Answer): BadgeKind | null {
   if (a.is_official || a.is_store_response) return "official";
-  return "community";
+  // v6.2 — FoundOurMarket™ is first-party only; no visible community badge today.
+  return null;
 }
 
 function PlatformBadge({ kind }: { kind: BadgeKind }) {

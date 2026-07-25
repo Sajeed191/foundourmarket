@@ -689,11 +689,8 @@ function SavingsPill({ value, format }: { value: number; format: (n: number) => 
     prev.current = value;
   }, [value, controls]);
   return (
-    <motion.span
-      animate={controls}
-      className="inline-flex items-center rounded-full bg-emerald-500/12 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 will-change-transform"
-    >
-      Save {format(value)}
+    <motion.span animate={controls} className="inline-block will-change-transform">
+      <SavingsBadge variant="pill" label="Save" amount={format(value)} />
     </motion.span>
   );
 }

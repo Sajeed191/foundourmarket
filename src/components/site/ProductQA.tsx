@@ -1225,10 +1225,14 @@ export function ProductQA({
                 {/* Meta row */}
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   {statusPill}
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {count} {count === 1 ? "Answer" : "Answers"}
-                  </span>
+                  {count > 0 && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <ShieldCheck className="size-3 text-accent/80" />
+                      Responded by FoundOurMarket™
+                    </span>
+                  )}
                 </div>
+
 
                 {/* Answers */}
                 {roots.length > 0 && (

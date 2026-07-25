@@ -9,6 +9,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { setPromoResolverConfig } from "@/lib/use-product-badges";
+import { getPublicMarketplaceState } from "@/lib/marketplace-state.functions";
+
 
 export type HomepageCollectionKey =
   | "flash_deals"

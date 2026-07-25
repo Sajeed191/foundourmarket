@@ -963,7 +963,7 @@ function ProductPage() {
 
             {/* Variants — pill selectors */}
             {variants.length > 0 && (
-              <div className="mt-6">
+              <div data-product-variants className="mt-6">
                 <VariantSelector variants={variants} selectedId={variantId} onSelect={setVariantId} />
               </div>
             )}

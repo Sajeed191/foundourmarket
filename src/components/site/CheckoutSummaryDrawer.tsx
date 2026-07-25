@@ -61,10 +61,13 @@ export function CheckoutSummaryDrawer({
           </ul>
 
           {savings > 0 && (
-            <div className="mb-3 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2.5">
-              <span className="text-xs font-medium text-emerald-400 inline-flex items-center gap-1.5"><BadgePercent className="size-3.5" /> You saved</span>
-              <span className="font-mono text-sm text-emerald-400">{fmt(savings)}</span>
-            </div>
+            <SavingsBadge
+              variant="row"
+              label="You saved"
+              amount={fmt(savings)}
+              className="mb-3"
+            />
+
           )}
 
           <dl className="space-y-2.5 text-sm border-t border-white/10 pt-4">

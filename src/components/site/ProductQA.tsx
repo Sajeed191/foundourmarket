@@ -770,6 +770,116 @@ function QuestionModalShell({
   );
 }
 
+/* PDP v7.0 — confirmation shown when the customer attempts to dismiss the
+   Ask a Question modal with unsaved text. Layers above the modal shell,
+   traps focus on the primary "Continue Editing" action, and closes on
+   Escape (equivalent to Continue Editing). */
+function DiscardDraftConfirm({
+  continueRef,
+  onContinue,
+  onDiscard,
+}: {
+  continueRef: React.RefObject<HTMLButtonElement>;
+  onContinue: () => void;
+  onDiscard: () => void;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // Autofocus the safe primary action.
+    requestAnimationFrame(() => continueRef.current?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        e.preventDefault();
+        onContinue();
+        return;
+      }
+      if (e.key === "Tab") {
+        // Simple focus trap between the two buttons.
+        const root = dialogRef.current;
+        if (!root) return;
+        const focusables = Array.from(
+          root.querySelectorAll<HTMLElement>("button:not([disabled])"),
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    // Capture phase so we win over the shell's own Escape → onClose handler.
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [continueRef, onContinue]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[90] grid place-items-center p-5 animate-in fade-in duration-150"
+      style={{ background: "rgba(5,6,8,0.72)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+      onClick={onContinue}
+    >
+      <div
+        ref={dialogRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="qa-discard-title"
+        aria-describedby="qa-discard-desc"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[400px] rounded-3xl p-6 animate-in zoom-in-95 duration-150"
+        style={{
+          background: "#121316",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85)",
+        }}
+      >
+        <h3 id="qa-discard-title" className="text-[17px] font-display font-semibold text-foreground leading-tight">
+          Discard your question?
+        </h3>
+        <p id="qa-discard-desc" className="mt-2 text-[13.5px] text-muted-foreground leading-relaxed">
+          Your question hasn&apos;t been submitted yet. If you leave now, your draft will be lost.
+        </p>
+        <div className="mt-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={onDiscard}
+            className="inline-flex items-center justify-center h-11 px-5 rounded-2xl text-[13.5px] font-medium transition-colors"
+            style={{
+              color: "#fca5a5",
+              background: "rgba(239,68,68,0.06)",
+              border: "1px solid rgba(239,68,68,0.28)",
+            }}
+          >
+            Discard
+          </button>
+          <button
+            ref={continueRef}
+            type="button"
+            onClick={onContinue}
+            className="inline-flex items-center justify-center h-11 px-5 text-[13.5px] font-semibold transition"
+            style={{
+              borderRadius: 16,
+              color: "#050608",
+              background: "linear-gradient(135deg,#ff9f43 0%, #ff8a2a 55%, #f07d00 100%)",
+              boxShadow: "0 10px 26px -16px rgba(255,138,42,0.55)",
+            }}
+          >
+            Continue Editing
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
 
 /* ------------------------ Question actions menu ------------------- */
 

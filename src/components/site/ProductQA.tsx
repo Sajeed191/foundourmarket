@@ -237,8 +237,11 @@ function QuestionModal({
   const [confirmedDupe, setConfirmedDupe] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  // PDP v7.0 — unsaved question protection.
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const submittingRef = useRef(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const continueBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) {

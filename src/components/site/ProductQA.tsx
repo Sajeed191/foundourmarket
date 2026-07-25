@@ -225,11 +225,12 @@ function QuestionModal({
   const navigate = useNavigate();
   const isEdit = !!initial?.id;
   const [question, setQuestion] = useState("");
-  const [details, setDetails] = useState("");
   const [anon, setAnon] = useState(false);
   const [busy, setBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [initialSnapshot, setInitialSnapshot] = useState<{ q: string; anon: boolean }>({ q: "", anon: false });
+  const [dupeMatch, setDupeMatch] = useState<Question | null>(null);
+  const [confirmedDupe, setConfirmedDupe] = useState(false);
   const submittingRef = useRef(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -237,27 +238,32 @@ function QuestionModal({
     if (!open) {
       setBusy(false);
       setMounted(false);
+      setDupeMatch(null);
+      setConfirmedDupe(false);
       submittingRef.current = false;
       return;
     }
     const q = initial?.question ?? "";
     const a = initial?.is_anonymous ?? false;
     setQuestion(q);
-    setDetails(initial?.details ?? "");
     setAnon(a);
     setInitialSnapshot({ q, anon: a });
-    // Trigger open animation on next frame
     const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
   }, [open, initial]);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = taRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = Math.max(140, el.scrollHeight) + "px";
   }, [question, open]);
+
+  // Clear the duplicate hint whenever the user edits the question.
+  useEffect(() => {
+    setDupeMatch(null);
+    setConfirmedDupe(false);
+  }, [question]);
 
   if (!open) return null;
 
@@ -287,12 +293,26 @@ function QuestionModal({
       onClose();
       return;
     }
+
+    // v6.6 — silent duplicate check on submit. If a strong match exists
+    // among already-answered questions, surface a single inline hint
+    // instead of showing suggestions while typing. A second Submit sends it.
+    if (!isEdit && !confirmedDupe) {
+      const best = questionSuggestions
+        .map((q) => ({ q, s: scoreOverlap(text, q.question) }))
+        .filter((x) => x.s >= 0.6 && x.q.answers.length > 0)
+        .sort((a, b) => b.s - a.s)[0];
+      if (best) {
+        setDupeMatch(best.q);
+        setConfirmedDupe(true);
+        return;
+      }
+    }
+
     submittingRef.current = true;
     setBusy(true);
     try {
       if (isEdit && initial?.id) {
-        // Edit mode: only question + anonymous flag. Existing details in the DB
-        // are preserved untouched (not editable here per v2 spec).
         const { error } = await supabase
           .from("product_questions")
           .update({ question: text, is_anonymous: false })
@@ -304,7 +324,7 @@ function QuestionModal({
           product_slug: productSlug,
           user_id: user.id,
           question: text,
-          details: details.trim() || null,
+          details: null,
           is_anonymous: false,
         });
         if (error) throw error;
@@ -341,11 +361,11 @@ function QuestionModal({
           <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed pr-10">
             {isEdit
               ? "Update your question before saving."
-              : "Our FoundOurMarket™ team typically responds within 24–48 hours."}
+              : "What would you like to know about this product?"}
           </p>
         </div>
 
-        {/* Body */}
+        {/* Body — v6.6: single textarea, character counter, no extra UI. */}
         <div className="flex-1 overflow-y-auto px-5 sm:px-6 pb-2 min-h-0">
           <div className="relative">
             <textarea
@@ -354,7 +374,7 @@ function QuestionModal({
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               maxLength={500}
-              placeholder={isEdit ? "What would you like to update?" : "What would you like to know about this product?"}
+              placeholder="Type your question…"
               aria-label={isEdit ? "Edit your question" : "Your question"}
               aria-invalid={!!validationMsg}
               className="w-full text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none transition-colors"
@@ -364,7 +384,6 @@ function QuestionModal({
                 border: `1px solid ${validationMsg ? "rgba(239,68,68,0.45)" : "rgba(255,255,255,0.08)"}`,
                 borderRadius: 18,
                 padding: 18,
-                paddingBottom: question.length > 0 ? 32 : 18,
                 fontSize: 16,
                 lineHeight: 1.7,
               }}
@@ -377,101 +396,29 @@ function QuestionModal({
                   : "rgba(255,255,255,0.08)";
               }}
             />
-            {question.length > 0 && (
-              <div className="pointer-events-none absolute right-4 bottom-3 text-[11px] tabular-nums text-muted-foreground/70">
-                {question.length} / 500
-              </div>
-            )}
           </div>
 
-          {validationMsg && (
-            <p className="mt-2 text-[12px]" style={{ color: "#f97a7a" }}>{validationMsg}</p>
-          )}
+          <div className="mt-2 flex items-center justify-between text-[11px] tabular-nums text-muted-foreground/70">
+            <span className={validationMsg ? "text-[#f97a7a]" : ""}>{validationMsg}</span>
+            <span>{question.length} / 500</span>
+          </div>
 
-          {/* v6.3 — live FAQ auto-link + duplicate detection (customer-only, not shown while editing) */}
-          {!isEdit && trimmed.length >= 5 && (() => {
-            const faqs = faqSuggestions
-              .map((f) => ({ f, s: Math.max(scoreOverlap(trimmed, f.question), scoreOverlap(trimmed, f.answer) * 0.6) }))
-              .filter((x) => x.s >= 0.4)
-              .sort((a, b) => b.s - a.s)
-              .slice(0, 3);
-            const dupes = questionSuggestions
-              .map((q) => ({ q, s: scoreOverlap(trimmed, q.question) }))
-              .filter((x) => x.s >= 0.5 && x.q.answers.length > 0)
-              .sort((a, b) => b.s - a.s)
-              .slice(0, 3);
-            if (faqs.length === 0 && dupes.length === 0) return null;
-            return (
-              <div className="mt-3 space-y-3">
-                {faqs.length > 0 && (
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3.5">
-                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-emerald-300/90 mb-2">
-                      You may already have your answer
-                    </p>
-                    <ul className="space-y-1.5">
-                      {faqs.map(({ f }) => (
-                        <li key={f.id}>
-                          <button
-                            type="button"
-                            onClick={() => { onFaqSuggestionSelect?.(f.id); onClose(); }}
-                            className="w-full text-left flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-emerald-500/[0.08] transition text-[13px] leading-snug text-foreground"
-                          >
-                            <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-400" />
-                            <span className="min-w-0">{f.question}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {dupes.length > 0 && (
-                  <div className="rounded-2xl border border-accent/20 bg-accent/[0.05] p-3.5">
-                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-accent mb-2">
-                      Similar questions already answered
-                    </p>
-                    <ul className="space-y-1.5">
-                      {dupes.map(({ q }) => (
-                        <li key={q.id}>
-                          <button
-                            type="button"
-                            onClick={() => { onQuestionSuggestionSelect?.(q.id); onClose(); }}
-                            className="w-full text-left flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-accent/[0.08] transition text-[13px] leading-snug text-foreground"
-                          >
-                            <MessageCircleQuestion className="mt-0.5 size-3.5 shrink-0 text-accent" />
-                            <span className="min-w-0">{q.question}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Only editing the question is allowed in edit mode (v2 spec). */}
-          {!isEdit && (
-            <div className="mt-3">
-              <textarea
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                rows={2}
-                maxLength={500}
-                placeholder="Add any context that would help someone answer (optional)…"
-                aria-label="Optional details"
-                className="w-full text-foreground placeholder:text-muted-foreground/60 resize-none focus:outline-none"
-                style={{
-                  background: "#0E1116",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 14,
-                  padding: 14,
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                }}
-              />
+          {/* v6.6 — single inline duplicate hint, only after Submit is pressed. */}
+          {dupeMatch && !isEdit && (
+            <div className="mt-3 rounded-2xl border border-accent/20 bg-accent/[0.05] px-4 py-3 flex items-start gap-3">
+              <MessageCircleQuestion className="mt-0.5 size-4 shrink-0 text-accent" />
+              <p className="text-[13px] leading-snug text-foreground flex-1">
+                A similar question has already been answered.{" "}
+                <button
+                  type="button"
+                  onClick={() => { onQuestionSuggestionSelect?.(dupeMatch.id); onClose(); }}
+                  className="font-semibold text-accent hover:underline underline-offset-2"
+                >
+                  View Answer
+                </button>
+              </p>
             </div>
           )}
-
         </div>
 
 

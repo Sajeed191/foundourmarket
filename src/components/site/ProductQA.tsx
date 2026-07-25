@@ -72,7 +72,8 @@ type BadgeKind = "official" | "product_team" | "customer_care" | "verified_buyer
 
 function pickAnswerBadge(a: Answer): BadgeKind | null {
   if (a.is_official || a.is_store_response) return "official";
-  return "community";
+  // v6.2 — FoundOurMarket™ is first-party only; no visible community badge today.
+  return null;
 }
 
 function PlatformBadge({ kind }: { kind: BadgeKind }) {
@@ -258,7 +259,7 @@ function QuestionModal({
         // are preserved untouched (not editable here per v2 spec).
         const { error } = await supabase
           .from("product_questions")
-          .update({ question: text, is_anonymous: anon })
+          .update({ question: text, is_anonymous: false })
           .eq("id", initial.id);
         if (error) throw error;
         toast.success("Question updated successfully.");
@@ -268,7 +269,7 @@ function QuestionModal({
           user_id: user.id,
           question: text,
           details: details.trim() || null,
-          is_anonymous: anon,
+          is_anonymous: false,
         });
         if (error) throw error;
         toast.success("Question submitted");
@@ -304,7 +305,7 @@ function QuestionModal({
           <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed pr-10">
             {isEdit
               ? "Update your question before saving."
-              : "Ask the community or our team — we usually reply within a day."}
+              : "Our FoundOurMarket™ team typically responds within 24–48 hours."}
           </p>
         </div>
 
@@ -374,45 +375,6 @@ function QuestionModal({
             </div>
           )}
 
-          {/* Anonymous — premium setting card w/ iOS switch */}
-          <div
-            className="mt-5 flex items-start gap-4 p-4"
-            style={{
-              background: "#0E1116",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 16,
-            }}
-          >
-            <div className="flex-1 min-w-0">
-              <div className="text-[14px] text-foreground font-medium leading-tight">Hide my name</div>
-              <div className="mt-1 text-[12px] text-muted-foreground leading-snug">
-                Other customers won't see your profile. Admins can still identify the author.
-              </div>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={anon}
-              aria-label="Hide my name from other customers"
-              onClick={() => setAnon((v) => !v)}
-              className="relative shrink-0 rounded-full transition-colors"
-              style={{
-                width: 46,
-                height: 28,
-                background: anon ? "var(--color-accent)" : "rgba(255,255,255,0.14)",
-              }}
-            >
-              <span
-                className="absolute top-[3px] rounded-full bg-white transition-all"
-                style={{
-                  width: 22,
-                  height: 22,
-                  left: anon ? 21 : 3,
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
-                }}
-              />
-            </button>
-          </div>
         </div>
 
         {/* Sticky footer */}
@@ -1092,23 +1054,17 @@ export function ProductQA({
       ) : (
         <ul className="space-y-3">
           {filtered.slice(0, visible).map((q) => {
-            const asker = q.is_anonymous ? "Anonymous" : (q.author_name || "Customer");
+            const asker = q.author_name || "Customer";
             const roots = q.answers.filter((a) => !a.parent_answer_id);
             const repliesOf = (aid: string) => q.answers.filter((a) => a.parent_answer_id === aid);
-            const officialExists = q.answers.some((a) => a.is_official);
+            const officialExists = q.answers.some((a) => a.is_official || a.is_store_response);
             const count = q.answers.length;
 
             let statusPill: React.ReactNode;
-            if (officialExists) {
+            if (officialExists || count > 0) {
               statusPill = (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/[0.12] text-accent px-2.5 py-1 text-[11px] font-medium">
                   <span className="size-1.5 rounded-full bg-accent" /> Officially Answered
-                </span>
-              );
-            } else if (count > 0) {
-              statusPill = (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/[0.12] text-sky-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-sky-400" /> Community Answered
                 </span>
               );
             } else {
@@ -1127,7 +1083,7 @@ export function ProductQA({
               >
                 {/* Header row: avatar + name + time + menu */}
                 <div className="flex items-start gap-3">
-                  <Avatar name={asker} url={q.is_anonymous ? null : q.author_avatar} size={42} />
+                  <Avatar name={asker} url={q.author_avatar} size={42} />
                   <div className="flex-1 min-w-0">
                     <p className="text-[15px] font-display font-semibold text-foreground truncate">{asker}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{relDate(q.created_at)}</p>

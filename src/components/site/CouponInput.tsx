@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Tag, Check, X, Loader2 } from "lucide-react";
 import { applyCoupon } from "@/lib/cart.functions";
 import { useAppliedPromoCode } from "@/lib/promo-code";
+import { SavingsBadge } from "@/components/site/SavingsBadge";
 
 export type AppliedCoupon = {
   code: string;

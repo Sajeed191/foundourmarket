@@ -625,15 +625,16 @@ function AnswerRow({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [menuOpen]);
 
-  const name = answer.author_name || (answer.is_store_response ? "FoundOurMarket" : "Customer");
   const store = answer.is_store_response;
   const official = answer.is_official;
+  const badge = pickAnswerBadge(answer);
+  const name = answer.author_name || (store || official ? "FoundOurMarket™ Team" : "Customer");
   // Answers are ONLY editable/deletable/moderated by admins (customers can't answer at all).
   const canManage = isAdmin;
 
   return (
     <div
-      className={`${isReply ? "ml-8" : ""} rounded-[14px] p-3.5 border ${
+      className={`${isReply ? "ml-8" : ""} rounded-[14px] border ${
         official
           ? "bg-accent/[0.06] border-accent/25"
           : store
@@ -641,21 +642,17 @@ function AnswerRow({
           : "bg-background/40 border-border/60"
       }`}
     >
-      <div className="flex items-start gap-3">
+      {official && !isReply && (
+        <div className="flex items-center gap-1.5 px-3.5 pt-2.5 text-[10px] font-mono uppercase tracking-[0.22em] text-accent">
+          <Pin className="size-3" /> Official Answer
+        </div>
+      )}
+      <div className="p-3.5 flex items-start gap-3">
         <Avatar name={name} url={answer.author_avatar} size={32} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-display truncate">{name}</span>
-            {store && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
-                <ShieldCheck className="size-2.5" /> Store
-              </span>
-            )}
-            {official && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
-                <CheckCircle2 className="size-2.5" /> Official
-              </span>
-            )}
+            {badge && <PlatformBadge kind={badge} />}
             <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground shrink-0">
               {relDate(answer.created_at)}
             </span>

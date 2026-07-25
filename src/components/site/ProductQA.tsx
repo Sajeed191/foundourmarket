@@ -1185,15 +1185,12 @@ export function ProductQA({
                 id={`q-${q.id}`}
                 className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5 animate-fade-in transition-colors hover:border-white/15 scroll-mt-24 target:border-accent/40"
               >
-                {/* Header row: avatar + name + time + menu */}
+                {/* Header row: avatar + name + time + menu (v6.4 — no "Asked by" prefix) */}
                 <div className="flex items-start gap-3">
                   <Avatar name={asker} url={q.author_avatar} size={42} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] text-muted-foreground truncate">
-                      Asked by <span className="font-display font-semibold text-foreground">{asker}</span>
-                    </p>
-                    <p className="text-[11px] text-muted-foreground/80 mt-0.5">Asked {relDate(q.created_at)}</p>
-
+                    <p className="text-[14px] font-display font-semibold text-foreground truncate">{asker}</p>
+                    <p className="text-[11px] text-muted-foreground/80 mt-0.5">{relDate(q.created_at)}</p>
                   </div>
                   <button
                     type="button"
@@ -1227,16 +1224,14 @@ export function ProductQA({
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed break-words whitespace-pre-wrap">{q.details}</p>
                 )}
 
-                {/* Meta row */}
-                <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  {statusPill}
-                  {count > 0 && (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <ShieldCheck className="size-3 text-accent/80" />
-                      Responded by FoundOurMarket™
-                    </span>
-                  )}
-                </div>
+                {/* Status pill — only Awaiting Response is shown here; the official
+                    answer card below carries its own "FoundOurMarket™ Official" identity. */}
+                {!officialExists && (
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    {statusPill}
+                  </div>
+                )}
+
 
 
                 {/* Answers */}

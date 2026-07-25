@@ -1156,6 +1156,17 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
     pointer-events: none !important;
     visibility: hidden !important;
   }
+  /* PDP v6.9 — Full-screen Ask a Question modal: hide every floating chrome
+     element so the customer sees only the question interface. */
+  body[data-qa-modal-open] [data-app-bottom-nav],
+  body[data-qa-modal-open] [data-floating-control],
+  body[data-qa-modal-open] [data-product-cta],
+  body[data-qa-modal-open] [data-sonner-toaster] {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
   [data-sonner-toaster][data-y-position="bottom"] { bottom: var(--floating-bottom-offset) !important; }
   .min-h-screen { min-height: 100dvh !important; }
   .h-screen { height: 100dvh !important; }

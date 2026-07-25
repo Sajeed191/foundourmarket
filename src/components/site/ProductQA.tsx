@@ -796,7 +796,7 @@ function AnswerRow({
             </span>
 
           </div>
-          <p className="text-sm leading-relaxed mt-1.5 break-words whitespace-pre-wrap">{answer.body}</p>
+          <CollapsibleAnswerBody body={answer.body} />
 
           <div className="mt-2.5 flex items-center gap-1.5">
             <button

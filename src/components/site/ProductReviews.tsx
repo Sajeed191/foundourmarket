@@ -280,12 +280,18 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
       .slice(0, 4);
   }, [published]);
 
-  // gallery of all customer media (cap for performance)
-  const galleryMedia = useMemo(() => {
-    const all: ReviewMedia[] = [];
-    for (const r of published) for (const m of r.media ?? []) all.push(m);
-    return all;
+  // Flat index of every published review's media, each entry keeping a pointer
+  // back to its parent review so tapping opens the ReviewMediaViewer with
+  // ONLY that review's media (per-review isolation, Reviews v3.1 rule).
+  const mediaStripEntries = useMemo(() => {
+    const entries: { m: ReviewMedia; review: Review; indexInReview: number }[] = [];
+    for (const r of published) {
+      const list = r.media ?? [];
+      for (let i = 0; i < list.length; i++) entries.push({ m: list[i], review: r, indexInReview: i });
+    }
+    return entries;
   }, [published]);
+
 
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();

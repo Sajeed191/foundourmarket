@@ -413,12 +413,9 @@ function CartPage() {
               {totalSavings > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 flex items-center justify-between rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-2.5"
+                  className="mb-4"
                 >
-                  <span className="text-xs font-medium inline-flex items-center gap-1.5 text-accent">
-                    <BadgePercent className="size-3.5" /> Total savings
-                  </span>
-                  <span className="font-mono text-sm font-semibold text-accent">{format(totalSavings)}</span>
+                  <SavingsBadge variant="row" label="Total savings" amount={format(totalSavings)} />
                 </motion.div>
               )}
 

@@ -997,8 +997,8 @@ function ProductPage() {
                         label="You save"
                         amount={format(originalPrice - effectivePrice)}
                         size="md"
-                        suffix={discountPct ? ` · ${discountPct}% off` : undefined}
                       />
+
                     </div>
                   )}
                 </>

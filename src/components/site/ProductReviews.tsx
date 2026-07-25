@@ -405,7 +405,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     setEditRating(myReview.rating);
     setEditTitle(myReview.title ?? "");
     setEditBody(myReview.body ?? "");
-    document.getElementById(`review-${myReview.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // No auto-scroll: the customer keeps their exact reading position.
   }
 
   async function buyAgain() {

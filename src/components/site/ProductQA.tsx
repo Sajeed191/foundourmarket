@@ -846,6 +846,21 @@ export function ProductQA({
     const votes = (row?.my_answer_votes ?? []) as string[];
     setItems(qs);
     setVoted(new Set(Array.isArray(votes) ? votes : []));
+    // Seed seen-answer set on first successful load; keep it stable afterwards
+    // so incoming realtime answers are correctly detected as "new".
+    if (seenAnswerIdsRef.current === null) {
+      const seen = new Set<string>();
+      for (const q of qs) for (const a of q.answers) seen.add(a.id);
+      seenAnswerIdsRef.current = seen;
+    } else {
+      // Fold any freshly-seen IDs in *after* one paint so they still animate
+      // this cycle, but subsequent re-renders treat them as seen.
+      requestAnimationFrame(() => {
+        const seen = seenAnswerIdsRef.current;
+        if (!seen) return;
+        for (const q of qs) for (const a of q.answers) seen.add(a.id);
+      });
+    }
     setLoading(false);
   }, [productSlug]);
 

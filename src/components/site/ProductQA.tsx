@@ -205,9 +205,9 @@ function QuestionModal({
   productSlug,
   initial,
   onSubmitted,
-  faqSuggestions = [],
+  onOptimisticInsert,
+  onViewQuestion,
   questionSuggestions = [],
-  onFaqSuggestionSelect,
   onQuestionSuggestionSelect,
 }: {
   open: boolean;
@@ -215,6 +215,10 @@ function QuestionModal({
   productSlug: string;
   initial: QuestionDraft | null;
   onSubmitted: () => void;
+  /** v6.7 — inserts an optimistic pending question into the list immediately. */
+  onOptimisticInsert?: (q: Question) => void;
+  /** v6.7 — deep-links to the newly submitted question. */
+  onViewQuestion?: (id: string) => void;
   faqSuggestions?: ProductFaq[];
   questionSuggestions?: Question[];
   onFaqSuggestionSelect?: (id: string) => void;
@@ -231,6 +235,8 @@ function QuestionModal({
   const [initialSnapshot, setInitialSnapshot] = useState<{ q: string; anon: boolean }>({ q: "", anon: false });
   const [dupeMatch, setDupeMatch] = useState<Question | null>(null);
   const [confirmedDupe, setConfirmedDupe] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successId, setSuccessId] = useState<string | null>(null);
   const submittingRef = useRef(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -240,6 +246,8 @@ function QuestionModal({
       setMounted(false);
       setDupeMatch(null);
       setConfirmedDupe(false);
+      setErrorMsg(null);
+      setSuccessId(null);
       submittingRef.current = false;
       return;
     }
@@ -257,12 +265,13 @@ function QuestionModal({
     if (!el) return;
     el.style.height = "auto";
     el.style.height = Math.max(140, el.scrollHeight) + "px";
-  }, [question, open]);
+  }, [question, open, successId]);
 
-  // Clear the duplicate hint whenever the user edits the question.
+  // Clear the duplicate hint and error whenever the user edits the question.
   useEffect(() => {
     setDupeMatch(null);
     setConfirmedDupe(false);
+    setErrorMsg(null);
   }, [question]);
 
   if (!open) return null;
@@ -294,9 +303,7 @@ function QuestionModal({
       return;
     }
 
-    // v6.6 — silent duplicate check on submit. If a strong match exists
-    // among already-answered questions, surface a single inline hint
-    // instead of showing suggestions while typing. A second Submit sends it.
+    // v6.6 — silent duplicate check on submit.
     if (!isEdit && !confirmedDupe) {
       const best = questionSuggestions
         .map((q) => ({ q, s: scoreOverlap(text, q.question) }))
@@ -311,6 +318,7 @@ function QuestionModal({
 
     submittingRef.current = true;
     setBusy(true);
+    setErrorMsg(null);
     try {
       if (isEdit && initial?.id) {
         const { error } = await supabase
@@ -319,22 +327,57 @@ function QuestionModal({
           .eq("id", initial.id);
         if (error) throw error;
         toast.success("Question updated successfully.");
+        onSubmitted();
+        onClose();
       } else {
-        const { error } = await supabase.from("product_questions").insert({
+        const { data, error } = await supabase
+          .from("product_questions")
+          .insert({
+            product_slug: productSlug,
+            user_id: user.id,
+            question: text,
+            details: null,
+            is_anonymous: false,
+          })
+          .select("id, created_at")
+          .single();
+        if (error) throw error;
+
+        // v6.7 — optimistically insert as a pending question so it appears
+        // in the list immediately with an "Awaiting Response" status.
+        const newId = (data?.id as string) ?? `pending-${Date.now()}`;
+        const createdAt = (data?.created_at as string) ?? new Date().toISOString();
+        const meta = (user.user_metadata ?? {}) as {
+          full_name?: string;
+          name?: string;
+          avatar_url?: string;
+        };
+        const displayName =
+          meta.full_name || meta.name || user.email?.split("@")[0] || "You";
+        const avatarUrl = meta.avatar_url ?? null;
+
+        onOptimisticInsert?.({
+          id: newId,
           product_slug: productSlug,
-          user_id: user.id,
           question: text,
           details: null,
           is_anonymous: false,
+          status: "pending",
+          helpful_count: 0,
+          created_at: createdAt,
+          is_mine: true,
+          author_name: displayName,
+          author_avatar: avatarUrl,
+          answers: [],
         });
-        if (error) throw error;
-        toast.success("Question submitted");
+        onSubmitted();
+        setSuccessId(newId);
       }
-      onSubmitted();
-      onClose();
     } catch (err) {
       console.error("[QA] submit failed", err);
-      toast.error(friendlyError(err, isEdit ? "Couldn't update your question." : "Couldn't submit your question."));
+      setErrorMsg(
+        friendlyError(err, "We couldn't submit your question. Please try again."),
+      );
     } finally {
       submittingRef.current = false;
       setBusy(false);
@@ -343,6 +386,76 @@ function QuestionModal({
 
   return (
     <QuestionModalShell open={open} mounted={mounted} onClose={onClose}>
+      {successId ? (
+        <div className="flex flex-col h-full">
+          <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-3 right-3 grid place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground transition"
+              style={{ width: 44, height: 44 }}
+            >
+              <X className="size-[18px]" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-2 min-h-0 flex flex-col items-center text-center">
+            <div
+              className="grid place-items-center rounded-full"
+              style={{
+                width: 68,
+                height: 68,
+                background: "rgba(16,185,129,0.10)",
+                border: "1px solid rgba(16,185,129,0.28)",
+                boxShadow: "0 10px 30px -18px rgba(16,185,129,0.45)",
+              }}
+            >
+              <CheckCircle2 className="size-8 text-emerald-400" strokeWidth={1.8} />
+            </div>
+            <h3 className="mt-5 text-[20px] font-display font-semibold text-foreground leading-tight">
+              Question Submitted
+            </h3>
+            <p className="mt-2 text-[14px] text-muted-foreground leading-relaxed max-w-[380px]">
+              Thank you! Your question has been sent to the FoundOurMarket™ team.
+              We&apos;ll review it and publish an official answer as soon as possible.
+            </p>
+          </div>
+          <div
+            className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3"
+            style={{
+              borderTop: "1px solid rgba(255,255,255,0.06)",
+              paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))",
+            }}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center px-5 rounded-2xl text-[14px] font-medium text-foreground/85 hover:text-foreground transition-colors"
+              style={{ height: 46, minWidth: 96, border: "1px solid rgba(255,255,255,0.10)", background: "transparent" }}
+            >
+              Done
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onViewQuestion?.(successId);
+                onClose();
+              }}
+              className="inline-flex items-center justify-center gap-2 px-6 text-[14px] font-semibold transition"
+              style={{
+                height: 46,
+                minWidth: 152,
+                borderRadius: 16,
+                color: "#050608",
+                background: "linear-gradient(135deg,#ff9f43 0%, #ff8a2a 55%, #f07d00 100%)",
+                boxShadow: "0 10px 26px -16px rgba(255,138,42,0.55)",
+              }}
+            >
+              View My Question
+            </button>
+          </div>
+        </div>
+      ) : (
       <form onSubmit={submit} className="flex flex-col h-full">
         {/* Header */}
         <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
@@ -403,7 +516,7 @@ function QuestionModal({
             <span>{question.length} / 500</span>
           </div>
 
-          {/* v6.6 — single inline duplicate hint, only after Submit is pressed. */}
+          {/* v6.6 — single inline duplicate hint. */}
           {dupeMatch && !isEdit && (
             <div className="mt-3 rounded-2xl border border-accent/20 bg-accent/[0.05] px-4 py-3 flex items-start gap-3">
               <MessageCircleQuestion className="mt-0.5 size-4 shrink-0 text-accent" />
@@ -417,6 +530,21 @@ function QuestionModal({
                   View Answer
                 </button>
               </p>
+            </div>
+          )}
+
+          {/* v6.7 — inline submission error; typed content is preserved. */}
+          {errorMsg && (
+            <div
+              className="mt-3 rounded-2xl px-4 py-3 text-[13px] leading-snug"
+              style={{
+                border: "1px solid rgba(239,68,68,0.28)",
+                background: "rgba(239,68,68,0.06)",
+                color: "#fca5a5",
+              }}
+              role="alert"
+            >
+              {errorMsg}
             </div>
           )}
         </div>
@@ -442,16 +570,18 @@ function QuestionModal({
             type="submit"
             disabled={!canSubmit}
             aria-label={isEdit ? "Save changes" : "Submit question"}
+            aria-busy={busy}
             className="inline-flex items-center justify-center gap-2 px-6 text-[14px] font-semibold transition disabled:cursor-not-allowed"
             style={{
               height: 46,
               minWidth: 132,
               borderRadius: 16,
-              color: canSubmit ? "#050608" : "rgba(255,255,255,0.55)",
-              background: canSubmit
+              color: canSubmit || busy ? "#050608" : "rgba(255,255,255,0.55)",
+              background: canSubmit || busy
                 ? "linear-gradient(135deg,#ff9f43 0%, #ff8a2a 55%, #f07d00 100%)"
                 : "rgba(255,255,255,0.08)",
-              boxShadow: canSubmit ? "0 10px 26px -16px rgba(255,138,42,0.55)" : "none",
+              boxShadow: canSubmit || busy ? "0 10px 26px -16px rgba(255,138,42,0.55)" : "none",
+              opacity: busy ? 0.85 : 1,
             }}
           >
             {busy && (
@@ -465,10 +595,11 @@ function QuestionModal({
                 }}
               />
             )}
-            {busy ? "Saving…" : isEdit ? "Save Changes" : user ? "Submit" : "Sign in to submit"}
+            {busy ? "Submitting…" : isEdit ? "Save Changes" : user ? "Submit" : "Sign in to submit"}
           </button>
         </div>
       </form>
+      )}
     </QuestionModalShell>
   );
 }
@@ -1345,6 +1476,18 @@ export function ProductQA({
         productSlug={productSlug}
         initial={null}
         onSubmitted={load}
+        onOptimisticInsert={(q) => {
+          setItems((prev) => (prev.some((x) => x.id === q.id) ? prev : [q, ...prev]));
+        }}
+        onViewQuestion={(id) => {
+          if (typeof window === "undefined") return;
+          const scrollTo = () => {
+            const el = document.getElementById(`q-${id}`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            else window.location.hash = `#q-${id}`;
+          };
+          requestAnimationFrame(() => requestAnimationFrame(scrollTo));
+        }}
         faqSuggestions={faqs}
         questionSuggestions={items}
         onFaqSuggestionSelect={(id) => {
@@ -1360,6 +1503,7 @@ export function ProductQA({
           else window.location.hash = `#q-${id}`;
         }}
       />
+
 
       <QuestionModal
         open={!!editingQuestion}

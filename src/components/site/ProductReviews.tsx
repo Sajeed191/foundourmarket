@@ -131,6 +131,10 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteDialogRef = useRef<HTMLDivElement | null>(null);
+  const keepReviewRef = useRef<HTMLButtonElement | null>(null);
+
   const [deleteMode, setDeleteMode] = useState<"customer" | "admin_soft" | "admin_hard">("customer");
   const [deleteReason, setDeleteReason] = useState("");
   const [restoringId, setRestoringId] = useState<string | null>(null);
@@ -507,8 +511,9 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
 
   async function confirmDelete() {
     const id = confirmDeleteId;
-    if (!id) return;
+    if (!id || deleting) return;
     setDeleting(true);
+    setDeleteError(null);
     const prevList = reviews;
     const prevMine = myReview;
     // Optimistic: customer & admin_hard delete → remove row entirely (full
@@ -535,24 +540,58 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
       toast.success(
         deleteMode === "admin_hard" ? "Review permanently deleted"
         : deleteMode === "admin_soft" ? "Review deleted (archived)"
-        : "Review deleted",
+        : "Review deleted successfully.",
       );
+      setConfirmDeleteId(null);
+      setDeleteReason("");
       if (!r.queued) { await load(); onAggregateChange?.(); }
     } catch (e) {
       setReviews(prevList);
       setMyReview(prevMine);
-      toast.error(e instanceof Error ? e.message : "Action failed");
+      if (deleteMode === "customer") {
+        // Keep the dialog open so the customer can retry.
+        setDeleteError("Couldn't delete your review. Please try again.");
+      } else {
+        toast.error(e instanceof Error ? e.message : "Action failed");
+        setConfirmDeleteId(null);
+        setDeleteReason("");
+      }
     } finally {
       setDeleting(false);
-      setConfirmDeleteId(null);
-      setDeleteReason("");
     }
   }
+
+  // Delete dialog a11y: focus the safe action, trap focus, close on Escape.
+  useEffect(() => {
+    if (!confirmDeleteId) return;
+    const t = window.setTimeout(() => keepReviewRef.current?.focus(), 40);
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (!deleting) setConfirmDeleteId(null);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const root = deleteDialogRef.current;
+      if (!root) return;
+      const nodes = Array.from(
+        root.querySelectorAll<HTMLElement>('button:not([disabled]),textarea,[href],input,[tabindex]:not([tabindex="-1"])'),
+      ).filter((el) => el.offsetParent !== null);
+      if (!nodes.length) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => { window.clearTimeout(t); document.removeEventListener("keydown", onKey); };
+  }, [confirmDeleteId, deleting]);
 
   function requestDelete(id: string, mode: "customer" | "admin_soft" | "admin_hard" = "customer") {
     setDeleteMode(mode);
     setDeleteReason("");
+    setDeleteError(null);
     setConfirmDeleteId(id);
+
   }
 
   async function restoreReview(id: string) {
@@ -1587,30 +1626,41 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
             onClick={() => !deleting && setConfirmDeleteId(null)}
-            className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+            style={{
+              paddingTop: "max(1rem, env(safe-area-inset-top))",
+              paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+            }}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              ref={deleteDialogRef}
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="delete-review-title"
+              aria-describedby="delete-review-desc"
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-3xl border border-white/10 bg-card p-6 text-center shadow-[var(--shadow-float)]"
+              className="w-full max-w-[20rem] rounded-3xl border border-white/10 bg-card px-7 py-8 text-center shadow-[var(--shadow-float)]"
             >
-              <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-destructive/15 text-destructive">
-                <Trash2 className="size-5" />
+              <div className="mx-auto grid size-10 place-items-center rounded-full bg-destructive/10 text-destructive">
+                <Trash2 className="size-4" />
               </div>
-              <p className="mt-4 text-base font-display">
+              <h3 id="delete-review-title" className="mt-6 text-[17px] font-display leading-snug">
                 {deleteMode === "admin_hard" ? "Permanently delete this review?"
                   : deleteMode === "admin_soft" ? "Delete this review?"
-                  : "Delete this review?"}
-              </p>
-              <p className="mt-1.5 text-sm text-muted-foreground">
+                  : "Delete Review?"}
+              </h3>
+              <p id="delete-review-desc" className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
                 {deleteMode === "admin_hard"
                   ? "This will permanently erase the review from the database. This action cannot be undone."
                   : deleteMode === "admin_soft"
                   ? "The review will be hidden from customers and moved to the admin archive. You can restore it later."
-                  : "Your review will be hidden from the product page. The product rating will update immediately."}
+                  : "Your review will be permanently removed from this product. This action cannot be undone."}
               </p>
               {deleteMode === "admin_soft" && (
                 <textarea
@@ -1619,26 +1669,36 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                   rows={2}
                   maxLength={200}
                   placeholder="Reason (optional, internal only)"
-                  className="mt-3 w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-left text-sm focus:border-accent focus:outline-none"
+                  className="mt-4 w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-left text-sm focus:border-accent focus:outline-none"
                 />
               )}
-              <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
+              {deleteError && (
+                <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[12px] leading-snug text-destructive">
+                  {deleteError}
+                </p>
+              )}
+              <div className="mt-7 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
                 <button
+                  ref={keepReviewRef}
                   onClick={() => setConfirmDeleteId(null)}
                   disabled={deleting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
                 >
-                  Cancel
+                  {deleteMode === "customer" ? "Keep Review" : "Cancel"}
                 </button>
                 <button
                   onClick={confirmDelete}
                   disabled={deleting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110 disabled:opacity-50"
+                  aria-busy={deleting}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground shadow-[0_10px_30px_-12px_color-mix(in_oklab,var(--destructive)_60%,transparent)] transition-all hover:brightness-110 disabled:opacity-60"
                 >
                   {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                  {deleting ? "Working…" : deleteMode === "admin_hard" ? "Delete permanently" : "Delete Review"}
+                  {deleting ? "Deleting…" : deleteMode === "admin_hard" ? "Delete permanently" : "Delete Review"}
                 </button>
               </div>
+              <span aria-live="polite" className="sr-only">
+                {deleting ? "Deleting your review" : deleteError ? deleteError : ""}
+              </span>
             </motion.div>
           </motion.div>
         )}

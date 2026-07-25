@@ -44,6 +44,8 @@ const AdminImageManager = lazy(() =>
   import("@/components/admin/AdminImageManager").then((m) => ({ default: m.AdminImageManager })),
 );
 import { ImageLightbox, type LightboxMedia } from "@/components/site/ImageLightbox";
+import { ImageWithSkeleton } from "@/components/ui/ImageWithSkeleton";
+
 import { resizedStorageImage } from "@/lib/storage-image";
 import { VariantSelector } from "@/components/site/VariantSelector";
 import { LazyMount } from "@/components/site/LazyMount";
@@ -751,7 +753,7 @@ function ProductPage() {
                   const rawUrl = activeMedia?.url || product.image || "";
                   const displaySrc = rawUrl ? galleryDisplaySrc(rawUrl) : "";
                   return (
-                    <img
+                    <ImageWithSkeleton
                       key={activeMedia?.id ?? "fallback"}
                       src={displaySrc || rawUrl || product.image}
                       alt={activeMedia?.alt || product.name}
@@ -764,12 +766,13 @@ function ProductPage() {
                         if (primary && el.src !== primary) el.src = primary;
                         else if (product.image && el.src !== product.image) el.src = product.image;
                       }}
-                      className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02] !rounded-none"
+                      imgClassName="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02] !rounded-none"
                       style={{ borderRadius: 0 }}
                     />
                   );
                 })()
               )}
+
 
               {/* Single canonical badge — top-left, no chrome around it */}
               {heroBadges[0] && (
@@ -863,7 +866,7 @@ function ProductPage() {
                         </div>
                       )
                     ) : (
-                      <img src={thumbDisplaySrc(item.url)} alt={item.alt || `${product.name} — view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { if (e.currentTarget.src !== item.url) e.currentTarget.src = item.url; }} />
+                      <ImageWithSkeleton src={thumbDisplaySrc(item.url)} alt={item.alt || `${product.name} — view ${i + 1}`} imgClassName="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { if (e.currentTarget.src !== item.url) e.currentTarget.src = item.url; }} />
                     )}
                   </button>
                 ))}

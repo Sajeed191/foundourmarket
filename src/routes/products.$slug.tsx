@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Heart, Truck, RotateCcw, Minus, Plus,
-  Share2, Play,
+  Share2, Play, ChevronDown,
   ShoppingCart, Zap, Check, Loader2, Lock,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
@@ -247,6 +247,7 @@ function ProductPage() {
   // element's viewport visibility (only one purchase section shows at a time).
   const inlinePurchaseRef = useRef<HTMLDivElement>(null);
   const [titleExpanded, setTitleExpanded] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
 
   // ── AI Shopping Context (v1.3) ──────────────────────────────────────────
   const currentVariant = variants.find((v) => v.id === variantId) ?? null;
@@ -997,8 +998,8 @@ function ProductPage() {
                         label="You save"
                         amount={format(originalPrice - effectivePrice)}
                         size="md"
-                        suffix={discountPct ? ` · ${discountPct}% off` : undefined}
                       />
+
                     </div>
                   )}
                 </>
@@ -1124,58 +1125,95 @@ function ProductPage() {
               </Link>
             </div>
 
-            {/* Delivery & trust — premium glass card. Only real, data-backed rows. */}
-            <div
-              className="mt-8 rounded-2xl border border-white/10 p-4 sm:p-5"
-              style={{
-                background:
-                  "linear-gradient(135deg, oklch(1 0 0 / 0.05), oklch(1 0 0 / 0.015))",
-                backdropFilter: "blur(20px) saturate(140%)",
-                WebkitBackdropFilter: "blur(20px) saturate(140%)",
-              }}
-            >
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5">
-                {[
-                  deliveryWindow && !isOOS
-                    ? { icon: Truck, label: "Estimated Delivery", value: deliveryWindow, accent: true }
-                    : null,
-                  {
-                    icon: Truck,
-                    label: unitShipping <= 0 ? "Free Shipping" : "Shipping",
-                    value: unitShipping <= 0 ? "On this order" : `From ${format(unitShipping)}`,
-                  },
-                  product.returnEligible
-                    ? { icon: RotateCcw, label: "Easy Returns", value: `${product.returnWindowDays}-day window` }
-                    : null,
-                  { icon: Lock, label: "Secure Checkout", value: "Encrypted payment" },
-                ]
-                  .filter((r): r is { icon: typeof Truck; label: string; value: string; accent?: boolean } => !!r)
-                  .map((row, i) => {
-                    const Icon = row.icon;
-                    return (
-                      <li key={i} className="flex items-start gap-3">
-                        <span
-                          className={`grid size-9 shrink-0 place-items-center rounded-xl border ${
-                            row.accent
-                              ? "border-accent/30 bg-accent/10 text-accent"
-                              : "border-white/10 bg-white/[0.03] text-muted-foreground"
-                          }`}
-                        >
-                          <Icon className="size-[16px]" strokeWidth={1.75} />
-                        </span>
-                        <div className="min-w-0 leading-tight">
-                          <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">
-                            {row.label}
-                          </p>
-                          <p className="mt-0.5 text-[13.5px] font-medium text-foreground/90 truncate">
-                            {row.value}
-                          </p>
-                        </div>
-                      </li>
-                    );
-                  })}
-              </ul>
-            </div>
+            {/* Delivery & trust — collapsible premium glass card.
+                Collapsed: only the Estimated Delivery row + chevron.
+                Expanded: reveals shipping / returns / secure checkout and any
+                future admin-added benefit rows. Height + opacity animate
+                smoothly (~280ms) with no CLS. */}
+            {(() => {
+              const headerRow = deliveryWindow && !isOOS
+                ? { icon: Truck, label: "Estimated Delivery", value: deliveryWindow, accent: true }
+                : { icon: Truck, label: "Delivery", value: "Details", accent: true };
+              const benefitRows = [
+                {
+                  icon: Truck,
+                  label: unitShipping <= 0 ? "Free Shipping" : "Shipping",
+                  value: unitShipping <= 0 ? "On this order" : `From ${format(unitShipping)}`,
+                },
+                product.returnEligible
+                  ? { icon: RotateCcw, label: "Easy Returns", value: `${product.returnWindowDays}-day window` }
+                  : null,
+                { icon: Lock, label: "Secure Checkout", value: "Encrypted payment" },
+              ].filter((r): r is { icon: typeof Truck; label: string; value: string } => !!r);
+              const HeaderIcon = headerRow.icon;
+              return (
+                <div
+                  className="mt-8 overflow-hidden rounded-2xl border border-white/10"
+                  style={{
+                    background: "linear-gradient(135deg, oklch(1 0 0 / 0.05), oklch(1 0 0 / 0.015))",
+                    backdropFilter: "blur(20px) saturate(140%)",
+                    WebkitBackdropFilter: "blur(20px) saturate(140%)",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryOpen((v) => !v)}
+                    aria-expanded={deliveryOpen}
+                    aria-controls="pdp-delivery-benefits"
+                    className="flex w-full items-start gap-3 p-4 sm:p-5 text-left transition-colors active:bg-white/[0.02]"
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">
+                      <HeaderIcon className="size-[16px]" strokeWidth={1.75} />
+                    </span>
+                    <div className="min-w-0 flex-1 leading-tight">
+                      <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                        {headerRow.label}
+                      </p>
+                      <p className="mt-0.5 text-[13.5px] font-medium text-foreground/90 truncate">
+                        {headerRow.value}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      className={`size-4 shrink-0 mt-1 text-muted-foreground transition-transform duration-300 ${deliveryOpen ? "rotate-180" : ""}`}
+                      strokeWidth={2}
+                    />
+                  </button>
+                  <div
+                    id="pdp-delivery-benefits"
+                    className="grid transition-[grid-template-rows,opacity] duration-300 ease-out"
+                    style={{
+                      gridTemplateRows: deliveryOpen ? "1fr" : "0fr",
+                      opacity: deliveryOpen ? 1 : 0,
+                    }}
+                    aria-hidden={!deliveryOpen}
+                  >
+                    <div className="min-h-0 overflow-hidden">
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 px-4 sm:px-5 pb-4 sm:pb-5 pt-1 border-t border-white/[0.06]">
+                        {benefitRows.map((row, i) => {
+                          const Icon = row.icon;
+                          return (
+                            <li key={i} className="flex items-start gap-3 pt-3">
+                              <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.03] text-muted-foreground">
+                                <Icon className="size-[16px]" strokeWidth={1.75} />
+                              </span>
+                              <div className="min-w-0 leading-tight">
+                                <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">
+                                  {row.label}
+                                </p>
+                                <p className="mt-0.5 text-[13.5px] font-medium text-foreground/90 truncate">
+                                  {row.value}
+                                </p>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
 
             {/* Product Overview — description component owns its own subsection titles */}
             <section className="mt-16">

@@ -388,6 +388,67 @@ function QuestionModal({
             <p className="mt-2 text-[12px]" style={{ color: "#f97a7a" }}>{validationMsg}</p>
           )}
 
+          {/* v6.3 — live FAQ auto-link + duplicate detection (customer-only, not shown while editing) */}
+          {!isEdit && trimmed.length >= 5 && (() => {
+            const faqs = faqSuggestions
+              .map((f) => ({ f, s: Math.max(scoreOverlap(trimmed, f.question), scoreOverlap(trimmed, f.answer) * 0.6) }))
+              .filter((x) => x.s >= 0.4)
+              .sort((a, b) => b.s - a.s)
+              .slice(0, 3);
+            const dupes = questionSuggestions
+              .map((q) => ({ q, s: scoreOverlap(trimmed, q.question) }))
+              .filter((x) => x.s >= 0.5 && x.q.answers.length > 0)
+              .sort((a, b) => b.s - a.s)
+              .slice(0, 3);
+            if (faqs.length === 0 && dupes.length === 0) return null;
+            return (
+              <div className="mt-3 space-y-3">
+                {faqs.length > 0 && (
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3.5">
+                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-emerald-300/90 mb-2">
+                      You may already have your answer
+                    </p>
+                    <ul className="space-y-1.5">
+                      {faqs.map(({ f }) => (
+                        <li key={f.id}>
+                          <button
+                            type="button"
+                            onClick={() => { onFaqSuggestionSelect?.(f.id); onClose(); }}
+                            className="w-full text-left flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-emerald-500/[0.08] transition text-[13px] leading-snug text-foreground"
+                          >
+                            <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-400" />
+                            <span className="min-w-0">{f.question}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {dupes.length > 0 && (
+                  <div className="rounded-2xl border border-accent/20 bg-accent/[0.05] p-3.5">
+                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-accent mb-2">
+                      Similar questions already answered
+                    </p>
+                    <ul className="space-y-1.5">
+                      {dupes.map(({ q }) => (
+                        <li key={q.id}>
+                          <button
+                            type="button"
+                            onClick={() => { onQuestionSuggestionSelect?.(q.id); onClose(); }}
+                            className="w-full text-left flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-accent/[0.08] transition text-[13px] leading-snug text-foreground"
+                          >
+                            <MessageCircleQuestion className="mt-0.5 size-3.5 shrink-0 text-accent" />
+                            <span className="min-w-0">{q.question}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Only editing the question is allowed in edit mode (v2 spec). */}
           {!isEdit && (
             <div className="mt-3">
@@ -412,6 +473,7 @@ function QuestionModal({
           )}
 
         </div>
+
 
         {/* Sticky footer */}
         <div

@@ -13,7 +13,8 @@ import { createServerFn } from "@tanstack/react-start";
 
 export type PublicMarketplaceState = {
   rotationNonce: number;
-  homepageRules: unknown;
+  /** JSON-encoded `homepage_collections` rule value (null when unset). */
+  homepageRulesJson: string | null;
 };
 
 export const getPublicMarketplaceState = createServerFn({ method: "GET" }).handler(
@@ -29,9 +30,11 @@ export const getPublicMarketplaceState = createServerFn({ method: "GET" }).handl
         .maybeSingle(),
     ]);
 
+    const value = (rules.data as { value?: unknown } | null)?.value ?? null;
+
     return {
       rotationNonce: Number((rotation.data as { nonce?: number } | null)?.nonce) || 0,
-      homepageRules: (rules.data as { value?: unknown } | null)?.value ?? null,
+      homepageRulesJson: value == null ? null : JSON.stringify(value),
     };
   },
 );

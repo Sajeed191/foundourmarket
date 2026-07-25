@@ -104,12 +104,31 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </div>
       )}
 
-      {/* Single primary CTA — beneath the search bar */}
+      {/* v6.3 — Official Product Support info card + single primary CTA */}
       {!isEmpty && (
-        <div className="mb-6 flex justify-end">
-          <AskCta />
+        <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 flex items-start gap-4">
+          <div className="shrink-0 size-10 rounded-xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
+            <MessageCircleQuestion className="size-5" strokeWidth={1.75} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] sm:text-sm font-display font-semibold text-foreground">
+              Official Product Support
+            </p>
+            <p className="mt-0.5 text-[12px] sm:text-[13px] text-muted-foreground leading-relaxed">
+              Our FoundOurMarket™ team typically responds within 24–48 hours.
+            </p>
+          </div>
+          <div className="hidden sm:block shrink-0">
+            <AskCta />
+          </div>
         </div>
       )}
+      {!isEmpty && (
+        <div className="mb-6 sm:hidden">
+          <AskCta full />
+        </div>
+      )}
+
 
       {/* Admin FAQs — accordion only rendered when data exists */}
       {hasFaqs && (

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2, ShieldCheck, MapPin, Plus, Lock, Smartphone, CreditCard,
-  Landmark, Wallet, Truck, CheckCircle2, XCircle, RotateCcw, Globe, Sparkles,
+  Landmark, Wallet, Truck, CheckCircle2, XCircle, RotateCcw, Globe, Sparkles, BadgePercent,
   Home, Briefcase, MapPinned, Pencil, Trash2, Star, ArrowRight, Clock,
   PackageCheck, BadgeCheck, ShieldHalf, Download, LifeBuoy,
 } from "lucide-react";

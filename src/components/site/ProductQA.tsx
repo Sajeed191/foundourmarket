@@ -278,8 +278,6 @@ function QuestionModal({
     setErrorMsg(null);
   }, [question]);
 
-  if (!open) return null;
-
   const trimmed = question.trim();
   const tooShort = trimmed.length > 0 && trimmed.length < 5;
   const tooLong = trimmed.length > 500;
@@ -295,6 +293,50 @@ function QuestionModal({
       : tooLong
         ? "Please keep your question under 500 characters."
         : "";
+
+  // PDP v7.0 — a draft is "dirty" whenever the user has typed something not
+  // yet submitted. Success and busy states never guard.
+  const isDirty = open && !successId && !busy && changed;
+  const dirtyRef = useRef(false);
+  dirtyRef.current = isDirty;
+  const successRef = useRef<string | null>(null);
+  successRef.current = successId;
+  const busyRef = useRef(false);
+  busyRef.current = busy;
+
+  // Stable close-intent that respects the dirty guard. Passed to the shell
+  // (backdrop + ESC) and history handlers so the reference never changes and
+  // the scroll-lock effect doesn't re-run.
+  const closeIntentRef = useRef<() => void>(() => {});
+  closeIntentRef.current = () => {
+    if (successRef.current) { onClose(); return; }
+    if (busyRef.current) return;
+    if (dirtyRef.current) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    onClose();
+  };
+  const requestClose = useCallback(() => closeIntentRef.current(), []);
+
+  // Android back-button: push a sentinel state on open, intercept popstate.
+  useEffect(() => {
+    if (!open) return;
+    const marker = { __qaModal: true, ts: Date.now() };
+    try { window.history.pushState(marker, ""); } catch { /* noop */ }
+    const onPop = () => { closeIntentRef.current(); };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // Best-effort: unwind the sentinel if it's still on top.
+      if ((window.history.state as { __qaModal?: boolean } | null)?.__qaModal) {
+        try { window.history.back(); } catch { /* noop */ }
+      }
+    };
+  }, [open]);
+
+  if (!open) return null;
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

@@ -910,41 +910,45 @@ export function ProductQA({
   return (
     <section className="max-w-7xl mx-auto pt-2 pb-16">
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-[22px] sm:text-[26px] font-display font-semibold tracking-tight text-foreground">
-            Questions &amp; Answers
-          </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-            Ask questions and get answers from shoppers and our team.
-          </p>
-          {items.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-muted-foreground">
-                <span className="text-foreground font-semibold">{items.length}</span> {items.length === 1 ? "Question" : "Questions"}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-3 py-1 text-[11px] font-medium text-emerald-300">
-                <span className="font-semibold">{answered}</span> Answered
-              </span>
-            </div>
-          )}
+      {!hideHeader && (
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-[22px] sm:text-[26px] font-display font-semibold tracking-tight text-foreground">
+              Questions &amp; Answers
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+              Ask questions and get answers from shoppers and our team.
+            </p>
+            {items.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                  <span className="text-foreground font-semibold">{items.length}</span> {items.length === 1 ? "Question" : "Questions"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-3 py-1 text-[11px] font-medium text-emerald-300">
+                  <span className="font-semibold">{answered}</span> Answered
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="shrink-0">{askButton(true)}</div>
         </div>
-        <div className="shrink-0">{askButton(true)}</div>
-      </div>
+      )}
 
       {/* Controls */}
       {items.length > 0 && (
-        <div className="sticky top-16 z-20 -mx-4 sm:mx-0 mb-5 px-4 sm:px-0 py-2 bg-background/85 backdrop-blur-xl">
+        <div className={`${hideHeader ? "" : "sticky top-16 z-20"} -mx-4 sm:mx-0 mb-5 px-4 sm:px-0 py-2 ${hideHeader ? "" : "bg-background/85 backdrop-blur-xl"}`}>
           <div className="flex gap-2 flex-wrap">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search questions and answers…"
-                className="w-full h-11 bg-card border border-border rounded-full pl-11 pr-4 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/10 transition"
-              />
-            </div>
+            {externalSearch === undefined && (
+              <div className="relative flex-1 min-w-[220px]">
+                <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search questions and answers…"
+                  className="w-full h-11 bg-card border border-border rounded-full pl-11 pr-4 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/10 transition"
+                />
+              </div>
+            )}
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}

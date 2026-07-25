@@ -737,7 +737,16 @@ export function ProductQA({
   const [internalSearch, setInternalSearch] = useState("");
   const search = externalSearch ?? internalSearch;
   const setSearch = (v: string) => setInternalSearch(v);
-  const [sort, setSort] = useState<Sort>("newest");
+  const sortKey = `fom.qa.sort.${productSlug}`;
+  const [sort, setSort] = useState<Sort>(() => {
+    if (typeof window === "undefined") return "newest";
+    const v = window.sessionStorage.getItem(sortKey);
+    const allowed: Sort[] = ["newest", "oldest", "helpful", "official", "answered", "unanswered"];
+    return (allowed as string[]).includes(v ?? "") ? (v as Sort) : "newest";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") window.sessionStorage.setItem(sortKey, sort);
+  }, [sort, sortKey]);
   const [askOpen, setAskOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionDraft | null>(null);
   const [replyOpen, setReplyOpen] = useState<{ answerId: string; questionId: string } | null>(null);

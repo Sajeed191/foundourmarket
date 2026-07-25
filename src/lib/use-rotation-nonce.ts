@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getPublicMarketplaceState } from "@/lib/marketplace-state.functions";
 
 /**
  * Global manual-reshuffle nonce. Admins can trigger an instant reshuffle of all
@@ -7,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
  * value. It is combined with the time-based rotation seed everywhere, so a bump
  * re-randomizes the order for every visitor immediately (via realtime), while
  * the regular 12:00 AM / PM rotation still applies on top.
+ *
+ * `rotation_state` is staff-only at the database level, so the value is read
+ * through the secure server function which exposes just the nonce.
  */
 export function useRotationNonce(): number {
   const [nonce, setNonce] = useState(0);
@@ -15,19 +19,18 @@ export function useRotationNonce(): number {
     let active = true;
 
     const load = async () => {
-      const { data } = await supabase
-        .from("rotation_state")
-        .select("nonce")
-        .limit(1)
-        .maybeSingle();
-      if (active && data) setNonce(Number(data.nonce) || 0);
+      try {
+        const state = await getPublicMarketplaceState();
+        if (active) setNonce(Number(state.rotationNonce) || 0);
+      } catch {
+        /* keep last known nonce — rotation still works off the time window */
+      }
     };
     load();
 
-    // Unique channel name per hook instance — multiple components subscribe to
-    // rotation state at once (Flash Deals, Trending, Best Sellers). Reusing one
-    // channel topic makes Supabase Realtime drop all but one subscription, so
-    // some rails never receive the new nonce and never reshuffle.
+    // Realtime is still bound for staff sessions (customers are filtered out by
+    // RLS and simply receive nothing). A light refresh on tab focus + a slow
+    // interval keeps customer sessions eventually consistent after a reshuffle.
     const channel = supabase
       .channel(`rotation-state-live-${Math.random().toString(36).slice(2)}`)
       .on(
@@ -40,14 +43,23 @@ export function useRotationNonce(): number {
       )
       .subscribe();
 
+    const onFocus = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onFocus);
+    const poll = setInterval(load, 5 * 60_000);
+
     return () => {
       active = false;
+      document.removeEventListener("visibilitychange", onFocus);
+      clearInterval(poll);
       supabase.removeChannel(channel);
     };
   }, []);
 
   return nonce;
 }
+
 
 /**
  * Triggers a global reshuffle of all rotating collections. Admin-only (enforced

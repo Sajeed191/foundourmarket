@@ -9,6 +9,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { setPromoResolverConfig } from "@/lib/use-product-badges";
+import { getPublicMarketplaceState } from "@/lib/marketplace-state.functions";
+
 
 export type HomepageCollectionKey =
   | "flash_deals"
@@ -116,12 +118,16 @@ async function load(force = false): Promise<HomepageCollectionRules> {
   if (cache && !force) return cache;
   if (!inflight) {
     inflight = (async () => {
-      const { data } = await supabase
-        .from("site_rules")
-        .select("value")
-        .eq("key", "homepage_collections")
-        .maybeSingle();
-      const rules = coerce((data as { value?: unknown } | null)?.value);
+      // `site_rules` is staff-only at the database level; the storefront reads
+      // the homepage rule through the secure server function.
+      let raw: unknown = null;
+      try {
+        const state = await getPublicMarketplaceState();
+        raw = state.homepageRulesJson ? JSON.parse(state.homepageRulesJson) : null;
+      } catch {
+        raw = null;
+      }
+      const rules = coerce(raw);
       cache = rules;
       inflight = null;
       syncResolverFromRules(rules);
@@ -131,6 +137,7 @@ async function load(force = false): Promise<HomepageCollectionRules> {
   }
   return inflight;
 }
+
 
 export function useHomepageCollectionRules(): HomepageCollectionRules {
   const [rules, setRules] = useState<HomepageCollectionRules>(

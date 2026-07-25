@@ -7300,6 +7300,7 @@ export type Database = {
         }[]
       }
       get_seed_status: { Args: never; Returns: Json }
+      hard_delete_own_review: { Args: { p_id: string }; Returns: undefined }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]

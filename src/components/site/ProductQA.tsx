@@ -802,6 +802,11 @@ export function ProductQA({
 
   useEffect(() => { void load(); }, [load]);
 
+  useEffect(() => {
+    if (!loading) onCountChange?.(items.length);
+  }, [items.length, loading, onCountChange]);
+
+
   // Deep-link: after items render, scroll the target question into view.
   const scrolledForHash = useRef<string | null>(null);
   useEffect(() => {

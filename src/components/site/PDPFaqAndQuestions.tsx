@@ -237,9 +237,15 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
         </Suspense>
       </IsolatedBoundary>
 
-      {/* Unified premium empty state — no FAQs AND no community questions */}
-      {isEmpty && (
-        <div className="py-16 px-6 text-center rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
+      {/* Unified premium empty state — smooth fade out when the first
+          question is submitted so the incoming card can fade in. */}
+      {emptyVisible && (
+        <div
+          className={`py-16 px-6 text-center rounded-[24px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent transition-all duration-300 ease-out ${
+            emptyFading ? "opacity-0 -translate-y-1 pointer-events-none" : "opacity-100 translate-y-0"
+          }`}
+          aria-hidden={emptyFading}
+        >
           <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
             <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
           </div>

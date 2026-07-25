@@ -2655,6 +2655,7 @@ export type Database = {
           ua_hash: string | null
           unsubscribed_at: string | null
           updated_at: string
+          user_id: string | null
           verification_expires_at: string | null
           verification_sent_at: string | null
           verification_token: string | null
@@ -2682,6 +2683,7 @@ export type Database = {
           ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
+          user_id?: string | null
           verification_expires_at?: string | null
           verification_sent_at?: string | null
           verification_token?: string | null
@@ -2709,6 +2711,7 @@ export type Database = {
           ua_hash?: string | null
           unsubscribed_at?: string | null
           updated_at?: string
+          user_id?: string | null
           verification_expires_at?: string | null
           verification_sent_at?: string | null
           verification_token?: string | null

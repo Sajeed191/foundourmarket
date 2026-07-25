@@ -845,11 +845,19 @@ function ShippingBox({
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-            <div className="pt-3 flex gap-2">
+            <div className="pt-3 flex gap-2 scroll-mt-24">
               <input
                 value={pincode} onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onFocus={(e) => {
+                  const el = e.currentTarget;
+                  // Wait for the mobile keyboard to resize the viewport, then
+                  // scroll the input into view so it isn't hidden behind it.
+                  window.setTimeout(() => {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }, 300);
+                }}
                 inputMode="numeric" placeholder="6-digit PIN code"
-                className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm tracking-wider focus:outline-none focus:ring-1 focus:ring-accent"
+                className="flex-1 min-w-0 bg-background border border-border rounded-lg px-3 py-2 text-sm tracking-wider focus:outline-none focus:ring-1 focus:ring-accent"
               />
               <button onClick={submit} disabled={busy} className="px-4 rounded-lg bg-accent text-accent-foreground text-xs font-bold uppercase tracking-widest disabled:opacity-40 inline-flex items-center gap-1.5">
                 {busy ? <Loader2 className="size-3.5 animate-spin" /> : "Check"}

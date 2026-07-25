@@ -762,7 +762,13 @@ export function ProductQA({
   useEffect(() => {
     if (typeof window !== "undefined") window.sessionStorage.setItem(sortKey, sort);
   }, [sort, sortKey]);
-  const [askOpen, setAskOpen] = useState(false);
+  const [askOpenInternal, setAskOpenInternal] = useState(false);
+  const askOpen = askOpenProp ?? askOpenInternal;
+  const setAskOpen = useCallback((v: boolean) => {
+    if (askOpenProp === undefined) setAskOpenInternal(v);
+    onAskOpenChange?.(v);
+  }, [askOpenProp, onAskOpenChange]);
+
   const [editingQuestion, setEditingQuestion] = useState<QuestionDraft | null>(null);
   const [replyOpen, setReplyOpen] = useState<{ answerId: string; questionId: string } | null>(null);
   const [answerOpen, setAnswerOpen] = useState<string | null>(null);

@@ -264,12 +264,26 @@ function QuestionModal({
     return () => cancelAnimationFrame(id);
   }, [open, initial]);
 
+  // Auto-grow the textarea from a compact 5–6 line start up to ~40% of the
+  // viewport height; beyond that the textarea itself scrolls internally so the
+  // modal never stretches into a giant empty canvas.
   useEffect(() => {
     const el = taRef.current;
     if (!el) return;
-    el.style.height = "auto";
-    el.style.height = Math.max(140, el.scrollHeight) + "px";
+    const resize = () => {
+      el.style.height = "auto";
+      const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+      const cap = Math.round(vh * 0.4);
+      const next = Math.min(cap, Math.max(132, el.scrollHeight));
+      el.style.height = next + "px";
+      el.style.overflowY = el.scrollHeight > cap ? "auto" : "hidden";
+    };
+    resize();
+    if (typeof window === "undefined") return;
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
   }, [question, open, successId]);
+
 
   // Clear the duplicate hint and error whenever the user edits the question.
   useEffect(() => {

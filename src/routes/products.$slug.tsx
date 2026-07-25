@@ -17,8 +17,7 @@ import { useLayoutMetrics } from "@/lib/layout-metrics";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 
 import { ProductReviews } from "@/components/site/ProductReviews";
-import { ProductQA } from "@/components/site/ProductQA";
-import { IsolatedBoundary } from "@/components/site/IsolatedBoundary";
+import { PDPFaqAndQuestions } from "@/components/site/PDPFaqAndQuestions";
 import { StarRating } from "@/components/site/StarRating";
 import { PDPCompareSection } from "@/components/site/PDPCompareSection";
 import { useWishlist } from "@/lib/wishlist";
@@ -1220,10 +1219,7 @@ function ProductPage() {
       </LazyMount>
       <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="questions">
         <div data-product-questions className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
-          <PdpSectionHeading title="Questions & Answers" subtitle="Ask anything about this product" />
-          <IsolatedBoundary name="product-qa">
-            <ProductQA productSlug={product.slug} />
-          </IsolatedBoundary>
+          <PDPFaqAndQuestions productSlug={product.slug} />
         </div>
       </LazyMount>
 

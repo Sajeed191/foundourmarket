@@ -20,6 +20,7 @@ import { ProductReviews } from "@/components/site/ProductReviews";
 import { PDPFaqAndQuestions } from "@/components/site/PDPFaqAndQuestions";
 import { StarRating } from "@/components/site/StarRating";
 import { PDPCompareSection } from "@/components/site/PDPCompareSection";
+import { PDPStickyIntel } from "@/components/site/PDPStickyIntel";
 import { useWishlist } from "@/lib/wishlist";
 import { fetchProductImages, fetchProductVariants, fetchProduct, discountPercent, type ProductImage, type ProductVariant } from "@/lib/products";
 import { fetchPublicColorGalleries, type VariantImage } from "@/lib/variant-images";
@@ -613,6 +614,24 @@ function ProductPage() {
   const missingVariant = requiresVariant && !variantId;
   const originalPrice = compareOf(product) ?? (product.discount ? effectivePrice * (1 + product.discount / 100) : null);
   const discountPct = discountPercent(effectivePrice, originalPrice);
+  const savingsAmount = originalPrice && originalPrice > effectivePrice ? originalPrice - effectivePrice : 0;
+  const isComingSoon = product.status === "scheduled";
+  const isPreorder = !!product.preorder || product.status === "preorder";
+  // Context-aware primary CTA label for the sticky purchase dock.
+  const primaryCtaLabel = isComingSoon
+    ? "Coming Soon"
+    : missingVariant
+      ? "Select Options"
+      : isOOS
+        ? "Notify Me"
+        : isPreorder
+          ? "Pre-order"
+          : "Buy Now";
+  const primaryCtaDisabled = isComingSoon || (isOOS && !isPreorder);
+  const scrollToVariants = () => {
+    const el = document.querySelector<HTMLElement>("[data-product-variants]");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   // Unified hero badge list — merchandising badges plus the sale/low-stock
   // pills, in priority order. The gallery renders at most 2 and collapses the
@@ -944,7 +963,7 @@ function ProductPage() {
 
             {/* Variants — pill selectors */}
             {variants.length > 0 && (
-              <div className="mt-6">
+              <div data-product-variants className="mt-6">
                 <VariantSelector variants={variants} selectedId={variantId} onSelect={setVariantId} />
               </div>
             )}
@@ -1226,23 +1245,39 @@ function ProductPage() {
       </LazyMount>
 
 
-      {/* Sticky mobile purchase dock — compact: Price + Add to Cart + Buy Now. */}
+      {/* Sticky mobile purchase dock v6.2 — intel line + Price + Add + Primary CTA. */}
       {showPurchaseDock && (
       <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 ease-out will-change-transform" style={{ bottom: "var(--product-dock-bottom)", transform: navHidden ? "translateY(calc(var(--product-dock-bottom) - var(--mobile-safe-bottom)))" : "translateY(0)", transition: "transform 200ms ease-out" }}>
-        <div className="flex h-full items-center gap-2 rounded-[24px] border border-white/10 px-3" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
+        <div className="flex h-full flex-col justify-center gap-1.5 rounded-[24px] border border-white/10 px-3 py-1.5" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
+          <PDPStickyIntel
+            missingVariant={missingVariant}
+            isOOS={isOOS}
+            isComingSoon={isComingSoon}
+            isPreorder={isPreorder}
+            effectiveStock={effectiveStock}
+            lowStockThreshold={product.lowStockThreshold}
+            deliveryWindow={deliveryWindow}
+            rating={product.rating}
+            reviews={product.reviews}
+          />
+          <div className="flex items-center gap-2">
           <div className="flex flex-col justify-center leading-none min-w-0 pr-1">
             {currencyReady ? (
               <>
                 <span className="fom-price-current text-[17px] font-display whitespace-nowrap leading-tight">{format(effectivePrice * Math.max(1, cartQty))}</span>
-                {originalPrice && originalPrice > effectivePrice && (
+                {savingsAmount > 0 ? (
+                  <span className="text-[10px] font-semibold text-emerald-300/90 leading-tight whitespace-nowrap">
+                    Save {format(savingsAmount * Math.max(1, cartQty))}{discountPct ? ` · ${discountPct}%` : ""}
+                  </span>
+                ) : originalPrice && originalPrice > effectivePrice ? (
                   <span className="text-[11px] font-mono line-through text-muted-foreground/70 leading-tight">{format(originalPrice * Math.max(1, cartQty))}</span>
-                )}
+                ) : null}
               </>
             ) : (
               <span aria-hidden className="h-4 w-14 rounded bg-white/[0.08] animate-pulse" />
             )}
           </div>
-          <div className="flex-1 relative min-h-[48px]">
+          <div className="flex-1 relative min-h-[44px]">
             {showQtySelector ? (
               <div
                 key="qty-sticky"
@@ -1251,7 +1286,7 @@ function ProductPage() {
                 <button
                   onClick={decCartQty}
                   aria-label={cartQty <= 1 ? "Remove from cart" : "Decrease quantity"}
-                  className="grid size-10 place-items-center rounded-xl text-foreground/80 active:scale-90"
+                  className="grid size-9 place-items-center rounded-xl text-foreground/80 active:scale-90"
                 >
                   <Minus className="size-4" />
                 </button>
@@ -1261,7 +1296,7 @@ function ProductPage() {
                 <button
                   onClick={incCartQty}
                   aria-label="Increase quantity"
-                  className="grid size-10 place-items-center rounded-xl text-foreground/80 active:scale-90"
+                  className="grid size-9 place-items-center rounded-xl text-foreground/80 active:scale-90"
                 >
                   <Plus className="size-4" />
                 </button>
@@ -1270,23 +1305,34 @@ function ProductPage() {
               <button
                 key="add-sticky"
                 onClick={handleAdd}
-                disabled={isOOS}
+                disabled={isOOS || isComingSoon}
                 className="absolute inset-0 inline-flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-transparent text-foreground font-semibold text-[13px] transition-all duration-200 ease-out active:scale-[0.97] disabled:opacity-40 animate-in fade-in zoom-in-95"
                 aria-label={isOOS ? "Notify me" : "Add to cart"}
               >
                 <ShoppingCart className="size-4" strokeWidth={2.5} />
-                <span>Add</span>
+                <span>{isOOS ? "Notify" : "Add"}</span>
               </button>
             )}
           </div>
-          <Link
-            to="/cart"
-            onClick={handleBuyNow}
-            aria-disabled={isOOS}
-            className={`flex-1 grid place-items-center min-h-[48px] bg-accent text-accent-foreground font-bold rounded-2xl text-[13px] uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${isOOS ? "pointer-events-none opacity-50" : ""}`}
-          >
-            {isOOS ? "Notify Me" : "Buy Now"}
-          </Link>
+          {missingVariant ? (
+            <button
+              type="button"
+              onClick={scrollToVariants}
+              className="flex-1 grid place-items-center min-h-[44px] bg-accent text-accent-foreground font-bold rounded-2xl text-[13px] uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)]"
+            >
+              {primaryCtaLabel}
+            </button>
+          ) : (
+            <Link
+              to="/cart"
+              onClick={handleBuyNow}
+              aria-disabled={primaryCtaDisabled}
+              className={`flex-1 grid place-items-center min-h-[44px] bg-accent text-accent-foreground font-bold rounded-2xl text-[13px] uppercase tracking-widest transition-all active:scale-95 shadow-[var(--shadow-ember)] ${primaryCtaDisabled ? "pointer-events-none opacity-50" : ""}`}
+            >
+              {primaryCtaLabel}
+            </Link>
+          )}
+          </div>
         </div>
       </div>
 

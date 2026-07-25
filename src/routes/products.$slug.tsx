@@ -1220,10 +1220,7 @@ function ProductPage() {
       </LazyMount>
       <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="questions">
         <div data-product-questions className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
-          <PdpSectionHeading title="Questions & Answers" subtitle="Ask anything about this product" />
-          <IsolatedBoundary name="product-qa">
-            <ProductQA productSlug={product.slug} />
-          </IsolatedBoundary>
+          <PDPFaqAndQuestions productSlug={product.slug} />
         </div>
       </LazyMount>
 

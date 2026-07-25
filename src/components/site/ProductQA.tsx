@@ -20,6 +20,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import type { ProductFaq } from "@/lib/product-faqs";
+
 
 /* ----------------------------- Types ----------------------------- */
 

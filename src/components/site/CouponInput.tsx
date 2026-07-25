@@ -95,10 +95,13 @@ export function CouponInput({
               <p className="text-sm font-medium truncate">
                 Code <span className="font-mono uppercase">{applied.code}</span> applied
               </p>
-              <p className="text-[11px] text-accent">
-                You save {format(applied.discount)}
-                {applied.kind === "percent" ? ` (${applied.value}% off)` : ""}
-              </p>
+              <SavingsBadge
+                variant="line"
+                label="You save"
+                amount={format(applied.discount)}
+                suffix={applied.kind === "percent" ? ` (${applied.value}% off)` : ""}
+                className="mt-0.5"
+              />
             </div>
           </div>
           <button onClick={clear} className="text-muted-foreground hover:text-destructive shrink-0" aria-label="Remove coupon">

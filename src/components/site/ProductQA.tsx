@@ -714,8 +714,9 @@ function AnswerRow({
             <span className="text-sm font-display truncate">{name}</span>
             {badge && <PlatformBadge kind={badge} />}
             <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground shrink-0">
-              {relDate(answer.created_at)}
+              {answeredOn(answer.created_at)}
             </span>
+
           </div>
           <p className="text-sm leading-relaxed mt-1.5 break-words whitespace-pre-wrap">{answer.body}</p>
 

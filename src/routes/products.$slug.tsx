@@ -18,6 +18,7 @@ import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 
 import { ProductReviews } from "@/components/site/ProductReviews";
 import { ProductQA } from "@/components/site/ProductQA";
+import { PDPFaqAndQuestions } from "@/components/site/PDPFaqAndQuestions";
 import { IsolatedBoundary } from "@/components/site/IsolatedBoundary";
 import { StarRating } from "@/components/site/StarRating";
 import { PDPCompareSection } from "@/components/site/PDPCompareSection";

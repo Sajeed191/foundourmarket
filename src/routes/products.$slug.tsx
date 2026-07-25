@@ -866,7 +866,7 @@ function ProductPage() {
                         </div>
                       )
                     ) : (
-                      <img src={thumbDisplaySrc(item.url)} alt={item.alt || `${product.name} — view ${i + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { if (e.currentTarget.src !== item.url) e.currentTarget.src = item.url; }} />
+                      <ImageWithSkeleton src={thumbDisplaySrc(item.url)} alt={item.alt || `${product.name} — view ${i + 1}`} imgClassName="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { if (e.currentTarget.src !== item.url) e.currentTarget.src = item.url; }} />
                     )}
                   </button>
                 ))}

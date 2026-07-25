@@ -1320,11 +1320,17 @@ export function ProductQA({
   }, [items.length, loading, onCountChange]);
 
 
-  // Deep-link: after items render, scroll the target question into view.
+  // Deep-link only: scroll to the hash target once, using the hash captured on
+  // mount. Later renders (optimistic inserts, realtime refreshes, edits,
+  // deletes) never move the page.
+  const initialHashRef = useRef<string | null>(null);
   const scrolledForHash = useRef<string | null>(null);
+  if (initialHashRef.current === null && typeof window !== "undefined") {
+    initialHashRef.current = window.location.hash || "";
+  }
   useEffect(() => {
     if (loading || items.length === 0 || typeof window === "undefined") return;
-    const hash = window.location.hash;
+    const hash = initialHashRef.current ?? "";
     if (!hash.startsWith("#q-") || scrolledForHash.current === hash) return;
     const el = document.getElementById(hash.slice(1));
     if (el) {

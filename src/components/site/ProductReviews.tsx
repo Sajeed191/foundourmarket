@@ -1855,10 +1855,38 @@ function WriteReviewModal(props: {
     onDiscard();
   }
 
+  // v7.x — iOS-friendly scroll lock. Freezes body at current scrollY so the PDP
+  // behind the modal cannot move, bottom nav / header don't react to scroll,
+  // and scroll chaining from the modal content is prevented.
   useEffect(() => {
-    document.body.setAttribute("data-review-wizard-open", "");
-    return () => document.body.removeAttribute("data-review-wizard-open");
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.setAttribute("data-review-wizard-open", "");
+    return () => {
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.removeAttribute("data-review-wizard-open");
+      window.scrollTo(0, scrollY);
+    };
   }, []);
+
+  // Block touch-through on the dimmed backdrop (prevents rubber-band / scroll
+  // bleed on iOS Safari when the finger starts on the overlay itself).
+  const onOverlayTouchMove = (e: React.TouchEvent) => {
+    if (e.target === e.currentTarget) e.preventDefault();
+  };
 
   return (
     <AnimatePresence>
@@ -1866,8 +1894,9 @@ function WriteReviewModal(props: {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-end justify-center bg-black/70 p-0 pb-[var(--app-bottom-nav-height)] backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-end justify-center bg-black/70 p-0 pb-[var(--app-bottom-nav-height)] backdrop-blur-sm sm:items-center sm:p-4 overscroll-contain"
           onClick={requestClose}
+          onTouchMove={onOverlayTouchMove}
         >
           <motion.div
             initial={{ y: 40, opacity: 0, scale: 0.98 }}
@@ -1875,7 +1904,7 @@ function WriteReviewModal(props: {
             exit={{ y: 40, opacity: 0 }}
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[var(--shadow-float)]"
+            className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[var(--shadow-float)] [-webkit-overflow-scrolling:touch]"
           >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-display">Write a review</h3>

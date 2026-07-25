@@ -32,7 +32,16 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
       .then((rows) => {
         if (cancelled) return;
         setFaqs(rows);
-        setOpenId(rows[0]?.id ?? null);
+        // Deep-link: open+scroll the FAQ if #faq-<id> is present, else open first.
+        const hash = typeof window !== "undefined" ? window.location.hash : "";
+        const target = hash.startsWith("#faq-") ? hash.slice(5) : null;
+        const matched = target && rows.some((r) => r.id === target) ? target : null;
+        setOpenId(matched ?? rows[0]?.id ?? null);
+        if (matched) {
+          requestAnimationFrame(() => {
+            document.getElementById(`faq-${matched}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        }
       })
       .catch(() => {
         if (!cancelled) setFaqs([]);
@@ -111,7 +120,8 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
                 return (
                   <li
                     key={f.id}
-                    className={`rounded-[18px] border transition-colors ${open ? "border-accent/40 bg-white/[0.04]" : "border-white/10 bg-white/[0.02] hover:border-white/20"}`}
+                    id={`faq-${f.id}`}
+                    className={`rounded-[18px] border transition-colors scroll-mt-24 ${open ? "border-accent/40 bg-white/[0.04]" : "border-white/10 bg-white/[0.02] hover:border-white/20"}`}
                   >
                     <button
                       type="button"

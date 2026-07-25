@@ -15,6 +15,7 @@ import {
   Trash2,
   Reply,
   Pencil,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +54,62 @@ type Question = {
   answers: Answer[];
 };
 
-type Sort = "newest" | "oldest" | "helpful" | "answered" | "unanswered";
+type Sort = "newest" | "oldest" | "helpful" | "official" | "answered" | "unanswered";
+
+/* --------------------- Platform identity badges ---------------------
+ * v6.1 — FoundOurMarket™ is currently first-party only. Answers surface
+ * ONE primary identity badge, priority:
+ *   1. FoundOurMarket™ Official  (admin-marked official pinned answer)
+ *   2. Product Team              (reserved — future role split)
+ *   3. Customer Care             (reserved — future role split)
+ *   4. Verified Buyer            (reserved — future purchase check)
+ *   5. Community                 (non-store answers, future)
+ * Today the schema only tells us `is_official` / `is_store_response`, so
+ * store/official answers collapse to the FoundOurMarket™ Official badge.
+ * Extra vendor badges can be added later without touching this contract.
+ */
+type BadgeKind = "official" | "product_team" | "customer_care" | "verified_buyer" | "community";
+
+function pickAnswerBadge(a: Answer): BadgeKind | null {
+  if (a.is_official || a.is_store_response) return "official";
+  return "community";
+}
+
+function PlatformBadge({ kind }: { kind: BadgeKind }) {
+  const map = {
+    official: {
+      label: "FoundOurMarket™ Official",
+      cls: "border-accent/30 bg-accent/12 text-accent",
+      icon: <ShieldCheck className="size-2.5" />,
+    },
+    product_team: {
+      label: "Product Team",
+      cls: "border-sky-500/25 bg-sky-500/10 text-sky-300",
+      icon: <ShieldCheck className="size-2.5" />,
+    },
+    customer_care: {
+      label: "Customer Care",
+      cls: "border-violet-500/25 bg-violet-500/10 text-violet-300",
+      icon: <ShieldCheck className="size-2.5" />,
+    },
+    verified_buyer: {
+      label: "Verified Buyer",
+      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-300",
+      icon: <CheckCircle2 className="size-2.5" />,
+    },
+    community: {
+      label: "Community",
+      cls: "border-white/10 bg-white/[0.04] text-muted-foreground",
+      icon: <MessageCircleQuestion className="size-2.5" />,
+    },
+  } as const;
+  const b = map[kind];
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${b.cls}`}>
+      {b.icon} {b.label}
+    </span>
+  );
+}
 
 type QuestionDraft = {
   id?: string;
@@ -569,15 +625,16 @@ function AnswerRow({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [menuOpen]);
 
-  const name = answer.author_name || (answer.is_store_response ? "FoundOurMarket" : "Customer");
   const store = answer.is_store_response;
   const official = answer.is_official;
+  const badge = pickAnswerBadge(answer);
+  const name = answer.author_name || (store || official ? "FoundOurMarket™ Team" : "Customer");
   // Answers are ONLY editable/deletable/moderated by admins (customers can't answer at all).
   const canManage = isAdmin;
 
   return (
     <div
-      className={`${isReply ? "ml-8" : ""} rounded-[14px] p-3.5 border ${
+      className={`${isReply ? "ml-8" : ""} rounded-[14px] border ${
         official
           ? "bg-accent/[0.06] border-accent/25"
           : store
@@ -585,21 +642,17 @@ function AnswerRow({
           : "bg-background/40 border-border/60"
       }`}
     >
-      <div className="flex items-start gap-3">
+      {official && !isReply && (
+        <div className="flex items-center gap-1.5 px-3.5 pt-2.5 text-[10px] font-mono uppercase tracking-[0.22em] text-accent">
+          <Pin className="size-3" /> Official Answer
+        </div>
+      )}
+      <div className="p-3.5 flex items-start gap-3">
         <Avatar name={name} url={answer.author_avatar} size={32} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-display truncate">{name}</span>
-            {store && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
-                <ShieldCheck className="size-2.5" /> Store
-              </span>
-            )}
-            {official && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
-                <CheckCircle2 className="size-2.5" /> Official
-              </span>
-            )}
+            {badge && <PlatformBadge kind={badge} />}
             <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground shrink-0">
               {relDate(answer.created_at)}
             </span>
@@ -684,7 +737,16 @@ export function ProductQA({
   const [internalSearch, setInternalSearch] = useState("");
   const search = externalSearch ?? internalSearch;
   const setSearch = (v: string) => setInternalSearch(v);
-  const [sort, setSort] = useState<Sort>("newest");
+  const sortKey = `fom.qa.sort.${productSlug}`;
+  const [sort, setSort] = useState<Sort>(() => {
+    if (typeof window === "undefined") return "newest";
+    const v = window.sessionStorage.getItem(sortKey);
+    const allowed: Sort[] = ["newest", "oldest", "helpful", "official", "answered", "unanswered"];
+    return (allowed as string[]).includes(v ?? "") ? (v as Sort) : "newest";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") window.sessionStorage.setItem(sortKey, sort);
+  }, [sort, sortKey]);
   const [askOpen, setAskOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionDraft | null>(null);
   const [replyOpen, setReplyOpen] = useState<{ answerId: string; questionId: string } | null>(null);
@@ -718,6 +780,19 @@ export function ProductQA({
   }, [productSlug]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Deep-link: after items render, scroll the target question into view.
+  const scrolledForHash = useRef<string | null>(null);
+  useEffect(() => {
+    if (loading || items.length === 0 || typeof window === "undefined") return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#q-") || scrolledForHash.current === hash) return;
+    const el = document.getElementById(hash.slice(1));
+    if (el) {
+      scrolledForHash.current = hash;
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [loading, items]);
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
@@ -755,6 +830,12 @@ export function ProductQA({
       const av = a.answers.reduce((s, x) => s + x.helpful_count, 0);
       const bv = b.answers.reduce((s, x) => s + x.helpful_count, 0);
       return bv - av;
+    });
+    else if (sort === "official") sorted.sort((a, b) => {
+      const ao = a.answers.some((x) => x.is_official || x.is_store_response) ? 1 : 0;
+      const bo = b.answers.some((x) => x.is_official || x.is_store_response) ? 1 : 0;
+      if (ao !== bo) return bo - ao;
+      return +new Date(b.created_at) - +new Date(a.created_at);
     });
     return sorted;
   }, [items, search, sort]);
@@ -956,6 +1037,8 @@ export function ProductQA({
             >
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
+              <option value="helpful">Most Helpful</option>
+              <option value="official">Official Answers First</option>
               <option value="answered">Most Answered</option>
               <option value="unanswered">Unanswered</option>
             </select>
@@ -989,20 +1072,20 @@ export function ProductQA({
             let statusPill: React.ReactNode;
             if (officialExists) {
               statusPill = (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/[0.12] text-sky-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-sky-400" /> Official Reply
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/[0.12] text-accent px-2.5 py-1 text-[11px] font-medium">
+                  <span className="size-1.5 rounded-full bg-accent" /> Officially Answered
                 </span>
               );
             } else if (count > 0) {
               statusPill = (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/[0.12] text-emerald-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-emerald-400" /> Answered
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/[0.12] text-sky-300 px-2.5 py-1 text-[11px] font-medium">
+                  <span className="size-1.5 rounded-full bg-sky-400" /> Community Answered
                 </span>
               );
             } else {
               statusPill = (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/[0.12] text-amber-300 px-2.5 py-1 text-[11px] font-medium">
-                  <span className="size-1.5 rounded-full bg-amber-400" /> Awaiting Answer
+                  <span className="size-1.5 rounded-full bg-amber-400" /> Awaiting Response
                 </span>
               );
             }
@@ -1010,7 +1093,8 @@ export function ProductQA({
             return (
               <li
                 key={q.id}
-                className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5 animate-fade-in transition-colors hover:border-white/15"
+                id={`q-${q.id}`}
+                className="bg-card/60 border border-border rounded-[18px] p-4 sm:p-5 animate-fade-in transition-colors hover:border-white/15 scroll-mt-24 target:border-accent/40"
               >
                 {/* Header row: avatar + name + time + menu */}
                 <div className="flex items-start gap-3">
@@ -1019,6 +1103,20 @@ export function ProductQA({
                     <p className="text-[15px] font-display font-semibold text-foreground truncate">{asker}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{relDate(q.created_at)}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const url = `${window.location.origin}${window.location.pathname}#q-${q.id}`;
+                      try {
+                        if (navigator.share) await navigator.share({ url, title: q.question });
+                        else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
+                      } catch { /* user cancelled */ }
+                    }}
+                    aria-label="Share question"
+                    className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+                  >
+                    <Link2 className="size-4" />
+                  </button>
                   <QuestionMenu
                     isAdmin={isAdmin}
                     isMine={q.is_mine}

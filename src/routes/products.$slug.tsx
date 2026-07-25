@@ -751,7 +751,7 @@ function ProductPage() {
                   const rawUrl = activeMedia?.url || product.image || "";
                   const displaySrc = rawUrl ? galleryDisplaySrc(rawUrl) : "";
                   return (
-                    <img
+                    <ImageWithSkeleton
                       key={activeMedia?.id ?? "fallback"}
                       src={displaySrc || rawUrl || product.image}
                       alt={activeMedia?.alt || product.name}
@@ -764,12 +764,13 @@ function ProductPage() {
                         if (primary && el.src !== primary) el.src = primary;
                         else if (product.image && el.src !== product.image) el.src = product.image;
                       }}
-                      className="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02] !rounded-none"
+                      imgClassName="absolute inset-0 w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02] !rounded-none"
                       style={{ borderRadius: 0 }}
                     />
                   );
                 })()
               )}
+
 
               {/* Single canonical badge — top-left, no chrome around it */}
               {heroBadges[0] && (

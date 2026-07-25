@@ -818,6 +818,14 @@ export function ProductQA({
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
+  // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
+  // answers get the smooth reveal animation.
+  const seenAnswerIdsRef = useRef<Set<string> | null>(null);
+  const isNewAnswer = useCallback((id: string) => {
+    const seen = seenAnswerIdsRef.current;
+    return !!seen && !seen.has(id);
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.rpc("get_product_qa", { _slug: productSlug });

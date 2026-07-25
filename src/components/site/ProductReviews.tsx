@@ -511,20 +511,21 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     setDeleting(true);
     const prevList = reviews;
     const prevMine = myReview;
-    // Optimistic: soft delete → hide from list (admin can restore via Deleted filter);
-    // hard delete → remove row entirely.
-    if (deleteMode === "admin_hard") {
-      setReviews((list) => list.filter((r) => r.id !== id));
-    } else {
+    // Optimistic: customer & admin_hard delete → remove row entirely (full
+    // cleanup of the review + its votes/reports/media via the DB function);
+    // admin_soft → archive with a "deleted" status the admin can restore.
+    if (deleteMode === "admin_soft") {
       setReviews((list) => list.map((r) => (r.id === id ? { ...r, status: "deleted", deleted_at: new Date().toISOString() } : r)));
+    } else {
+      setReviews((list) => list.filter((r) => r.id !== id));
     }
-    if (myReview?.id === id && deleteMode !== "admin_hard") setMyReview(null);
+    if (myReview?.id === id && deleteMode !== "admin_soft") setMyReview(null);
     try {
       const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
       const fn =
         deleteMode === "admin_hard" ? "admin_hard_delete_review"
         : deleteMode === "admin_soft" ? "admin_soft_delete_review"
-        : "soft_delete_own_review";
+        : "hard_delete_own_review";
       const args =
         deleteMode === "admin_soft"
           ? { p_id: id, p_reason: deleteReason.trim() || null }

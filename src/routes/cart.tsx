@@ -320,7 +320,7 @@ function CartPage() {
                           )}
                           <span className="fom-price-current block text-sm font-mono">{format(pr.sale * item.qty)}</span>
                           {pr.save > 0 && (
-                            <span className="block text-[10px] font-semibold text-accent">You save {format(pr.save * item.qty)}</span>
+                            <SavingsBadge variant="line" label="You save" amount={format(pr.save * item.qty)} className="mt-0.5" />
                           )}
                         </div>
                       </div>

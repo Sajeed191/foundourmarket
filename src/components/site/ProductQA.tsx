@@ -511,7 +511,7 @@ function QuestionModal({
         <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close"
             className="absolute top-3 right-3 grid place-items-center rounded-full text-muted-foreground hover:bg-white/5 hover:text-foreground transition"
             style={{ width: 44, height: 44 }}

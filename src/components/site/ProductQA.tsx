@@ -1083,7 +1083,7 @@ export function ProductQA({
               >
                 {/* Header row: avatar + name + time + menu */}
                 <div className="flex items-start gap-3">
-                  <Avatar name={asker} url={q.is_anonymous ? null : q.author_avatar} size={42} />
+                  <Avatar name={asker} url={q.author_avatar} size={42} />
                   <div className="flex-1 min-w-0">
                     <p className="text-[15px] font-display font-semibold text-foreground truncate">{asker}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{relDate(q.created_at)}</p>

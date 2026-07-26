@@ -207,21 +207,19 @@ function DetailCard({
       }
     >
       {title && (
-        <header className="mb-2.5 flex items-start gap-3">
-          <span aria-hidden className="pdp-accent-line mt-[3px]" />
-          <div className="min-w-0 flex-1">
-            {eyebrow && (
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/50">
-                {eyebrow}
-              </p>
-            )}
-            <h3 className="mt-[11px] text-[22px] font-bold leading-[1.15] tracking-[-0.02em] text-foreground">
-              {title}
-            </h3>
-            {subtitle && (
-              <p className="mt-1 text-[11px] leading-snug text-muted-foreground/55">{subtitle}</p>
-            )}
-          </div>
+        <header className="mb-3 flex flex-col items-start">
+          <span aria-hidden className="pdp-accent-line" />
+          {eyebrow && (
+            <p className="mt-3 text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-muted-foreground/[0.48]">
+              {eyebrow}
+            </p>
+          )}
+          <h3 className="mt-2.5 text-[20px] font-bold leading-[1.15] tracking-[-0.02em] text-foreground">
+            {title}
+          </h3>
+          {subtitle && (
+            <p className="mt-[7px] text-[11px] leading-snug text-muted-foreground/55">{subtitle}</p>
+          )}
         </header>
       )}
       {children}

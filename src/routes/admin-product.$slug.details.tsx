@@ -945,58 +945,60 @@ function WorkflowBody(p: any) {
               />
             </LazyPanel>
 
-            <AdvancedSettings>
-              {/* SEO */}
-              <div data-editor-field="seo" className="space-y-3">
-                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                  SEO Center
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>
-                </p>
-                <button type="button" onClick={generateSeo}
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
-                  <Sparkles className="size-3.5" /> Improve
-                </button>
-                <Field label="SEO Title" value={f.seo_title} onChange={(v: string) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
-                <div>
-                  <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Meta Description</label>
-                  <textarea value={f.seo_description} rows={3} onChange={(e) => set({ seo_description: e.target.value })}
-                    className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm focus:border-accent/40 focus:outline-none" />
-                  <p className="mt-1 text-[10px] text-muted-foreground">{f.seo_description.length}/160 characters</p>
-                </div>
-                <Field label="Keywords (comma separated)" value={f.keywords} onChange={(v: string) => set({ keywords: v })} />
-                <p className="truncate rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">{canonical}</p>
-                <InlineSuggestions items={seoTips} />
-              </div>
-
-              {/* FAQs */}
-              <div className="space-y-2 border-t border-white/8 pt-3">
-                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Product FAQs</p>
-                <ProductFaqManager productSlug={slug} />
-              </div>
-
-              {/* Rating */}
-              <div className="space-y-2 border-t border-white/8 pt-3">
-                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                  Rating Management
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-400">
-                    <Star className="size-2.5 fill-current" /> {(Number(f.rating) || 0).toFixed(1)}
-                  </span>
-                </p>
-                <RatingManager f={f} set={set} />
-              </div>
-
-              {/* Health & diagnostics */}
-              <div data-editor-field="health" className="space-y-3 border-t border-white/8 pt-3">
-                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Product Health</p>
-                <HealthDashboard score={score} ready={healthReady} cards={healthCards} />
-                <ValidationCards issues={issues} />
-                <LazyPanel name="Editor performance" lines={5}>
-                  <EditorDiagnostics />
-                </LazyPanel>
-              </div>
-            </AdvancedSettings>
           </div>
         </Step>
+
+        {/* Advanced Tools — everything heavy, on demand */}
+          <AdvancedSettings>
+            {/* SEO */}
+            <div data-editor-field="seo" className="space-y-3">
+              <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                SEO Center
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>
+              </p>
+              <button type="button" onClick={generateSeo}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
+                <Sparkles className="size-3.5" /> Improve
+              </button>
+              <Field label="SEO Title" value={f.seo_title} onChange={(v: string) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
+              <div>
+                <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Meta Description</label>
+                <textarea value={f.seo_description} rows={3} onChange={(e) => set({ seo_description: e.target.value })}
+                  className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm focus:border-accent/40 focus:outline-none" />
+                <p className="mt-1 text-[10px] text-muted-foreground">{f.seo_description.length}/160 characters</p>
+              </div>
+              <Field label="Keywords (comma separated)" value={f.keywords} onChange={(v: string) => set({ keywords: v })} />
+              <p className="truncate rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">{canonical}</p>
+              <InlineSuggestions items={seoTips} />
+            </div>
+
+            {/* FAQs */}
+            <div className="space-y-2 border-t border-white/8 pt-3">
+              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Product FAQs</p>
+              <ProductFaqManager productSlug={slug} />
+            </div>
+
+            {/* Rating */}
+            <div className="space-y-2 border-t border-white/8 pt-3">
+              <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                Rating Management
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-400">
+                  <Star className="size-2.5 fill-current" /> {(Number(f.rating) || 0).toFixed(1)}
+                </span>
+              </p>
+              <RatingManager f={f} set={set} />
+            </div>
+
+            {/* Health & diagnostics */}
+            <div data-editor-field="health" className="space-y-3 border-t border-white/8 pt-3">
+              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Product Health</p>
+              <HealthDashboard score={score} ready={healthReady} cards={healthCards} />
+              <ValidationCards issues={issues} />
+              <LazyPanel name="Editor performance" lines={5}>
+                <EditorDiagnostics />
+              </LazyPanel>
+            </div>
+          </AdvancedSettings>
 
         {pasteRaw && (
           <UniversalPasteDialog

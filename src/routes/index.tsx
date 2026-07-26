@@ -294,7 +294,7 @@ function ProductSection({
   return (
     <SectionTracker
       sectionKey={sectionKey}
-      className={`px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24 block`}
+      className={`px-4 sm:px-6 py-9 sm:py-10 max-w-7xl mx-auto scroll-mt-24 block`}
     >
       <SectionHeader
         eyebrow={eyebrow}
@@ -315,7 +315,7 @@ function ProductSection({
               items={preview}
               virtualizeThreshold={0}
               cols={{ base: 2, lg: 4 }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+              className="grid auto-rows-fr grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
               getKey={(p) => p.id ?? p.slug}
               getImageSrc={(p) => p.image}
               renderItem={(p) => (
@@ -323,7 +323,7 @@ function ProductSection({
               )}
             />
           ) : (
-            <div data-product-grid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div data-product-grid className="grid auto-rows-fr grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {preview.map((p, i) => (
                 <Reveal key={p.id ?? p.slug} delay={i} className="h-full" productCardFrame><ProductCard product={p} compact forceBadge={sectionBadge} /></Reveal>
               ))}
@@ -770,10 +770,12 @@ function Home() {
       <CinematicDivider />
 
       {/* 7 · Social Proof — verified customer reviews */}
-      <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-4 sm:mb-6">
-          <h2 className="text-fluid-2xl font-display tracking-tight">What our customers say</h2>
-        </Reveal>
+      <section className="px-4 sm:px-6 pt-10 pb-9 sm:pt-12 sm:pb-10 max-w-7xl mx-auto">
+        <PremiumSectionHeading
+          eyebrow="Social Proof"
+          title="What our customers say"
+          subtitle="Verified reviews from shoppers around the world."
+        />
 
 
         {testimonials.length > 0 && (

@@ -12,6 +12,20 @@ import { getPublicMarketplaceState } from "@/lib/marketplace-state.functions";
  * `rotation_state` is staff-only at the database level, so the value is read
  * through the secure server function which exposes just the nonce.
  */
+let sharedNonce: Promise<number> | null = null;
+/** One shared in-flight request per page load — many components use this hook. */
+function loadNonceOnce(): Promise<number> {
+  if (!sharedNonce) {
+    sharedNonce = getPublicMarketplaceState()
+      .then((s) => Number(s.rotationNonce) || 0)
+      .catch(() => {
+        sharedNonce = null;
+        return 0;
+      });
+  }
+  return sharedNonce;
+}
+
 export function useRotationNonce(): number {
   const [nonce, setNonce] = useState(0);
 
@@ -19,14 +33,11 @@ export function useRotationNonce(): number {
     let active = true;
 
     const load = async () => {
-      try {
-        const state = await getPublicMarketplaceState();
-        if (active) setNonce(Number(state.rotationNonce) || 0);
-      } catch {
-        /* keep last known nonce — rotation still works off the time window */
-      }
+      const value = await loadNonceOnce();
+      if (active) setNonce(value);
     };
     load();
+
 
     // Realtime is still bound for staff sessions (customers are filtered out by
     // RLS and simply receive nothing). A light refresh on tab focus + a slow

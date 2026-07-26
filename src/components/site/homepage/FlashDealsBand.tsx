@@ -82,7 +82,7 @@ export function FlashDealsBand() {
   if (loading || active.length === 0) return null;
 
   return (
-    <section className="py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
+    <section className="pt-8 pb-9 sm:pt-10 sm:pb-11 max-w-7xl mx-auto scroll-mt-24">
       <div className="px-4 sm:px-6">
         <PremiumSectionHeading
           title="Flash Deals"

@@ -51,7 +51,7 @@ export function TrustStripV2() {
   }, [reduced]);
 
   return (
-    <section ref={ref} className="px-4 sm:px-6 lg:px-10 pt-1 lg:pt-4 pb-4 lg:pb-8 max-w-7xl lg:max-w-[1480px] mx-auto">
+    <section ref={ref} className="px-4 sm:px-6 lg:px-10 pt-5 lg:pt-6 pb-8 lg:pb-10 max-w-7xl lg:max-w-[1480px] mx-auto">
       <div
         className="flex items-center justify-between rounded-2xl glass-strong ring-1 ring-white/10 px-3 sm:px-8 py-4 sm:py-5 shadow-[var(--shadow-float)]"
         style={{

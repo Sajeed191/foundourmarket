@@ -115,9 +115,8 @@ export function PremiumSectionHeading({
             fontWeight: 600,
             letterSpacing: "0.28em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.46)",
           }}
-          className="mb-2"
+          className="mb-2 text-muted-foreground"
         >
           {eyebrow}
         </div>
@@ -130,10 +129,9 @@ export function PremiumSectionHeading({
           fontWeight: 700,
           letterSpacing: "-0.02em",
           lineHeight: 1.1,
-          color: "#ffffff",
           fontSize: "clamp(24px, 5.6vw, 32px)",
         }}
-        className="break-words"
+        className="break-words text-foreground"
       >
         {title}
       </h2>
@@ -145,12 +143,12 @@ export function PremiumSectionHeading({
             marginTop: "8px",
             fontSize: "13px",
             lineHeight: 1.5,
-            color: "rgba(255,255,255,0.55)",
             maxWidth: "52ch",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
           }}
+          className="text-muted-foreground"
         >
           {subtitle}
         </p>
@@ -158,11 +156,13 @@ export function PremiumSectionHeading({
 
       <div
         aria-hidden
+        className="text-foreground"
         style={{
           marginTop: "12px",
           height: "1px",
           width: "56px",
-          background: "rgba(255,255,255,0.22)",
+          background: "currentColor",
+          opacity: 0.22,
           transformOrigin: "left center",
           transform: shown ? "scaleX(1)" : "scaleX(0)",
           transition: `transform 260ms ${EASE} 180ms`,

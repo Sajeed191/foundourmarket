@@ -48,18 +48,22 @@ const SPEC_GROUP_ORDER = [
 
 type SpecGroupName = (typeof SPEC_GROUP_ORDER)[number];
 
-const SPEC_GROUP_META: Record<SpecGroupName, { icon: LucideIcon; subtitle: string }> = {
-  Display: { icon: Monitor, subtitle: "Screen, resolution and visual quality" },
-  Performance: { icon: Cpu, subtitle: "Processor, memory and storage" },
-  Camera: { icon: CameraIcon, subtitle: "Imaging and video capability" },
-  Battery: { icon: BatteryCharging, subtitle: "Power and charging information" },
-  Connectivity: { icon: Signal, subtitle: "Networks, wireless and ports" },
-  Audio: { icon: Volume2, subtitle: "Sound output and microphones" },
-  "Build & Design": { icon: Layers, subtitle: "Materials, finish and protection" },
-  "Dimensions & Weight": { icon: Ruler, subtitle: "Physical size and weight" },
-  Sensors: { icon: Radar, subtitle: "Onboard sensing hardware" },
-  General: { icon: Info, subtitle: "Additional product information" },
+const SPEC_GROUP_META: Record<
+  SpecGroupName,
+  { icon: LucideIcon; subtitle: string; short: string; tint?: string; tintStrength?: number }
+> = {
+  Display: { icon: Monitor, subtitle: "Screen, resolution and visual quality", short: "Screen & Visuals", tint: "#7dd3fc", tintStrength: 0.03 },
+  Performance: { icon: Cpu, subtitle: "Processor, memory and storage", short: "Processor & Memory", tint: "#a78bfa", tintStrength: 0.03 },
+  Camera: { icon: CameraIcon, subtitle: "Imaging and video capability", short: "Imaging & Video", tint: "#f0abfc", tintStrength: 0.025 },
+  Battery: { icon: BatteryCharging, subtitle: "Power and charging information", short: "Power & Charging", tint: "#fb923c", tintStrength: 0.035 },
+  Connectivity: { icon: Signal, subtitle: "Networks, wireless and ports", short: "Network & Ports", tint: "#5eead4", tintStrength: 0.025 },
+  Audio: { icon: Volume2, subtitle: "Sound output and microphones", short: "Sound & Audio", tint: "#93c5fd", tintStrength: 0.025 },
+  "Build & Design": { icon: Layers, subtitle: "Materials, finish and protection", short: "Materials & Finish", tint: "#d6a06a", tintStrength: 0.035 },
+  "Dimensions & Weight": { icon: Ruler, subtitle: "Physical size and weight", short: "Size & Weight", tint: "#cbd5e1", tintStrength: 0.02 },
+  Sensors: { icon: Radar, subtitle: "Onboard sensing hardware", short: "Sensing Hardware", tint: "#86efac", tintStrength: 0.022 },
+  General: { icon: Info, subtitle: "Additional product information", short: "General Information", tint: "#94a3b8", tintStrength: 0.02 },
 };
+
 
 const SPEC_GROUP_PATTERNS: Array<{ group: SpecGroupName; test: RegExp }> = [
   { group: "Display", test: /display|screen|resolution|refresh|panel|nits|hdr|ppi/i },

@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 
 import {
-  Search, ArrowRight, Star, Sparkles, Award, Package, Globe2, Flame,
-  BadgeCheck, Pencil, Truck, ShieldCheck, Zap, Gift, LayoutGrid,
+  Search, ArrowRight, Star, Sparkles, Award, Package, Flame,
+  BadgeCheck, Pencil, LayoutGrid,
   Sofa, UtensilsCrossed, Gamepad2, Cpu, ToyBrick, PawPrint, Car, Shirt, Dumbbell,
   Watch, Headphones, Gem, Baby, Wrench, BookOpen,
 } from "lucide-react";
@@ -25,31 +25,31 @@ import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
 // TEMPORARY EXPERIMENT (Trending section only): reuse Browse's grid so cards
 // mount incrementally in batches of 16 via IncrementalGrid instead of all at
 // once. Remove this import when reverting the experiment.
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
-import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { useFlag } from "@/lib/use-debug-flag";
-import { SearchButton } from "@/components/site/SearchButton";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
 // Below-the-fold: lazy so the code stays out of the initial homepage chunk.
-const FlashDeals = lazy(() =>
-  import("@/components/site/FlashDeals").then((m) => ({ default: m.FlashDeals })),
-);
 const TestimonialsCarousel = lazy(() =>
   import("@/components/site/TestimonialsCarousel").then((m) => ({ default: m.TestimonialsCarousel })),
 );
 
-import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 import { useTestimonials } from "@/lib/use-testimonials";
 import { SectionTracker } from "@/components/site/SectionTracker";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
+
+import { HeroV2 } from "@/components/site/homepage/HeroV2";
+import { TrustStripV2 } from "@/components/site/homepage/TrustStripV2";
+import { CategoryBento } from "@/components/site/homepage/CategoryBento";
+import { PickedForYouRail } from "@/components/site/homepage/PickedForYouRail";
+import { FlashDealsBand } from "@/components/site/homepage/FlashDealsBand";
+import { WhyFoundOurMarket } from "@/components/site/homepage/WhyFoundOurMarket";
 
 const PLACEHOLDERS = [
   "Search 2,400+ curated products...",
@@ -682,191 +682,19 @@ function Home() {
   return (
     <>
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} query={query} onQueryChange={setQuery} />
-      {/* Hero starts immediately below the main navigation (announcement bar removed). */}
 
+      {/* Hero v2 — cinematic, search-first, personalized greeting */}
+      <HeroV2 onOpenSearch={() => setSearchOpen(true)} />
 
-      {/* 2 · Premium rotating product showcase hero */}
-      <section
-        className="relative z-30 px-3 sm:px-6 lg:px-10 pb-3 sm:pb-5"
-        style={{
-          background: "var(--gradient-hero)",
-          // Pull the hero up so its own background fills the area behind the
-          // floating top nav — no separate reserved band renders behind it.
-          marginTop: "calc(-1 * var(--app-header-h, 4.75rem))",
-          paddingTop: "calc(var(--app-header-h, 4.75rem) + 1rem)",
-        }}
-      >
-        {/* full-bleed ambient layer — seamless navbar blend + soft orange glow,
-            stretches edge-to-edge so there are never black side gaps */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+      {/* Trust strip v2 — single glass credibility row */}
+      <TrustStripV2 />
 
-          {/* (Top softener removed — the hero now owns the full area behind the
-              nav pill, so there is no seam or band to blend.) */}
-          {/* warm ambient orange lighting matching the accent */}
-          <div className="absolute left-1/2 -top-[6%] -translate-x-1/2 h-[420px] w-[140%] opacity-70" style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.74 0.19 49 / 0.16), transparent 60%)" }} />
-        </div>
-        <div className="relative z-10 mx-auto max-w-3xl px-1 pt-1 sm:pt-4 pb-2 text-center">
-          <h1 className="font-display font-semibold tracking-[-0.02em] leading-[1.02] text-[clamp(2.6rem,11vw,4.5rem)]">
-            <span className="block text-foreground">Whatever you need.</span>
-            <span className="block bg-gradient-to-r from-foreground via-accent to-accent bg-clip-text text-transparent">
-              All in one place.
-            </span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-[15px] sm:text-lg leading-relaxed text-muted-foreground">
-            A premium independent marketplace, sourcing top-quality products from
-            across the world — delivered with cinematic precision.
-          </p>
-
-          {/* ── search trigger — opens the full search destination ── */}
-          <div className="relative z-10 mx-auto mt-8 max-w-2xl">
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Open search"
-              className="group relative w-full rounded-full border border-white/10 shadow-[0_16px_40px_-20px_oklch(0_0_0/0.7)] transition-[border-color,box-shadow,transform] duration-300 hover:border-accent/40 active:scale-[0.995]"
-              style={{ background: "oklch(0.19 0.008 60)" }}
-            >
-              <span className="absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 grid size-10 sm:size-11 place-items-center rounded-full bg-white/[0.05] text-muted-foreground transition-colors duration-300 group-hover:bg-accent/15 group-hover:text-accent">
-                <Search className="size-[19px] sm:size-[21px]" />
-              </span>
-              <span className="flex h-14 sm:h-16 w-full items-center pl-14 sm:pl-16 pr-[120px] sm:pr-[140px] text-left text-base sm:text-[17px] font-medium tracking-[-0.01em] text-muted-foreground/65">
-                {query.trim() || rotatingPlaceholder}
-              </span>
-              <span className="pointer-events-none absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 inline-flex h-11 sm:h-12 items-center gap-1.5 rounded-full bg-accent px-5 sm:px-6 text-sm font-semibold uppercase tracking-[0.06em] text-accent-foreground shadow-[0_8px_24px_-8px_oklch(0.74_0.19_49/0.7)]">
-                Search
-              </span>
-            </button>
-          </div>
-
-
-
-          {/* Primary actions */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/search"
-              search={{ q: "" }}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-8 text-sm font-semibold uppercase tracking-[0.08em] text-accent-foreground shadow-[0_10px_30px_-10px_oklch(0.74_0.19_49/0.7)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
-            >
-              Shop Now
-            </Link>
-            <a
-              href="#categories"
-              className="inline-flex h-12 items-center justify-center rounded-full glass-strong px-8 text-sm font-semibold uppercase tracking-[0.08em] text-foreground ring-1 ring-white/12 transition-colors duration-200 hover:ring-accent/40"
-            >
-              Browse Categories
-            </a>
-          </div>
-        </div>
-
-
-
-
-
-
-      </section>
-
-
-      {/* Trust strip — compact, between hero and categories */}
-      <TrustBadgesStrip />
-
-      {/* 3 · Main Categories — premium 2-column marketplace grid */}
-      <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
-        <div className="relative">
-          <SectionHeader eyebrow="Browse" title="Main Categories" icon={LayoutGrid} href="/categories" sectionKey="categories" />
-          {isProductAdmin && (
-            <button
-              onClick={() => setEditCats(true)}
-              className="absolute right-0 top-0 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-background/70 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-accent backdrop-blur-md hover:bg-accent/15"
-            >
-              <Pencil className="size-3" /> Edit
-            </button>
-          )}
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 items-start gap-3 sm:gap-4">
-          {ffCategoryGrid && homeCategories.map((cat, i) => {
-            const Icon = iconForCategory(cat.slug, cat.name);
-            const hasImage = !!(cat.image || cat.mobile_image);
-            return (
-              <Reveal key={cat.slug} delay={i}>
-                <div className="relative">
-                  <Link
-                    data-product-card-frame
-                    to="/category/$slug"
-                    params={{ slug: cat.slug }}
-                    onClick={() => { void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" }); }}
-                    className={`group relative flex flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97] ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
-                  >
-
-                    {/* Image above name — 1:1, premium rounded capsule.
-                        Falls back to an icon inside a soft glass capsule. */}
-                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl border border-border bg-muted/60">
-                      {hasImage ? (
-                        <img
-                          src={cat.mobile_image || cat.image || ""}
-                          alt={cat.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="size-full object-cover [transition:transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="size-full grid place-items-center">
-                          <span className="grid size-14 sm:size-16 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
-                            <Icon className="size-6 sm:size-7" />
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-full pb-0.5">
-
-                      <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-foreground group-hover:text-accent transition-colors">{cat.name}</h3>
-                    </div>
-                  </Link>
-
-                  {isProductAdmin && (
-                    <div className="absolute left-2 top-2 z-20">
-                      <InlineActiveToggle
-                        active={cat.homepage_visible}
-                        label="Category"
-                        size="sm"
-                        onToggle={(next) => toggleCategoryVisible(cat.id, next)}
-                      />
-                    </div>
-                  )}
-                </div>
-              </Reveal>
-            );
-          })}
-
-          {!isProductAdmin && (
-            <Reveal delay={homeCategories.length}>
-              <div className="relative">
-                <Link
-                  data-product-card-frame
-                  to="/categories"
-                  className="group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97]"
-                >
-
-                  <div className="relative w-full aspect-[1/0.86] sm:aspect-[1/0.92] grid place-items-center overflow-hidden rounded-2xl border border-border bg-muted/60">
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,oklch(0.74_0.19_49/0.18),transparent_65%)]" />
-                    <span className="relative grid size-14 sm:size-16 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
-                      <ArrowRight className="size-6 sm:size-7 transition-transform duration-300 group-hover:translate-x-1" />
-                    </span>
-                  </div>
-
-                  <div className="w-full pb-0.5">
-                    <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
-                    <span className="block text-[10px] sm:text-[11px] text-muted-foreground font-medium tracking-wide mt-1">Browse everything</span>
-                  </div>
-
-
-
-                </Link>
-
-              </div>
-            </Reveal>
-          )}
-        </div>
-      </section>
+      {/* Categories v2 — bento-style editorial discovery */}
+      <CategoryBento
+        categories={homeCategories}
+        isAdmin={isProductAdmin}
+        onEdit={() => setEditCats(true)}
+      />
       {isProductAdmin && editCats && (
         <Suspense fallback={null}>
           <CategoryAdminSheet onClose={() => setEditCats(false)} onChanged={() => {}} productCounts={categoryCounts} />
@@ -875,11 +703,15 @@ function Home() {
 
       <CinematicDivider />
 
+      {/* Picked For You / Trending rail */}
+      <PickedForYouRail products={products} />
+
+      {/* Flash Deals band */}
+      {ffFlashDeals && (
         <LazyMount minHeight={360}>
-          {ffFlashDeals && (
-            <Suspense fallback={null}><FlashDeals /></Suspense>
-          )}
+          <FlashDealsBand />
         </LazyMount>
+      )}
 
 
 
@@ -929,6 +761,11 @@ function Home() {
               />
         </>
       ))}
+
+      <CinematicDivider />
+
+      {/* Why FoundOurMarket — premium benefit cards */}
+      <WhyFoundOurMarket />
 
       <CinematicDivider />
 

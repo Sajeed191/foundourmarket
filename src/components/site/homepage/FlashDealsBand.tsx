@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Zap, ArrowRight, Timer } from "lucide-react";
+import { ArrowRight, Timer } from "lucide-react";
 import { useFlashDeals, type FlashItem } from "@/lib/use-flash-deals";
 import { useRegion } from "@/lib/region";
 import { Price } from "@/components/site/Price";
@@ -11,7 +11,8 @@ function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
-function InlineCountdown({ end, now }: { end: string; now: number }) {
+function InlineCountdown({ end, now }: { end: string | null; now: number }) {
+  if (!end) return null;
   const diff = Math.max(0, new Date(end).getTime() - now);
   const d = Math.floor(diff / 86_400_000);
   const h = Math.floor((diff % 86_400_000) / 3_600_000);
@@ -53,10 +54,10 @@ function DealPill({ item, now }: { item: FlashItem; now: number }) {
       <div className="flex flex-1 flex-col justify-between gap-2 p-3">
         <p className="text-[12.5px] font-medium leading-snug text-foreground line-clamp-2">{p.name}</p>
         <div className="flex items-center justify-between">
-          <Price product={p} price={flash} compareAt={regular} size="sm" />
+          <Price value={flash} className="text-sm" />
           <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <Timer className="size-3 text-accent" />
-            <InlineCountdown end={item.endsAt} now={now} />
+            <InlineCountdown end={item.endAt} now={now} />
           </span>
         </div>
       </div>
@@ -65,7 +66,7 @@ function DealPill({ item, now }: { item: FlashItem; now: number }) {
 }
 
 export function FlashDealsBand() {
-  const { deals, loading } = useFlashDeals();
+  const { items, loading, now: flashNow } = useFlashDeals();
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -74,8 +75,8 @@ export function FlashDealsBand() {
   }, []);
 
   const active = useMemo(
-    () => deals.filter((d) => new Date(d.endsAt).getTime() > now).slice(0, 6),
-    [deals, now],
+    () => items.filter((d: FlashItem) => !d.endAt || new Date(d.endAt).getTime() > now).slice(0, 6),
+    [items, now],
   );
 
   if (loading || active.length === 0) return null;
@@ -91,8 +92,8 @@ export function FlashDealsBand() {
       </div>
       <LazyMount minHeight={200}>
         <div className="mt-4 flex gap-3 overflow-x-auto px-4 sm:px-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
-          {active.map((item) => (
-            <div key={item.dealId} className="snap-start">
+          {active.map((item: FlashItem) => (
+            <div key={item.dealId ?? item.product.slug} className="snap-start">
               <DealPill item={item} now={now} />
             </div>
           ))}

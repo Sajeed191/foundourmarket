@@ -58,7 +58,10 @@ import {
   StartOptions, HelpDot, useEditorWorkflow, type StepState,
 } from "@/components/admin/product-editor/GuidedWorkflow";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
+import { contextFlags, missingTemplateSpecs } from "@/lib/editor-context";
+import { PublishConfidence, SpecTemplateStrip } from "@/components/admin/product-editor/InvisibleUX";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
+
 
 
 

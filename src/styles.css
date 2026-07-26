@@ -3970,3 +3970,20 @@ body[data-immersive-ui] [data-scroll-top] {
   .pdp-card, .pdp-tab-glow { transition: none; }
   .pdp-skel::after { animation: none; }
 }
+
+/* Watermark sitting behind the specification card stack. */
+.pdp-panel-watermark {
+  position: absolute;
+  top: -0.18em;
+  left: -0.04em;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  font-size: clamp(120px, 34vw, 220px);
+  color: var(--foreground);
+  opacity: 0.02;
+  filter: blur(1px);
+}

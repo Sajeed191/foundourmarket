@@ -22,6 +22,8 @@ import {
 } from "@/lib/reviews";
 import { analyzeReviews } from "@/lib/reviews-ai.functions";
 import { cn } from "@/lib/utils";
+import { useModalScrollLock } from "@/lib/use-scroll-lock";
+
 import { StarRating } from "@/components/site/StarRating";
 
 type ProfileMap = Record<string, { full_name: string | null; avatar_url: string | null }>;

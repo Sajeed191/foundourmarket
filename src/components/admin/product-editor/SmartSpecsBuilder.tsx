@@ -10,9 +10,11 @@
 // ============================================================
 import { useMemo, useRef, useState } from "react";
 import {
-  Plus, Trash2, GripVertical, ClipboardPaste, Wand2, Search, X, Layers,
+  Plus, Trash2, GripVertical, ClipboardPaste, Wand2, Search, X, Layers, ListChecks,
 } from "lucide-react";
 import { toast } from "sonner";
+import { SmartEmpty } from "@/components/admin/product-editor/EmptyStates";
+
 import {
   parseSpecPaste, mergeSpecRows, cleanSpecRows, groupSpecs, groupForSpec, reorderRows, normalizeLabel,
   type SpecRow,

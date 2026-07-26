@@ -1472,27 +1472,45 @@ export function ProductQA({
     }
   }
 
-  async function deleteQuestion(q: Question) {
+  function deleteQuestion(q: Question) {
     if (!(q.is_mine || isAdmin)) {
       toast.error("You can only delete your own question.");
       return;
     }
-    if (!confirm("Delete this question? This cannot be undone.")) return;
-    // Optimistic removal
+    // v7.3 — premium confirmation surface instead of the native confirm().
+    setDeleteQError(null);
+    setConfirmDeleteQ(q);
+  }
+
+  async function performDeleteQuestion() {
+    const q = confirmDeleteQ;
+    if (!q || deletingQ) return; // double-submission guard
+    setDeletingQ(true);
+    setDeleteQError(null);
     const prevItems = items;
     setItems((prev) => prev.filter((x) => x.id !== q.id));
     try {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        throw new Error("You appear to be offline. Check your connection and try again.");
+      }
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) throw new Error("Your session expired. Please sign in again.");
       const { error } = await supabase
         .from("product_questions")
         .delete()
         .eq("id", q.id);
       if (error) throw error;
       toast.success("Question deleted");
+      setConfirmDeleteQ(null);
     } catch (err) {
+      console.error("[qa] delete question failed", { questionId: q.id, err });
       setItems(prevItems);
-      toast.error(friendlyError(err, q.is_mine ? "You can only delete your own question." : "Couldn't delete question."));
+      setDeleteQError(friendlyError(err, q.is_mine ? "You can only delete your own question." : "Couldn't delete question."));
+    } finally {
+      setDeletingQ(false);
     }
   }
+
 
   async function hideQuestion(q: Question) {
     if (!isAdmin) return;

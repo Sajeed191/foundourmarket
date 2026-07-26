@@ -23,8 +23,16 @@ import {
   UniversalPasteDialog, useUniversalPaste, type PasteApplyPayload,
 } from "@/components/admin/product-editor/UniversalPasteDialog";
 import { ValidationCards, type ValidationIssue } from "@/components/admin/product-editor/ValidationCards";
+import { HealthDashboard, type HealthCard } from "@/components/admin/product-editor/HealthDashboard";
+import { InlineSuggestions } from "@/components/admin/product-editor/InlineSuggestions";
+import {
+  titleSuggestions, descriptionSuggestions, featureSuggestions, specSuggestions, seoSuggestions,
+  type SuggestInput,
+} from "@/lib/product-suggestions";
+import { focusEditorField, focusFirstApplied } from "@/lib/editor-focus";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
+
 
 
 /** Unsaved editor state → live PDP overlay (presentation only). */

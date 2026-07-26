@@ -16,6 +16,8 @@ import { ProductFaqManager } from "@/components/admin/ProductFaqManager";
 import {
   FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv, type KV,
 } from "@/components/admin/product-editor/field-builders";
+import { SmartSpecsBuilder } from "@/components/admin/product-editor/SmartSpecsBuilder";
+
 
 export const Route = createFileRoute("/admin-product/$slug/details")({ component: DetailsPage });
 
@@ -396,10 +398,16 @@ function CommandCenter({ slug, f, set, row }: {
       </Collapsible>
 
       {/* Specifications */}
-      <Collapsible title="Specifications" icon={<Layers className="size-4" />} desc="Technical key/value details">
-        <KeyValueBuilder rows={f.specs} onChange={(v) => set({ specs: v })}
-          keyPlaceholder="e.g. Weight" valuePlaceholder="e.g. 150g" addLabel="Add Specification" />
+      <Collapsible title="Specifications" icon={<Layers className="size-4" />}
+        desc="Paste anything — cards are built automatically"
+        badge={
+          <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
+            {f.specs.filter((s) => s.k.trim()).length}
+          </span>
+        }>
+        <SmartSpecsBuilder rows={f.specs} onChange={(v) => set({ specs: v })} />
       </Collapsible>
+
 
       {/* Attributes */}
       <Collapsible title="Attributes" icon={<Tag className="size-4" />} desc="Variant & buyer-facing attributes">

@@ -30,6 +30,7 @@ PDP recommendations rule (permanent): additive, never interruptive. They never b
 - [Composition-first contracts](mem://constraints/composition-first) — Compose existing contracts before introducing new ones; prevents contract sprawl
 - [Publish is presentation over Marketplace Readiness](mem://constraints/publish-presentation-only) — Publish surfaces present readiness; they never add validation, scoring, or duplicate checks
 - [Vendor Portal v1 (FROZEN)](mem://constraints/vendor-portal-v1) — Dashboard, Product Editor, Work Queue, Analytics, Publish Assistant — no new intelligence, presentation only
+- [Product Editor v11.0 (FROZEN)](mem://features/product-editor-frozen) — Complete and frozen; only bug fixes, accessibility, performance, security, and minor visual consistency changes allowed
 - [Track B — Customer Experience](mem://features/customer-experience) — Buyer-facing layer. Phase 1 AI Marketplace Search shipped; roadmap: Browse, PDP relationships, Personalization
 - [Browse Presentation Adapter v1 (FROZEN)](mem://features/browse-adapter) — Single composition layer for /category, /deals, search. Approved badges, one-sentence reasons, no per-surface forks
 - [PDP Experience v2 Stage 1 (FROZEN)](mem://features/pdp-experience) — Relationship Presentation Adapter + FBT. Canonical PDP relationship path. Section order centralized in adapter; PDP imports only `@/lib/pdp`; BrowseCard everywhere

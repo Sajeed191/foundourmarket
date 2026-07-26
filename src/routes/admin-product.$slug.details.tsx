@@ -539,13 +539,12 @@ function CommandCenter({ slug, f, set, row }: {
   }, [slug]);
 
   const jumpToTarget = useCallback((target: string) => {
-    if (target.startsWith("route:")) {
-      const dest = target.slice(6);
-      navigate({ to: `/admin-product/$slug/${dest}` as never, params: { slug } });
-      return;
-    }
+    if (target === "route:pricing") { navigate({ to: "/admin-product/$slug/pricing", params: { slug } }); return; }
+    if (target === "route:inventory") { navigate({ to: "/admin-product/$slug/inventory", params: { slug } }); return; }
+    if (target === "route:variants") { navigate({ to: "/admin-product/$slug/variants", params: { slug } }); return; }
     focusEditorField(target);
   }, [navigate, slug]);
+
 
   const restoreSnapshot = useCallback((data: Record<string, unknown>) => {
     saveVersion(slug, "manual", "Before restore", snapRef.current);

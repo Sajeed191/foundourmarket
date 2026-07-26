@@ -4,7 +4,9 @@
 // editor toolbar. Pure UI; all values are held in form state.
 // ============================================================
 import { useRef } from "react";
-import { Plus, Trash2, GripVertical, Bold, Italic, List, ListOrdered, Heading2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Bold, Italic, List, ListOrdered, Heading2, Sparkles, Layers } from "lucide-react";
+import { SmartEmpty } from "@/components/admin/product-editor/EmptyStates";
+
 
 export type KV = { k: string; v: string };
 

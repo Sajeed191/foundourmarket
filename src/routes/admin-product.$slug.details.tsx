@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,
   ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff,
-  Package, Star, HelpCircle,
+  Package, Star, HelpCircle, ClipboardPaste,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateProducts } from "@/lib/use-products";
 import { resolveImage } from "@/lib/products";
+import { useAdminCategories } from "@/lib/use-categories";
 import { SectionEditor, Field, parseList, useNavigate } from "@/components/admin/product-editor/kit";
 import { ProductMediaGallery, ProductVideoUploader } from "@/components/admin/product-editor/media-fields";
 import { CategorySelector } from "@/components/admin/product-editor/category-selector";
@@ -18,7 +19,13 @@ import {
 } from "@/components/admin/product-editor/field-builders";
 import { SmartSpecsBuilder } from "@/components/admin/product-editor/SmartSpecsBuilder";
 import { LivePreviewShell } from "@/components/admin/product-editor/LivePreviewShell";
+import {
+  UniversalPasteDialog, useUniversalPaste, type PasteApplyPayload,
+} from "@/components/admin/product-editor/UniversalPasteDialog";
+import { ValidationCards, type ValidationIssue } from "@/components/admin/product-editor/ValidationCards";
+import { mergeSpecRows } from "@/lib/spec-intelligence";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
+
 
 /** Unsaved editor state → live PDP overlay (presentation only). */
 function draftOverlayFromForm(f: Form): DraftOverlay {
@@ -272,6 +279,57 @@ function CommandCenter({ slug, f, set, row }: {
   const [status, setStatus] = useState<string>(row.status ?? "draft");
   const [pubBusy, setPubBusy] = useState(false);
 
+  /* --- Universal Smart Paste (CTRL+V anywhere outside a field) --- */
+  const [pasteRaw, setPasteRaw] = useState("");
+  const { categories } = useAdminCategories(true);
+  const catOptions = useMemo(
+    () => categories.map((c) => ({ name: c.name, slug: c.slug })),
+    [categories],
+  );
+  const onPaste = useCallback((text: string) => setPasteRaw(text), []);
+  useUniversalPaste(onPaste);
+
+  function applyPaste(p: PasteApplyPayload) {
+    const patch: Partial<Form> = {};
+    let notes: string[] = [];
+    if (p.specs?.length) {
+      const { rows, added, updated } = mergeSpecRows(f.specs, p.specs);
+      patch.specs = rows;
+      notes.push(`${added} specs added${updated ? `, ${updated} updated` : ""}`);
+    }
+    if (p.description && !f.description.trim()) {
+      patch.description = p.description;
+      notes.push("description");
+    } else if (p.description) {
+      patch.description = `${f.description.trim()}\n\n${p.description}`;
+      notes.push("description appended");
+    }
+    if (p.features?.length) {
+      const seen = new Set(f.features.map((x) => x.toLowerCase().trim()));
+      const merged = [...f.features];
+      for (const x of p.features) if (!seen.has(x.toLowerCase().trim())) merged.push(x);
+      patch.features = merged;
+      notes.push(`${merged.length - f.features.length} features`);
+    }
+    if (p.brand && !f.brand.trim()) { patch.brand = p.brand; notes.push("brand"); }
+    if (p.name && !f.name.trim()) { patch.name = p.name; notes.push("title"); }
+    if (p.categorySlugs?.length) {
+      const merged = [...new Set([...p.categorySlugs, ...f.categories])];
+      patch.categories = merged;
+      patch.category = merged[0] ?? f.category;
+      notes.push("category");
+    }
+    if (!Object.keys(patch).length) {
+      toast.info("Nothing new to import", { description: "Everything pasted already exists on this product." });
+      return;
+    }
+    set(patch);
+    toast.success("Imported into product", {
+      description: `${notes.join(" · ")} — live preview updated. Save to publish.`,
+    });
+  }
+
+
   const sellPrice = Number(row.price_inr ?? row.price ?? 0);
   const stock = Number(row.stock_quantity ?? 0);
 
@@ -289,6 +347,36 @@ function CommandCenter({ slug, f, set, row }: {
   const okCount = checks.filter((c) => c.ok).length;
   const score = Math.round((okCount / checks.length) * 100);
   const warnings = checks.filter((c) => !c.ok);
+
+  const RULES: Record<string, { title: string; why: string; impact: ValidationIssue["impact"]; action: string }> = {
+    Images: { title: "No product images", impact: "high", action: "Add images", why: "Customers almost never buy a product they can't see. At least one hero image is expected." },
+    Pricing: { title: "Selling price missing", impact: "high", action: "Set price", why: "Without a price the product can't be added to a cart or shown in browse rails." },
+    Inventory: { title: "Out of stock", impact: "high", action: "Update stock", why: "Zero stock hides the buy button and drops this product in recommendations." },
+    Category: { title: "Category not set", impact: "medium", action: "Choose category", why: "Category drives browse placement, filters and related-product intelligence." },
+    Specifications: { title: "No specifications", impact: "medium", action: "Smart paste specs", why: "Shoppers in this segment compare specifications before buying — spec cards raise conversion." },
+    SEO: { title: "SEO title or meta missing", impact: "medium", action: "Auto-generate SEO", why: "Search engines and social previews fall back to generic text without these fields." },
+    SKU: { title: "SKU not assigned", impact: "low", action: "Open inventory", why: "SKUs keep stock, returns and supplier reconciliation accurate." },
+    Video: { title: "No product video", impact: "low", action: "Add video", why: "Product videos measurably lift trust on higher-priced items." },
+  };
+
+  const issues: ValidationIssue[] = warnings.map((w) => {
+    const rule = RULES[w.key];
+    return {
+      id: w.key,
+      title: rule?.title ?? `Missing ${w.key}`,
+      why: rule?.why ?? "Complete this field so the customer page renders fully.",
+      impact: rule?.impact ?? "medium",
+      actionLabel: rule?.action ?? "Fix now",
+      onAction: () => {
+        if (w.key === "Pricing") { navigate({ to: "/admin-product/$slug/pricing", params: { slug } }); return; }
+        if (w.key === "Inventory" || w.key === "SKU") { navigate({ to: "/admin-product/$slug/inventory", params: { slug } }); return; }
+        if (w.key === "SEO") { generateSeo(); return; }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        toast.info(`${w.key} — open the section above to complete it.`);
+      },
+    };
+  });
+
 
   const tone = score >= 85 ? { t: "text-emerald-400", b: "bg-emerald-500", r: "stroke-emerald-400" }
     : score >= 60 ? { t: "text-accent", b: "bg-accent", r: "stroke-accent" }
@@ -498,21 +586,18 @@ function CommandCenter({ slug, f, set, row }: {
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
             <div className={`h-full rounded-full transition-all duration-500 ${tone.b}`} style={{ width: `${score}%` }} />
           </div>
-          {warnings.length === 0 ? (
-            <p className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5 text-xs text-emerald-400">
-              <CheckCircle2 className="size-4" /> All health checks passing — this product is fully optimized.
-            </p>
-          ) : (
-            <div className="space-y-1.5">
-              {warnings.map((w) => (
-                <div key={w.key} className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-300">
-                  <AlertTriangle className="size-3.5 shrink-0" /> Missing {w.key}
-                </div>
-              ))}
-            </div>
-          )}
+          <ValidationCards issues={issues} />
         </div>
       </Collapsible>
+
+      {pasteRaw && (
+        <UniversalPasteDialog
+          raw={pasteRaw}
+          categories={catOptions}
+          onApply={applyPaste}
+          onClose={() => setPasteRaw("")}
+        />
+      )}
     </div>
   );
 }

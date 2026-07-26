@@ -3569,3 +3569,20 @@ body[data-review-media-open] [data-sonner-toaster] {
   visibility: hidden !important;
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
+
+/* Reviews / Q&A v7.3 — Immersive mode. Any review or question composer,
+   editor, or confirmation surface turns the page into its own premium screen:
+   the site header, bottom navigation, sticky purchase docks (Buy Now / Add to
+   Cart), floating widgets (Live Chat orb, admin toolbars) and floating
+   promotional buttons all recede. Toasts stay visible so success/error
+   feedback is never swallowed. Restored in one frame on close — no flicker. */
+body[data-immersive-ui] [data-app-header],
+body[data-immersive-ui] [data-app-bottom-nav],
+body[data-immersive-ui] [data-floating-control],
+body[data-immersive-ui] [data-product-cta],
+body[data-immersive-ui] [data-floating-promo] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye, MoreVertical, Copy, Archive, FileText, X, Undo2, Redo2 } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye, MoreVertical, Copy, Archive, FileText, X, Undo2, Redo2, Send } from "lucide-react";
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -697,6 +697,17 @@ export function SectionEditor<T extends Record<string, any>>({
                 className="inline-flex h-11 basis-[35%] grow-0 items-center justify-center gap-1.5 rounded-lg border border-accent/35 bg-accent/10 px-3 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.98]"
               >
                 <Eye className="size-4" /> Preview
+              </button>
+
+              {/* Publish — jumps to the Review & Publish step (always reachable) */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("editor-focus-field", { detail: "publish" }))}
+                aria-label="Go to review and publish"
+                title="Review & Publish"
+                className="grid size-11 shrink-0 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-all hover:border-white/25 hover:text-foreground active:scale-95"
+              >
+                <Send className="size-4" />
               </button>
 
               {/* Save Changes — primary CTA (65%) */}

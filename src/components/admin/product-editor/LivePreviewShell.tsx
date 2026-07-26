@@ -58,21 +58,17 @@ export function LivePreviewShell({
 
   return (
     <>
-      <div ref={wrapRef} className="flex w-full items-stretch gap-0">
-        <div className="min-w-0 flex-1 xl:flex-none" style={{ width: undefined }}>
-          <div className="xl:hidden">{children}</div>
-          <div className="hidden xl:block" style={{ width: `${split}%` }} />
-        </div>
-      </div>
-
-      {/* Desktop split */}
-      <div className="hidden xl:flex xl:items-stretch xl:gap-0" ref={undefined}>
-        <div className="min-w-0" style={{ width: `${split}%` }}>
+      <div ref={wrapRef} className="flex w-full items-stretch">
+        <div
+          className="min-w-0 flex-1 xl:flex-none xl:basis-[var(--split)]"
+          style={{ ["--split" as string]: `${split}%` } as React.CSSProperties}
+        >
           {children}
         </div>
         <div
           role="separator"
           aria-orientation="vertical"
+
           onPointerDown={() => {
             dragging.current = true;
             document.body.style.userSelect = "none";

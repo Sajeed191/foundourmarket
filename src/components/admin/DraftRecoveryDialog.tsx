@@ -44,13 +44,12 @@ export function DraftRecoveryDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <History className="h-5 w-5 text-primary" />
-            Recover unsaved work
+            Recovered draft
           </AlertDialogTitle>
           <AlertDialogDescription>
-            We found a draft you were editing
-            {savedAt ? ` ${relative(savedAt)}` : ""}
-            {deviceLabel ? ` on ${deviceLabel}` : ""}. Would you like to restore
-            it or start fresh?
+            Saved {savedAt ? relative(savedAt) : "earlier"}
+            {deviceLabel ? ` on ${deviceLabel}` : ""}. Nothing was lost — continue
+            where you left off, or start fresh.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -60,10 +59,11 @@ export function DraftRecoveryDialog({
           </AlertDialogCancel>
           <AlertDialogAction onClick={onRestore}>
             <RotateCcw className="mr-1.5 h-4 w-4" />
-            Restore draft
+            Continue editing
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
+

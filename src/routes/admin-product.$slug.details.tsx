@@ -808,6 +808,37 @@ function WorkflowBody(p: any) {
     if (url && url.trim()) setPasteRaw(url.trim());
   }
 
+  // "Paste specifications" empty-state action opens the universal paste flow.
+  useEffect(() => {
+    const open = () => setPasteRaw(" ");
+    window.addEventListener("editor-open-paste", open);
+    return () => window.removeEventListener("editor-open-paste", open);
+  }, [setPasteRaw]);
+
+  /* One Clear Start — a brand-new product shows three cards and nothing else. */
+  const [started, setStarted] = useState(false);
+  if (isEmpty && !started) {
+    return (
+      <div className="mx-auto max-w-3xl py-6">
+        <StartOptions
+          onPaste={() => { setStarted(true); setPasteRaw(" "); }}
+          onImport={() => { setStarted(true); importFromUrl(); }}
+          onScratch={() => { setStarted(true); setStep("basic"); focusEditorField("information"); }}
+        />
+        {pasteRaw && (
+          <UniversalPasteDialog
+            raw={pasteRaw}
+            categories={catOptions}
+            onApply={applyPaste}
+            onClose={() => setPasteRaw("")}
+          />
+        )}
+      </div>
+    );
+  }
+
+
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">

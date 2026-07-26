@@ -580,7 +580,43 @@ export function SectionEditor<T extends Record<string, any>>({
             className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/95 backdrop-blur-xl"
             style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
           >
-            <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-2.5 pb-1">
+            {/* Workspace strip — live state + history, one thumb reach */}
+            <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-1.5">
+              <span className={`inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium ${statusMeta.tone}`}>
+                <span className={`size-1.5 shrink-0 rounded-full ${statusMeta.dot}`} />
+                <span className="truncate">
+                  {saveState === "saving"
+                    ? "Saving…"
+                    : dirty
+                      ? `${changedKeys.length} unsaved change${changedKeys.length === 1 ? "" : "s"}`
+                      : "All changes saved"}
+                </span>
+              </span>
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={undo}
+                  disabled={!canUndo}
+                  aria-label="Undo (Ctrl+Z)"
+                  title="Undo — Ctrl+Z"
+                  className="grid size-11 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-all hover:text-foreground hover:border-white/25 active:scale-95 disabled:opacity-30"
+                >
+                  <Undo2 className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={redo}
+                  disabled={!canRedo}
+                  aria-label="Redo (Ctrl+Y)"
+                  title="Redo — Ctrl+Y"
+                  className="grid size-11 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-all hover:text-foreground hover:border-white/25 active:scale-95 disabled:opacity-30"
+                >
+                  <Redo2 className="size-4" />
+                </button>
+              </span>
+            </div>
+            <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-2 pb-1">
+
               {/* More Actions */}
               <div className="relative shrink-0">
                 <button

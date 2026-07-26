@@ -1902,32 +1902,38 @@ function WriteReviewModal(props: {
     onDiscard();
   }
 
-  // v7.x — iOS-friendly scroll lock. Freezes body at current scrollY so the PDP
-  // behind the modal cannot move, bottom nav / header don't react to scroll,
-  // and scroll chaining from the modal content is prevented.
+  // v7.2 — Shared, jump-free scroll lock (freeze + instant restore, no smooth
+  // scroll animation, focus restored with preventScroll).
+  useModalScrollLock(true, "data-review-wizard-open");
+
+  // Escape closes (through the same guarded path as the X / backdrop).
+  const panelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const scrollY = window.scrollY;
-    const body = document.body;
-    const prev = {
-      overflow: body.style.overflow,
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !confirmDiscard) {
+        e.preventDefault();
+        requestClose();
+      }
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const nodes = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]),input:not([type="hidden"]),textarea,select,[href],[tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null || el.tagName === "TEXTAREA");
+      if (nodes.length === 0) return;
+      const first = nodes[0];
+      const lastNode = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        lastNode.focus();
+      } else if (!e.shiftKey && document.activeElement === lastNode) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    body.style.overflow = "hidden";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
-    body.setAttribute("data-review-wizard-open", "");
-    return () => {
-      body.style.overflow = prev.overflow;
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.width = prev.width;
-      body.removeAttribute("data-review-wizard-open");
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   // Block touch-through on the dimmed backdrop (prevents rubber-band / scroll
   // bleed on iOS Safari when the finger starts on the overlay itself).
@@ -1938,21 +1944,27 @@ function WriteReviewModal(props: {
   return (
     <AnimatePresence>
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Write a review"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-end justify-center bg-black/70 p-0 pb-[var(--app-bottom-nav-height)] backdrop-blur-sm sm:items-center sm:p-4 overscroll-contain"
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md overscroll-contain"
           onClick={requestClose}
           onTouchMove={onOverlayTouchMove}
         >
           <motion.div
-            initial={{ y: 40, opacity: 0, scale: 0.98 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 40, opacity: 0 }}
-            transition={{ type: "spring", damping: 26, stiffness: 280 }}
+            ref={panelRef}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[var(--shadow-float)] [-webkit-overflow-scrolling:touch]"
+            className="w-[92vw] max-w-[520px] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-[26px] border border-white/10 bg-card/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[var(--shadow-float)] [-webkit-overflow-scrolling:touch]"
           >
+
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-display">Write a review</h3>
               <button onClick={requestClose} className="grid size-9 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground">

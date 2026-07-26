@@ -2086,22 +2086,35 @@ function WriteReviewModal(props: {
 
             <div className="min-h-[180px]">
               {step === 1 && (
-                <div className="grid place-items-center py-6">
-                  <p className="mb-5 text-sm text-muted-foreground">How would you rate this product?</p>
-                  <div className="flex items-center gap-2">
+                <div className="grid place-items-center py-8">
+                  <p className="mb-6 text-[16px] text-muted-foreground">How would you rate this product?</p>
+                  <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Rating">
                     {Array.from({ length: 5 }).map((_, i) => {
                       const value = i + 1;
                       const active = (hoverRating || rating) >= value;
                       return (
-                        <button key={i} type="button" onMouseEnter={() => setHoverRating(value)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(value)} aria-label={`Rate ${value}`} className="p-1 transition-transform hover:scale-125">
-                          <Star className={cn("size-9 transition-colors", active ? "fill-accent text-accent drop-shadow-[0_0_8px_oklch(0.74_0.19_49/0.5)]" : "text-muted-foreground/40")} />
+                        <button
+                          key={i}
+                          type="button"
+                          role="radio"
+                          aria-checked={rating === value}
+                          onMouseEnter={() => setHoverRating(value)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => { haptic("selection"); setRating(value); }}
+                          aria-label={`Rate ${value}`}
+                          className="fom-tap grid place-items-center rounded-xl p-1.5 transition-transform hover:scale-110"
+                        >
+                          <span key={active ? `on-${rating}` : "off"} className={cn(active && rating >= value && "fom-star-pop", "block")}>
+                            <Star className={cn("size-9 transition-colors duration-200", active ? "fill-accent text-accent drop-shadow-[0_0_12px_oklch(0.74_0.19_49/0.45)]" : "text-muted-foreground/40")} />
+                          </span>
                         </button>
                       );
                     })}
                   </div>
-                  <p className="mt-4 text-sm font-display text-accent">{["", "Poor", "Fair", "Good", "Very good", "Excellent"][hoverRating || rating]}</p>
+                  <p className="mt-5 h-5 text-[15px] font-display text-accent">{["", "Poor", "Fair", "Good", "Very good", "Excellent"][hoverRating || rating]}</p>
                 </div>
               )}
+
               {step === 2 && (
                 <div>
                   <label className="mb-2 block text-sm text-muted-foreground">Give your review a title</label>

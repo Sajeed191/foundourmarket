@@ -1255,9 +1255,13 @@ export function ProductQA({
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
+  const [confirmDeleteQ, setConfirmDeleteQ] = useState<Question | null>(null);
+  const [deletingQ, setDeletingQ] = useState(false);
+  const [deleteQError, setDeleteQError] = useState<string | null>(null);
+
   // Q&A v7.3 — immersive mode while answering / editing an answer or reply, so
   // the composer reads as its own premium screen.
-  useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen);
+  useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen || !!confirmDeleteQ);
 
   // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
   // answers get the smooth reveal animation.
@@ -1836,6 +1840,56 @@ export function ProductQA({
         initial={editingQuestion}
         onSubmitted={load}
       />
+      {/* Q&A v7.3 — premium delete-question confirmation */}
+      {confirmDeleteQ && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-label="Delete question"
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 qa-delete-overlay"
+          style={{ background: "rgba(5,6,8,0.72)", backdropFilter: "blur(8px)" }}
+          onClick={() => { if (!deletingQ) setConfirmDeleteQ(null); }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-[92vw] max-w-[20rem] rounded-[26px] px-7 py-8 text-center qa-delete-panel"
+            style={{
+              background: "#121316",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85)",
+            }}
+          >
+            <div className="mx-auto grid size-10 place-items-center rounded-full bg-destructive/10 text-destructive">
+              <Trash2 className="size-4" />
+            </div>
+            <h3 className="mt-6 text-[17px] font-display leading-snug">Delete Question?</h3>
+            <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+              Your question and its answers will be permanently removed from this product. This action cannot be undone.
+            </p>
+            {deleteQError && (
+              <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[12px] leading-snug text-destructive">{deleteQError}</p>
+            )}
+            <div className="mt-7 flex flex-col-reverse gap-2.5">
+              <button
+                onClick={() => setConfirmDeleteQ(null)}
+                disabled={deletingQ}
+                className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-3 text-[11px] font-bold uppercase tracking-widest transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+              >
+                Keep Question
+              </button>
+              <button
+                onClick={performDeleteQuestion}
+                disabled={deletingQ}
+                aria-busy={deletingQ}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110 disabled:opacity-60"
+              >
+                {deletingQ ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                {deletingQ ? "Deleting…" : "Delete Question"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

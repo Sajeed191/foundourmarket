@@ -1953,7 +1953,8 @@ function WriteReviewModal(props: {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md overscroll-contain"
+          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-center justify-center p-4 backdrop-blur-lg overscroll-contain"
+          style={{ background: "rgba(5,6,8,0.72)" }}
           onClick={requestClose}
           onTouchMove={onOverlayTouchMove}
         >
@@ -1964,7 +1965,12 @@ function WriteReviewModal(props: {
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="w-[92vw] max-w-[520px] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-[26px] border border-white/10 bg-card/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[var(--shadow-float)] [-webkit-overflow-scrolling:touch]"
+            className="w-[92vw] max-w-[520px] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-[26px] p-6 sm:p-8 [-webkit-overflow-scrolling:touch]"
+            style={{
+              background: "#121316",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
+            }}
           >
 
             <div className="flex items-center justify-between mb-5">
@@ -2004,7 +2010,7 @@ function WriteReviewModal(props: {
                 <div>
                   <label className="mb-2 block text-sm text-muted-foreground">Give your review a title</label>
                   <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Excellent quality and fast delivery" autoFocus
-                    className="w-full bg-background/60 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25" />
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25" />
                   <p className="mt-2 text-right text-[10px] font-mono text-muted-foreground">{title.length}/120</p>
                 </div>
               )}
@@ -2012,7 +2018,7 @@ function WriteReviewModal(props: {
                 <div>
                   <label className="mb-2 block text-sm text-muted-foreground">Tell us about your experience</label>
                   <textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={2000} rows={6} placeholder="What did you like? How was the quality, delivery and packaging?" autoFocus
-                    className="w-full bg-background/60 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25" />
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25" />
                   <p className="mt-2 text-right text-[10px] font-mono text-muted-foreground">{body.length}/2000</p>
                 </div>
               )}
@@ -2021,17 +2027,17 @@ function WriteReviewModal(props: {
                   <label className="mb-3 block text-sm text-muted-foreground">Add photos or videos (optional)</label>
                   <div className="flex flex-wrap gap-2.5">
                     {pendingMedia.map((m, i) => (
-                      <div key={i} className="relative size-20 overflow-hidden rounded-xl border border-border">
+                      <div key={i} className="relative size-20 overflow-hidden rounded-xl border border-white/10">
                         {m.type === "image" ? <img loading="lazy" decoding="async" src={m.url} alt="" className="size-full object-cover" /> : <video src={m.url} className="size-full object-cover" />}
                         <button type="button" onClick={() => setPendingMedia((p) => p.filter((_, idx) => idx !== i))}
-                          className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-background/90 text-foreground ring-1 ring-border">
+                          className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-[#121316] text-foreground ring-1 ring-white/15">
                           <X className="size-3" />
                         </button>
                       </div>
                     ))}
                     {pendingMedia.length < 6 && (
                       <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-                        className="grid size-20 place-items-center rounded-xl border border-dashed border-border text-muted-foreground hover:border-accent hover:text-accent disabled:opacity-50">
+                        className="grid size-20 place-items-center rounded-xl border border-dashed border-white/15 text-muted-foreground hover:border-accent hover:text-accent disabled:opacity-50">
                         {uploading ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
                       </button>
                     )}
@@ -2040,7 +2046,7 @@ function WriteReviewModal(props: {
                 </div>
               )}
               {step === 5 && (
-                <div className="rounded-2xl border border-white/10 bg-background/40 p-5">
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
                   <p className="mb-3 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Review summary</p>
                   <StarRating rating={rating} starClassName="size-5" />
                   {title && <p className="mt-3 font-display">{title}</p>}
@@ -2089,7 +2095,7 @@ function WriteReviewModal(props: {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full max-w-sm rounded-3xl border border-white/10 bg-card p-6 text-center shadow-[var(--shadow-float)]"
+                  className="w-full max-w-sm rounded-3xl border border-white/[0.08] bg-[#121316] p-6 text-center shadow-[0_30px_80px_-30px_rgba(0,0,0,0.85)]"
                 >
                   <p className="text-base font-display">Discard review?</p>
                   <p className="mt-1.5 text-sm text-muted-foreground">You have unsaved changes. Do you want to continue editing or discard this review?</p>

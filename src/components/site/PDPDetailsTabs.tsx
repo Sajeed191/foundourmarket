@@ -207,15 +207,15 @@ function DetailCard({
       }
     >
       {title && (
-        <header className="mb-2 flex items-start gap-3">
-          <span aria-hidden className="pdp-accent-line mt-[2px]" />
+        <header className="mb-2.5 flex items-start gap-3">
+          <span aria-hidden className="pdp-accent-line mt-[3px]" />
           <div className="min-w-0 flex-1">
             {eyebrow && (
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/50">
                 {eyebrow}
               </p>
             )}
-            <h3 className="mt-[7px] text-[18px] font-semibold leading-tight tracking-[-0.015em] text-foreground">
+            <h3 className="mt-[11px] text-[22px] font-bold leading-[1.15] tracking-[-0.02em] text-foreground">
               {title}
             </h3>
             {subtitle && (
@@ -229,7 +229,7 @@ function DetailCard({
   );
 }
 
-/** Sentence-case label over a bright value, separated by faded gradient hairlines. */
+/** Uppercase micro-label beside a bold value on one shared specification grid. */
 function SpecRows({
   entries,
   observe,
@@ -238,18 +238,14 @@ function SpecRows({
   observe: (node: HTMLElement | null) => void;
 }) {
   return (
-    <dl className="mt-1">
+    <dl className="mt-0.5">
       {entries.map(([k, v], i) => (
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}
-          <Reveal observe={observe} index={i} step={40}>
-            <div className="py-2">
-              <dt className="text-[11px] font-medium leading-tight text-muted-foreground/70">
-                {toTitleCase(k)}
-              </dt>
-              <dd className="mt-[3px] break-words text-[16.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
-                {v}
-              </dd>
+          <Reveal observe={observe} index={i} step={30}>
+            <div className="pdp-spec-row">
+              <dt className="pdp-spec-label">{toTitleCase(k)}</dt>
+              <dd className="pdp-spec-value">{v}</dd>
             </div>
           </Reveal>
         </div>
@@ -257,6 +253,7 @@ function SpecRows({
     </dl>
   );
 }
+
 
 
 

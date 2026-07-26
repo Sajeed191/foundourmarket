@@ -634,9 +634,52 @@ function CommandCenter({ slug, f, set, row }: {
     },
   );
 
+  const openPublishingPanel = useCallback((p: "checklist" | "timeline" | "preview") => {
+    focusEditorField("publishing");
+    window.dispatchEvent(new CustomEvent("editor-publishing-panel", { detail: p }));
+  }, []);
+
+  function generateReport() {
+    const lines = [
+      `# ${f.name || slug}`,
+      `Status: ${status.replace(/_/g, " ")}`,
+      `Price: ${sellPrice > 0 ? `₹${sellPrice}` : "not set"} · Stock: ${stock} · Images: ${imageCount}`,
+      `Specs: ${f.specs.filter((s) => s.k.trim()).length} · Features: ${f.features.length}`,
+      `SEO: ${seoOk ? "complete" : `${seoScore}/3 fields`}`,
+      "",
+      "## Outstanding",
+      ...(warnings.length ? warnings.map((w) => `- ${RULES[w.key]?.title ?? w.key}`) : ["- Nothing outstanding"]),
+    ];
+    void navigator.clipboard?.writeText(lines.join("\n"));
+    toast.success("Product report copied to clipboard");
+  }
+
+  // Ctrl/Cmd + Shift + P — publish from anywhere in the editor.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        void setWorkflowStatus(status === "published" ? "draft" : "published");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setWorkflowStatus, status]);
+
   const commands: EditorCommand[] = [
-    { id: "publish", group: "Publish", icon: Send, label: status === "published" ? "Unpublish product" : "Publish product", run: togglePublish },
+    { id: "publish", group: "Publish", icon: Send, label: status === "published" ? "Unpublish product" : "Publish product", hint: "⇧⌘P", run: () => void setWorkflowStatus(status === "published" ? "draft" : "published") },
+    { id: "draft", group: "Publish", icon: FileText, label: "Save as draft", run: () => void setWorkflowStatus("draft") },
+    { id: "review", group: "Publish", icon: CheckCircle2, label: "Mark ready for review", run: () => void setWorkflowStatus("ready_for_review") },
+    { id: "archive", group: "Publish", icon: EyeOff, label: "Archive product", run: () => void setWorkflowStatus("archived") },
+    { id: "checklist", group: "Workflow", icon: ListChecks, label: "Open pre-publish checklist", run: () => openPublishingPanel("checklist") },
+    { id: "timeline", group: "Workflow", icon: Activity, label: "Open timeline & version history", run: () => openPublishingPanel("timeline") },
+    { id: "compare", group: "Workflow", icon: Layers, label: "Compare versions", run: () => openPublishingPanel("timeline") },
+    { id: "restore", group: "Workflow", icon: Activity, label: "Restore a version", run: () => openPublishingPanel("timeline") },
+    { id: "pv-mobile", group: "Workflow", icon: Eye, label: "Publishing preview — mobile & desktop", run: () => openPublishingPanel("preview") },
+    { id: "j-validation", group: "Workflow", icon: AlertTriangle, label: "Jump to validation", run: () => focusEditorField("health") },
+    { id: "report", group: "Workflow", icon: FileText, label: "Generate product report", run: generateReport },
     { id: "preview", group: "Publish", icon: Eye, label: "Open customer preview", run: () => navigate({ to: "/admin-product/$slug/preview", params: { slug } }) },
+
     { id: "gen-desc", group: "Generate", icon: Sparkles, label: "Generate description sections", run: generateDescription },
     { id: "gen-seo", group: "Generate", icon: Search, label: "Generate SEO title & meta", run: generateSeo },
     { id: "gen-feat", group: "Generate", icon: ListChecks, label: "Suggest features", run: generateFeatures },

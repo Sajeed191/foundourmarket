@@ -31,10 +31,14 @@ export function FeaturesBuilder({ value, onChange }: { value: string[]; onChange
   return (
     <div className="space-y-2">
       {value.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 px-3 py-3 text-center text-xs text-muted-foreground">
-          No features yet. Add highlights buyers care about.
-        </p>
+        <SmartEmpty
+          icon={Sparkles}
+          title="Add your first highlight"
+          hint="Three to six short lines describing what makes this product worth buying."
+          actions={[{ label: "Add highlight", primary: true, run: add }]}
+        />
       )}
+
       {value.map((f, i) => (
         <div key={i} className="flex items-center gap-2">
           <span className="grid size-7 shrink-0 place-items-center rounded-md border border-accent/30 bg-accent/10 text-[10px] font-mono text-accent">{i + 1}</span>

@@ -855,6 +855,15 @@ function WorkflowBody(p: any) {
 
         <StepProgress states={stepStates} readiness={score} />
 
+        {/* Publish confidence — one number, one suggestion, one button */}
+        <PublishConfidence
+          score={score}
+          topSuggestion={topIssue?.title}
+          actionLabel={topIssue?.actionLabel}
+          onFix={topIssue?.onAction}
+        />
+
+
         {/* ① Basic information */}
         <Step id="basic" index={1} title="Basic Information" fieldKey="information"
           desc="Name, brand & category" help="Start with the product name — everything else gets easier once it is set.">

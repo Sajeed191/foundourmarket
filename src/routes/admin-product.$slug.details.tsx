@@ -1058,14 +1058,15 @@ function WorkflowBody(p: any) {
         <AdvancedSettings>
             {/* SEO */}
             <div data-editor-field="seo" className="space-y-3">
-              <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                SEO Center
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>
-              </p>
-              <button type="button" onClick={generateSeo}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
-                <Sparkles className="size-3.5" /> Improve
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  SEO Center
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>
+                </p>
+                <AiChip label="Improve" onClick={generateSeo} />
+                <AiChip label="Keywords" onClick={generateKeywords} />
+              </div>
+
               <Field label="SEO Title" value={f.seo_title} onChange={(v: string) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
               <div>
                 <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Meta Description</label>

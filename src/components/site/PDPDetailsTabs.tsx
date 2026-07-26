@@ -207,15 +207,15 @@ function DetailCard({
       }
     >
       {title && (
-        <header className="mb-2 flex items-start gap-3">
-          <span aria-hidden className="pdp-accent-line mt-[2px]" />
+        <header className="mb-2.5 flex items-start gap-3">
+          <span aria-hidden className="pdp-accent-line mt-[3px]" />
           <div className="min-w-0 flex-1">
             {eyebrow && (
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/50">
                 {eyebrow}
               </p>
             )}
-            <h3 className="mt-[7px] text-[18px] font-semibold leading-tight tracking-[-0.015em] text-foreground">
+            <h3 className="mt-[11px] text-[22px] font-bold leading-[1.15] tracking-[-0.02em] text-foreground">
               {title}
             </h3>
             {subtitle && (
@@ -229,7 +229,7 @@ function DetailCard({
   );
 }
 
-/** Sentence-case label over a bright value, separated by faded gradient hairlines. */
+/** Uppercase micro-label beside a bold value on one shared specification grid. */
 function SpecRows({
   entries,
   observe,
@@ -238,18 +238,14 @@ function SpecRows({
   observe: (node: HTMLElement | null) => void;
 }) {
   return (
-    <dl className="mt-1">
+    <dl className="mt-0.5">
       {entries.map(([k, v], i) => (
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}
-          <Reveal observe={observe} index={i} step={40}>
-            <div className="py-2">
-              <dt className="text-[11px] font-medium leading-tight text-muted-foreground/70">
-                {toTitleCase(k)}
-              </dt>
-              <dd className="mt-[3px] break-words text-[16.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
-                {v}
-              </dd>
+          <Reveal observe={observe} index={i} step={30}>
+            <div className="pdp-spec-row">
+              <dt className="pdp-spec-label">{toTitleCase(k)}</dt>
+              <dd className="pdp-spec-value">{v}</dd>
             </div>
           </Reveal>
         </div>
@@ -257,6 +253,7 @@ function SpecRows({
     </dl>
   );
 }
+
 
 
 
@@ -486,7 +483,7 @@ export function PDPDetailsTabs({
         key={current}
         id={`pdp-tab-panel-${current}`}
         role="tabpanel"
-        className="relative mt-4 flex flex-col gap-[22px]"
+        className="relative mt-4 flex flex-col gap-[18px]"
       >
         {current === "specs" && (
           <>
@@ -503,7 +500,7 @@ export function PDPDetailsTabs({
             {groups.map(({ group, entries }, i) => {
               const meta = SPEC_GROUP_META[group as SpecGroupName];
               return (
-                <Reveal key={group} observe={observe} index={i} step={40}>
+                <Reveal key={group} observe={observe} index={i} step={30}>
                   <DetailCard
                     eyebrow={group.toUpperCase()}
                     title={meta?.short ?? "Product Information"}
@@ -562,7 +559,7 @@ export function PDPDetailsTabs({
                   key={i}
                   observe={observe}
                   index={i}
-                  step={40}
+                  step={30}
                   className={compact ? "" : "w-full"}
                 >
                   {compact ? (
@@ -608,11 +605,11 @@ export function PDPDetailsTabs({
               </Reveal>
             )}
             {warrantyEntries.length > 0 && (
-              <div className="grid grid-cols-1 gap-[22px] sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
                 {warrantyEntries.map(([k, v], i) => {
                   const Icon = WARRANTY_ICONS.find((w) => w.test.test(k))?.icon ?? ShieldCheck;
                   return (
-                    <Reveal key={k} observe={observe} index={i} step={50}>
+                    <Reveal key={k} observe={observe} index={i} step={30}>
                       <div className="pdp-card pdp-card-tap flex h-full items-start gap-3">
                         <span className="grid size-9 shrink-0 place-items-center rounded-2xl border border-accent/20 bg-accent/[0.08] text-accent">
                           <Icon className="size-4" strokeWidth={1.75} />
@@ -646,8 +643,8 @@ export function PDPDetailsTabs({
                 {boxItems.map((item, i) => (
                   <li key={i}>
                     {i > 0 && <div aria-hidden className="pdp-row-divider" />}
-                    <Reveal observe={observe} index={i} step={40}>
-                      <div className="flex items-center gap-3 py-3.5">
+                    <Reveal observe={observe} index={i} step={30}>
+                      <div className="flex items-center gap-3 py-3">
                         <span className="grid size-7 shrink-0 place-items-center rounded-full border border-accent/25 bg-accent/[0.1] text-accent">
                           <Check className="size-3.5" strokeWidth={2.5} />
                         </span>

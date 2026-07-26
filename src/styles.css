@@ -3822,7 +3822,17 @@ body[data-immersive-ui] [data-scroll-top] {
     radial-gradient(60% 70% at 18% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
     radial-gradient(50% 60% at 92% 12%, color-mix(in oklab, var(--foreground) 5%, transparent), transparent 72%);
   filter: blur(6px);
+  will-change: transform;
 }
+/* Ambient light drift — imperceptible depth, transform only, 26s loop. */
+@media (prefers-reduced-motion: no-preference) {
+  .pdp-details-stage::before { animation: pdp-ambient-drift 26s ease-in-out infinite alternate; }
+}
+@keyframes pdp-ambient-drift {
+  from { transform: translate3d(-1.5%, 0, 0) scale(1); }
+  to { transform: translate3d(1.5%, 1%, 0) scale(1.04); }
+}
+
 .pdp-details-stage::after {
   content: "";
   position: absolute;
@@ -3836,8 +3846,8 @@ body[data-immersive-ui] [data-scroll-top] {
 /* Oversized DETAILS watermark — pushed right and cropped, blurred, slow float. */
 .pdp-watermark {
   position: absolute;
-  top: -0.24em;
-  left: 74%;
+  top: -0.2em;
+  left: 82%;
   z-index: -1;
   pointer-events: none;
   user-select: none;
@@ -3845,10 +3855,11 @@ body[data-immersive-ui] [data-scroll-top] {
   font-weight: 900;
   letter-spacing: -0.06em;
   line-height: 0.78;
-  font-size: clamp(110px, 30vw, 200px);
+  font-size: clamp(120px, 26vw, 240px);
   color: color-mix(in oklab, var(--foreground) 100%, transparent);
-  opacity: 0.025;
+  opacity: 0.02;
   filter: blur(1px);
+
   will-change: transform;
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -3864,11 +3875,13 @@ body[data-immersive-ui] [data-scroll-top] {
   position: absolute;
   pointer-events: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 92%, #ffb066), var(--accent));
+  background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 88%, #ffc48a), var(--accent) 62%, color-mix(in oklab, var(--accent) 88%, #000) 100%);
   box-shadow:
-    0 8px 22px -10px color-mix(in oklab, var(--accent) 90%, transparent),
-    0 0 26px -12px color-mix(in oklab, var(--accent) 80%, transparent),
-    0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent) inset;
+    0 7px 8px -6px color-mix(in oklab, var(--accent) 85%, transparent),
+    0 0 18px -10px color-mix(in oklab, var(--accent) 70%, transparent),
+    0 1px 0 0 color-mix(in oklab, #ffffff 26%, transparent) inset,
+    0 0 0 1px color-mix(in oklab, var(--accent) 28%, transparent) inset;
+
   transform-origin: center;
   transition:
     transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -3876,21 +3889,30 @@ body[data-immersive-ui] [data-scroll-top] {
   will-change: transform, width;
 }
 
-/* Premium floating category / info card — compact density. */
+/* Premium floating card — matte luxury surface, top highlight, inner light. */
 .pdp-card {
   position: relative;
   overflow: hidden;
   border-radius: 22px;
-  padding: 13px 16px 14px;
+  padding: 12px 15px 12px;
   border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
   background:
     linear-gradient(160deg, color-mix(in oklab, var(--accent) 3%, transparent), transparent 45%),
-    color-mix(in oklab, var(--foreground) 2.2%, transparent);
-  box-shadow: 0 18px 46px -34px rgba(0, 0, 0, 0.9);
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--foreground) 3.4%, transparent),
+      color-mix(in oklab, var(--foreground) 1.6%, transparent) 55%,
+      color-mix(in oklab, #000000 12%, transparent)
+    );
+  box-shadow:
+    0 18px 46px -34px rgba(0, 0, 0, 0.9),
+    0 1px 0 0 color-mix(in oklab, #ffffff 6%, transparent) inset,
+    0 -1px 0 0 rgba(0, 0, 0, 0.35) inset;
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease,
     border-color 180ms ease, background-color 180ms ease;
   will-change: transform;
 }
+
 /* Per-category personality: an extremely subtle tinted glow in the top corner. */
 .pdp-card::before {
   content: "";
@@ -3905,25 +3927,30 @@ body[data-immersive-ui] [data-scroll-top] {
 .pdp-card-alt {
   background:
     linear-gradient(160deg, color-mix(in oklab, var(--accent) 3%, transparent), transparent 45%),
-    color-mix(in oklab, var(--foreground) 4%, transparent);
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--foreground) 5.2%, transparent),
+      color-mix(in oklab, var(--foreground) 3.2%, transparent) 55%,
+      color-mix(in oklab, #000000 10%, transparent)
+    );
 }
 @media (hover: hover) {
   .pdp-card:hover {
     transform: translate3d(0, -2px, 0);
-    border-color: color-mix(in oklab, var(--accent) 34%, transparent);
-    background-color: color-mix(in oklab, var(--foreground) 2%, transparent);
+    border-color: color-mix(in oklab, var(--accent) 30%, transparent);
     box-shadow:
       0 28px 62px -34px rgba(0, 0, 0, 0.95),
-      0 0 34px -18px color-mix(in oklab, var(--accent) 55%, transparent);
+      0 0 28px -18px color-mix(in oklab, var(--accent) 50%, transparent),
+      0 1px 0 0 color-mix(in oklab, #ffffff 8%, transparent) inset;
   }
 }
 .pdp-card-tap:active {
-  transform: scale(0.99);
-  border-color: color-mix(in oklab, var(--accent) 40%, transparent);
-  background-color: color-mix(in oklab, var(--foreground) 5%, transparent);
+  transform: scale(0.985);
+  border-color: color-mix(in oklab, var(--accent) 38%, transparent);
   box-shadow:
     0 26px 60px -30px rgba(0, 0, 0, 0.95),
-    0 0 30px -18px color-mix(in oklab, var(--accent) 50%, transparent);
+    0 0 26px -18px color-mix(in oklab, var(--accent) 46%, transparent),
+    0 1px 0 0 color-mix(in oklab, #ffffff 8%, transparent) inset;
 }
 
 /* Left accent line — 3px, 36px, rounded, gradient + soft glow. */
@@ -3941,30 +3968,65 @@ body[data-immersive-ui] [data-scroll-top] {
   box-shadow: 0 0 12px -2px color-mix(in oklab, var(--accent) 70%, transparent);
 }
 
-/* Row divider: gradient hairline with faded edges, inset from card padding. */
+/* Row divider: gradient hairline, brightest at centre, invisible at the edges. */
 .pdp-row-divider {
   height: 1px;
   margin-inline: 2px;
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in oklab, var(--foreground) 8%, transparent) 22%,
-    color-mix(in oklab, var(--foreground) 8%, transparent) 78%,
+    color-mix(in oklab, var(--foreground) 4%, transparent) 18%,
+    color-mix(in oklab, var(--foreground) 11%, transparent) 50%,
+    color-mix(in oklab, var(--foreground) 4%, transparent) 82%,
     transparent
   );
 }
+
+/* Premium specification grid — labels and values on one shared rhythm. */
+.pdp-spec-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding-block: 8px;
+}
+@media (min-width: 480px) {
+  .pdp-spec-row {
+    grid-template-columns: 40% minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 16px;
+    gap: 0;
+  }
+}
+.pdp-spec-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.45;
+  color: color-mix(in oklab, var(--foreground) 58%, transparent);
+}
+.pdp-spec-value {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
 
 
 /* Progressive reveal — one time, transform + opacity only. */
 .pdp-reveal {
   opacity: 0;
-  transform: translate3d(0, 22px, 0) scale(0.985);
+  transform: translate3d(0, 10px, 0);
   will-change: transform, opacity;
 }
 .pdp-reveal.is-in {
-  animation: pdp-reveal-in 550ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: pdp-reveal-in 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: var(--pdp-delay, 0ms);
 }
+
 @keyframes pdp-reveal-in {
   to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
@@ -3991,7 +4053,9 @@ body[data-immersive-ui] [data-scroll-top] {
   .pdp-reveal { opacity: 1; transform: none; animation: none !important; }
   .pdp-card, .pdp-tab-glow { transition: none; }
   .pdp-skel::after { animation: none; }
+  .pdp-details-stage::before, .pdp-watermark { animation: none !important; }
 }
+
 
 /* Watermark sitting behind the specification card stack. */
 .pdp-panel-watermark {

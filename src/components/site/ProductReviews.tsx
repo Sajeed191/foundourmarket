@@ -1815,7 +1815,7 @@ function HelpfulButton({ active, count, onClick }: { active: boolean; count: num
   const [ripple, setRipple] = useState(0);
   return (
     <button
-      onClick={() => { setRipple((n) => n + 1); tapFeedback(); onClick(); }}
+      onClick={() => { setRipple((n) => n + 1); haptic("selection"); onClick(); }}
       aria-pressed={active}
       aria-label={`Mark review helpful${count > 0 ? ` (${count})` : ""}`}
       className={cn(
@@ -1860,7 +1860,7 @@ function FloatingWriteCTA({ onWrite }: { onWrite: () => void }) {
       type="button"
       data-floating-control
       data-hidden={hidden}
-      onClick={() => { tapFeedback(); onWrite(); }}
+      onClick={() => { haptic("selection"); onWrite(); }}
       className="fom-fab"
       aria-label="Write a review"
     >

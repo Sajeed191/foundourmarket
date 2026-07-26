@@ -55,6 +55,8 @@ import { RevealOnScroll } from "@/components/site/RevealOnScroll";
 import { formatSold } from "@/lib/format-sold";
 import { toast } from "sonner";
 import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
+import { useDraftPreviewOverlay, applyDraftOverlay } from "@/lib/pdp-preview-channel";
+
 
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {
@@ -198,7 +200,11 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const { product: loadedProduct } = Route.useLoaderData();
   const { product: liveProduct, loading: liveLoading } = useProduct(slug);
-  const product = liveProduct ?? loadedProduct;
+  // Admin live-preview only: merges unsaved editor state over the real
+  // product so the customer page itself is the preview (no second renderer).
+  const draftOverlay = useDraftPreviewOverlay(slug);
+  const product = applyDraftOverlay(liveProduct ?? loadedProduct, draftOverlay);
+
   const loading = !product && liveLoading;
   const { categories: allCats } = useAllCategories();
   const breadcrumbCat = product ? allCats.find((c) => c.slug === product.category) ?? null : null;

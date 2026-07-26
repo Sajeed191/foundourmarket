@@ -17,6 +17,33 @@ import {
   FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv, type KV,
 } from "@/components/admin/product-editor/field-builders";
 import { SmartSpecsBuilder } from "@/components/admin/product-editor/SmartSpecsBuilder";
+import { LivePreviewShell } from "@/components/admin/product-editor/LivePreviewShell";
+import type { DraftOverlay } from "@/lib/pdp-preview-channel";
+
+/** Unsaved editor state → live PDP overlay (presentation only). */
+function draftOverlayFromForm(f: Form): DraftOverlay {
+  const specs: Record<string, string> = {};
+  for (const s of f.specs) if (s.k.trim()) specs[s.k.trim()] = s.v;
+  const attrs: Record<string, string> = {};
+  for (const a of f.attrs) if (a.k.trim()) attrs[a.k.trim()] = a.v;
+  return {
+    name: f.name,
+    brand: f.brand || null,
+    productType: f.product_type || null,
+    category: f.categories[0] ?? f.category,
+    categories: f.categories,
+    description: f.description,
+    features: f.features.filter((x) => x.trim()),
+    specifications: specs,
+    attributes: attrs,
+    videoUrl: f.video_url || null,
+    seoTitle: f.seo_title || null,
+    seoDescription: f.seo_description || null,
+    rating: Number(f.rating) || 0,
+    reviews: Number(f.reviews) || 0,
+  };
+}
+
 
 
 export const Route = createFileRoute("/admin-product/$slug/details")({ component: DetailsPage });
@@ -83,7 +110,12 @@ function DetailsPage() {
       })}
       validate={(f) => (f.name.trim() ? null : "Product name is required.")}
     >
-      {(f, set, row) => <CommandCenter slug={slug} f={f} set={set} row={row} />}
+      {(f, set, row) => (
+        <LivePreviewShell slug={slug} overlay={draftOverlayFromForm(f)}>
+          <CommandCenter slug={slug} f={f} set={set} row={row} />
+        </LivePreviewShell>
+      )}
+
     </SectionEditor>
   );
 }

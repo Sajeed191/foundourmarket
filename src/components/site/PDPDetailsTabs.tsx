@@ -174,12 +174,14 @@ function toTitleCase(raw: string): string {
     .join(" ");
 }
 
-/** Category / info card: thin orange accent line, name, small caption. No icon. */
+/** Category / info card: glowing accent line, category eyebrow, larger title. */
 function DetailCard({
   title,
   subtitle,
   eyebrow,
   alt = false,
+  tint,
+  tintStrength,
   children,
   className,
 }: {
@@ -187,28 +189,37 @@ function DetailCard({
   subtitle?: string;
   eyebrow?: string;
   alt?: boolean;
+  tint?: string;
+  tintStrength?: number;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("pdp-card pdp-card-tap", alt && "pdp-card-alt", className)}>
+    <section
+      className={cn("pdp-card pdp-card-tap", alt && "pdp-card-alt", className)}
+      style={
+        tint
+          ? ({
+              ["--pdp-tint" as string]: tint,
+              ["--pdp-tint-strength" as string]: String(tintStrength ?? 0.03),
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       {title && (
-        <header className="mb-2.5 flex items-start gap-3">
-          <span
-            aria-hidden
-            className="mt-[3px] h-8 w-[2px] shrink-0 rounded-full bg-gradient-to-b from-accent via-accent/60 to-transparent"
-          />
+        <header className="mb-2 flex items-start gap-3">
+          <span aria-hidden className="pdp-accent-line mt-[2px]" />
           <div className="min-w-0 flex-1">
             {eyebrow && (
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/55">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/50">
                 {eyebrow}
               </p>
             )}
-            <h3 className="mt-0.5 text-[16px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
+            <h3 className="mt-[7px] text-[18px] font-semibold leading-tight tracking-[-0.015em] text-foreground">
               {title}
             </h3>
             {subtitle && (
-              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/60">{subtitle}</p>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground/55">{subtitle}</p>
             )}
           </div>
         </header>
@@ -227,16 +238,16 @@ function SpecRows({
   observe: (node: HTMLElement | null) => void;
 }) {
   return (
-    <dl>
+    <dl className="mt-1">
       {entries.map(([k, v], i) => (
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}
           <Reveal observe={observe} index={i} step={40}>
-            <div className="py-2.5">
+            <div className="py-2">
               <dt className="text-[11px] font-medium leading-tight text-muted-foreground/70">
                 {toTitleCase(k)}
               </dt>
-              <dd className="mt-0.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
+              <dd className="mt-[3px] break-words text-[16.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
                 {v}
               </dd>
             </div>
@@ -246,6 +257,8 @@ function SpecRows({
     </dl>
   );
 }
+
+
 
 
 function EmptyState({ message }: { message: string }) {

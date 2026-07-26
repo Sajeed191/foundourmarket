@@ -775,16 +775,36 @@ function WorkflowBody(p: any) {
     workflowInput, snapshot, pubBusy, setWorkflowStatus, jumpToTarget, restoreSnapshot,
     nameTips, descTips, featTips, specTips, seoTips, seoOk, seoScore, canonical, generateSeo,
     checks, okCount, healthCards, issues, healthReady, copilotRecs, undoPatch, setUndoPatch,
-    commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate,
+    commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate, topIssue,
   } = p;
   const { mode, setStep } = useEditorWorkflow();
   const advanced = mode === "advanced";
   const isEmpty = !f.name.trim() && imageCount === 0;
 
+  // Smart Context — only surface the spec template that fits this product.
+  const ctx = contextFlags({
+    name: f.name, category: f.category, categories: f.categories,
+    productType: f.product_type, tags: f.tags,
+  });
+  const [tplDismissed, setTplDismissed] = useState<string | null>(null);
+  const missingTpl = missingTemplateSpecs(ctx.template, f.specs);
+  const showTpl = !!ctx.template && ctx.template.id !== tplDismissed && missingTpl.length > 0;
+
+  function addTemplateSpecs() {
+    if (!ctx.template) return;
+    set({ specs: [...f.specs, ...missingTpl.map((k: string) => ({ k, v: "" }))] });
+    focusEditorField("specs");
+    toast.success(`${missingTpl.length} ${ctx.template.label.toLowerCase()} specs added`, {
+      duration: 2000,
+      description: "Fill in the values — nothing is saved until you save.",
+    });
+  }
+
   function importFromUrl() {
     const url = window.prompt("Paste the product listing URL");
     if (url && url.trim()) setPasteRaw(url.trim());
   }
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">

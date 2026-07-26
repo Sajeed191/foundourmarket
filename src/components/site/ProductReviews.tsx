@@ -2142,6 +2142,28 @@ function ReviewMediaViewer({ list, index, onIndex, onClose }: { list: ReviewMedi
 
   useEffect(() => { setZoomed(false); }, [index, list]);
 
+  const viewerOpen = !!list;
+
+  // Chrome hiding + scroll lock — keyed only on open state so swiping between
+  // media never re-toggles the header / floating chat.
+  useEffect(() => {
+    if (!viewerOpen) return;
+    document.body.style.overflow = "hidden";
+    document.body.setAttribute("data-review-media-open", "");
+    let restoreContext = () => {};
+    import("@/lib/floating-stack")
+      .then((m) => {
+        m.setContextHidden(true);
+        restoreContext = () => m.setContextHidden(false);
+      })
+      .catch(() => {});
+    return () => {
+      document.body.style.overflow = "";
+      document.body.removeAttribute("data-review-media-open");
+      restoreContext();
+    };
+  }, [viewerOpen]);
+
   useEffect(() => {
     if (!list) return;
     const onKey = (e: KeyboardEvent) => {
@@ -2150,9 +2172,10 @@ function ReviewMediaViewer({ list, index, onIndex, onClose }: { list: ReviewMedi
       if (!zoomed && e.key === "ArrowLeft" && count > 1) onIndex((index - 1 + count) % count);
     };
     window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+    return () => window.removeEventListener("keydown", onKey);
   }, [list, index, count, onClose, onIndex, zoomed]);
+
+
 
   if (!list) return null;
   const current = list[index];

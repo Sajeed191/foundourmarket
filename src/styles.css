@@ -1167,6 +1167,7 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
     visibility: hidden !important;
     transition: opacity 0.2s ease, visibility 0.2s ease;
   }
+
   [data-sonner-toaster][data-y-position="bottom"] { bottom: var(--floating-bottom-offset) !important; }
   .min-h-screen { min-height: 100dvh !important; }
   .h-screen { height: 100dvh !important; }
@@ -3554,4 +3555,17 @@ html [data-product-badge][style*="--badge-color"][style*="--badge-text"] {
   background-color: var(--badge-color) !important;
   color: var(--badge-text) !important;
   transition-property: opacity, transform !important;
+}
+
+/* Reviews v3.2 — Review media viewer is a standalone fullscreen surface:
+   hide the header, bottom nav, floating chat and any product CTAs. */
+body[data-review-media-open] [data-app-header],
+body[data-review-media-open] [data-app-bottom-nav],
+body[data-review-media-open] [data-floating-control],
+body[data-review-media-open] [data-product-cta],
+body[data-review-media-open] [data-sonner-toaster] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }

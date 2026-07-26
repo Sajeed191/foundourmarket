@@ -426,12 +426,12 @@ export function PDPDetailsTabs({
             ref={listRef}
             role="tablist"
             aria-label="Product details"
-            className="no-scrollbar relative flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 py-2.5 sm:px-0"
+            className="no-scrollbar relative flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 py-2 sm:px-0"
           >
             {ind && (
               <span
                 aria-hidden
-                className="pdp-tab-glow top-2.5 h-11"
+                className="pdp-tab-glow top-2 h-[42px]"
                 style={{ width: ind.width, transform: `translate3d(${ind.left}px,0,0)`, left: 0 }}
               />
             )}
@@ -447,12 +447,12 @@ export function PDPDetailsTabs({
                   aria-controls={`pdp-tab-panel-${t.id}`}
                   onClick={() => setActive(t.id)}
                   className={cn(
-                    "relative z-[1] h-11 min-h-[44px] shrink-0 snap-start whitespace-nowrap rounded-full px-5 text-[13px] font-medium",
-                    "transition-colors duration-[260ms] ease-out",
+                    "relative z-[1] h-[42px] shrink-0 snap-start whitespace-nowrap rounded-full px-5 text-[13px] font-medium",
+                    "transition-colors duration-[180ms] ease-out",
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50",
                     isActive
                       ? "text-accent-foreground"
-                      : "border border-white/[0.07] bg-white/[0.025] text-muted-foreground shadow-[0_10px_28px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl hover:text-foreground/90",
+                      : "border border-white/[0.06] bg-white/[0.02] text-muted-foreground/80 backdrop-blur-xl hover:text-foreground/90",
                   )}
                 >
                   {t.label}
@@ -468,19 +468,47 @@ export function PDPDetailsTabs({
         key={current}
         id={`pdp-tab-panel-${current}`}
         role="tabpanel"
-        className="relative mt-6 space-y-[30px]"
+        className="relative mt-5 space-y-3"
       >
-        {current === "specs" &&
-          groups.map(({ group, entries }, i) => {
-            const meta = SPEC_GROUP_META[group as SpecGroupName];
-            return (
-              <Reveal key={group} observe={observe} index={i} step={60}>
-                <DetailCard title={group} count={entries.length} icon={meta?.icon}>
-                  <SpecRows entries={entries} observe={observe} />
-                </DetailCard>
-              </Reveal>
-            );
-          })}
+        {current === "specs" && (
+          <>
+            <span aria-hidden className="pdp-panel-watermark">
+              Specs
+            </span>
+            <div className="mb-4 flex gap-2">
+              {[
+                { value: String(specCount), label: "Specifications" },
+                { value: String(groups.length), label: "Categories" },
+                { value: "Verified", label: "Catalogue" },
+              ].map((s) => (
+                <div key={s.label} className="pdp-stat">
+                  <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">
+                    {s.value}
+                  </p>
+                  <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60">
+                    {s.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+            {groups.map(({ group, entries }, i) => {
+              const meta = SPEC_GROUP_META[group as SpecGroupName];
+              return (
+                <Reveal key={group} observe={observe} index={i} step={40}>
+                  <DetailCard
+                    eyebrow={group.toUpperCase()}
+                    title={meta?.subtitle ?? "Product information"}
+                    subtitle={`${entries.length} ${entries.length === 1 ? "specification" : "specifications"}`}
+                    alt={i % 2 === 1}
+                  >
+                    <SpecRows entries={entries} observe={observe} />
+                  </DetailCard>
+                </Reveal>
+              );
+            })}
+          </>
+        )}
+
 
         {current === "description" && (
           <Reveal observe={observe}>

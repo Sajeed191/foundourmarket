@@ -1507,14 +1507,15 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => !modRunning && setModConfirm(null)}
-            className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fom-overlay fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-3xl border border-white/10 bg-card p-6 text-center shadow-[var(--shadow-float)]"
+              className="fom-surface w-full max-w-sm p-6 text-center"
             >
               <div className={cn(
                 "mx-auto grid size-12 place-items-center rounded-2xl",
@@ -1562,14 +1563,15 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setDetailsFor(null)}
-            className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fom-overlay fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-card p-6 shadow-[var(--shadow-float)]"
+              className="fom-surface w-full max-w-lg max-h-[85vh] overflow-y-auto p-6"
             >
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
@@ -1640,13 +1642,10 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
             onClick={() => !deleting && setConfirmDeleteId(null)}
-            className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
-            style={{
-              paddingTop: "max(1rem, env(safe-area-inset-top))",
-              paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
-            }}
+            onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
+            className="fom-overlay fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center p-4"
           >
             <motion.div
               ref={deleteDialogRef}
@@ -1659,7 +1658,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
               exit={{ scale: 0.96, opacity: 0 }}
               transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[20rem] rounded-3xl border border-white/10 bg-card px-7 py-8 text-center shadow-[var(--shadow-float)]"
+              className="fom-surface w-full max-w-[20rem] px-7 py-8 text-center"
             >
               <div className="mx-auto grid size-10 place-items-center rounded-full bg-destructive/10 text-destructive">
                 <Trash2 className="size-4" />
@@ -1683,7 +1682,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                   rows={2}
                   maxLength={200}
                   placeholder="Reason (optional, internal only)"
-                  className="mt-4 w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-left text-sm focus:border-accent focus:outline-none"
+                  className="fom-inset mt-4 w-full rounded-xl px-3 py-2 text-left text-sm focus:border-accent focus:outline-none"
                 />
               )}
               {deleteError && (
@@ -1965,9 +1964,8 @@ function WriteReviewModal(props: {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-center justify-center p-4 backdrop-blur-lg overscroll-contain"
-          style={{ background: "rgba(5,6,8,0.72)" }}
+          transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+          className="fom-overlay fixed inset-0 z-[var(--z-modal-overlay)] flex items-center justify-center p-4"
           onClick={requestClose}
           onTouchMove={onOverlayTouchMove}
         >
@@ -1976,14 +1974,9 @@ function WriteReviewModal(props: {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="w-[92vw] max-w-[520px] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-[26px] p-6 sm:p-8 [-webkit-overflow-scrolling:touch]"
-            style={{
-              background: "#121316",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
-            }}
+            className="fom-surface w-[92vw] max-w-[520px] max-h-[85dvh] overflow-y-auto overscroll-contain p-6 sm:p-8 [-webkit-overflow-scrolling:touch]"
           >
 
             <div className="flex items-center justify-between mb-5">
@@ -2101,14 +2094,15 @@ function WriteReviewModal(props: {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={(e) => { e.stopPropagation(); setConfirmDiscard(false); }}
-                className="fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+                className="fom-overlay fixed inset-0 z-[var(--z-modal-dialog)] flex items-center justify-center p-4"
               >
                 <motion.div
-                  initial={{ scale: 0.95, opacity: 0 }}
+                  initial={{ scale: 0.96, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.95, opacity: 0 }}
+                  exit={{ scale: 0.96, opacity: 0 }}
+                  transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full max-w-sm rounded-3xl border border-white/[0.08] bg-[#121316] p-6 text-center shadow-[0_30px_80px_-30px_rgba(0,0,0,0.85)]"
+                  className="fom-surface w-full max-w-sm p-6 text-center"
                 >
                   <p className="text-base font-display">Discard review?</p>
                   <p className="mt-1.5 text-sm text-muted-foreground">You have unsaved changes. Do you want to continue editing or discard this review?</p>

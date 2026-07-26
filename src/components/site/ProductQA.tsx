@@ -642,7 +642,7 @@ function QuestionModal({
 
         {/* Sticky footer — pinned above the safe area on all devices. */}
         <div
-          className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3 bg-background/95 backdrop-blur-sm"
+          className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3"
           style={{
             borderTop: "1px solid rgba(255,255,255,0.06)",
             paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))",
@@ -767,26 +767,21 @@ function QuestionModalShell({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+      className="fom-overlay fixed inset-0 z-[80] flex items-center justify-center p-4"
       onClick={onClose}
       style={{
-        background: "rgba(5,6,8,0.72)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
         opacity: mounted ? 1 : 0,
-        transition: "opacity 220ms ease-out",
+        transition: "opacity 260ms cubic-bezier(0.22,1,0.36,1)",
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-[92vw] max-w-[520px] max-h-[85dvh] flex flex-col rounded-[26px] overflow-hidden"
+        className="fom-surface w-[92vw] max-w-[520px] max-h-[85dvh] flex flex-col overflow-hidden"
         style={{
-          background: "#121316",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
-          transform: mounted ? "translateY(0) scale(1)" : "translateY(8px) scale(0.95)",
+          animation: "none",
+          transform: mounted ? "scale(1)" : "scale(0.96)",
           opacity: mounted ? 1 : 0,
-          transition: "transform 250ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease-out",
+          transition: "transform 260ms cubic-bezier(0.22,1,0.36,1), opacity 260ms cubic-bezier(0.22,1,0.36,1)",
         }}
       >
         {children}
@@ -847,8 +842,7 @@ function DiscardDraftConfirm({
 
   return (
     <div
-      className="fixed inset-0 z-[90] grid place-items-center p-5 animate-in fade-in duration-150"
-      style={{ background: "rgba(5,6,8,0.72)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+      className="fom-overlay fixed inset-0 z-[90] grid place-items-center p-5"
       onClick={onContinue}
     >
       <div
@@ -858,12 +852,7 @@ function DiscardDraftConfirm({
         aria-labelledby="qa-discard-title"
         aria-describedby="qa-discard-desc"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[400px] rounded-3xl p-6 animate-in zoom-in-95 duration-150"
-        style={{
-          background: "#121316",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85)",
-        }}
+        className="fom-surface w-full max-w-[400px] p-6"
       >
         <h3 id="qa-discard-title" className="text-[17px] font-display font-semibold text-foreground leading-tight">
           Discard your question?
@@ -1258,10 +1247,16 @@ export function ProductQA({
   const [confirmDeleteQ, setConfirmDeleteQ] = useState<Question | null>(null);
   const [deletingQ, setDeletingQ] = useState(false);
   const [deleteQError, setDeleteQError] = useState<string | null>(null);
+  // v7.4 — answer/reply delete gets the same premium surface (never confirm()).
+  const [confirmDeleteA, setConfirmDeleteA] = useState<{ id: string; isReply: boolean } | null>(null);
+  const [deletingA, setDeletingA] = useState(false);
+  const [deleteAError, setDeleteAError] = useState<string | null>(null);
+  const [postingA, setPostingA] = useState(false);
+  const [savingA, setSavingA] = useState(false);
 
   // Q&A v7.3 — immersive mode while answering / editing an answer or reply, so
   // the composer reads as its own premium screen.
-  useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen || !!confirmDeleteQ);
+  useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen || !!confirmDeleteQ || !!confirmDeleteA);
 
   // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
   // answers get the smooth reveal animation.
@@ -1385,9 +1380,11 @@ export function ProductQA({
 
   async function postAnswer(questionId: string, parentAnswerId: string | null) {
     const text = draft.trim();
-    if (!text) return;
+    if (!text || postingA) return;
     if (!user) { toast.message("Sign in to answer."); return; }
     if (!isAdmin) { toast.error("Only administrators can answer questions."); return; }
+    setPostingA(true);
+    const startedAt = Date.now();
     try {
       const { error } = await supabase.from("product_answers").insert({
         question_id: questionId,
@@ -1403,35 +1400,86 @@ export function ProductQA({
       toast.success("Answer posted");
       void load();
     } catch (err) {
-      console.error("[QA] answer failed", err);
+      const { logQaDiagnostics } = await import("@/lib/qa-diagnostics");
+      await logQaDiagnostics({ action: "post-answer", rpc: "product_answers.insert", questionId, replyId: parentAnswerId, productId: productSlug, currentUserId: user?.id ?? null, startedAt, error: err });
       toast.error(friendlyError(err, "Couldn't post your answer."));
+    } finally {
+      setPostingA(false);
     }
   }
 
   async function saveEdit() {
-    if (!editing) return;
+    if (!editing || savingA) return;
     const body = editing.body.trim();
     if (!body) return;
+    setSavingA(true);
+    const startedAt = Date.now();
+    const answerId = editing.id;
     try {
-      const { error } = await supabase.from("product_answers").update({ body }).eq("id", editing.id);
+      const { error } = await supabase.from("product_answers").update({ body }).eq("id", answerId);
       if (error) throw error;
       setEditing(null);
       void load();
     } catch (err) {
+      const { logQaDiagnostics } = await import("@/lib/qa-diagnostics");
+      await logQaDiagnostics({ action: "edit-answer", rpc: "product_answers.update", answerId, productId: productSlug, currentUserId: user?.id ?? null, startedAt, error: err });
       toast.error(friendlyError(err, "Couldn't update answer."));
+    } finally {
+      setSavingA(false);
     }
   }
 
-  async function deleteAnswer(id: string) {
+  function deleteAnswer(id: string, isReply = false) {
     if (!isAdmin) { toast.error("Only administrators can delete answers."); return; }
-    if (!confirm("Delete this answer? This cannot be undone.")) return;
+    setDeleteAError(null);
+    setConfirmDeleteA({ id, isReply });
+  }
+
+  // Escape closes either delete dialog, but never while the request is active.
+  useEffect(() => {
+    if (!confirmDeleteQ && !confirmDeleteA) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (deletingQ || deletingA) { e.preventDefault(); return; }
+      setConfirmDeleteQ(null);
+      setConfirmDeleteA(null);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [confirmDeleteQ, confirmDeleteA, deletingQ, deletingA]);
+
+  async function performDeleteAnswer() {
+    const target = confirmDeleteA;
+    if (!target || deletingA) return; // double-tap guard
+    setDeletingA(true);
+    setDeleteAError(null);
+    const startedAt = Date.now();
     try {
-      const { error } = await supabase.from("product_answers").delete().eq("id", id);
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        throw new Error("You appear to be offline. Check your connection and try again.");
+      }
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) throw new Error("Your session expired. Please sign in again.");
+      const { error } = await supabase.from("product_answers").delete().eq("id", target.id);
       if (error) throw error;
-      toast.success("Answer deleted");
+      toast.success(target.isReply ? "Reply deleted" : "Answer deleted");
+      setConfirmDeleteA(null);
       void load();
     } catch (err) {
-      toast.error(friendlyError(err, "Couldn't delete."));
+      const { logQaDiagnostics } = await import("@/lib/qa-diagnostics");
+      await logQaDiagnostics({
+        action: target.isReply ? "delete-reply" : "delete-answer",
+        rpc: "product_answers.delete",
+        answerId: target.isReply ? null : target.id,
+        replyId: target.isReply ? target.id : null,
+        productId: productSlug,
+        currentUserId: user?.id ?? null,
+        startedAt,
+        error: err,
+      });
+      setDeleteAError(friendlyError(err, target.isReply ? "Couldn't delete this reply." : "Couldn't delete this answer."));
+    } finally {
+      setDeletingA(false);
     }
   }
 
@@ -1491,6 +1539,7 @@ export function ProductQA({
     if (!q || deletingQ) return; // double-submission guard
     setDeletingQ(true);
     setDeleteQError(null);
+    const startedAt = Date.now();
     const prevItems = items;
     setItems((prev) => prev.filter((x) => x.id !== q.id));
     try {
@@ -1507,7 +1556,8 @@ export function ProductQA({
       toast.success("Question deleted");
       setConfirmDeleteQ(null);
     } catch (err) {
-      console.error("[qa] delete question failed", { questionId: q.id, err });
+      const { logQaDiagnostics } = await import("@/lib/qa-diagnostics");
+      await logQaDiagnostics({ action: "delete-question", rpc: "product_questions.delete", questionId: q.id, productId: productSlug, ownerUserId: (q as { user_id?: string | null }).user_id ?? null, currentUserId: user?.id ?? null, startedAt, error: err });
       setItems(prevItems);
       setDeleteQError(friendlyError(err, q.is_mine ? "You can only delete your own question." : "Couldn't delete question."));
     } finally {
@@ -1697,7 +1747,7 @@ export function ProductQA({
                     {[...roots].sort((a, b) => Number(b.is_official) - Number(a.is_official)).map((a) => (
                       <div key={a.id} className="space-y-2">
                         {editing?.id === a.id ? (
-                          <div className="rounded-[14px] p-3.5 border border-border bg-background/40">
+                          <div className="rounded-[14px] p-3.5 border border-white/[0.07] bg-white/[0.04]">
                             <textarea
                               value={editing.body}
                               onChange={(e) => setEditing({ ...editing, body: e.target.value })}
@@ -1705,7 +1755,7 @@ export function ProductQA({
                               className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent resize-none"
                             />
                             <div className="flex gap-2 mt-2">
-                              <button onClick={saveEdit} className="bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition">Save</button>
+                              <button onClick={saveEdit} disabled={savingA} aria-busy={savingA} className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-60">{savingA && <Loader2 className="size-3 animate-spin" />}{savingA ? "Saving…" : "Save"}</button>
                               <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition">Cancel</button>
                             </div>
                           </div>
@@ -1716,7 +1766,7 @@ export function ProductQA({
                               isAdmin={isAdmin}
                               voted={voted.has(a.id)}
                               onVote={() => toggleVote(a.id)}
-                              onDelete={() => deleteAnswer(a.id)}
+                              onDelete={() => deleteAnswer(a.id, false)}
                               onEdit={() => setEditing({ id: a.id, body: a.body })}
                               onMarkOfficial={() => markOfficial(q.id, a.id, a.is_official)}
                               onReply={isAdmin ? () => { setReplyOpen({ answerId: a.id, questionId: q.id }); setDraft(""); } : undefined}
@@ -1732,7 +1782,7 @@ export function ProductQA({
                               isReply
                               voted={voted.has(r.id)}
                               onVote={() => toggleVote(r.id)}
-                              onDelete={() => deleteAnswer(r.id)}
+                              onDelete={() => deleteAnswer(r.id, true)}
                               onEdit={() => setEditing({ id: r.id, body: r.body })}
                               onHide={() => hideAnswer(r.id)}
                             />
@@ -1746,7 +1796,7 @@ export function ProductQA({
                               placeholder="Write a reply…"
                               className="flex-1 bg-background border border-border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent"
                             />
-                            <button onClick={() => postAnswer(q.id, a.id)} disabled={!draft.trim()} className="bg-accent text-accent-foreground font-bold px-4 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50">Reply</button>
+                            <button onClick={() => postAnswer(q.id, a.id)} disabled={!draft.trim() || postingA} aria-busy={postingA} className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-4 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50">{postingA && <Loader2 className="size-3 animate-spin" />}{postingA ? "Posting…" : "Reply"}</button>
                             <button onClick={() => { setReplyOpen(null); setDraft(""); }} className="px-3 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition">Cancel</button>
                           </div>
                         )}
@@ -1773,7 +1823,7 @@ export function ProductQA({
                         </label>
                         <div className="ml-auto flex gap-2">
                           <button onClick={() => { setAnswerOpen(null); setDraft(""); }} className="px-3 py-1.5 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition">Cancel</button>
-                          <button onClick={() => postAnswer(q.id, null)} disabled={!draft.trim()} className="bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50">Post answer</button>
+                          <button onClick={() => postAnswer(q.id, null)} disabled={!draft.trim() || postingA} aria-busy={postingA} className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50">{postingA && <Loader2 className="size-3 animate-spin" />}{postingA ? "Posting…" : "Post answer"}</button>
                         </div>
                       </div>
                     </div>
@@ -1846,18 +1896,13 @@ export function ProductQA({
           role="alertdialog"
           aria-modal="true"
           aria-label="Delete question"
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4 qa-delete-overlay"
-          style={{ background: "rgba(5,6,8,0.72)", backdropFilter: "blur(8px)" }}
+          className="fom-overlay fixed inset-0 z-[80] flex items-center justify-center p-4"
           onClick={() => { if (!deletingQ) setConfirmDeleteQ(null); }}
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-[92vw] max-w-[20rem] rounded-[26px] px-7 py-8 text-center qa-delete-panel"
-            style={{
-              background: "#121316",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85)",
-            }}
+            className="fom-surface w-[92vw] max-w-[20rem] px-7 py-8 text-center"
           >
             <div className="mx-auto grid size-10 place-items-center rounded-full bg-destructive/10 text-destructive">
               <Trash2 className="size-4" />
@@ -1887,6 +1932,51 @@ export function ProductQA({
                 {deletingQ ? "Deleting…" : "Delete Question"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Q&A v7.4 — premium answer / reply delete confirmation */}
+      {confirmDeleteA && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-label={confirmDeleteA.isReply ? "Delete reply" : "Delete answer"}
+          className="fom-overlay fixed inset-0 z-[80] flex items-center justify-center p-4"
+          onClick={() => { if (!deletingA) setConfirmDeleteA(null); }}
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
+        >
+          <div onClick={(e) => e.stopPropagation()} className="fom-surface w-[92vw] max-w-[20rem] px-7 py-8 text-center">
+            <div className="mx-auto grid size-10 place-items-center rounded-full bg-destructive/10 text-destructive">
+              <Trash2 className="size-4" />
+            </div>
+            <h3 className="mt-6 text-[17px] font-display leading-snug">
+              {confirmDeleteA.isReply ? "Delete Reply?" : "Delete Answer?"}
+            </h3>
+            <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+              This will be permanently removed from the question. This action cannot be undone.
+            </p>
+            {deleteAError && (
+              <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[12px] leading-snug text-destructive">{deleteAError}</p>
+            )}
+            <div className="mt-7 flex flex-col-reverse gap-2.5">
+              <button
+                onClick={() => setConfirmDeleteA(null)}
+                disabled={deletingA}
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 px-5 py-3 text-[11px] font-bold uppercase tracking-widest transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+              >
+                Keep {confirmDeleteA.isReply ? "Reply" : "Answer"}
+              </button>
+              <button
+                onClick={performDeleteAnswer}
+                disabled={deletingA}
+                aria-busy={deletingA}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-destructive px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110 disabled:opacity-60"
+              >
+                {deletingA ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                {deletingA ? "Deleting…" : confirmDeleteA.isReply ? "Delete Reply" : "Delete Answer"}
+              </button>
+            </div>
+            <span aria-live="polite" className="sr-only">{deletingA ? "Deleting" : deleteAError ?? ""}</span>
           </div>
         </div>
       )}

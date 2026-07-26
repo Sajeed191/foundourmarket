@@ -484,6 +484,77 @@ function CommandCenter({ slug, f, set, row }: {
   const seoOk = !!(f.seo_title.trim() && f.seo_description.trim() && f.keywords.trim());
   const seoScore = [f.seo_title, f.seo_description, f.keywords].filter((x) => x.trim()).length;
 
+  /* --------------- Enterprise Workflow & Publishing (7.0) --------------- */
+
+  const warranty = f.specs.find((s) => /warrant/i.test(s.k))?.v ?? "";
+
+  const workflowInput: WorkflowInput = {
+    slug,
+    name: f.name, brand: f.brand,
+    category: f.category, categories: f.categories,
+    description: f.description, features: f.features,
+    specCount: f.specs.filter((s) => s.k.trim()).length,
+    seoTitle: f.seo_title, seoDescription: f.seo_description, keywords: f.keywords,
+    videoUrl: f.video_url,
+    imageCount, heroImage: primaryUrl,
+    price: sellPrice, stock, sku: String(row.sku ?? ""),
+    warranty,
+    variantCount: Number(row.variant_count ?? 0),
+    variantIssues: 0,
+    status: normalizeStatus(status),
+  };
+
+  /** Flat, comparable snapshot of everything this editor owns. */
+  const snapshot = useMemo<Record<string, unknown>>(() => ({
+    name: f.name, brand: f.brand, product_type: f.product_type,
+    category: f.category, categories: f.categories, tags: f.tags,
+    description: f.description, features: f.features,
+    specs: f.specs, attrs: f.attrs, video_url: f.video_url,
+    seo_title: f.seo_title, seo_description: f.seo_description, keywords: f.keywords,
+    rating: f.rating, reviews: f.reviews,
+  }), [f]);
+
+  // Auto-snapshot: first mount + whenever the draft settles after edits.
+  const snapRef = useRef(snapshot);
+  snapRef.current = snapshot;
+  useEffect(() => {
+    saveVersion(slug, "draft", "Draft opened", snapRef.current);
+    logEvent(slug, "Editor opened");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
+  const setWorkflowStatus = useCallback(async (next: WorkflowStatus) => {
+    setPubBusy(true);
+    const { error } = await supabase
+      .from("products")
+      .update({ status: next, updated_at: new Date().toISOString() })
+      .eq("slug", slug);
+    setPubBusy(false);
+    if (error) { toast.error("Update failed", { description: error.message }); return; }
+    setStatus(next);
+    await invalidateProducts();
+    if (next === "published") saveVersion(slug, "publish", "Published snapshot", snapRef.current);
+    logEvent(slug, `Status → ${next.replace(/_/g, " ")}`);
+    toast.success(`Moved to ${next.replace(/_/g, " ")}`);
+  }, [slug]);
+
+  const jumpToTarget = useCallback((target: string) => {
+    if (target.startsWith("route:")) {
+      const dest = target.slice(6);
+      navigate({ to: `/admin-product/$slug/${dest}` as never, params: { slug } });
+      return;
+    }
+    focusEditorField(target);
+  }, [navigate, slug]);
+
+  const restoreSnapshot = useCallback((data: Record<string, unknown>) => {
+    saveVersion(slug, "manual", "Before restore", snapRef.current);
+    set(data as Partial<Form>);
+    logEvent(slug, "Version restored");
+    toast.success("Version restored into the draft", { description: "Nothing is saved until you save." });
+  }, [set, slug]);
+
+
   /* ------------------------- AI Copilot & automation ------------------------- */
 
   const descInput: DescriptionInput = {

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye, MoreVertical, Copy, Archive, FileText, X } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye, MoreVertical, Copy, Archive, FileText, X, Undo2, Redo2 } from "lucide-react";
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";

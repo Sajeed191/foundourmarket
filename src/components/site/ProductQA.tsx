@@ -15,7 +15,7 @@ import {
   Trash2,
   Reply,
   Pencil,
-  
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { haptic, successToast } from "@/lib/premium-feedback";
@@ -1174,6 +1174,29 @@ function AnswerReveal({ animate, children }: { animate: boolean; children: React
 
 const PAGE_SIZE = 8;
 
+/** Premium skeleton placeholder for the questions list (no spinner-only screens). */
+function QASkeleton() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="rounded-[20px] border border-white/[0.06] bg-white/[0.02] p-4">
+          <div className="flex items-center gap-3">
+            <div className="fom-skeleton size-9 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="fom-skeleton h-3 w-28" />
+              <div className="fom-skeleton h-2.5 w-16" />
+            </div>
+            <div className="fom-skeleton h-6 w-24 rounded-full" />
+          </div>
+          <div className="fom-skeleton mt-4 h-3.5 w-3/4" />
+          <div className="fom-skeleton mt-2 h-3 w-full" />
+          <div className="fom-skeleton mt-1.5 h-3 w-2/3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ProductQA({
   productSlug,
   hideHeader = false,
@@ -1952,13 +1975,13 @@ export function ProductQA({
               This will be permanently removed from the question. This action cannot be undone.
             </p>
             {deleteAError && (
-              <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[12px] leading-snug text-destructive">{deleteAError}</p>
+              <div className="fom-note mt-4"><AlertTriangle className="mt-[1px] size-3.5 shrink-0 opacity-80" aria-hidden="true" /><span>{deleteAError}</span></div>
             )}
             <div className="mt-7 flex flex-col-reverse gap-2.5">
               <button
                 onClick={() => setConfirmDeleteA(null)}
                 disabled={deletingA}
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 px-5 py-3 text-[11px] font-bold uppercase tracking-widest transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                className="fom-btn fom-btn-ghost hover:border-accent/40 hover:text-accent"
               >
                 Keep {confirmDeleteA.isReply ? "Reply" : "Answer"}
               </button>
@@ -1966,13 +1989,13 @@ export function ProductQA({
                 onClick={performDeleteAnswer}
                 disabled={deletingA}
                 aria-busy={deletingA}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-destructive px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110 disabled:opacity-60"
+                className="fom-btn fom-btn-danger"
               >
-                {deletingA ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                {deletingA ? "Deleting…" : confirmDeleteA.isReply ? "Delete Reply" : "Delete Answer"}
+                {deletingA ? <Loader2 className="size-[18px] animate-spin" /> : <Trash2 className="size-3.5" />}
+                {deletingA ? (confirmDeleteA.isReply ? "Deleting reply…" : "Deleting answer…") : confirmDeleteA.isReply ? "Delete Reply" : "Delete Answer"}
               </button>
             </div>
-            <span aria-live="polite" className="sr-only">{deletingA ? "Deleting" : deleteAError ?? ""}</span>
+            <span aria-live="polite" className="sr-only">{deletingA ? (confirmDeleteA.isReply ? "Deleting reply, please wait" : "Deleting answer, please wait") : deleteAError ?? ""}</span>
           </div>
         </div>
       )}

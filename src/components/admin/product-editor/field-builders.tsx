@@ -28,7 +28,12 @@ export function arrayToKv(rows: KV[]): Record<string, string> {
 export function FeaturesBuilder({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const update = (i: number, text: string) => onChange(value.map((f, idx) => (idx === i ? text : f)));
   const add = () => onChange([...value, ""]);
-  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
+  const remove = (i: number) => {
+    const before = value;
+    onChange(value.filter((_, idx) => idx !== i));
+    undoableToast("Highlight removed", () => onChange(before));
+  };
+
 
   return (
     <div className="space-y-2">

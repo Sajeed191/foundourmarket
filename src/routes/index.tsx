@@ -764,6 +764,11 @@ function Home() {
 
       <CinematicDivider />
 
+      {/* Why FoundOurMarket — premium benefit cards */}
+      <WhyFoundOurMarket />
+
+      <CinematicDivider />
+
       {/* 7 · Social Proof — verified customer reviews */}
       <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
         <Reveal className="text-center mb-4 sm:mb-6">

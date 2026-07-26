@@ -73,6 +73,16 @@ export function PublishingCenter({
 
   const status = input.status;
 
+  // Command palette can open a specific panel.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent<string>).detail;
+      if (p === "checklist" || p === "timeline" || p === "preview") setPanel(p);
+    };
+    window.addEventListener("editor-publishing-panel", handler);
+    return () => window.removeEventListener("editor-publishing-panel", handler);
+  }, []);
+
   /* --- Scheduled publishing: applied while an admin has the editor open --- */
   useEffect(() => {
     if (!schedule) return;

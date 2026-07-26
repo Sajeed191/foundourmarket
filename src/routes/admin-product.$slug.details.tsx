@@ -466,6 +466,105 @@ function CommandCenter({ slug, f, set, row }: {
   const seoOk = !!(f.seo_title.trim() && f.seo_description.trim() && f.keywords.trim());
   const seoScore = [f.seo_title, f.seo_description, f.keywords].filter((x) => x.trim()).length;
 
+  /* ------------------------- AI Copilot & automation ------------------------- */
+
+  const descInput: DescriptionInput = {
+    name: f.name, brand: f.brand, productType: f.product_type,
+    category: f.categories[0] ?? f.category, features: f.features, specs: f.specs,
+  };
+
+  // One-step undo for anything the Copilot applies.
+  const [undoPatch, setUndoPatch] = useState<Partial<Form> | null>(null);
+  const applyWithUndo = useCallback((patch: Partial<Form>, before: Partial<Form>) => {
+    setUndoPatch(before);
+    set(patch);
+  }, [set]);
+
+  const draftSections = useMemo(() => buildDescriptionSections(descInput), [
+    f.name, f.brand, f.product_type, f.category, f.categories, f.features, f.specs,
+  ]);
+  const draftMerge = useMemo(
+    () => mergeDescriptionSections(f.description, draftSections),
+    [f.description, draftSections],
+  );
+  const featureChips = useMemo(() => generateFeatureChips(descInput), [f.features, f.specs]);
+  const keywordChips = useMemo(() => generateKeywordChips(descInput), [
+    f.name, f.brand, f.product_type, f.category, f.categories, f.specs,
+  ]);
+
+  function generateDescription() {
+    if (!draftMerge.addedSections.length) {
+      toast.info("Description already covers every section");
+      return;
+    }
+    applyWithUndo({ description: draftMerge.text }, { description: f.description });
+    focusEditorField("description");
+    toast.success(`Added ${draftMerge.addedSections.length} section${draftMerge.addedSections.length === 1 ? "" : "s"}`, {
+      description: `${draftMerge.addedSections.join(" · ")} — your existing text was left untouched.`,
+    });
+  }
+
+  function generateFeatures() {
+    const merged = [...f.features, ...featureChips].slice(0, 12);
+    if (merged.length === f.features.length) { toast.info("No new features to suggest"); return; }
+    applyWithUndo({ features: merged }, { features: f.features });
+    focusEditorField("features");
+    toast.success(`${merged.length - f.features.length} feature suggestions added`);
+  }
+
+  function generateKeywords() {
+    if (!keywordChips.length) { toast.info("Add a title or specs first"); return; }
+    applyWithUndo({ keywords: keywordChips.join(", ") }, { keywords: f.keywords });
+    focusEditorField("seo");
+    toast.success(`${keywordChips.length} keywords generated`);
+  }
+
+  const copilotRecs = buildCopilotRecs(
+    {
+      name: f.name, brand: f.brand, productType: f.product_type,
+      category: f.categories[0] ?? f.category, categories: f.categories,
+      description: f.description, features: f.features, specs: f.specs,
+      seoTitle: f.seo_title, seoDescription: f.seo_description, keywords: f.keywords,
+      videoUrl: f.video_url, imageCount, price: sellPrice, stock,
+    },
+    {
+      generateDescription,
+      descriptionPreview: draftMerge.addedSections.length
+        ? draftSections
+            .filter((s) => draftMerge.addedSections.includes(s.name))
+            .map((s) => `## ${s.name}\n${s.body}`)
+            .join("\n\n")
+        : undefined,
+      generateSeo,
+      seoPreview: `Title: ${f.seo_title.trim() || `${f.name}${f.brand ? ` by ${f.brand}` : ""}`.slice(0, 60)}`,
+      generateFeatures,
+      featuresPreview: featureChips.slice(0, 6).map((x) => `• ${x}`).join("\n") || undefined,
+      generateKeywords,
+      keywordsPreview: keywordChips.join(", ") || undefined,
+      openPricing: () => navigate({ to: "/admin-product/$slug/pricing", params: { slug } }),
+      openInventory: () => navigate({ to: "/admin-product/$slug/inventory", params: { slug } }),
+    },
+  );
+
+  const commands: EditorCommand[] = [
+    { id: "publish", group: "Publish", icon: Send, label: status === "published" ? "Unpublish product" : "Publish product", run: togglePublish },
+    { id: "preview", group: "Publish", icon: Eye, label: "Open customer preview", run: () => navigate({ to: "/admin-product/$slug/preview", params: { slug } }) },
+    { id: "gen-desc", group: "Generate", icon: Sparkles, label: "Generate description sections", run: generateDescription },
+    { id: "gen-seo", group: "Generate", icon: Search, label: "Generate SEO title & meta", run: generateSeo },
+    { id: "gen-feat", group: "Generate", icon: ListChecks, label: "Suggest features", run: generateFeatures },
+    { id: "gen-kw", group: "Generate", icon: Sparkles, label: "Suggest search keywords", run: generateKeywords },
+    { id: "j-media", group: "Jump to", icon: ImageIcon, label: "Jump to Media", run: () => focusEditorField("media") },
+    { id: "j-info", group: "Jump to", icon: Tag, label: "Jump to Product Information", run: () => focusEditorField("information") },
+    { id: "j-desc", group: "Jump to", icon: FileText, label: "Jump to Description", run: () => focusEditorField("description") },
+    { id: "j-specs", group: "Jump to", icon: Layers, label: "Jump to Specifications", run: () => focusEditorField("specs") },
+    { id: "j-seo", group: "Jump to", icon: Search, label: "Jump to SEO Center", run: () => focusEditorField("seo") },
+    { id: "j-health", group: "Jump to", icon: Activity, label: "Jump to Product Health", run: () => focusEditorField("health") },
+    { id: "g-pricing", group: "Go to", icon: Tag, label: "Pricing", run: () => navigate({ to: "/admin-product/$slug/pricing", params: { slug } }) },
+    { id: "g-inventory", group: "Go to", icon: Package, label: "Inventory", run: () => navigate({ to: "/admin-product/$slug/inventory", params: { slug } }) },
+    { id: "g-seo", group: "Go to", icon: Search, label: "SEO workspace", run: () => navigate({ to: "/admin-product/$slug/seo", params: { slug } }) },
+  ];
+
+
   return (
     <div className="space-y-4">
       {/* Compact summary + health card */}

@@ -1228,19 +1228,13 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                             )}
 
                             {/* Action row — helpful + More menu */}
-                            <div className="mt-2 flex items-center gap-1">
-                              <button
+                            <div className="mt-3.5 flex items-center gap-1">
+                              <HelpfulButton
+                                active={myVotes[r.id] === "helpful"}
+                                count={r.helpful_count ?? 0}
                                 onClick={() => vote(r, "helpful")}
-                                aria-label="Helpful"
-                                className={cn(
-                                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
-                                  myVotes[r.id] === "helpful"
-                                    ? "bg-accent/15 text-accent"
-                                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-                                )}
-                              >
-                                <ThumbsUp className="size-3.5" /> Helpful {r.helpful_count > 0 ? `(${r.helpful_count})` : ""}
-                              </button>
+                              />
+
 
                               {/* More menu (Edit / Delete / Report / Copy link) */}
                               <div className="relative ml-auto">

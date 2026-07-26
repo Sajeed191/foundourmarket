@@ -23,6 +23,7 @@ import {
 import { analyzeReviews } from "@/lib/reviews-ai.functions";
 import { cn } from "@/lib/utils";
 import { useModalScrollLock } from "@/lib/use-scroll-lock";
+import { useImmersiveChrome } from "@/lib/use-immersive-chrome";
 
 import { StarRating } from "@/components/site/StarRating";
 
@@ -138,6 +139,10 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   const keepReviewRef = useRef<HTMLButtonElement | null>(null);
 
   const [deleteMode, setDeleteMode] = useState<"customer" | "admin_soft" | "admin_hard">("customer");
+  // Reviews v7.3 — immersive mode for the delete confirmation and the inline
+  // review editor: header, bottom nav, sticky purchase docks and floating
+  // widgets recede so only the surface itself is visible.
+  useImmersiveChrome(!!confirmDeleteId || !!editingId);
   const [deleteReason, setDeleteReason] = useState("");
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -513,6 +518,8 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
 
   async function confirmDelete() {
     const id = confirmDeleteId;
+    // Double-submission guard: the first tap latches `deleting`, every later
+    // tap returns immediately, so no duplicate RPC can be issued.
     if (!id || deleting) return;
     setDeleting(true);
     setDeleteError(null);
@@ -528,40 +535,38 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     }
     if (myReview?.id === id && deleteMode !== "admin_soft") setMyReview(null);
     try {
-      const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
-      const fn =
-        deleteMode === "admin_hard" ? "admin_hard_delete_review"
-        : deleteMode === "admin_soft" ? "admin_soft_delete_review"
-        : "hard_delete_own_review";
-      const args =
-        deleteMode === "admin_soft"
-          ? { p_id: id, p_reason: deleteReason.trim() || null }
-          : { p_id: id };
-      const r = await resilientRpc("review.submit", fn, args, `review.${fn}:${id}`);
-      if (!r.ok) throw new Error((r.error as any)?.message ?? "Action failed");
+      const { deleteReview } = await import("@/lib/review-delete");
+      const res = await deleteReview({ id, mode: deleteMode, reason: deleteReason });
+      if (!res.ok) {
+        setReviews(prevList);
+        setMyReview(prevMine);
+        if (deleteMode === "customer") {
+          // Keep the dialog open with the precise reason so the customer can
+          // retry (or knows they must sign in again).
+          setDeleteError(res.message);
+        } else {
+          toast.error(res.message);
+          setConfirmDeleteId(null);
+          setDeleteReason("");
+        }
+        return;
+      }
       toast.success(
-        deleteMode === "admin_hard" ? "Review permanently deleted"
+        res.queued ? "Delete saved — it will complete once you're back online."
+        : res.alreadyGone ? "This review was already deleted."
+        : deleteMode === "admin_hard" ? "Review permanently deleted"
         : deleteMode === "admin_soft" ? "Review deleted (archived)"
         : "Review deleted successfully.",
       );
       setConfirmDeleteId(null);
       setDeleteReason("");
-      if (!r.queued) { await load(); onAggregateChange?.(); }
-    } catch (e) {
-      setReviews(prevList);
-      setMyReview(prevMine);
-      if (deleteMode === "customer") {
-        // Keep the dialog open so the customer can retry.
-        setDeleteError("Couldn't delete your review. Please try again.");
-      } else {
-        toast.error(e instanceof Error ? e.message : "Action failed");
-        setConfirmDeleteId(null);
-        setDeleteReason("");
-      }
+      // Refresh only this section's data + the product aggregate — never the page.
+      if (!res.queued) { await load(); onAggregateChange?.(); }
     } finally {
       setDeleting(false);
     }
   }
+
 
   // Delete dialog a11y: focus the safe action, trap focus, close on Escape.
   useEffect(() => {
@@ -1645,7 +1650,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-[20rem] rounded-3xl border border-white/10 bg-card px-7 py-8 text-center shadow-[var(--shadow-float)]"
             >
@@ -1907,6 +1912,7 @@ function WriteReviewModal(props: {
   // v7.2 — Shared, jump-free scroll lock (freeze + instant restore, no smooth
   // scroll animation, focus restored with preventScroll).
   useModalScrollLock(true, "data-review-wizard-open");
+  useImmersiveChrome(true);
 
   // Escape closes (through the same guarded path as the X / backdrop).
   const panelRef = useRef<HTMLDivElement | null>(null);

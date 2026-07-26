@@ -622,7 +622,7 @@ function CommandCenter({ slug, f, set, row }: {
 
 
       {/* Media Center — images first, then video, with live health checks */}
-      <Collapsible title="Media Center" icon={<ImageIcon className="size-4" />}
+      <Collapsible fieldKey="media" title="Media Center" icon={<ImageIcon className="size-4" />}
         desc={`${imageCount} Image${imageCount === 1 ? "" : "s"} • ${primaryUrl ? "Hero Set" : "No Hero"} • ${f.video_url.trim() ? "Video" : "No Video"}`}
         badge={
           <span className="flex items-center gap-1">

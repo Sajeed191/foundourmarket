@@ -191,7 +191,7 @@ export function AiCopilot({
       </aside>
 
       {/* Mobile — launcher + bottom sheet */}
-      <div className="lg:hidden">
+      <div className="order-first lg:order-none lg:hidden">
         <button
           type="button"
           onClick={() => setSheetOpen(true)}

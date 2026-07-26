@@ -323,7 +323,7 @@ function ProductSection({
               )}
             />
           ) : (
-            <div data-product-grid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div data-product-grid className="grid auto-rows-fr grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {preview.map((p, i) => (
                 <Reveal key={p.id ?? p.slug} delay={i} className="h-full" productCardFrame><ProductCard product={p} compact forceBadge={sectionBadge} /></Reveal>
               ))}

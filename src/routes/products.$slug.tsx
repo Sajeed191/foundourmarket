@@ -1215,29 +1215,16 @@ function ProductPage() {
             })()}
 
 
-            {/* Product Overview — description component owns its own subsection titles */}
+            {/* Product Details — horizontal tab experience over the same product data */}
             <section className="mt-16">
-              <PdpSectionHeading title="Product Overview" subtitle="Everything you need to know" />
-              <ProductDescription description={product.description} />
-              {product.features?.length > 0 && (
-                <ul className="mt-6 space-y-2.5">
-                  {product.features.map((feat: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2.5 text-[15px] text-muted-foreground leading-relaxed">
-                      <span className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <PdpSectionHeading title="Product Details" subtitle="Everything you need to know" />
+              <PDPDetailsTabs
+                description={product.description}
+                features={product.features as string[] | null}
+                specifications={product.specifications as Record<string, unknown> | null}
+                warranty={(product as { warranty?: string | null }).warranty ?? null}
+              />
             </section>
-
-            {/* Specifications — grouped accordion, one open at a time. */}
-            {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <section className="mt-16">
-                <PdpSectionHeading title="Specifications" subtitle="Grouped for easy scanning" />
-                <SpecificationsAccordion specs={product.specifications as Record<string, string>} />
-              </section>
-            )}
 
 
             <div data-product-sticky-threshold aria-hidden className="h-px w-full" />

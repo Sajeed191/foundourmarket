@@ -522,10 +522,12 @@ function CommandCenter({ slug, f, set, row }: {
 
   const setWorkflowStatus = useCallback(async (next: WorkflowStatus) => {
     setPubBusy(true);
+    const startedAt = performance.now();
     const { error } = await supabase
       .from("products")
       .update({ status: next, updated_at: new Date().toISOString() })
       .eq("slug", slug);
+    recordMetric("publish-prepare", performance.now() - startedAt, next);
     setPubBusy(false);
     if (error) { toast.error("Update failed", { description: error.message }); return; }
     setStatus(next);

@@ -1059,7 +1059,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
                         className={cn(
-                          "group rounded-[18px] border bg-card/60 backdrop-blur-xl p-3 sm:p-3.5 transition-colors hover:border-white/15",
+                          "group rounded-[20px] border bg-card/60 backdrop-blur-xl p-4 sm:p-5 transition-colors hover:border-white/15",
                           r.pinned || r.featured ? "border-accent/40" : "border-white/10",
                           r.status !== "published" && "opacity-70",
                         )}

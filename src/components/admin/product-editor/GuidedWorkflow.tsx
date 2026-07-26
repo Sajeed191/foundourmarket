@@ -325,31 +325,39 @@ export function AdvancedSettings({ children }: { children: ReactNode }) {
 
 /* ---------------------------- start options ----------------------------- */
 
+/**
+ * One Clear Start — three large cards, nothing else on screen.
+ * Used as a gate for brand-new products so the full form never appears cold.
+ */
 export function StartOptions({ onPaste, onImport, onScratch }: {
   onPaste: () => void; onImport: () => void; onScratch: () => void;
 }) {
   const items = [
-    { icon: "📋", label: "Paste Product Details", hint: "Amazon, Excel or PDF text", run: onPaste },
-    { icon: "🌐", label: "Import from URL", hint: "Paste a listing link", run: onImport },
-    { icon: "✏️", label: "Start from Scratch", hint: "Fill it in yourself", run: onScratch },
+    { icon: "📋", label: "Paste Product", hint: "Amazon, Excel, PDF or CSV — detected automatically", run: onPaste },
+    { icon: "🌐", label: "Import Product", hint: "Paste a listing link and we fill the fields", run: onImport },
+    { icon: "✏️", label: "Create Manually", hint: "Step-by-step, one question at a time", run: onScratch },
   ];
   return (
-    <div className="space-y-2.5">
-      <p className="text-sm font-semibold">How would you like to start?</p>
-      <div className="grid gap-2.5 sm:grid-cols-3">
+    <div className="space-y-4">
+      <div className="text-center sm:text-left">
+        <p className="text-lg font-semibold tracking-tight">How would you like to start?</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">Pick one — everything else stays out of your way.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
         {items.map((it) => (
           <button
             key={it.label}
             type="button"
             onClick={it.run}
-            className="flex min-h-20 flex-col items-start justify-center gap-1 rounded-2xl border border-white/12 bg-white/[0.03] p-4 text-left transition-[transform,background-color] duration-[var(--editor-motion-fast,160ms)] hover:bg-white/[0.06] active:scale-[0.99]"
+            className="flex min-h-32 flex-col items-start justify-end gap-1.5 rounded-2xl border border-white/12 bg-white/[0.03] p-5 text-left transition-[transform,background-color] duration-[var(--editor-motion-fast,160ms)] hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 active:scale-[0.99]"
           >
-            <span className="text-lg" aria-hidden="true">{it.icon}</span>
-            <span className="text-sm font-semibold">{it.label}</span>
-            <span className="text-[11px] text-muted-foreground">{it.hint}</span>
+            <span className="text-2xl" aria-hidden="true">{it.icon}</span>
+            <span className="text-[15px] font-semibold">{it.label}</span>
+            <span className="text-[11px] leading-relaxed text-muted-foreground">{it.hint}</span>
           </button>
         ))}
       </div>
     </div>
   );
 }
+

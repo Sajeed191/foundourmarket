@@ -4,7 +4,9 @@
 // editor toolbar. Pure UI; all values are held in form state.
 // ============================================================
 import { useRef } from "react";
-import { Plus, Trash2, GripVertical, Bold, Italic, List, ListOrdered, Heading2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Bold, Italic, List, ListOrdered, Heading2, Sparkles, Layers } from "lucide-react";
+import { SmartEmpty, undoableToast } from "@/components/admin/product-editor/EmptyStates";
+
 
 export type KV = { k: string; v: string };
 
@@ -26,15 +28,24 @@ export function arrayToKv(rows: KV[]): Record<string, string> {
 export function FeaturesBuilder({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const update = (i: number, text: string) => onChange(value.map((f, idx) => (idx === i ? text : f)));
   const add = () => onChange([...value, ""]);
-  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
+  const remove = (i: number) => {
+    const before = value;
+    onChange(value.filter((_, idx) => idx !== i));
+    undoableToast("Highlight removed", () => onChange(before));
+  };
+
 
   return (
     <div className="space-y-2">
       {value.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 px-3 py-3 text-center text-xs text-muted-foreground">
-          No features yet. Add highlights buyers care about.
-        </p>
+        <SmartEmpty
+          icon={Sparkles}
+          title="Add your first highlight"
+          hint="Three to six short lines describing what makes this product worth buying."
+          actions={[{ label: "Add highlight", primary: true, run: add }]}
+        />
       )}
+
       {value.map((f, i) => (
         <div key={i} className="flex items-center gap-2">
           <span className="grid size-7 shrink-0 place-items-center rounded-md border border-accent/30 bg-accent/10 text-[10px] font-mono text-accent">{i + 1}</span>
@@ -67,15 +78,23 @@ export function KeyValueBuilder({
 }) {
   const update = (i: number, patch: Partial<KV>) => onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const add = () => onChange([...rows, { k: "", v: "" }]);
-  const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
+  const remove = (i: number) => {
+    const before = rows;
+    onChange(rows.filter((_, idx) => idx !== i));
+    undoableToast("Row removed", () => onChange(before));
+  };
 
   return (
     <div className="space-y-2">
       {rows.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 px-3 py-3 text-center text-xs text-muted-foreground">
-          No rows yet.
-        </p>
+        <SmartEmpty
+          icon={Layers}
+          title={`Add your first ${addLabel.replace(/^Add\s+/i, "").toLowerCase() || "row"}`}
+          hint="Short label on the left, value on the right — customers see these as clean rows."
+          actions={[{ label: addLabel, primary: true, run: add }]}
+        />
       )}
+
       {rows.map((r, i) => (
         <div key={i} className="flex items-center gap-2">
           <GripVertical className="size-4 shrink-0 text-muted-foreground/50" />

@@ -10,9 +10,11 @@
 // ============================================================
 import { useMemo, useRef, useState } from "react";
 import {
-  Plus, Trash2, GripVertical, ClipboardPaste, Wand2, Search, X, Layers,
+  Plus, Trash2, GripVertical, ClipboardPaste, Wand2, Search, X, Layers, ListChecks,
 } from "lucide-react";
 import { toast } from "sonner";
+import { SmartEmpty, undoableToast } from "@/components/admin/product-editor/EmptyStates";
+
 import {
   parseSpecPaste, mergeSpecRows, cleanSpecRows, groupSpecs, groupForSpec, reorderRows, normalizeLabel,
   type SpecRow,
@@ -48,7 +50,12 @@ export function SmartSpecsBuilder({
 
   const update = (i: number, patch: Partial<SpecRow>) =>
     onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
-  const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
+  const remove = (i: number) => {
+    const before = rows;
+    onChange(rows.filter((_, idx) => idx !== i));
+    undoableToast("Specification removed", () => onChange(before));
+  };
+
   const add = () => onChange([...rows, { k: "", v: "" }]);
 
   function applyText(text: string) {
@@ -188,10 +195,17 @@ export function SmartSpecsBuilder({
 
       {/* Rows */}
       {rows.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center text-xs text-muted-foreground">
-          No specifications yet. Use Smart Paste — cards are created for you.
-        </p>
+        <SmartEmpty
+          icon={ListChecks}
+          title="Add your first specification"
+          hint="Paste a spec sheet from Amazon, Excel or a PDF — cards are grouped for you automatically."
+          actions={[
+            { label: "Add specification", primary: true, run: () => onChange([...rows, { k: "", v: "" }]) },
+            { label: "Paste specifications", run: () => window.dispatchEvent(new CustomEvent("editor-open-paste")) },
+          ]}
+        />
       )}
+
       {rows.length > 0 && visible.length === 0 && (
         <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center text-xs text-muted-foreground">
           No specifications match “{query}”.

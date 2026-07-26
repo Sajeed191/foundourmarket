@@ -60,6 +60,8 @@ import {
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import { contextFlags, missingTemplateSpecs } from "@/lib/editor-context";
 import { PublishConfidence, SpecTemplateStrip } from "@/components/admin/product-editor/InvisibleUX";
+import { AiChip } from "@/components/admin/product-editor/EmptyStates";
+
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
 
 
@@ -763,6 +765,9 @@ function CommandCenter({ slug, f, set, row }: {
         commands={commands} pasteRaw={pasteRaw} setPasteRaw={setPasteRaw}
         catOptions={catOptions} applyPaste={applyPaste} navigate={navigate}
         topIssue={topIssue}
+        generateDescription={generateDescription} generateFeatures={generateFeatures}
+        generateKeywords={generateKeywords}
+
 
       />
     </GuidedWorkflow>
@@ -779,6 +784,8 @@ function WorkflowBody(p: any) {
     nameTips, descTips, featTips, specTips, seoTips, seoOk, seoScore, canonical, generateSeo,
     checks, okCount, healthCards, issues, healthReady, copilotRecs, undoPatch, setUndoPatch,
     commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate, topIssue,
+    generateDescription, generateFeatures, generateKeywords,
+
   } = p;
   const { mode, setStep } = useEditorWorkflow();
   const advanced = mode === "advanced";
@@ -807,6 +814,37 @@ function WorkflowBody(p: any) {
     const url = window.prompt("Paste the product listing URL");
     if (url && url.trim()) setPasteRaw(url.trim());
   }
+
+  // "Paste specifications" empty-state action opens the universal paste flow.
+  useEffect(() => {
+    const open = () => setPasteRaw(" ");
+    window.addEventListener("editor-open-paste", open);
+    return () => window.removeEventListener("editor-open-paste", open);
+  }, [setPasteRaw]);
+
+  /* One Clear Start — a brand-new product shows three cards and nothing else. */
+  const [started, setStarted] = useState(false);
+  if (isEmpty && !started) {
+    return (
+      <div className="mx-auto max-w-3xl py-6">
+        <StartOptions
+          onPaste={() => { setStarted(true); setPasteRaw(" "); }}
+          onImport={() => { setStarted(true); importFromUrl(); }}
+          onScratch={() => { setStarted(true); setStep("basic"); focusEditorField("information"); }}
+        />
+        {pasteRaw && (
+          <UniversalPasteDialog
+            raw={pasteRaw}
+            categories={catOptions}
+            onApply={applyPaste}
+            onClose={() => setPasteRaw("")}
+          />
+        )}
+      </div>
+    );
+  }
+
+
 
 
   return (
@@ -868,13 +906,6 @@ function WorkflowBody(p: any) {
         <Step id="basic" index={1} title="Basic Information" fieldKey="information"
           desc="Name, brand & category" help="Start with the product name — everything else gets easier once it is set.">
           <div className="space-y-4">
-            {isEmpty && (
-              <StartOptions
-                onPaste={() => setPasteRaw(" ")}
-                onImport={importFromUrl}
-                onScratch={() => focusEditorField("information")}
-              />
-            )}
             <div>
               <Field label="Product Name" value={f.name} onChange={(v: string) => set({ name: v })} />
               <InlineSuggestions items={nameTips} />
@@ -886,12 +917,16 @@ function WorkflowBody(p: any) {
             <CategorySelector value={f.categories} onChange={(v: string[]) => set({ categories: v, category: v[0] ?? "" })} />
             {advanced && <Field label="Tags (comma separated)" value={f.tags} onChange={(v: string) => set({ tags: v })} />}
             <div data-editor-field="description">
-              <p className="mb-1.5 flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                Description <HelpDot text="Short, factual copy. Buyers scan it — three tight paragraphs beat one long one." />
-              </p>
+              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  Description <HelpDot text="Short, factual copy. Buyers scan it — three tight paragraphs beat one long one." />
+                </p>
+                <AiChip label={f.description.trim() ? "Rewrite" : "Generate"} onClick={generateDescription} />
+              </div>
               <RichTextEditor value={f.description} onChange={(v: string) => set({ description: v })} rows={7} />
               <InlineSuggestions items={descTips} />
             </div>
+
             <NextStep label="Next — Images" onClick={() => setStep("images")} />
           </div>
         </Step>
@@ -953,7 +988,11 @@ function WorkflowBody(p: any) {
           }>
           <div className="space-y-4">
             <div data-editor-field="features">
-              <p className="mb-1.5 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Key Features</p>
+              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Key Features</p>
+                <AiChip label="Generate" onClick={generateFeatures} />
+              </div>
+
               <FeaturesBuilder value={f.features} onChange={(v: string[]) => set({ features: v })} />
               <InlineSuggestions items={featTips} />
             </div>
@@ -1023,14 +1062,15 @@ function WorkflowBody(p: any) {
         <AdvancedSettings>
             {/* SEO */}
             <div data-editor-field="seo" className="space-y-3">
-              <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                SEO Center
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>
-              </p>
-              <button type="button" onClick={generateSeo}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
-                <Sparkles className="size-3.5" /> Improve
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  SEO Center
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>
+                </p>
+                <AiChip label="Improve" onClick={generateSeo} />
+                <AiChip label="Keywords" onClick={generateKeywords} />
+              </div>
+
               <Field label="SEO Title" value={f.seo_title} onChange={(v: string) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
               <div>
                 <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Meta Description</label>

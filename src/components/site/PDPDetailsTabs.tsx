@@ -163,7 +163,7 @@ export function PDPDetailsTabs({
   return (
     <div>
       {/* Tab strip — horizontal snap scroll, sticky on mobile, no wrapping. */}
-      <div className="sticky top-[calc(var(--app-header-h,56px))] z-20 -mx-4 sm:mx-0 bg-background/85 backdrop-blur-xl">
+      <div className="sticky top-[var(--app-header-height,0px)] z-20 -mx-4 sm:mx-0 bg-background/85 backdrop-blur-xl">
         <div
           role="tablist"
           aria-label="Product details"
@@ -184,7 +184,7 @@ export function PDPDetailsTabs({
                   "transition-[background-color,color,border-color,box-shadow] duration-[250ms] ease-out",
                   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50",
                   isActive
-                    ? "border border-accent/60 bg-accent text-accent-foreground shadow-[0_6px_20px_-8px_hsl(var(--accent)/0.7)]"
+                    ? "border border-accent/60 bg-accent text-accent-foreground shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--accent)_60%,transparent)]"
                     : "border border-white/[0.08] bg-white/[0.02] text-muted-foreground hover:text-foreground/90",
                 )}
               >

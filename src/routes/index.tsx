@@ -689,104 +689,12 @@ function Home() {
       {/* Trust strip v2 — single glass credibility row */}
       <TrustStripV2 />
 
-      {/* 3 · Main Categories — premium 2-column marketplace grid */}
-      <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
-        <div className="relative">
-          <SectionHeader eyebrow="Browse" title="Main Categories" icon={LayoutGrid} href="/categories" sectionKey="categories" />
-          {isProductAdmin && (
-            <button
-              onClick={() => setEditCats(true)}
-              className="absolute right-0 top-0 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-background/70 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-accent backdrop-blur-md hover:bg-accent/15"
-            >
-              <Pencil className="size-3" /> Edit
-            </button>
-          )}
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 items-start gap-3 sm:gap-4">
-          {ffCategoryGrid && homeCategories.map((cat, i) => {
-            const Icon = iconForCategory(cat.slug, cat.name);
-            const hasImage = !!(cat.image || cat.mobile_image);
-            return (
-              <Reveal key={cat.slug} delay={i}>
-                <div className="relative">
-                  <Link
-                    data-product-card-frame
-                    to="/category/$slug"
-                    params={{ slug: cat.slug }}
-                    onClick={() => { void supabase.rpc("track_category_event", { _id: cat.id, _event: "click" }); }}
-                    className={`group relative flex flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97] ${isProductAdmin && !cat.homepage_visible ? "opacity-50" : ""}`}
-                  >
-
-                    {/* Image above name — 1:1, premium rounded capsule.
-                        Falls back to an icon inside a soft glass capsule. */}
-                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl border border-border bg-muted/60">
-                      {hasImage ? (
-                        <img
-                          src={cat.mobile_image || cat.image || ""}
-                          alt={cat.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="size-full object-cover [transition:transform_700ms_cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="size-full grid place-items-center">
-                          <span className="grid size-14 sm:size-16 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
-                            <Icon className="size-6 sm:size-7" />
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-full pb-0.5">
-
-                      <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-foreground group-hover:text-accent transition-colors">{cat.name}</h3>
-                    </div>
-                  </Link>
-
-                  {isProductAdmin && (
-                    <div className="absolute left-2 top-2 z-20">
-                      <InlineActiveToggle
-                        active={cat.homepage_visible}
-                        label="Category"
-                        size="sm"
-                        onToggle={(next) => toggleCategoryVisible(cat.id, next)}
-                      />
-                    </div>
-                  )}
-                </div>
-              </Reveal>
-            );
-          })}
-
-          {!isProductAdmin && (
-            <Reveal delay={homeCategories.length}>
-              <div className="relative">
-                <Link
-                  data-product-card-frame
-                  to="/categories"
-                  className="group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97]"
-                >
-
-                  <div className="relative w-full aspect-[1/0.86] sm:aspect-[1/0.92] grid place-items-center overflow-hidden rounded-2xl border border-border bg-muted/60">
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,oklch(0.74_0.19_49/0.18),transparent_65%)]" />
-                    <span className="relative grid size-14 sm:size-16 place-items-center rounded-full bg-accent/12 text-accent ring-1 ring-accent/25 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-colors group-hover:bg-accent/20">
-                      <ArrowRight className="size-6 sm:size-7 transition-transform duration-300 group-hover:translate-x-1" />
-                    </span>
-                  </div>
-
-                  <div className="w-full pb-0.5">
-                    <h3 className="text-[14px] sm:text-[16px] font-semibold tracking-tight leading-snug line-clamp-1 text-accent group-hover:text-accent transition-colors">Shop All Departments</h3>
-                    <span className="block text-[10px] sm:text-[11px] text-muted-foreground font-medium tracking-wide mt-1">Browse everything</span>
-                  </div>
-
-
-
-                </Link>
-
-              </div>
-            </Reveal>
-          )}
-        </div>
-      </section>
+      {/* Categories v2 — bento-style editorial discovery */}
+      <CategoryBento
+        categories={homeCategories}
+        isAdmin={isProductAdmin}
+        onEdit={() => setEditCats(true)}
+      />
       {isProductAdmin && editCats && (
         <Suspense fallback={null}>
           <CategoryAdminSheet onClose={() => setEditCats(false)} onChanged={() => {}} productCounts={categoryCounts} />
@@ -795,11 +703,15 @@ function Home() {
 
       <CinematicDivider />
 
+      {/* Picked For You / Trending rail */}
+      <PickedForYouRail products={products} />
+
+      {/* Flash Deals band */}
+      {ffFlashDeals && (
         <LazyMount minHeight={360}>
-          {ffFlashDeals && (
-            <Suspense fallback={null}><FlashDeals /></Suspense>
-          )}
+          <FlashDealsBand />
         </LazyMount>
+      )}
 
 
 

@@ -988,7 +988,11 @@ function WorkflowBody(p: any) {
           }>
           <div className="space-y-4">
             <div data-editor-field="features">
-              <p className="mb-1.5 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Key Features</p>
+              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Key Features</p>
+                <AiChip label="Generate" onClick={generateFeatures} />
+              </div>
+
               <FeaturesBuilder value={f.features} onChange={(v: string[]) => set({ features: v })} />
               <InlineSuggestions items={featTips} />
             </div>

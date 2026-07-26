@@ -585,15 +585,23 @@ export function SectionEditor<T extends Record<string, any>>({
           >
             {/* Workspace strip — live state + history, one thumb reach */}
             <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-1.5">
-              <span className={`inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium ${statusMeta.tone}`}>
-                <span className={`size-1.5 shrink-0 rounded-full ${statusMeta.dot}`} />
+              <span
+                className={`inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium ${statusMeta.tone}`}
+                aria-live="polite"
+              >
+                <span className={`size-1.5 shrink-0 rounded-full ${statusMeta.dot}`} aria-hidden="true" />
                 <span className="truncate">
                   {saveState === "saving"
-                    ? "Saving…"
+                    ? "Syncing changes…"
                     : dirty
-                      ? `${changedKeys.length} unsaved change${changedKeys.length === 1 ? "" : "s"}`
+                      ? `${changedKeys.length} unsaved field${changedKeys.length === 1 ? "" : "s"}`
                       : "All changes saved"}
                 </span>
+                {lastSavedAt && saveState !== "saving" && (
+                  <span className="hidden shrink-0 text-muted-foreground sm:inline">
+                    · auto-saved {lastSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                )}
               </span>
               <span className="ml-auto flex shrink-0 items-center gap-1">
                 <button

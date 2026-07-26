@@ -55,6 +55,8 @@ import { RevealOnScroll } from "@/components/site/RevealOnScroll";
 import { formatSold } from "@/lib/format-sold";
 import { toast } from "sonner";
 import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
+import { useDraftPreviewOverlay, applyDraftOverlay } from "@/lib/pdp-preview-channel";
+
 
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {

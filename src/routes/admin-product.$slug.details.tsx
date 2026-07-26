@@ -576,7 +576,9 @@ function CommandCenter({ slug, f, set, row }: {
 
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+      <div className="min-w-0 space-y-4">
+
       {/* Compact summary + health card */}
       <div className="card-premium rounded-2xl p-3.5">
         <div className="flex items-center gap-3">

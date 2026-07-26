@@ -10,7 +10,7 @@ import {
   LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Bookmark, Truck, CalendarCheck, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { haptic, successToast } from "@/lib/premium-feedback";
+import { haptic, successToast, useFocusReturn } from "@/lib/premium-feedback";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/auth";

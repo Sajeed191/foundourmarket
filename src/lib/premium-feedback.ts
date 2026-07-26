@@ -55,3 +55,40 @@ export function createFocusReturn() {
     },
   };
 }
+
+/* -------------------------------------------------------------------------- */
+/* Focus return                                                               */
+/* -------------------------------------------------------------------------- */
+import { useEffect, useRef } from "react";
+
+let lastInteractive: HTMLElement | null = null;
+if (typeof document !== "undefined") {
+  const track = (e: Event) => {
+    const t = e.target as HTMLElement | null;
+    const el = t?.closest?.("button, [role='button'], a, summary") as HTMLElement | null;
+    if (el) lastInteractive = el;
+  };
+  document.addEventListener("pointerdown", track, true);
+  document.addEventListener("keyup", track, true);
+}
+
+/**
+ * Returns DOM focus to the control that opened an overlay once it closes.
+ * Presentation-only; safe on every overlay.
+ */
+export function useFocusReturn(open: boolean) {
+  const origin = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (open) {
+      origin.current = lastInteractive;
+      return;
+    }
+    const el = origin.current;
+    origin.current = null;
+    if (!el || !el.isConnected) return;
+    const id = requestAnimationFrame(() => {
+      try { el.focus({ preventScroll: true }); } catch { /* noop */ }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [open]);
+}

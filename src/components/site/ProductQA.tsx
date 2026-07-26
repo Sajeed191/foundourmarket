@@ -18,7 +18,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { haptic, successToast } from "@/lib/premium-feedback";
+import { haptic, successToast, useFocusReturn } from "@/lib/premium-feedback";
 import { useModalScrollLock } from "@/lib/use-scroll-lock";
 import { useImmersiveChrome } from "@/lib/use-immersive-chrome";
 

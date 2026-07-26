@@ -1810,29 +1810,99 @@ function StatCard({ icon, value, label, highlight }: { icon: React.ReactNode; va
   );
 }
 
+/** Helpful vote pill — orange ripple, animated counter, no page refresh. */
+function HelpfulButton({ active, count, onClick }: { active: boolean; count: number; onClick: () => void }) {
+  const [ripple, setRipple] = useState(0);
+  return (
+    <button
+      onClick={() => { setRipple((n) => n + 1); tapFeedback(); onClick(); }}
+      aria-pressed={active}
+      aria-label={`Mark review helpful${count > 0 ? ` (${count})` : ""}`}
+      className={cn(
+        "relative overflow-hidden inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all active:scale-[0.97]",
+        active
+          ? "border-accent/35 bg-accent/[0.12] text-accent"
+          : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground",
+      )}
+    >
+      {ripple > 0 && <span key={ripple} className="fom-ripple" aria-hidden />}
+      <ThumbsUp className={cn("size-3.5 transition-transform", active && "scale-110")} />
+      <span>Helpful</span>
+      {count > 0 && (
+        <span key={count} className="fom-count-in tabular-nums">{count}</span>
+      )}
+    </button>
+  );
+}
+
+/** Floating composer CTA — appears while browsing a long review list. */
+function FloatingWriteCTA({ onWrite }: { onWrite: () => void }) {
+  const [hidden, setHidden] = useState(true);
+  useEffect(() => {
+    let last = window.scrollY;
+    let idle: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > last + 6) setHidden(true);
+      last = y;
+      clearTimeout(idle);
+      idle = setTimeout(() => {
+        const chromeHidden = document.body.hasAttribute("data-immersive-ui") || document.body.hasAttribute("data-review-media-open");
+        setHidden(chromeHidden || window.scrollY < 400);
+      }, 220);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); clearTimeout(idle); };
+  }, []);
+  return (
+    <button
+      type="button"
+      data-floating-control
+      data-hidden={hidden}
+      onClick={() => { tapFeedback(); onWrite(); }}
+      className="fom-fab"
+      aria-label="Write a review"
+    >
+      <Pencil className="size-3.5 text-accent" /> Write Review
+    </button>
+  );
+}
+
 function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolean; onWrite: () => void; filtered: boolean; onReset: () => void }) {
   if (filtered) {
     return (
       <div className="grid place-items-center rounded-3xl border border-white/10 bg-card/40 py-14 text-center">
-        <p className="text-sm text-muted-foreground">No reviews match this filter.</p>
-        <button onClick={onReset} className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-mono uppercase tracking-widest hover:border-accent/40 hover:text-accent">
+        <p className="text-[15px] text-muted-foreground">No reviews match this filter.</p>
+        <button onClick={onReset} className="fom-btn fom-btn-ghost fom-tap mt-5">
           Show all reviews
         </button>
       </div>
     );
   }
   return (
-    <div className="relative grid place-items-center overflow-hidden rounded-3xl border border-white/10 bg-card/40 backdrop-blur-xl py-16 px-6 text-center">
+    <div className="relative grid place-items-center overflow-hidden rounded-3xl border border-white/10 bg-card/40 backdrop-blur-xl py-20 px-6 text-center">
       <div className="pointer-events-none absolute inset-0 opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
-      <div className="relative">
-        <span className="inline-grid size-16 place-items-center rounded-2xl bg-accent/15 text-accent animate-glow">
-          <Star className="size-8 fill-accent" />
-        </span>
-        <h3 className="mt-5 text-xl font-display">No reviews yet</h3>
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">Be the first to review this product and help other shoppers make the right choice.</p>
+      <div className="relative max-w-sm">
+        <div className="flex items-center justify-center gap-1.5" aria-hidden>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.06 * i, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Star className="size-7 fill-accent/85 text-accent/85 drop-shadow-[0_0_10px_oklch(0.74_0.19_49/0.35)]" />
+            </motion.span>
+          ))}
+        </div>
+        <h3 className="mt-6 text-[20px] font-display leading-snug">Be the first to review this product</h3>
+        <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">
+          Share your experience and help other shoppers choose with confidence.
+        </p>
         {canWrite && (
-          <button onClick={onWrite} className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 hover:shadow-[var(--shadow-ember)]">
-            <Pencil className="size-3.5" /> Write the First Review
+          <button onClick={onWrite} className="fom-btn fom-btn-primary fom-tap mt-7 px-7">
+            <Pencil className="size-3.5" /> Write Review
           </button>
         )}
       </div>
@@ -1844,32 +1914,51 @@ function ReviewsSkeleton() {
   return (
     <div aria-hidden="true">
       <div className="mb-8 grid gap-8 lg:grid-cols-[280px_1fr] rounded-3xl border border-white/10 bg-card/40 p-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-16 w-20 rounded-xl fom-skeleton" />
-          <div className="h-4 w-32 rounded fom-skeleton" />
+        <div className="flex flex-col gap-3">
+          <div className="h-14 w-24 rounded-xl fom-skeleton" />
+          <div className="flex gap-1.5">
+            {[0, 1, 2, 3, 4].map((i) => <div key={i} className="size-4 rounded-[5px] fom-skeleton" />)}
+          </div>
           <div className="h-3 w-40 rounded fom-skeleton" />
+          <div className="h-3 w-28 rounded fom-skeleton" />
         </div>
         <div className="space-y-3 self-center">
-          {[0, 1, 2, 3, 4].map((i) => <div key={i} className="h-2.5 w-full rounded-full fom-skeleton" />)}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="h-3 w-8 rounded fom-skeleton" />
+              <div className="h-2 flex-1 rounded-full fom-skeleton" />
+              <div className="h-3 w-8 rounded fom-skeleton" />
+            </div>
+          ))}
         </div>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="mb-6 flex gap-2">
+        {[0, 1, 2, 3].map((i) => <div key={i} className="h-9 w-24 rounded-full fom-skeleton" />)}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-2xl border border-white/10 bg-card/40 p-6">
-            <div className="flex items-center gap-3.5">
-              <div className="size-12 rounded-full fom-skeleton" />
-              <div className="space-y-2"><div className="h-3 w-24 rounded fom-skeleton" /><div className="h-2.5 w-16 rounded fom-skeleton" /></div>
+          <div key={i} className="rounded-[20px] border border-white/10 bg-card/40 p-5">
+            <div className="flex items-center gap-3">
+              <div className="size-11 rounded-full fom-skeleton" />
+              <div className="space-y-2">
+                <div className="h-3.5 w-28 rounded fom-skeleton" />
+                <div className="h-2.5 w-20 rounded fom-skeleton" />
+              </div>
             </div>
-            <div className="mt-4 h-3 w-32 rounded fom-skeleton" />
-            <div className="mt-4 h-4 w-48 rounded fom-skeleton" />
-            <div className="mt-2 h-3 w-full rounded fom-skeleton" />
-            <div className="mt-1.5 h-3 w-3/4 rounded fom-skeleton" />
+            <div className="mt-4 h-4 w-2/3 rounded fom-skeleton" />
+            <div className="mt-3 h-3 w-full rounded fom-skeleton" />
+            <div className="mt-1.5 h-3 w-5/6 rounded fom-skeleton" />
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[0, 1, 2].map((k) => <div key={k} className="h-20 rounded-[12px] fom-skeleton" />)}
+            </div>
+            <div className="mt-4 h-9 w-28 rounded-full fom-skeleton" />
           </div>
         ))}
       </div>
     </div>
   );
 }
+
 
 const STEPS = ["Rating", "Title", "Experience", "Photos", "Submit"];
 

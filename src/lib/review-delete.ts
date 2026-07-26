@@ -249,7 +249,11 @@ export async function deleteReview(input: {
     return { ok: false, message: "Your session expired. Please sign in again to delete this review.", retryable: false };
   }
 
-  // 2. First attempt.
+  // 2. Remove the review's uploaded media through the Storage API (hard deletes
+  //    only — a soft delete keeps the row and its media restorable).
+  if (mode !== "admin_soft") await cleanupReviewMedia(id);
+
+  // 3. First attempt.
   let err = await callRpc(fn, args);
   if (!err) return { ok: true, queued: false, alreadyGone: false };
   if (isNotFound(err)) return { ok: true, queued: false, alreadyGone: true };

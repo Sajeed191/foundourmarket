@@ -1459,10 +1459,16 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                   </button>
                 </div>
               )}
+
+              {/* Floating composer CTA — long lists only, hidden while scrolling. */}
+              {expanded && !showCompose && sorted.length > 3 && !!user && !hasReviewed && (
+                <FloatingWriteCTA onWrite={openCompose} />
+              )}
             </>
           )}
         </>
       )}
+
 
       {/* Write review multi-step modal */}
       {showCompose && !!user && (

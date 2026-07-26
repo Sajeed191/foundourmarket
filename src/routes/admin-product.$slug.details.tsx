@@ -603,12 +603,12 @@ function CommandCenter({ slug, f, set, row }: {
 
 
       {/* SEO center */}
-      <Collapsible title="SEO Center" icon={<Search className="size-4" />} defaultOpen={false}
+      <Collapsible fieldKey="seo" title="SEO Center" icon={<Search className="size-4" />} defaultOpen={false}
         desc="Search title, meta & keywords"
         badge={<span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>}>
         <div className="space-y-3">
           <button type="button" onClick={generateSeo}
-            className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 py-1.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 py-1.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
             <Sparkles className="size-3.5" /> Auto-generate SEO
           </button>
           <Field label="SEO Title" value={f.seo_title} onChange={(v) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
@@ -623,20 +623,20 @@ function CommandCenter({ slug, f, set, row }: {
             <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Canonical URL</label>
             <p className="truncate rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">{canonical}</p>
           </div>
+          <InlineSuggestions items={seoTips} />
         </div>
       </Collapsible>
 
       {/* Health center */}
-      <Collapsible title="Product Health Center" icon={<Activity className="size-4" />}
+      <Collapsible fieldKey="health" title="Product Health Center" icon={<Activity className="size-4" />}
         desc={`${okCount}/${checks.length} checks passing`}
         badge={<span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${tone.t} bg-white/5`}>{score}%</span>}>
         <div className="space-y-3">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
-            <div className={`h-full rounded-full transition-all duration-500 ${tone.b}`} style={{ width: `${score}%` }} />
-          </div>
+          <HealthDashboard score={score} ready={warnings.every((w) => RULES[w.key]?.impact !== "high")} cards={healthCards} />
           <ValidationCards issues={issues} />
         </div>
       </Collapsible>
+
 
       {pasteRaw && (
         <UniversalPasteDialog

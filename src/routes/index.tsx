@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 
 import {
-  Search, ArrowRight, Star, Sparkles, Award, Package, Globe2, Flame,
-  BadgeCheck, Pencil, Truck, ShieldCheck, Zap, Gift, LayoutGrid,
+  Search, ArrowRight, Star, Sparkles, Award, Package, Flame,
+  BadgeCheck, Pencil, LayoutGrid,
   Sofa, UtensilsCrossed, Gamepad2, Cpu, ToyBrick, PawPrint, Car, Shirt, Dumbbell,
   Watch, Headphones, Gem, Baby, Wrench, BookOpen,
 } from "lucide-react";
@@ -25,31 +25,31 @@ import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-import heroProductImg from "@/assets/hero-product.jpg";
 import { ProductCard } from "@/components/site/ProductCard";
 // TEMPORARY EXPERIMENT (Trending section only): reuse Browse's grid so cards
 // mount incrementally in batches of 16 via IncrementalGrid instead of all at
 // once. Remove this import when reverting the experiment.
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
-import { AdaptiveProductMedia } from "@/components/site/AdaptiveProductMedia";
 import { useFlag } from "@/lib/use-debug-flag";
-import { SearchButton } from "@/components/site/SearchButton";
 import { SearchOverlay } from "@/components/site/SearchOverlay";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
 // Below-the-fold: lazy so the code stays out of the initial homepage chunk.
-const FlashDeals = lazy(() =>
-  import("@/components/site/FlashDeals").then((m) => ({ default: m.FlashDeals })),
-);
 const TestimonialsCarousel = lazy(() =>
   import("@/components/site/TestimonialsCarousel").then((m) => ({ default: m.TestimonialsCarousel })),
 );
 
-import { TrustBadgesStrip } from "@/components/site/TrustBadgesStrip";
 import { useTestimonials } from "@/lib/use-testimonials";
 import { SectionTracker } from "@/components/site/SectionTracker";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
+
+import { HeroV2 } from "@/components/site/homepage/HeroV2";
+import { TrustStripV2 } from "@/components/site/homepage/TrustStripV2";
+import { CategoryBento } from "@/components/site/homepage/CategoryBento";
+import { PickedForYouRail } from "@/components/site/homepage/PickedForYouRail";
+import { FlashDealsBand } from "@/components/site/homepage/FlashDealsBand";
+import { WhyFoundOurMarket } from "@/components/site/homepage/WhyFoundOurMarket";
 
 const PLACEHOLDERS = [
   "Search 2,400+ curated products...",

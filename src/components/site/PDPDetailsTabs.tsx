@@ -608,7 +608,7 @@ export function PDPDetailsTabs({
               </Reveal>
             )}
             {warrantyEntries.length > 0 && (
-              <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-[22px] sm:grid-cols-2">
                 {warrantyEntries.map(([k, v], i) => {
                   const Icon = WARRANTY_ICONS.find((w) => w.test.test(k))?.icon ?? ShieldCheck;
                   return (

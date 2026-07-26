@@ -2151,8 +2151,23 @@ function ReviewMediaViewer({ list, index, onIndex, onClose }: { list: ReviewMedi
     };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
-    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+    // Hide site chrome (header, bottom nav, floating chat) while the viewer is open.
+    document.body.setAttribute("data-review-media-open", "");
+    let restoreContext = () => {};
+    import("@/lib/floating-stack")
+      .then((m) => {
+        m.setContextHidden(true);
+        restoreContext = () => m.setContextHidden(false);
+      })
+      .catch(() => {});
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+      document.body.removeAttribute("data-review-media-open");
+      restoreContext();
+    };
   }, [list, index, count, onClose, onIndex, zoomed]);
+
 
   if (!list) return null;
   const current = list[index];

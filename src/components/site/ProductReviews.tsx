@@ -783,7 +783,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
               </div>
 
               </div>
-              <div className="space-y-2 self-center">
+              <div className="space-y-2.5 self-center">
                 {[5, 4, 3, 2, 1].map((star, idx) => {
                   const count = buckets[star - 1];
                   const pct = published.length ? (count / published.length) * 100 : 0;
@@ -791,25 +791,28 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                     <button
                       key={star}
                       onClick={() => setFilter(String(star) as ReviewFilter)}
-                      className="flex w-full items-center gap-3 text-xs group"
+                      aria-label={`Show ${star} star reviews (${count})`}
+                      className="flex w-full items-center gap-3 text-[12px] group py-1"
                     >
-                      <span className="flex w-8 items-center gap-1 font-mono text-muted-foreground">
+                      <span className="flex w-8 items-center gap-1 font-medium text-muted-foreground">
                         {star}<Star className="size-3 fill-accent/70 text-accent/70" />
                       </span>
-                      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+                      <span className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
                         <motion.span
-                          className="block h-full rounded-full bg-accent/80 group-hover:bg-accent"
+                          className="fom-meter"
                           initial={{ width: 0 }}
                           whileInView={{ width: `${pct}%` }}
                           viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: idx * 0.05, ease: "easeOut" }}
+                          transition={{ duration: 0.55, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
                         />
                       </span>
-                      <span className="w-10 text-right font-mono text-muted-foreground tabular-nums">{Math.round(pct)}%</span>
+                      <span className="w-9 text-right text-muted-foreground tabular-nums">{Math.round(pct)}%</span>
+                      <span className="w-8 text-right text-[11px] text-muted-foreground/60 tabular-nums">{count}</span>
                     </button>
                   );
                 })}
               </div>
+
             </motion.div>
           )}
 
@@ -1006,34 +1009,29 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                 <button
                   key={c.key}
                   onClick={() => setFilter(c.key)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-4 py-2 text-[11px] font-mono uppercase tracking-wider transition-all",
-                    filter === c.key
-                      ? "border-accent/40 bg-accent/15 text-accent shadow-[0_0_0_1px_oklch(0.74_0.19_49/0.2)]"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-white/20",
-                  )}
+                  aria-pressed={filter === c.key}
+                  className="fom-chip fom-tap"
                 >
                   {c.label}
                 </button>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <span className="shrink-0 self-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mr-1">Sort</span>
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <span className="shrink-0 self-center text-[11px] uppercase tracking-widest text-muted-foreground/60 mr-1">Sort</span>
                 {sortChips.map((c) => (
                   <button
                     key={c.key}
                     onClick={() => setSort(c.key)}
-                    className={cn(
-                      "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors",
-                      sort === c.key ? "bg-white/[0.07] text-foreground" : "text-muted-foreground hover:text-foreground",
-                    )}
+                    aria-pressed={sort === c.key}
+                    className="fom-chip fom-tap"
                   >
                     {c.label}
                   </button>
                 ))}
               </div>
             </div>
+
           </div>
           )}
 
@@ -1061,7 +1059,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
                         className={cn(
-                          "group rounded-[18px] border bg-card/60 backdrop-blur-xl p-3 sm:p-3.5 transition-colors hover:border-white/15",
+                          "group rounded-[20px] border bg-card/60 backdrop-blur-xl p-4 sm:p-5 transition-colors hover:border-white/15",
                           r.pinned || r.featured ? "border-accent/40" : "border-white/10",
                           r.status !== "published" && "opacity-70",
                         )}
@@ -1129,9 +1127,9 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                           return (
                           <>
                             {/* Header: avatar + name + verified + rating; date right */}
-                            <div className="flex items-start gap-2.5">
+                            <div className="flex items-start gap-3">
                               <div className={cn(
-                                "size-9 rounded-full overflow-hidden grid place-items-center text-sm font-display shrink-0 ring-1",
+                                "size-11 rounded-full overflow-hidden grid place-items-center text-[15px] font-display shrink-0 ring-1",
                                 avatarUrl ? "bg-muted ring-white/10" : cn(swatch.bg, swatch.fg, swatch.ring),
                               )}>
                                 {avatarUrl
@@ -1139,23 +1137,26 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                                   : <span aria-hidden>{name.charAt(0).toUpperCase()}</span>}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <p className="text-[14px] font-display font-semibold leading-tight truncate">{name}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-[16px] font-display font-semibold leading-tight truncate">{name}</p>
                                   {r.verified_purchase && (
-                                    <Check className="size-3 text-emerald-400" strokeWidth={3} aria-label="Verified Buyer" />
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-400/[0.08] px-2 py-0.5 text-[10.5px] font-medium text-emerald-300">
+                                      <Check className="size-2.5" strokeWidth={3} aria-hidden /> Verified
+                                    </span>
                                   )}
                                 </div>
-                                <div className="mt-0.5 flex items-center gap-1">
+                                <div className="mt-1 flex items-center gap-1.5">
                                   <StarRating rating={r.rating} starClassName="size-3" />
-                                  <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{r.rating.toFixed(1)}</span>
+                                  <span className="text-[12px] text-muted-foreground tabular-nums">{r.rating.toFixed(1)}</span>
                                 </div>
                               </div>
-                              <span className="shrink-0 text-[11px] text-muted-foreground/70 tabular-nums">{fmtDate(r.created_at)}</span>
+                              <span className="shrink-0 text-[12px] text-muted-foreground/60 tabular-nums">{fmtDate(r.created_at)}</span>
                             </div>
 
                             {/* Title + body — primary focus */}
-                            {r.title && <p className="mt-2 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
+                            {r.title && <p className="mt-3.5 text-[16px] font-semibold leading-snug text-foreground">{r.title}</p>}
                             {r.body && <ReviewBody text={r.body} />}
+
 
                             {/* Media gallery — after review text, compact fixed-height thumbnails */}
                             {r.media?.length > 0 && (() => {
@@ -1164,7 +1165,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                               const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : count === 3 ? "grid-cols-3" : "grid-cols-4";
                               const shown = media.slice(0, 4);
                               return (
-                                <div className={cn("mt-2.5 grid gap-1.5", cols)}>
+                                <div className={cn("mt-3.5 grid gap-2", cols)}>
                                   {shown.map((m, i) => {
                                     const showOverlay = i === 3 && count > 4;
                                     return (
@@ -1227,19 +1228,13 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                             )}
 
                             {/* Action row — helpful + More menu */}
-                            <div className="mt-2 flex items-center gap-1">
-                              <button
+                            <div className="mt-3.5 flex items-center gap-1">
+                              <HelpfulButton
+                                active={myVotes[r.id] === "helpful"}
+                                count={r.helpful_count ?? 0}
                                 onClick={() => vote(r, "helpful")}
-                                aria-label="Helpful"
-                                className={cn(
-                                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
-                                  myVotes[r.id] === "helpful"
-                                    ? "bg-accent/15 text-accent"
-                                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-                                )}
-                              >
-                                <ThumbsUp className="size-3.5" /> Helpful {r.helpful_count > 0 ? `(${r.helpful_count})` : ""}
-                              </button>
+                              />
+
 
                               {/* More menu (Edit / Delete / Report / Copy link) */}
                               <div className="relative ml-auto">
@@ -1464,10 +1459,16 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                   </button>
                 </div>
               )}
+
+              {/* Floating composer CTA — long lists only, hidden while scrolling. */}
+              {expanded && !showCompose && sorted.length > 3 && !!user && !hasReviewed && (
+                <FloatingWriteCTA onWrite={openCompose} />
+              )}
             </>
           )}
         </>
       )}
+
 
       {/* Write review multi-step modal */}
       {showCompose && !!user && (
@@ -1815,29 +1816,99 @@ function StatCard({ icon, value, label, highlight }: { icon: React.ReactNode; va
   );
 }
 
+/** Helpful vote pill — orange ripple, animated counter, no page refresh. */
+function HelpfulButton({ active, count, onClick }: { active: boolean; count: number; onClick: () => void }) {
+  const [ripple, setRipple] = useState(0);
+  return (
+    <button
+      onClick={() => { setRipple((n) => n + 1); haptic("selection"); onClick(); }}
+      aria-pressed={active}
+      aria-label={`Mark review helpful${count > 0 ? ` (${count})` : ""}`}
+      className={cn(
+        "relative overflow-hidden inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-all active:scale-[0.97]",
+        active
+          ? "border-accent/35 bg-accent/[0.12] text-accent"
+          : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground",
+      )}
+    >
+      {ripple > 0 && <span key={ripple} className="fom-ripple" aria-hidden />}
+      <ThumbsUp className={cn("size-3.5 transition-transform", active && "scale-110")} />
+      <span>Helpful</span>
+      {count > 0 && (
+        <span key={count} className="fom-count-in tabular-nums">{count}</span>
+      )}
+    </button>
+  );
+}
+
+/** Floating composer CTA — appears while browsing a long review list. */
+function FloatingWriteCTA({ onWrite }: { onWrite: () => void }) {
+  const [hidden, setHidden] = useState(true);
+  useEffect(() => {
+    let last = window.scrollY;
+    let idle: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > last + 6) setHidden(true);
+      last = y;
+      clearTimeout(idle);
+      idle = setTimeout(() => {
+        const chromeHidden = document.body.hasAttribute("data-immersive-ui") || document.body.hasAttribute("data-review-media-open");
+        setHidden(chromeHidden || window.scrollY < 400);
+      }, 220);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); clearTimeout(idle); };
+  }, []);
+  return (
+    <button
+      type="button"
+      data-floating-control
+      data-hidden={hidden}
+      onClick={() => { haptic("selection"); onWrite(); }}
+      className="fom-fab"
+      aria-label="Write a review"
+    >
+      <Pencil className="size-3.5 text-accent" /> Write Review
+    </button>
+  );
+}
+
 function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolean; onWrite: () => void; filtered: boolean; onReset: () => void }) {
   if (filtered) {
     return (
       <div className="grid place-items-center rounded-3xl border border-white/10 bg-card/40 py-14 text-center">
-        <p className="text-sm text-muted-foreground">No reviews match this filter.</p>
-        <button onClick={onReset} className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-mono uppercase tracking-widest hover:border-accent/40 hover:text-accent">
+        <p className="text-[15px] text-muted-foreground">No reviews match this filter.</p>
+        <button onClick={onReset} className="fom-btn fom-btn-ghost fom-tap mt-5">
           Show all reviews
         </button>
       </div>
     );
   }
   return (
-    <div className="relative grid place-items-center overflow-hidden rounded-3xl border border-white/10 bg-card/40 backdrop-blur-xl py-16 px-6 text-center">
+    <div className="relative grid place-items-center overflow-hidden rounded-3xl border border-white/10 bg-card/40 backdrop-blur-xl py-20 px-6 text-center">
       <div className="pointer-events-none absolute inset-0 opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
-      <div className="relative">
-        <span className="inline-grid size-16 place-items-center rounded-2xl bg-accent/15 text-accent animate-glow">
-          <Star className="size-8 fill-accent" />
-        </span>
-        <h3 className="mt-5 text-xl font-display">No reviews yet</h3>
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">Be the first to review this product and help other shoppers make the right choice.</p>
+      <div className="relative max-w-sm">
+        <div className="flex items-center justify-center gap-1.5" aria-hidden>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.06 * i, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Star className="size-7 fill-accent/85 text-accent/85 drop-shadow-[0_0_10px_oklch(0.74_0.19_49/0.35)]" />
+            </motion.span>
+          ))}
+        </div>
+        <h3 className="mt-6 text-[20px] font-display leading-snug">Be the first to review this product</h3>
+        <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">
+          Share your experience and help other shoppers choose with confidence.
+        </p>
         {canWrite && (
-          <button onClick={onWrite} className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 hover:shadow-[var(--shadow-ember)]">
-            <Pencil className="size-3.5" /> Write the First Review
+          <button onClick={onWrite} className="fom-btn fom-btn-primary fom-tap mt-7 px-7">
+            <Pencil className="size-3.5" /> Write Review
           </button>
         )}
       </div>
@@ -1849,32 +1920,51 @@ function ReviewsSkeleton() {
   return (
     <div aria-hidden="true">
       <div className="mb-8 grid gap-8 lg:grid-cols-[280px_1fr] rounded-3xl border border-white/10 bg-card/40 p-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-16 w-20 rounded-xl fom-skeleton" />
-          <div className="h-4 w-32 rounded fom-skeleton" />
+        <div className="flex flex-col gap-3">
+          <div className="h-14 w-24 rounded-xl fom-skeleton" />
+          <div className="flex gap-1.5">
+            {[0, 1, 2, 3, 4].map((i) => <div key={i} className="size-4 rounded-[5px] fom-skeleton" />)}
+          </div>
           <div className="h-3 w-40 rounded fom-skeleton" />
+          <div className="h-3 w-28 rounded fom-skeleton" />
         </div>
         <div className="space-y-3 self-center">
-          {[0, 1, 2, 3, 4].map((i) => <div key={i} className="h-2.5 w-full rounded-full fom-skeleton" />)}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="h-3 w-8 rounded fom-skeleton" />
+              <div className="h-2 flex-1 rounded-full fom-skeleton" />
+              <div className="h-3 w-8 rounded fom-skeleton" />
+            </div>
+          ))}
         </div>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="mb-6 flex gap-2">
+        {[0, 1, 2, 3].map((i) => <div key={i} className="h-9 w-24 rounded-full fom-skeleton" />)}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-2xl border border-white/10 bg-card/40 p-6">
-            <div className="flex items-center gap-3.5">
-              <div className="size-12 rounded-full fom-skeleton" />
-              <div className="space-y-2"><div className="h-3 w-24 rounded fom-skeleton" /><div className="h-2.5 w-16 rounded fom-skeleton" /></div>
+          <div key={i} className="rounded-[20px] border border-white/10 bg-card/40 p-5">
+            <div className="flex items-center gap-3">
+              <div className="size-11 rounded-full fom-skeleton" />
+              <div className="space-y-2">
+                <div className="h-3.5 w-28 rounded fom-skeleton" />
+                <div className="h-2.5 w-20 rounded fom-skeleton" />
+              </div>
             </div>
-            <div className="mt-4 h-3 w-32 rounded fom-skeleton" />
-            <div className="mt-4 h-4 w-48 rounded fom-skeleton" />
-            <div className="mt-2 h-3 w-full rounded fom-skeleton" />
-            <div className="mt-1.5 h-3 w-3/4 rounded fom-skeleton" />
+            <div className="mt-4 h-4 w-2/3 rounded fom-skeleton" />
+            <div className="mt-3 h-3 w-full rounded fom-skeleton" />
+            <div className="mt-1.5 h-3 w-5/6 rounded fom-skeleton" />
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[0, 1, 2].map((k) => <div key={k} className="h-20 rounded-[12px] fom-skeleton" />)}
+            </div>
+            <div className="mt-4 h-9 w-28 rounded-full fom-skeleton" />
           </div>
         ))}
       </div>
     </div>
   );
 }
+
 
 const STEPS = ["Rating", "Title", "Experience", "Photos", "Submit"];
 
@@ -2002,22 +2092,35 @@ function WriteReviewModal(props: {
 
             <div className="min-h-[180px]">
               {step === 1 && (
-                <div className="grid place-items-center py-6">
-                  <p className="mb-5 text-sm text-muted-foreground">How would you rate this product?</p>
-                  <div className="flex items-center gap-2">
+                <div className="grid place-items-center py-8">
+                  <p className="mb-6 text-[16px] text-muted-foreground">How would you rate this product?</p>
+                  <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Rating">
                     {Array.from({ length: 5 }).map((_, i) => {
                       const value = i + 1;
                       const active = (hoverRating || rating) >= value;
                       return (
-                        <button key={i} type="button" onMouseEnter={() => setHoverRating(value)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(value)} aria-label={`Rate ${value}`} className="p-1 transition-transform hover:scale-125">
-                          <Star className={cn("size-9 transition-colors", active ? "fill-accent text-accent drop-shadow-[0_0_8px_oklch(0.74_0.19_49/0.5)]" : "text-muted-foreground/40")} />
+                        <button
+                          key={i}
+                          type="button"
+                          role="radio"
+                          aria-checked={rating === value}
+                          onMouseEnter={() => setHoverRating(value)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => { haptic("selection"); setRating(value); }}
+                          aria-label={`Rate ${value}`}
+                          className="fom-tap grid place-items-center rounded-xl p-1.5 transition-transform hover:scale-110"
+                        >
+                          <span key={active ? `on-${rating}` : "off"} className={cn(active && rating >= value && "fom-star-pop", "block")}>
+                            <Star className={cn("size-9 transition-colors duration-200", active ? "fill-accent text-accent drop-shadow-[0_0_12px_oklch(0.74_0.19_49/0.45)]" : "text-muted-foreground/40")} />
+                          </span>
                         </button>
                       );
                     })}
                   </div>
-                  <p className="mt-4 text-sm font-display text-accent">{["", "Poor", "Fair", "Good", "Very good", "Excellent"][hoverRating || rating]}</p>
+                  <p className="mt-5 h-5 text-[15px] font-display text-accent">{["", "Poor", "Fair", "Good", "Very good", "Excellent"][hoverRating || rating]}</p>
                 </div>
               )}
+
               {step === 2 && (
                 <div>
                   <label className="mb-2 block text-sm text-muted-foreground">Give your review a title</label>

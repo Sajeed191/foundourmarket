@@ -3693,11 +3693,103 @@ body[data-immersive-ui] [data-scroll-top] {
 /* Minimum comfortable touch target. */
 .fom-tap { min-height: 44px; min-width: 44px; }
 
+/* ── Reviews & Q&A Premium v2 — presentation tokens ─────────────────────── */
+
+/* Star tap: fill + tiny pop + warm shimmer (no bounce). */
+@keyframes fom-star-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+.fom-star-pop { animation: fom-star-pop 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Counter increment: soft rise, no layout shift. */
+@keyframes fom-count-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fom-count-in { animation: fom-count-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Helpful ripple — orange, transform/opacity only. */
+@keyframes fom-ripple {
+  from { opacity: 0.45; transform: scale(0.6); }
+  to   { opacity: 0; transform: scale(1.9); }
+}
+.fom-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in oklab, var(--accent) 45%, transparent) 0%, transparent 70%);
+  animation: fom-ripple 520ms ease-out forwards;
+  pointer-events: none;
+}
+
+/* Premium selection chip (filters + sorting). */
+.fom-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.9rem;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted-foreground);
+  background: rgba(255, 255, 255, 0.02);
+  transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fom-chip:hover { color: var(--foreground); border-color: rgba(255, 255, 255, 0.18); }
+.fom-chip:active { transform: scale(0.97); }
+.fom-chip:focus-visible { outline: 2px solid color-mix(in oklab, var(--accent) 70%, transparent); outline-offset: 2px; }
+.fom-chip[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+/* Animated rating distribution fill. */
+.fom-meter {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 65%, transparent), var(--accent));
+}
+
+/* Floating composer CTA pill. */
+.fom-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 14px 40px -16px rgba(0, 0, 0, 0.8);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--foreground);
+  transition: opacity 240ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fom-fab[data-hidden="true"] { opacity: 0; transform: translateY(14px) scale(0.96); pointer-events: none; }
+.fom-fab:active { transform: scale(0.97); }
+
 @media (prefers-reduced-motion: reduce) {
   .fom-overlay, .fom-surface { animation-duration: 1ms; }
   .fom-skeleton { animation: none; }
   .fom-btn:active:not(:disabled) { transform: none; }
+  .fom-star-pop, .fom-count-in, .fom-ripple { animation: none; }
+  .fom-chip:active, .fom-fab:active { transform: none; }
+  .fom-fab { transition: opacity 1ms linear; }
 }
+
 
 
 /* Q&A v7.3 — premium delete confirmation: soft fade backdrop + 96%→100% scale. */

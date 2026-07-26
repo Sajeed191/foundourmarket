@@ -1686,14 +1686,17 @@ export function ProductQA({
         <QASkeleton />
       ) : items.length === 0 ? (
         hideEmptyState ? null : (
-          <div className="py-16 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
-            <div className="mx-auto mb-5 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
+          <div className="py-20 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
+            <div className="mx-auto mb-6 size-16 rounded-2xl grid place-items-center bg-accent/10 border border-accent/20 text-accent">
               <MessageCircleQuestion className="size-7" strokeWidth={1.5} />
             </div>
-            <p className="text-lg font-display font-semibold mb-1.5">No questions yet</p>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed mb-6">Be the first to ask about this product.</p>
+            <p className="text-[20px] font-display font-semibold mb-2.5 leading-snug">Be the first to ask about this product</p>
+            <p className="text-[15px] text-muted-foreground max-w-sm mx-auto leading-relaxed mb-7">
+              Ask anything — our team and other shoppers will help you decide.
+            </p>
             {!hideAskCta && <div className="max-w-xs mx-auto">{askButton(true)}</div>}
           </div>
+
         )
       ) : filtered.length === 0 ? (
         <div className="py-14 px-6 text-center rounded-[20px] border border-white/[0.06] bg-white/[0.02]">
@@ -1773,7 +1776,7 @@ export function ProductQA({
 
                 {/* Answers */}
                 {roots.length > 0 && (
-                  <div className="mt-4 space-y-2.5">
+                  <div className="mt-4 space-y-2.5 pl-3.5 border-l border-white/[0.07]">
                     {[...roots].sort((a, b) => Number(b.is_official) - Number(a.is_official)).map((a) => (
                       <div key={a.id} className="space-y-2">
                         {editing?.id === a.id ? (

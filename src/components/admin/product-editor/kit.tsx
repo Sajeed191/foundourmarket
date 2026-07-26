@@ -354,7 +354,44 @@ export function SectionEditor<T extends Record<string, any>>({
   }, []);
 
 
-  const set = (patch: Partial<T>) => setForm((f) => (f ? { ...f, ...patch } : f));
+  /* ---- unlimited editor history (Ctrl+Z / Ctrl+Y) ---- */
+  const past = useRef<T[]>([]);
+  const future = useRef<T[]>([]);
+  const [, bumpHistory] = useState(0);
+  const tickHistory = useCallback(() => bumpHistory((n) => n + 1), []);
+
+  const set = useCallback((patch: Partial<T>) => {
+    const cur = formRef.current;
+    if (!cur) return;
+    past.current = [...past.current, cur].slice(-300);
+    future.current = [];
+    tickHistory();
+    setForm({ ...cur, ...patch });
+  }, [tickHistory]);
+
+  const undo = useCallback(() => {
+    const cur = formRef.current;
+    if (!cur || past.current.length === 0) return;
+    const prev = past.current[past.current.length - 1];
+    past.current = past.current.slice(0, -1);
+    future.current = [cur, ...future.current].slice(0, 300);
+    tickHistory();
+    setForm(prev);
+  }, [tickHistory]);
+
+  const redo = useCallback(() => {
+    const cur = formRef.current;
+    if (!cur || future.current.length === 0) return;
+    const next = future.current[0];
+    future.current = future.current.slice(1);
+    past.current = [...past.current, cur].slice(-300);
+    tickHistory();
+    setForm(next);
+  }, [tickHistory]);
+
+  const canUndo = past.current.length > 0;
+  const canRedo = future.current.length > 0;
+
 
   const doSave = useCallback(
     async (silent: boolean) => {

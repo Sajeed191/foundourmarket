@@ -73,15 +73,23 @@ export function KeyValueBuilder({
 }) {
   const update = (i: number, patch: Partial<KV>) => onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const add = () => onChange([...rows, { k: "", v: "" }]);
-  const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
+  const remove = (i: number) => {
+    const before = rows;
+    onChange(rows.filter((_, idx) => idx !== i));
+    undoableToast("Row removed", () => onChange(before));
+  };
 
   return (
     <div className="space-y-2">
       {rows.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 px-3 py-3 text-center text-xs text-muted-foreground">
-          No rows yet.
-        </p>
+        <SmartEmpty
+          icon={Layers}
+          title={`Add your first ${addLabel.replace(/^Add\s+/i, "").toLowerCase() || "row"}`}
+          hint="Short label on the left, value on the right — customers see these as clean rows."
+          actions={[{ label: addLabel, primary: true, run: add }]}
+        />
       )}
+
       {rows.map((r, i) => (
         <div key={i} className="flex items-center gap-2">
           <GripVertical className="size-4 shrink-0 text-muted-foreground/50" />

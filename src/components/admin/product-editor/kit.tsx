@@ -437,10 +437,10 @@ export function SectionEditor<T extends Record<string, any>>({
       logActivity("product_updated", "product", row?.id, { slug, section: sectionKey, auto: silent });
       invalidateProducts();
       if (!silent) {
-        toast.success("Draft saved", {
-          description: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        });
+        // Quiet confirmation — self-dismisses, never blocks the workspace.
+        toast.success("Draft saved", { duration: 2000 });
       }
+
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [slug, sectionKey, title, row?.id],

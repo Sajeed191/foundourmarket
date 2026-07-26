@@ -1,10 +1,11 @@
 import {
-  createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode,
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode,
 } from "react";
 import { Check, ChevronDown, HelpCircle, Search, Settings2, Sparkles, X } from "lucide-react";
 
 import {
-  EDITOR_STEPS, STEP_OF_FIELD, readEditorMode, searchFields, writeEditorMode,
+  EDITOR_STEPS, STEP_OF_FIELD, readEditorMode, readEditorSearch, readEditorStep,
+  searchFields, writeEditorMode, writeEditorSearch, writeEditorStep,
   type EditorMode, type EditorStepId,
 } from "@/lib/editor-mode";
 import { focusEditorField } from "@/lib/editor-focus";
@@ -26,15 +27,27 @@ export function useEditorWorkflow(): WorkflowCtx {
   return ctx;
 }
 
+const STEP_IDS = new Set<string>(EDITOR_STEPS.map((s) => s.id));
+
 export function GuidedWorkflow({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<EditorMode>("simple");
-  const [step, setStep] = useState<EditorStepId>("basic");
+  const [step, setStepState] = useState<EditorStepId>("basic");
 
-  useEffect(() => setModeState(readEditorMode()), []);
+  // Section memory — restore preferred mode + last opened step after hydration.
+  useEffect(() => {
+    setModeState(readEditorMode());
+    const remembered = readEditorStep();
+    if (remembered && STEP_IDS.has(remembered)) setStepState(remembered as EditorStepId);
+  }, []);
 
   const setMode = useCallback((m: EditorMode) => {
     setModeState(m);
     writeEditorMode(m);
+  }, []);
+
+  const setStep = useCallback((s: EditorStepId) => {
+    setStepState(s);
+    writeEditorStep(s);
   }, []);
 
   // Jumping to a field opens the step that owns it.
@@ -46,11 +59,12 @@ export function GuidedWorkflow({ children }: { children: ReactNode }) {
     };
     window.addEventListener("editor-focus-field", handler);
     return () => window.removeEventListener("editor-focus-field", handler);
-  }, []);
+  }, [setStep]);
 
-  const value = useMemo(() => ({ mode, setMode, step, setStep }), [mode, setMode, step]);
+  const value = useMemo(() => ({ mode, setMode, step, setStep }), [mode, setMode, step, setStep]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
+
 
 /* ------------------------------ mode switch ----------------------------- */
 

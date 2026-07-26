@@ -11,23 +11,44 @@
 export type EditorMode = "simple" | "advanced";
 
 const MODE_KEY = "fom_editor_mode";
+const STEP_KEY = "fom_editor_step";
+const SEARCH_KEY = "fom_editor_search";
+
+function readLS(key: string): string | null {
+  if (typeof localStorage === "undefined") return null;
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function writeLS(key: string, value: string): void {
+  try { localStorage.setItem(key, value); } catch { /* storage may be blocked */ }
+}
 
 export function readEditorMode(): EditorMode {
-  if (typeof localStorage === "undefined") return "simple";
-  try {
-    return localStorage.getItem(MODE_KEY) === "advanced" ? "advanced" : "simple";
-  } catch {
-    return "simple";
-  }
+  return readLS(MODE_KEY) === "advanced" ? "advanced" : "simple";
 }
 
 export function writeEditorMode(mode: EditorMode): void {
-  try {
-    localStorage.setItem(MODE_KEY, mode);
-  } catch {
-    /* storage may be blocked */
-  }
+  writeLS(MODE_KEY, mode);
 }
+
+/** Section memory — last opened step. */
+export function readEditorStep(): string | null {
+  return readLS(STEP_KEY);
+}
+
+export function writeEditorStep(step: string): void {
+  writeLS(STEP_KEY, step);
+}
+
+/** Section memory — last field search. */
+export function readEditorSearch(): string {
+  return readLS(SEARCH_KEY) ?? "";
+}
+
+export function writeEditorSearch(q: string): void {
+  writeLS(SEARCH_KEY, q);
+}
+
 
 /** Steps of the guided workflow, in order. */
 export const EDITOR_STEPS = [

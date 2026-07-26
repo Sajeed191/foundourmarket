@@ -3803,3 +3803,141 @@ body[data-immersive-ui] [data-scroll-top] {
 @media (prefers-reduced-motion: reduce) {
   .qa-delete-overlay, .qa-delete-panel { animation-duration: 1ms; }
 }
+
+
+/* ============================================================
+   PDP Product Details v2.0 — Ultra Premium (presentation only)
+   ============================================================ */
+
+/* Ambient stage: soft radial lighting + micro grain behind the section. */
+.pdp-details-stage { position: relative; isolation: isolate; }
+.pdp-details-stage::before {
+  content: "";
+  position: absolute;
+  inset: -8% -12% auto -12%;
+  height: 60%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 70% at 18% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
+    radial-gradient(50% 60% at 92% 12%, color-mix(in oklab, var(--foreground) 5%, transparent), transparent 72%);
+  filter: blur(6px);
+}
+.pdp-details-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Oversized DETAILS watermark — cropped, blurred, slow float. */
+.pdp-watermark {
+  position: absolute;
+  top: -0.22em;
+  right: -0.06em;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.78;
+  font-size: clamp(88px, 26vw, 170px);
+  color: color-mix(in oklab, var(--foreground) 100%, transparent);
+  opacity: 0.02;
+  filter: blur(1px);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pdp-watermark { animation: pdp-watermark-drift 22s ease-in-out infinite alternate; }
+}
+@keyframes pdp-watermark-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-14px, 8px, 0); }
+}
+
+/* Glow that follows the active tab pill. */
+.pdp-tab-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 62%, #ff9a3d));
+  box-shadow:
+    0 10px 30px -14px color-mix(in oklab, var(--accent) 85%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--accent) 28%, transparent) inset;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, width;
+}
+
+/* Premium floating category / info card. */
+.pdp-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 24px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 7%, transparent);
+  background:
+    linear-gradient(160deg, color-mix(in oklab, var(--accent) 4%, transparent), transparent 45%),
+    color-mix(in oklab, var(--foreground) 2.6%, transparent);
+  box-shadow: 0 18px 46px -34px rgba(0, 0, 0, 0.9);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, border-color 260ms ease;
+  will-change: transform;
+}
+@media (hover: hover) {
+  .pdp-card:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: color-mix(in oklab, var(--accent) 22%, transparent);
+    box-shadow:
+      0 26px 60px -36px rgba(0, 0, 0, 0.95),
+      0 0 32px -18px color-mix(in oklab, var(--accent) 55%, transparent);
+  }
+}
+.pdp-card-tap:active { transform: scale(0.985); }
+
+/* Row divider: gradient hairline with faded edges, inset from card padding. */
+.pdp-row-divider {
+  height: 1px;
+  margin-inline: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--foreground) 11%, transparent) 18%,
+    color-mix(in oklab, var(--foreground) 11%, transparent) 82%,
+    transparent
+  );
+}
+
+/* Progressive reveal — one time, transform + opacity only. */
+.pdp-reveal { opacity: 0; transform: translate3d(0, 14px, 0); will-change: transform, opacity; }
+.pdp-reveal.is-in {
+  animation: pdp-reveal-in 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--pdp-delay, 0ms);
+}
+@keyframes pdp-reveal-in {
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* Luxury shimmer skeleton. */
+.pdp-skel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+.pdp-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 8%, transparent), transparent);
+  animation: pdp-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes pdp-shimmer { to { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pdp-reveal { opacity: 1; transform: none; animation: none !important; }
+  .pdp-card, .pdp-tab-glow { transition: none; }
+  .pdp-skel::after { animation: none; }
+}

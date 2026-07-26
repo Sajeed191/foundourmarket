@@ -3822,7 +3822,17 @@ body[data-immersive-ui] [data-scroll-top] {
     radial-gradient(60% 70% at 18% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
     radial-gradient(50% 60% at 92% 12%, color-mix(in oklab, var(--foreground) 5%, transparent), transparent 72%);
   filter: blur(6px);
+  will-change: transform;
 }
+/* Ambient light drift — imperceptible depth, transform only, 26s loop. */
+@media (prefers-reduced-motion: no-preference) {
+  .pdp-details-stage::before { animation: pdp-ambient-drift 26s ease-in-out infinite alternate; }
+}
+@keyframes pdp-ambient-drift {
+  from { transform: translate3d(-1.5%, 0, 0) scale(1); }
+  to { transform: translate3d(1.5%, 1%, 0) scale(1.04); }
+}
+
 .pdp-details-stage::after {
   content: "";
   position: absolute;

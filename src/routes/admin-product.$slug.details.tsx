@@ -53,6 +53,10 @@ import {
 import { focusEditorField, focusFirstApplied } from "@/lib/editor-focus";
 import { LazyPanel } from "@/components/admin/product-editor/LazyPanel";
 import { recordMetric } from "@/lib/editor-perf";
+import {
+  GuidedWorkflow, ModeSwitch, FieldSearch, StepProgress, Step, AdvancedSettings,
+  StartOptions, HelpDot, useEditorWorkflow, type StepState,
+} from "@/components/admin/product-editor/GuidedWorkflow";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
 
@@ -1025,5 +1029,4 @@ function NextStep({ label, onClick }: { label: string; onClick: () => void }) {
       {label} <ChevronDown className="size-4 -rotate-90" />
     </button>
   );
-}
 }

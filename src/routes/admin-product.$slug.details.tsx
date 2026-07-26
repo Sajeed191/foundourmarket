@@ -460,16 +460,9 @@ function CommandCenter({ slug, f, set, row }: {
     : score >= 40 ? { t: "text-amber-400", b: "bg-amber-500", r: "stroke-amber-400" }
     : { t: "text-destructive", b: "bg-destructive", r: "stroke-destructive" };
 
-  async function togglePublish() {
-    const next = status === "published" ? "draft" : "published";
-    setPubBusy(true);
-    const { error } = await supabase.from("products").update({ status: next, updated_at: new Date().toISOString() }).eq("slug", slug);
-    setPubBusy(false);
-    if (error) { toast.error("Update failed", { description: error.message }); return; }
-    setStatus(next);
-    await invalidateProducts();
-    toast.success(next === "published" ? "Product published" : "Moved to draft");
-  }
+  // Status changes flow through the Publishing Center (setWorkflowStatus).
+
+
 
   function generateSeo() {
     const title = f.seo_title.trim() || `${f.name.trim()}${f.brand.trim() ? ` by ${f.brand.trim()}` : ""}`.slice(0, 60);

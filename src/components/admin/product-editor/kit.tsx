@@ -567,10 +567,14 @@ export function SectionEditor<T extends Record<string, any>>({
               <div className="flex items-start gap-3">
                 <RotateCcw className="size-4 text-amber-400 mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">We found an unsaved draft from {relativeAge(recovery.savedAt)} ago.</p>
+                  <p className="text-sm font-medium">Continue editing?</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Unsaved draft found · saved {new Date(recovery.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {" "}({relativeAge(recovery.savedAt)} ago). It stays on this device until you save.
+                  </p>
                   <div className="flex gap-2 mt-2.5">
-                    <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-accent-foreground hover:brightness-110">Restore Draft</button>
-                    <button onClick={discardDraft} className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">Discard Draft</button>
+                    <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-accent-foreground hover:brightness-110">Continue</button>
+                    <button onClick={discardDraft} className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">Discard</button>
                   </div>
                 </div>
               </div>

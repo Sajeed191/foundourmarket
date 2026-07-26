@@ -291,7 +291,7 @@ function CommandCenter({ slug, f, set, row }: {
 
   function applyPaste(p: PasteApplyPayload) {
     const patch: Partial<Form> = {};
-    let notes: string[] = [];
+    const notes: string[] = [];
     if (p.specs?.length) {
       const { rows, added, updated } = mergeSpecRows(f.specs, p.specs);
       patch.specs = rows;

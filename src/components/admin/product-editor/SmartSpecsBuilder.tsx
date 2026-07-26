@@ -188,10 +188,17 @@ export function SmartSpecsBuilder({
 
       {/* Rows */}
       {rows.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center text-xs text-muted-foreground">
-          No specifications yet. Use Smart Paste — cards are created for you.
-        </p>
+        <SmartEmpty
+          icon={ListChecks}
+          title="Add your first specification"
+          hint="Paste a spec sheet from Amazon, Excel or a PDF — cards are grouped for you automatically."
+          actions={[
+            { label: "Add specification", primary: true, run: () => onChange([...rows, { k: "", v: "" }]) },
+            { label: "Paste specifications", run: () => window.dispatchEvent(new CustomEvent("editor-open-paste")) },
+          ]}
+        />
       )}
+
       {rows.length > 0 && visible.length === 0 && (
         <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center text-xs text-muted-foreground">
           No specifications match “{query}”.

@@ -13,8 +13,11 @@ const GLOW_MS = 800;
 
 export function focusEditorField(key: string, opts: { select?: boolean } = {}) {
   if (typeof document === "undefined") return;
+  // Let collapsed sections expand themselves before we measure/scroll.
+  window.dispatchEvent(new CustomEvent("editor-focus-field", { detail: key }));
   // Wait a frame so freshly-applied state has rendered.
   requestAnimationFrame(() => {
+
     const host = document.querySelector<HTMLElement>(`[data-editor-field="${CSS.escape(key)}"]`);
     if (!host) return;
 

@@ -1256,7 +1256,7 @@ export function ProductQA({
 
   // Q&A v7.3 — immersive mode while answering / editing an answer or reply, so
   // the composer reads as its own premium screen.
-  useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen || !!confirmDeleteQ);
+  useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen || !!confirmDeleteQ || !!confirmDeleteA);
 
   // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
   // answers get the smooth reveal animation.
@@ -1434,6 +1434,19 @@ export function ProductQA({
     setDeleteAError(null);
     setConfirmDeleteA({ id, isReply });
   }
+
+  // Escape closes either delete dialog, but never while the request is active.
+  useEffect(() => {
+    if (!confirmDeleteQ && !confirmDeleteA) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (deletingQ || deletingA) { e.preventDefault(); return; }
+      setConfirmDeleteQ(null);
+      setConfirmDeleteA(null);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [confirmDeleteQ, confirmDeleteA, deletingQ, deletingA]);
 
   async function performDeleteAnswer() {
     const target = confirmDeleteA;

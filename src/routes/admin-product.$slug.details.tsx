@@ -765,14 +765,25 @@ function CommandCenter({ slug, f, set, row }: {
       </Collapsible>
 
 
-      {pasteRaw && (
-        <UniversalPasteDialog
-          raw={pasteRaw}
-          categories={catOptions}
-          onApply={applyPaste}
-          onClose={() => setPasteRaw("")}
-        />
-      )}
+        {pasteRaw && (
+          <UniversalPasteDialog
+            raw={pasteRaw}
+            categories={catOptions}
+            onApply={applyPaste}
+            onClose={() => setPasteRaw("")}
+          />
+        )}
+      </div>
+
+      {/* AI Copilot — docked right on desktop, bottom sheet on mobile */}
+      <AiCopilot
+        recs={copilotRecs}
+        canUndo={!!undoPatch}
+        onUndo={() => { if (undoPatch) { set(undoPatch); setUndoPatch(null); toast.success("Reverted"); } }}
+      />
+
+      <EditorCommandPalette commands={commands} />
     </div>
   );
+
 }

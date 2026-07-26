@@ -731,22 +731,11 @@ function QuestionModalShell({
   // - Lock background scroll and preserve scroll position.
   // - Hide every floating chrome element via body[data-qa-modal-open] (CSS).
   // - Hide LiveChat/admin widgets that subscribe to the floating-stack context.
+  // Scroll lock + instant, jump-free restore lives in the shared hook.
+  useModalScrollLock(open, "data-qa-modal-open");
+
   useEffect(() => {
     if (!open) return;
-    const scrollY = window.scrollY;
-    const body = document.body;
-    const prev = {
-      overflow: body.style.overflow,
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-    };
-    // iOS-friendly scroll lock that preserves position.
-    body.style.overflow = "hidden";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
-    body.setAttribute("data-qa-modal-open", "true");
 
     let restoreContext = () => {};
     // Best-effort: hide LiveChat / admin floating widgets that opt into the
@@ -764,16 +753,11 @@ function QuestionModalShell({
     window.addEventListener("keydown", onKey);
 
     return () => {
-      body.style.overflow = prev.overflow;
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.width = prev.width;
-      body.removeAttribute("data-qa-modal-open");
-      window.scrollTo(0, scrollY);
       window.removeEventListener("keydown", onKey);
       restoreContext();
     };
   }, [open, onClose]);
+
 
   return (
     <div

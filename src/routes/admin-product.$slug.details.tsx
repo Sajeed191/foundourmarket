@@ -957,7 +957,16 @@ function WorkflowBody(p: any) {
               <FeaturesBuilder value={f.features} onChange={(v: string[]) => set({ features: v })} />
               <InlineSuggestions items={featTips} />
             </div>
+            {showTpl && (
+              <SpecTemplateStrip
+                label={ctx.template!.label}
+                missing={missingTpl}
+                onAddAll={addTemplateSpecs}
+                onDismiss={() => setTplDismissed(ctx.template!.id)}
+              />
+            )}
             <SmartSpecsBuilder rows={f.specs} onChange={(v: KV[]) => set({ specs: v })} />
+
             <InlineSuggestions items={specTips} />
             {advanced && (
               <div>

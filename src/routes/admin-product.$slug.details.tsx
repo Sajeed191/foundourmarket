@@ -784,6 +784,8 @@ function WorkflowBody(p: any) {
     nameTips, descTips, featTips, specTips, seoTips, seoOk, seoScore, canonical, generateSeo,
     checks, okCount, healthCards, issues, healthReady, copilotRecs, undoPatch, setUndoPatch,
     commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate, topIssue,
+    generateDescription, generateFeatures, generateKeywords,
+
   } = p;
   const { mode, setStep } = useEditorWorkflow();
   const advanced = mode === "advanced";

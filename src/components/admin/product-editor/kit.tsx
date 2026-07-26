@@ -699,6 +699,17 @@ export function SectionEditor<T extends Record<string, any>>({
                 <Eye className="size-4" /> Preview
               </button>
 
+              {/* Publish — jumps to the Review & Publish step (always reachable) */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("editor-focus-field", { detail: "publish" }))}
+                aria-label="Go to review and publish"
+                title="Review & Publish"
+                className="grid size-11 shrink-0 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-all hover:border-white/25 hover:text-foreground active:scale-95"
+              >
+                <Send className="size-4" />
+              </button>
+
               {/* Save Changes — primary CTA (65%) */}
               <button
                 type="button"

@@ -237,10 +237,21 @@ export function Step({
   );
 }
 
-/* -------------------------- advanced settings --------------------------- */
+/* -------------------------- advanced tools ------------------------------ */
+
+const ADVANCED_FIELDS = new Set(["seo", "health", "diagnostics", "faq", "rating", "attributes"]);
 
 export function AdvancedSettings({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  // Jumping to an advanced field (SEO, health…) reveals the panel automatically.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const key = (e as CustomEvent<string>).detail;
+      if (ADVANCED_FIELDS.has(key)) setOpen(true);
+    };
+    window.addEventListener("editor-focus-field", handler);
+    return () => window.removeEventListener("editor-focus-field", handler);
+  }, []);
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.02]">
       <button
@@ -250,7 +261,7 @@ export function AdvancedSettings({ children }: { children: ReactNode }) {
         className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left"
       >
         <Settings2 className="size-4 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 flex-1 text-sm font-semibold">Advanced Settings</span>
+        <span className="min-w-0 flex-1 text-sm font-semibold">Advanced Tools</span>
         <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform duration-[var(--editor-motion-base,220ms)] ${open ? "rotate-180" : ""}`} />
       </button>
       {open && <div className="space-y-3 border-t border-white/10 p-4">{children}</div>}

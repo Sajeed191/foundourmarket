@@ -899,13 +899,6 @@ function WorkflowBody(p: any) {
         <Step id="basic" index={1} title="Basic Information" fieldKey="information"
           desc="Name, brand & category" help="Start with the product name — everything else gets easier once it is set.">
           <div className="space-y-4">
-            {isEmpty && (
-              <StartOptions
-                onPaste={() => setPasteRaw(" ")}
-                onImport={importFromUrl}
-                onScratch={() => focusEditorField("information")}
-              />
-            )}
             <div>
               <Field label="Product Name" value={f.name} onChange={(v: string) => set({ name: v })} />
               <InlineSuggestions items={nameTips} />
@@ -917,12 +910,16 @@ function WorkflowBody(p: any) {
             <CategorySelector value={f.categories} onChange={(v: string[]) => set({ categories: v, category: v[0] ?? "" })} />
             {advanced && <Field label="Tags (comma separated)" value={f.tags} onChange={(v: string) => set({ tags: v })} />}
             <div data-editor-field="description">
-              <p className="mb-1.5 flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                Description <HelpDot text="Short, factual copy. Buyers scan it — three tight paragraphs beat one long one." />
-              </p>
+              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  Description <HelpDot text="Short, factual copy. Buyers scan it — three tight paragraphs beat one long one." />
+                </p>
+                <AiChip label={f.description.trim() ? "Rewrite" : "Generate"} onClick={generateDescription} />
+              </div>
               <RichTextEditor value={f.description} onChange={(v: string) => set({ description: v })} rows={7} />
               <InlineSuggestions items={descTips} />
             </div>
+
             <NextStep label="Next — Images" onClick={() => setStep("images")} />
           </div>
         </Step>

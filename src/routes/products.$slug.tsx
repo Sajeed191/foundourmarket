@@ -200,7 +200,11 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const { product: loadedProduct } = Route.useLoaderData();
   const { product: liveProduct, loading: liveLoading } = useProduct(slug);
-  const product = liveProduct ?? loadedProduct;
+  // Admin live-preview only: merges unsaved editor state over the real
+  // product so the customer page itself is the preview (no second renderer).
+  const draftOverlay = useDraftPreviewOverlay(slug);
+  const product = applyDraftOverlay(liveProduct ?? loadedProduct, draftOverlay);
+
   const loading = !product && liveLoading;
   const { categories: allCats } = useAllCategories();
   const breadcrumbCat = product ? allCats.find((c) => c.slug === product.category) ?? null : null;

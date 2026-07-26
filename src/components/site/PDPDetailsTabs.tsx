@@ -377,23 +377,26 @@ export function PDPDetailsTabs({
     return () => window.removeEventListener("resize", sync);
   }, [current, tabs.length]);
 
+  const specCount = groups.reduce((n, g) => n + g.entries.length, 0);
+
   const hero = (
-    <header className="relative mb-6">
+    <header className="relative mb-5">
       <span aria-hidden className="pdp-watermark">
         Details
       </span>
-      <h2 className="text-[clamp(1.75rem,1.2rem+2.4vw,2.75rem)] font-semibold leading-[1.05] tracking-[-0.035em] text-foreground">
+      <h2 className="text-[28px] font-semibold uppercase leading-[1.05] tracking-[0.06em] text-foreground">
         Product Details
       </h2>
-      <p className="mt-2 max-w-[42ch] text-[13.5px] leading-relaxed text-muted-foreground/75">
-        Everything crafted for informed buying.
+      <p className="mt-2 max-w-[44ch] text-[13px] leading-relaxed text-muted-foreground/70">
+        Complete specifications, features and warranty information.
       </p>
       <div
         aria-hidden
-        className="mt-5 h-px w-full bg-gradient-to-r from-accent/40 via-white/[0.07] to-transparent"
+        className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-white/[0.14] to-transparent"
       />
     </header>
   );
+
 
   if (loading) {
     return (

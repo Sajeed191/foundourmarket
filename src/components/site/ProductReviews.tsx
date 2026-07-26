@@ -513,6 +513,8 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
 
   async function confirmDelete() {
     const id = confirmDeleteId;
+    // Double-submission guard: the first tap latches `deleting`, every later
+    // tap returns immediately, so no duplicate RPC can be issued.
     if (!id || deleting) return;
     setDeleting(true);
     setDeleteError(null);
@@ -528,40 +530,38 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     }
     if (myReview?.id === id && deleteMode !== "admin_soft") setMyReview(null);
     try {
-      const { resilientRpc } = await import("@/lib/infra/supabase-resilient");
-      const fn =
-        deleteMode === "admin_hard" ? "admin_hard_delete_review"
-        : deleteMode === "admin_soft" ? "admin_soft_delete_review"
-        : "hard_delete_own_review";
-      const args =
-        deleteMode === "admin_soft"
-          ? { p_id: id, p_reason: deleteReason.trim() || null }
-          : { p_id: id };
-      const r = await resilientRpc("review.submit", fn, args, `review.${fn}:${id}`);
-      if (!r.ok) throw new Error((r.error as any)?.message ?? "Action failed");
+      const { deleteReview } = await import("@/lib/review-delete");
+      const res = await deleteReview({ id, mode: deleteMode, reason: deleteReason });
+      if (!res.ok) {
+        setReviews(prevList);
+        setMyReview(prevMine);
+        if (deleteMode === "customer") {
+          // Keep the dialog open with the precise reason so the customer can
+          // retry (or knows they must sign in again).
+          setDeleteError(res.message);
+        } else {
+          toast.error(res.message);
+          setConfirmDeleteId(null);
+          setDeleteReason("");
+        }
+        return;
+      }
       toast.success(
-        deleteMode === "admin_hard" ? "Review permanently deleted"
+        res.queued ? "Delete saved — it will complete once you're back online."
+        : res.alreadyGone ? "This review was already deleted."
+        : deleteMode === "admin_hard" ? "Review permanently deleted"
         : deleteMode === "admin_soft" ? "Review deleted (archived)"
         : "Review deleted successfully.",
       );
       setConfirmDeleteId(null);
       setDeleteReason("");
-      if (!r.queued) { await load(); onAggregateChange?.(); }
-    } catch (e) {
-      setReviews(prevList);
-      setMyReview(prevMine);
-      if (deleteMode === "customer") {
-        // Keep the dialog open so the customer can retry.
-        setDeleteError("Couldn't delete your review. Please try again.");
-      } else {
-        toast.error(e instanceof Error ? e.message : "Action failed");
-        setConfirmDeleteId(null);
-        setDeleteReason("");
-      }
+      // Refresh only this section's data + the product aggregate — never the page.
+      if (!res.queued) { await load(); onAggregateChange?.(); }
     } finally {
       setDeleting(false);
     }
   }
+
 
   // Delete dialog a11y: focus the safe action, trap focus, close on Escape.
   useEffect(() => {

@@ -949,7 +949,7 @@ function WorkflowBody(p: any) {
         </Step>
 
         {/* Advanced Tools — everything heavy, on demand */}
-          <AdvancedSettings>
+        <AdvancedSettings>
             {/* SEO */}
             <div data-editor-field="seo" className="space-y-3">
               <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">

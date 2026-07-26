@@ -164,6 +164,60 @@ async function logDiagnostics(ctx: {
   console.groupEnd();
 }
 
+/**
+ * Root cause of "delete review fails after posting":
+ * `hard_delete_own_review` used to `DELETE FROM storage.objects` to clean up
+ * the review's uploaded photos/videos. The platform blocks direct writes to
+ * storage tables (SQLSTATE 42501 — "Direct deletion from storage tables is not
+ * allowed. Use the Storage API instead."), which aborted the whole transaction,
+ * so any review WITH media could never be deleted while media-free reviews
+ * deleted fine.
+ *
+ * The database function now only removes the review row (votes/reports cascade,
+ * rating recalculates). Media cleanup moves here, through the Storage API,
+ * where the owner-scoped bucket policy allows it. Best-effort: a storage
+ * failure must never block the review deletion itself.
+ */
+const REVIEW_BUCKET = "review-media";
+
+function storagePathFromUrl(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw) return null;
+  const marker = `/storage/v1/object/`;
+  const i = raw.indexOf(marker);
+  let path = raw;
+  if (i >= 0) {
+    path = raw.slice(i + marker.length).replace(/^(public|sign)\//, "");
+    if (!path.startsWith(`${REVIEW_BUCKET}/`)) return null;
+    path = path.slice(REVIEW_BUCKET.length + 1);
+  } else if (raw.startsWith("http")) {
+    return null;
+  }
+  path = path.split("?")[0];
+  return path || null;
+}
+
+async function cleanupReviewMedia(reviewId: string): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from("product_reviews")
+      .select("media")
+      .eq("id", reviewId)
+      .maybeSingle();
+    const media = (data as { media?: unknown } | null)?.media;
+    if (!Array.isArray(media) || media.length === 0) return;
+    const paths = media
+      .map((m) => {
+        const item = m as { url?: unknown; src?: unknown; path?: unknown };
+        return storagePathFromUrl(item?.url ?? item?.src ?? item?.path);
+      })
+      .filter((p): p is string => !!p);
+    if (paths.length === 0) return;
+    await supabase.storage.from(REVIEW_BUCKET).remove(paths);
+  } catch {
+    /* best effort — never block the review deletion */
+  }
+}
+
 export async function deleteReview(input: {
   id: string;
   mode: ReviewDeleteMode;

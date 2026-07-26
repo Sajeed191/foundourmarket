@@ -73,9 +73,10 @@ export function LivePreviewShell({
             dragging.current = true;
             document.body.style.userSelect = "none";
           }}
-          className="mx-2 w-1.5 shrink-0 cursor-col-resize rounded-full bg-white/10 transition-colors hover:bg-accent/50"
+          className="mx-2 hidden w-1.5 shrink-0 cursor-col-resize rounded-full bg-white/10 transition-colors hover:bg-accent/50 xl:block"
         />
-        <div className="min-w-0 flex-1">
+        <div className="hidden min-w-0 flex-1 xl:block">
+
           <div className="sticky top-4 h-[calc(100vh-2rem)]">
             <LivePreviewPane slug={slug} overlay={overlay} />
           </div>

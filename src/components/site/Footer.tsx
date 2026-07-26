@@ -240,8 +240,9 @@ export function Footer() {
   return (
     <>
       <BackToTop />
-      <footer className="relative bg-[#0b0b0f] text-white mobile-page-clearance">
-        <div className="mx-auto max-w-6xl px-6 pt-8 pb-6 sm:px-8 md:pt-10">
+      <footer className="relative bg-background text-white mobile-page-clearance border-t border-white/[0.06]">
+        <div className="mx-auto max-w-6xl px-6 pt-12 pb-6 sm:px-8 md:pt-14">
+
           {/* ── 1 · Brand ─────────────────────────────────────── */}
           <section className="flex flex-col items-start gap-1.5">
             <Link

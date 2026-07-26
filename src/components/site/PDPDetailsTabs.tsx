@@ -156,51 +156,57 @@ function Reveal({
   );
 }
 
-/** Category / info card with orange accent line header and item count. */
+/** Title-cases raw spec keys so labels never shout in ALL CAPS. */
+function toTitleCase(raw: string): string {
+  return raw
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((w) =>
+      w.length <= 3 && w === w.toUpperCase() && /[A-Z]/.test(w)
+        ? w
+        : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+    )
+    .join(" ");
+}
+
+/** Category / info card: thin orange accent line, name, small caption. No icon. */
 function DetailCard({
   title,
   subtitle,
-  count,
-  countLabel,
-  icon: Icon,
+  eyebrow,
+  alt = false,
   children,
   className,
 }: {
   title?: string;
   subtitle?: string;
-  count?: number;
-  countLabel?: string;
-  icon?: LucideIcon;
+  eyebrow?: string;
+  alt?: boolean;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("pdp-card pdp-card-tap", className)}>
+    <section className={cn("pdp-card pdp-card-tap", alt && "pdp-card-alt", className)}>
       {title && (
-        <header className="mb-4 flex items-start gap-3">
+        <header className="mb-2.5 flex items-start gap-3">
           <span
             aria-hidden
-            className="mt-[3px] h-10 w-[3px] shrink-0 rounded-full bg-gradient-to-b from-accent via-accent/70 to-accent/5"
+            className="mt-[3px] h-8 w-[2px] shrink-0 rounded-full bg-gradient-to-b from-accent via-accent/60 to-transparent"
           />
           <div className="min-w-0 flex-1">
-            <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
+            {eyebrow && (
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/55">
+                {eyebrow}
+              </p>
+            )}
+            <h3 className="mt-0.5 text-[16px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
               {title}
             </h3>
-            {typeof count === "number" ? (
-              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-accent/80">
-                {count} {countLabel ?? (count === 1 ? "Specification" : "Specifications")}
-              </p>
-            ) : (
-              subtitle && (
-                <p className="mt-1 text-[11.5px] leading-snug text-muted-foreground/70">{subtitle}</p>
-              )
+            {subtitle && (
+              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/60">{subtitle}</p>
             )}
           </div>
-          {Icon && (
-            <span className="grid size-9 shrink-0 place-items-center rounded-2xl border border-accent/20 bg-accent/[0.08] text-accent">
-              <Icon className="size-4" strokeWidth={1.75} />
-            </span>
-          )}
         </header>
       )}
       {children}
@@ -208,7 +214,7 @@ function DetailCard({
   );
 }
 
-/** Uppercase label over a bright value, separated by faded gradient hairlines. */
+/** Sentence-case label over a bright value, separated by faded gradient hairlines. */
 function SpecRows({
   entries,
   observe,
@@ -222,11 +228,11 @@ function SpecRows({
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}
           <Reveal observe={observe} index={i} step={40}>
-            <div className="py-3.5">
-              <dt className="text-[10.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground/60">
-                {k}
+            <div className="py-2.5">
+              <dt className="text-[11px] font-medium leading-tight text-muted-foreground/70">
+                {toTitleCase(k)}
               </dt>
-              <dd className="mt-1.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
+              <dd className="mt-0.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
                 {v}
               </dd>
             </div>
@@ -236,6 +242,7 @@ function SpecRows({
     </dl>
   );
 }
+
 
 function EmptyState({ message }: { message: string }) {
   return (

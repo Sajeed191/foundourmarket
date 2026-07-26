@@ -1776,7 +1776,7 @@ export function ProductQA({
 
                 {/* Answers */}
                 {roots.length > 0 && (
-                  <div className="mt-4 space-y-2.5">
+                  <div className="mt-4 space-y-2.5 pl-3.5 border-l border-white/[0.07]">
                     {[...roots].sort((a, b) => Number(b.is_official) - Number(a.is_official)).map((a) => (
                       <div key={a.id} className="space-y-2">
                         {editing?.id === a.id ? (

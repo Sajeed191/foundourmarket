@@ -285,7 +285,7 @@ export function ProductHeaderStrip({ h, active }: { h: ProductHeaderInfo; active
  * - Detects unsaved changes and warns before leaving.
  */
 export function SectionEditor<T extends Record<string, any>>({
-  slug, sectionKey, title, icon, cols, toForm, toPatch, validate, allow, autosave = true, children,
+  slug, sectionKey, title, icon, cols, toForm, toPatch, validate, allow, autosave = false, children,
 }: {
   slug: string;
   sectionKey: string;
@@ -296,7 +296,7 @@ export function SectionEditor<T extends Record<string, any>>({
   toPatch: (form: T) => Record<string, unknown>;
   validate?: (form: T) => string | null;
   allow?: Role[];
-  /** Debounced 2s autosave of changed fields. Defaults to on. */
+  /** Debounced 2s autosave of changed fields. Off by default — saving is manual. */
   autosave?: boolean;
   children: (form: T, set: (patch: Partial<T>) => void, row: Record<string, any>) => ReactNode;
 }) {
@@ -436,7 +436,11 @@ export function SectionEditor<T extends Record<string, any>>({
       savedFlash.current = setTimeout(() => setJustSaved(false), 2000);
       logActivity("product_updated", "product", row?.id, { slug, section: sectionKey, auto: silent });
       invalidateProducts();
-      if (!silent) toast.success(`${title} saved`);
+      if (!silent) {
+        toast.success("Draft saved", {
+          description: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        });
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [slug, sectionKey, title, row?.id],
@@ -563,10 +567,14 @@ export function SectionEditor<T extends Record<string, any>>({
               <div className="flex items-start gap-3">
                 <RotateCcw className="size-4 text-amber-400 mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">We found an unsaved draft from {relativeAge(recovery.savedAt)} ago.</p>
+                  <p className="text-sm font-medium">Continue editing?</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Unsaved draft found · saved {new Date(recovery.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {" "}({relativeAge(recovery.savedAt)} ago). It stays on this device until you save.
+                  </p>
                   <div className="flex gap-2 mt-2.5">
-                    <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-accent-foreground hover:brightness-110">Restore Draft</button>
-                    <button onClick={discardDraft} className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">Discard Draft</button>
+                    <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-accent-foreground hover:brightness-110">Continue</button>
+                    <button onClick={discardDraft} className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">Discard</button>
                   </div>
                 </div>
               </div>
@@ -586,7 +594,7 @@ export function SectionEditor<T extends Record<string, any>>({
                 <AlertTriangle className="size-3.5 shrink-0" /> {validationError}
               </div>
             )}
-            {children(form, set, row!)}
+            <div onKeyDown={advanceOnEnter}>{children(form, set, row!)}</div>
           </motion.div>
 
           {/* Flush bottom action bar — edge-to-edge, no floating card */}
@@ -603,14 +611,14 @@ export function SectionEditor<T extends Record<string, any>>({
                 <span className={`size-1.5 shrink-0 rounded-full ${statusMeta.dot}`} aria-hidden="true" />
                 <span className="truncate">
                   {saveState === "saving"
-                    ? "Syncing changes…"
+                    ? "Saving…"
                     : dirty
-                      ? `${changedKeys.length} unsaved field${changedKeys.length === 1 ? "" : "s"}`
-                      : "All changes saved"}
+                      ? `Unsaved changes · ${changedKeys.length} field${changedKeys.length === 1 ? "" : "s"}`
+                      : "Draft"}
                 </span>
                 {lastSavedAt && saveState !== "saving" && (
                   <span className="hidden shrink-0 text-muted-foreground sm:inline">
-                    · auto-saved {lastSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    · saved {lastSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 )}
               </span>
@@ -701,9 +709,9 @@ export function SectionEditor<T extends Record<string, any>>({
                 {saveState === "saving" ? (
                   <><Loader2 className="size-4 animate-spin" /> Saving…</>
                 ) : justSaved ? (
-                  <><Check className="size-4" /> Changes Saved</>
+                  <><Check className="size-4" /> Draft Saved</>
                 ) : (
-                  <><Save className="size-4" /> Save Changes{dirty ? ` (${changedKeys.length})` : ""}</>
+                  <><Save className="size-4" /> Save Draft{dirty ? ` (${changedKeys.length})` : ""}</>
                 )}
               </button>
             </div>
@@ -733,6 +741,25 @@ export function SectionEditor<T extends Record<string, any>>({
       )}
     </AdminShell>
   );
+}
+
+/** Enter moves to the next input instead of doing nothing (textareas keep newlines). */
+function advanceOnEnter(e: React.KeyboardEvent<HTMLDivElement>) {
+  if (e.key !== "Enter" || e.shiftKey || e.metaKey || e.ctrlKey) return;
+  const el = e.target as HTMLElement | null;
+  if (!el || el.tagName !== "INPUT") return;
+  const input = el as HTMLInputElement;
+  if (input.type === "checkbox" || input.type === "radio" || input.type === "submit") return;
+  const focusables = Array.from(
+    e.currentTarget.querySelectorAll<HTMLElement>("input, select, textarea, button:not([disabled])"),
+  ).filter((n) => n.offsetParent !== null && n.tabIndex !== -1);
+  const i = focusables.indexOf(input);
+  if (i === -1) return;
+  const next = focusables[i + 1];
+  if (!next) return;
+  e.preventDefault();
+  next.focus();
+  if (next instanceof HTMLInputElement) next.select();
 }
 
 function MenuItem({ icon, label, onClick, disabled, danger }: {

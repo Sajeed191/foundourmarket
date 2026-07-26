@@ -83,7 +83,12 @@ function DetailsPage() {
       })}
       validate={(f) => (f.name.trim() ? null : "Product name is required.")}
     >
-      {(f, set, row) => <CommandCenter slug={slug} f={f} set={set} row={row} />}
+      {(f, set, row) => (
+        <LivePreviewShell slug={slug} overlay={draftOverlayFromForm(f)}>
+          <CommandCenter slug={slug} f={f} set={set} row={row} />
+        </LivePreviewShell>
+      )}
+
     </SectionEditor>
   );
 }

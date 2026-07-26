@@ -7,9 +7,10 @@ import {
   ImagePlus, X, Pin, Sparkles, ShieldCheck, EyeOff, Eye, MessageSquare, Play, Brain,
   Camera, BadgeCheck, PackageCheck, ChevronLeft, ChevronRight, ThumbsUp as Recommend,
   Users, TrendingUp, Check, ArrowRight, ArrowLeft, ZoomIn, Search, Video,
-  LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Bookmark, Truck, CalendarCheck,
+  LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Bookmark, Truck, CalendarCheck, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { haptic, successToast, useFocusReturn } from "@/lib/premium-feedback";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/auth";
@@ -143,6 +144,9 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   // review editor: header, bottom nav, sticky purchase docks and floating
   // widgets recede so only the surface itself is visible.
   useImmersiveChrome(!!confirmDeleteId || !!editingId);
+  // Polish: focus returns to the control that opened each overlay.
+  useFocusReturn(!!confirmDeleteId);
+  useFocusReturn(!!editingId);
   const [deleteReason, setDeleteReason] = useState("");
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -453,7 +457,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     if (!r.ok) { toast.error("Could not post review", { description: (r.error as any)?.message }); return; }
     closeCompose();
     if (!r.queued) {
-      toast.success("Review posted — thank you!");
+      successToast("Review posted — thank you!");
       await load();
       onAggregateChange?.();
     }
@@ -486,7 +490,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
         .eq("user_id", user.id);
       if (mErr) throw new Error(mErr.message);
       setEditingId(null);
-      toast.success("Review updated");
+      successToast("Review updated");
       if (!r.queued) { await load(); onAggregateChange?.(); }
     } catch (e) {
       setReviews(prevList);
@@ -521,6 +525,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     // Double-submission guard: the first tap latches `deleting`, every later
     // tap returns immediately, so no duplicate RPC can be issued.
     if (!id || deleting) return;
+    haptic("light");
     setDeleting(true);
     setDeleteError(null);
     const prevList = reviews;
@@ -1113,10 +1118,10 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                               <input ref={editFileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => onPickEditFiles(e.target.files)} />
                             </div>
                             <div className="flex gap-2">
-                              <button onClick={() => saveEdit(r.id)} disabled={editSaving || editUploading} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs uppercase tracking-widest font-bold bg-accent text-accent-foreground disabled:opacity-50">
-                                {editSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} {editSaving ? "Saving…" : "Update"}
+                              <button onClick={() => saveEdit(r.id)} disabled={editSaving || editUploading} className="fom-btn fom-btn-primary">
+                                {editSaving ? <Loader2 className="size-[18px] animate-spin" /> : <Check className="size-3.5" />} {editSaving ? "Saving review…" : "Update"}
                               </button>
-                              <button onClick={() => setEditingId(null)} disabled={editSaving} className="px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-border">Cancel</button>
+                              <button onClick={() => setEditingId(null)} disabled={editSaving} className="fom-btn fom-btn-ghost">Cancel</button>
                             </div>
                           </div>
                         ) : (() => {
@@ -1686,16 +1691,17 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                 />
               )}
               {deleteError && (
-                <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[12px] leading-snug text-destructive">
-                  {deleteError}
-                </p>
+                <div className="fom-note mt-4">
+                  <AlertTriangle className="mt-[1px] size-3.5 shrink-0 opacity-80" aria-hidden="true" />
+                  <span>{deleteError}</span>
+                </div>
               )}
               <div className="mt-7 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
                 <button
                   ref={keepReviewRef}
                   onClick={() => setConfirmDeleteId(null)}
                   disabled={deleting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                  className="fom-btn fom-btn-ghost hover:border-accent/40 hover:text-accent"
                 >
                   {deleteMode === "customer" ? "Keep Review" : "Cancel"}
                 </button>
@@ -1703,14 +1709,14 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                   onClick={confirmDelete}
                   disabled={deleting}
                   aria-busy={deleting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground shadow-[0_10px_30px_-12px_color-mix(in_oklab,var(--destructive)_60%,transparent)] transition-all hover:brightness-110 disabled:opacity-60"
+                  className="fom-btn fom-btn-danger"
                 >
-                  {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                  {deleting ? "Deleting…" : deleteMode === "admin_hard" ? "Delete permanently" : "Delete Review"}
+                  {deleting ? <Loader2 className="size-[18px] animate-spin" /> : <Trash2 className="size-3.5" />}
+                  {deleting ? "Deleting review…" : deleteMode === "admin_hard" ? "Delete permanently" : "Delete Review"}
                 </button>
               </div>
               <span aria-live="polite" className="sr-only">
-                {deleting ? "Deleting your review" : deleteError ? deleteError : ""}
+                {deleting ? "Deleting your review, please wait" : deleteError ? deleteError : ""}
               </span>
             </motion.div>
           </motion.div>
@@ -1841,28 +1847,28 @@ function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolea
 
 function ReviewsSkeleton() {
   return (
-    <div className="animate-pulse">
+    <div aria-hidden="true">
       <div className="mb-8 grid gap-8 lg:grid-cols-[280px_1fr] rounded-3xl border border-white/10 bg-card/40 p-8">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-16 w-20 rounded-xl bg-white/5" />
-          <div className="h-4 w-32 rounded bg-white/5" />
-          <div className="h-3 w-40 rounded bg-white/5" />
+          <div className="h-16 w-20 rounded-xl fom-skeleton" />
+          <div className="h-4 w-32 rounded fom-skeleton" />
+          <div className="h-3 w-40 rounded fom-skeleton" />
         </div>
         <div className="space-y-3 self-center">
-          {[0, 1, 2, 3, 4].map((i) => <div key={i} className="h-2.5 w-full rounded-full bg-white/5" />)}
+          {[0, 1, 2, 3, 4].map((i) => <div key={i} className="h-2.5 w-full rounded-full fom-skeleton" />)}
         </div>
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="rounded-2xl border border-white/10 bg-card/40 p-6">
             <div className="flex items-center gap-3.5">
-              <div className="size-12 rounded-full bg-white/5" />
-              <div className="space-y-2"><div className="h-3 w-24 rounded bg-white/5" /><div className="h-2.5 w-16 rounded bg-white/5" /></div>
+              <div className="size-12 rounded-full fom-skeleton" />
+              <div className="space-y-2"><div className="h-3 w-24 rounded fom-skeleton" /><div className="h-2.5 w-16 rounded fom-skeleton" /></div>
             </div>
-            <div className="mt-4 h-3 w-32 rounded bg-white/5" />
-            <div className="mt-4 h-4 w-48 rounded bg-white/5" />
-            <div className="mt-2 h-3 w-full rounded bg-white/5" />
-            <div className="mt-1.5 h-3 w-3/4 rounded bg-white/5" />
+            <div className="mt-4 h-3 w-32 rounded fom-skeleton" />
+            <div className="mt-4 h-4 w-48 rounded fom-skeleton" />
+            <div className="mt-2 h-3 w-full rounded fom-skeleton" />
+            <div className="mt-1.5 h-3 w-3/4 rounded fom-skeleton" />
           </div>
         ))}
       </div>
@@ -1981,7 +1987,7 @@ function WriteReviewModal(props: {
 
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-display">Write a review</h3>
-              <button onClick={requestClose} className="grid size-9 place-items-center rounded-full border border-white/10 text-muted-foreground hover:text-foreground">
+              <button onClick={requestClose} className="fom-tap grid place-items-center rounded-full border border-white/10 text-muted-foreground transition hover:text-foreground active:scale-[0.98]">
                 <X className="size-4" />
               </button>
             </div>
@@ -2068,18 +2074,18 @@ function WriteReviewModal(props: {
             <div className="mt-6 flex items-center justify-between gap-3">
               <button
                 onClick={() => (step === 1 ? requestClose() : setStep(step - 1))}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2.5 text-[11px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                className="fom-btn fom-btn-ghost font-mono text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="size-3.5" /> {step === 1 ? "Cancel" : "Back"}
               </button>
               {last ? (
                 <button onClick={onSubmit} disabled={submitting || uploading}
-                  className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 disabled:opacity-50">
-                  {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} {submitting ? "Posting…" : "Submit review"}
+                  className="fom-btn fom-btn-primary px-6">
+                  {submitting ? <Loader2 className="size-[18px] animate-spin" /> : <Check className="size-3.5" />} {submitting ? "Posting review…" : "Submit review"}
                 </button>
               ) : (
                 <button onClick={() => canNext && setStep(step + 1)} disabled={!canNext}
-                  className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-[11px] font-bold uppercase tracking-widest text-accent-foreground hover:brightness-110 disabled:opacity-40">
+                  className="fom-btn fom-btn-primary px-6">
                   Next <ArrowRight className="size-3.5" />
                 </button>
               )}
@@ -2109,13 +2115,13 @@ function WriteReviewModal(props: {
                   <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-center">
                     <button
                       onClick={() => setConfirmDiscard(false)}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all hover:border-accent/40 hover:text-accent"
+                      className="fom-btn fom-btn-ghost hover:border-accent/40 hover:text-accent"
                     >
                       Continue Editing
                     </button>
                     <button
                       onClick={discardAndClose}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110"
+                      className="fom-btn fom-btn-danger"
                     >
                       <Trash2 className="size-3.5" /> Discard Review
                     </button>

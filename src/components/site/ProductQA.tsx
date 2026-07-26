@@ -15,9 +15,10 @@ import {
   Trash2,
   Reply,
   Pencil,
-  
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { haptic, successToast, useFocusReturn } from "@/lib/premium-feedback";
 import { useModalScrollLock } from "@/lib/use-scroll-lock";
 import { useImmersiveChrome } from "@/lib/use-immersive-chrome";
 
@@ -393,7 +394,7 @@ function QuestionModal({
           .update({ question: text, is_anonymous: false })
           .eq("id", initial.id);
         if (error) throw error;
-        toast.success("Question updated successfully.");
+        successToast("Question updated successfully.");
         onSubmitted();
         onClose();
       } else {
@@ -625,16 +626,9 @@ function QuestionModal({
 
           {/* v6.7 — inline submission error; typed content is preserved. */}
           {errorMsg && (
-            <div
-              className="mt-3 rounded-2xl px-4 py-3 text-[13px] leading-snug"
-              style={{
-                border: "1px solid rgba(239,68,68,0.28)",
-                background: "rgba(239,68,68,0.06)",
-                color: "#fca5a5",
-              }}
-              role="alert"
-            >
-              {errorMsg}
+            <div className="fom-note mt-3" role="alert" aria-live="polite">
+              <AlertTriangle className="mt-[1px] size-3.5 shrink-0 opacity-80" aria-hidden="true" />
+              <span>{errorMsg}</span>
             </div>
           )}
         </div>
@@ -678,14 +672,14 @@ function QuestionModal({
               <span
                 className="inline-block rounded-full animate-spin"
                 style={{
-                  width: 14,
-                  height: 14,
+                  width: 18,
+                  height: 18,
                   border: "2px solid rgba(5,6,8,0.35)",
                   borderTopColor: "#050608",
                 }}
               />
             )}
-            {busy ? "Submitting…" : isEdit ? "Save Changes" : user ? "Submit Question" : "Sign in to submit"}
+            {busy ? (isEdit ? "Saving question…" : "Submitting question…") : isEdit ? "Save Changes" : user ? "Submit Question" : "Sign in to submit"}
           </button>
         </div>
       </form>
@@ -737,6 +731,7 @@ function QuestionModalShell({
   // Scroll lock + instant, jump-free restore lives in the shared hook.
   useModalScrollLock(open, "data-qa-modal-open");
   useImmersiveChrome(open);
+  useFocusReturn(open);
 
   useEffect(() => {
     if (!open) return;
@@ -1180,6 +1175,29 @@ function AnswerReveal({ animate, children }: { animate: boolean; children: React
 
 const PAGE_SIZE = 8;
 
+/** Premium skeleton placeholder for the questions list (no spinner-only screens). */
+function QASkeleton() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="rounded-[20px] border border-white/[0.06] bg-white/[0.02] p-4">
+          <div className="flex items-center gap-3">
+            <div className="fom-skeleton size-9 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="fom-skeleton h-3 w-28" />
+              <div className="fom-skeleton h-2.5 w-16" />
+            </div>
+            <div className="fom-skeleton h-6 w-24 rounded-full" />
+          </div>
+          <div className="fom-skeleton mt-4 h-3.5 w-3/4" />
+          <div className="fom-skeleton mt-2 h-3 w-full" />
+          <div className="fom-skeleton mt-1.5 h-3 w-2/3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ProductQA({
   productSlug,
   hideHeader = false,
@@ -1257,6 +1275,10 @@ export function ProductQA({
   // Q&A v7.3 — immersive mode while answering / editing an answer or reply, so
   // the composer reads as its own premium screen.
   useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen || !!confirmDeleteQ || !!confirmDeleteA);
+  // Polish: focus returns to the control that opened each overlay.
+  useFocusReturn(!!confirmDeleteQ);
+  useFocusReturn(!!confirmDeleteA);
+  useFocusReturn(!!editing);
 
   // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
   // answers get the smooth reveal animation.
@@ -1397,7 +1419,7 @@ export function ProductQA({
       setDraft("");
       setAnswerOpen(null);
       setReplyOpen(null);
-      toast.success("Answer posted");
+      successToast("Answer posted");
       void load();
     } catch (err) {
       const { logQaDiagnostics } = await import("@/lib/qa-diagnostics");
@@ -1451,6 +1473,7 @@ export function ProductQA({
   async function performDeleteAnswer() {
     const target = confirmDeleteA;
     if (!target || deletingA) return; // double-tap guard
+    haptic("light");
     setDeletingA(true);
     setDeleteAError(null);
     const startedAt = Date.now();
@@ -1462,7 +1485,7 @@ export function ProductQA({
       if (!sess.session) throw new Error("Your session expired. Please sign in again.");
       const { error } = await supabase.from("product_answers").delete().eq("id", target.id);
       if (error) throw error;
-      toast.success(target.isReply ? "Reply deleted" : "Answer deleted");
+      successToast(target.isReply ? "Reply deleted" : "Answer deleted");
       setConfirmDeleteA(null);
       void load();
     } catch (err) {
@@ -1537,6 +1560,7 @@ export function ProductQA({
   async function performDeleteQuestion() {
     const q = confirmDeleteQ;
     if (!q || deletingQ) return; // double-submission guard
+    haptic("light");
     setDeletingQ(true);
     setDeleteQError(null);
     const startedAt = Date.now();
@@ -1553,7 +1577,7 @@ export function ProductQA({
         .delete()
         .eq("id", q.id);
       if (error) throw error;
-      toast.success("Question deleted");
+      successToast("Question deleted");
       setConfirmDeleteQ(null);
     } catch (err) {
       const { logQaDiagnostics } = await import("@/lib/qa-diagnostics");
@@ -1659,7 +1683,7 @@ export function ProductQA({
 
       {/* List */}
       {loading ? (
-        <div className="py-12 grid place-items-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
+        <QASkeleton />
       ) : items.length === 0 ? (
         hideEmptyState ? null : (
           <div className="py-16 px-6 text-center rounded-[20px] border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent">
@@ -1672,7 +1696,13 @@ export function ProductQA({
           </div>
         )
       ) : filtered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">No questions match your filters.</p>
+        <div className="py-14 px-6 text-center rounded-[20px] border border-white/[0.06] bg-white/[0.02]">
+          <div className="mx-auto mb-4 size-12 rounded-2xl grid place-items-center border border-white/10 text-muted-foreground">
+            <Search className="size-5" strokeWidth={1.5} />
+          </div>
+          <p className="text-[15px] font-display font-semibold">No matching questions</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">Try a different search term or sort order.</p>
+        </div>
 
       ) : (
         <ul className="space-y-3">
@@ -1755,8 +1785,8 @@ export function ProductQA({
                               className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent resize-none"
                             />
                             <div className="flex gap-2 mt-2">
-                              <button onClick={saveEdit} disabled={savingA} aria-busy={savingA} className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-60">{savingA && <Loader2 className="size-3 animate-spin" />}{savingA ? "Saving…" : "Save"}</button>
-                              <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition">Cancel</button>
+                              <button onClick={saveEdit} disabled={savingA} aria-busy={savingA} className="fom-btn fom-btn-primary">{savingA && <Loader2 className="size-[18px] animate-spin" />}{savingA ? "Saving answer…" : "Save"}</button>
+                              <button onClick={() => setEditing(null)} className="fom-btn fom-btn-ghost text-muted-foreground hover:text-foreground">Cancel</button>
                             </div>
                           </div>
                         ) : (
@@ -1796,7 +1826,7 @@ export function ProductQA({
                               placeholder="Write a reply…"
                               className="flex-1 bg-background border border-border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-accent"
                             />
-                            <button onClick={() => postAnswer(q.id, a.id)} disabled={!draft.trim() || postingA} aria-busy={postingA} className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-bold px-4 rounded-full text-[11px] uppercase tracking-widest hover:brightness-110 transition disabled:opacity-50">{postingA && <Loader2 className="size-3 animate-spin" />}{postingA ? "Posting…" : "Reply"}</button>
+                            <button onClick={() => postAnswer(q.id, a.id)} disabled={!draft.trim() || postingA} aria-busy={postingA} className="fom-btn fom-btn-primary">{postingA && <Loader2 className="size-[18px] animate-spin" />}{postingA ? "Posting reply…" : "Reply"}</button>
                             <button onClick={() => { setReplyOpen(null); setDraft(""); }} className="px-3 rounded-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition">Cancel</button>
                           </div>
                         )}
@@ -1912,13 +1942,14 @@ export function ProductQA({
               Your question and its answers will be permanently removed from this product. This action cannot be undone.
             </p>
             {deleteQError && (
-              <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[12px] leading-snug text-destructive">{deleteQError}</p>
+              <div className="fom-note mt-4"><AlertTriangle className="mt-[1px] size-3.5 shrink-0 opacity-80" aria-hidden="true" /><span>{deleteQError}</span></div>
             )}
             <div className="mt-7 flex flex-col-reverse gap-2.5">
               <button
+                autoFocus
                 onClick={() => setConfirmDeleteQ(null)}
                 disabled={deletingQ}
-                className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-3 text-[11px] font-bold uppercase tracking-widest transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                className="fom-btn fom-btn-ghost hover:border-accent/40 hover:text-accent"
               >
                 Keep Question
               </button>
@@ -1926,10 +1957,10 @@ export function ProductQA({
                 onClick={performDeleteQuestion}
                 disabled={deletingQ}
                 aria-busy={deletingQ}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110 disabled:opacity-60"
+                className="fom-btn fom-btn-danger"
               >
-                {deletingQ ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                {deletingQ ? "Deleting…" : "Delete Question"}
+                {deletingQ ? <Loader2 className="size-[18px] animate-spin" /> : <Trash2 className="size-3.5" />}
+                {deletingQ ? "Deleting question…" : "Delete Question"}
               </button>
             </div>
           </div>
@@ -1956,13 +1987,14 @@ export function ProductQA({
               This will be permanently removed from the question. This action cannot be undone.
             </p>
             {deleteAError && (
-              <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[12px] leading-snug text-destructive">{deleteAError}</p>
+              <div className="fom-note mt-4"><AlertTriangle className="mt-[1px] size-3.5 shrink-0 opacity-80" aria-hidden="true" /><span>{deleteAError}</span></div>
             )}
             <div className="mt-7 flex flex-col-reverse gap-2.5">
               <button
+                autoFocus
                 onClick={() => setConfirmDeleteA(null)}
                 disabled={deletingA}
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 px-5 py-3 text-[11px] font-bold uppercase tracking-widest transition-all hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                className="fom-btn fom-btn-ghost hover:border-accent/40 hover:text-accent"
               >
                 Keep {confirmDeleteA.isReply ? "Reply" : "Answer"}
               </button>
@@ -1970,13 +2002,13 @@ export function ProductQA({
                 onClick={performDeleteAnswer}
                 disabled={deletingA}
                 aria-busy={deletingA}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-destructive px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-destructive-foreground transition-all hover:brightness-110 disabled:opacity-60"
+                className="fom-btn fom-btn-danger"
               >
-                {deletingA ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                {deletingA ? "Deleting…" : confirmDeleteA.isReply ? "Delete Reply" : "Delete Answer"}
+                {deletingA ? <Loader2 className="size-[18px] animate-spin" /> : <Trash2 className="size-3.5" />}
+                {deletingA ? (confirmDeleteA.isReply ? "Deleting reply…" : "Deleting answer…") : confirmDeleteA.isReply ? "Delete Reply" : "Delete Answer"}
               </button>
             </div>
-            <span aria-live="polite" className="sr-only">{deletingA ? "Deleting" : deleteAError ?? ""}</span>
+            <span aria-live="polite" className="sr-only">{deletingA ? (confirmDeleteA.isReply ? "Deleting reply, please wait" : "Deleting answer, please wait") : deleteAError ?? ""}</span>
           </div>
         </div>
       )}

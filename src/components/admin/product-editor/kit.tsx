@@ -316,6 +316,17 @@ export function SectionEditor<T extends Record<string, any>>({
   const [confirmOpen, setConfirmOpen] = useState(false);
   formRef.current = form;
 
+  // Diagnostics only: time from editor mount to the first interactive form.
+  const mountedAt = useRef<number>(typeof performance !== "undefined" ? performance.now() : 0);
+  const startupLogged = useRef(false);
+  useEffect(() => {
+    if (!form || startupLogged.current) return;
+    startupLogged.current = true;
+    recordMetric("editor-startup", performance.now() - mountedAt.current, sectionKey);
+  }, [form, sectionKey]);
+
+
+
   // Seed isolated state once from the loaded row, and surface any newer local draft.
   useEffect(() => {
     if (!row) return;

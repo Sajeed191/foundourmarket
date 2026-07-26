@@ -703,18 +703,46 @@ function CommandCenter({ slug, f, set, row }: {
   ];
 
 
+  const specCount = f.specs.filter((s) => s.k.trim()).length;
   const stepStates: StepState[] = [
-    { id: "basic", done: !!f.name.trim() && f.categories.length > 0 },
-    { id: "images", done: imageCount > 0 },
-    { id: "pricing", done: sellPrice > 0 },
+    {
+      id: "basic",
+      done: !!f.name.trim() && f.categories.length > 0,
+      level: f.name.trim() && f.categories.length > 0 ? "complete" : f.name.trim() ? "recommended" : "missing",
+    },
+    { id: "images", done: imageCount > 0, level: imageCount > 0 ? "complete" : "missing" },
+    { id: "pricing", done: sellPrice > 0, level: sellPrice > 0 ? "complete" : "missing" },
     {
       id: "specs",
-      done: f.specs.filter((s) => s.k.trim()).length >= 3,
-      note: `${Math.max(0, 3 - f.specs.filter((s) => s.k.trim()).length)} left`,
+      done: specCount >= 3,
+      level: specCount >= 3 ? "complete" : specCount > 0 ? "recommended" : "missing",
     },
-    { id: "inventory", done: stock > 0 },
-    { id: "publish", done: status === "published" },
+    { id: "inventory", done: stock > 0, level: stock > 0 ? "complete" : "missing" },
+    {
+      id: "publish",
+      done: status === "published",
+      level: status === "published" ? "complete" : score >= 60 ? "recommended" : "missing",
+    },
   ];
+
+  // Ctrl/Cmd + Enter — publish from anywhere in the editor.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        void setWorkflowStatus(status === "published" ? "draft" : "published");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setWorkflowStatus, status]);
+
+  // Publish confidence — a single prioritized suggestion, never a raw list.
+  const topIssue = [...issues].sort((a, b) => {
+    const w = { high: 0, medium: 1, low: 2 } as const;
+    return w[a.impact] - w[b.impact];
+  })[0];
+
 
   return (
     <GuidedWorkflow>

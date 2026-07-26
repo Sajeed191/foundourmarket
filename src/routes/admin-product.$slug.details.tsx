@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  normalizeStatus, logEvent, saveVersion, type WorkflowInput, type WorkflowStatus,
+} from "@/lib/publishing-workflow";
+
+const PublishingCenter = lazy(() =>
+  import("@/components/admin/product-editor/PublishingCenter").then((m) => ({ default: m.PublishingCenter })),
+);
+
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,
   ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff, Eye,
@@ -452,16 +460,9 @@ function CommandCenter({ slug, f, set, row }: {
     : score >= 40 ? { t: "text-amber-400", b: "bg-amber-500", r: "stroke-amber-400" }
     : { t: "text-destructive", b: "bg-destructive", r: "stroke-destructive" };
 
-  async function togglePublish() {
-    const next = status === "published" ? "draft" : "published";
-    setPubBusy(true);
-    const { error } = await supabase.from("products").update({ status: next, updated_at: new Date().toISOString() }).eq("slug", slug);
-    setPubBusy(false);
-    if (error) { toast.error("Update failed", { description: error.message }); return; }
-    setStatus(next);
-    await invalidateProducts();
-    toast.success(next === "published" ? "Product published" : "Moved to draft");
-  }
+  // Status changes flow through the Publishing Center (setWorkflowStatus).
+
+
 
   function generateSeo() {
     const title = f.seo_title.trim() || `${f.name.trim()}${f.brand.trim() ? ` by ${f.brand.trim()}` : ""}`.slice(0, 60);
@@ -475,6 +476,76 @@ function CommandCenter({ slug, f, set, row }: {
   const canonical = `https://foundourmarket.com/products/${slug}`;
   const seoOk = !!(f.seo_title.trim() && f.seo_description.trim() && f.keywords.trim());
   const seoScore = [f.seo_title, f.seo_description, f.keywords].filter((x) => x.trim()).length;
+
+  /* --------------- Enterprise Workflow & Publishing (7.0) --------------- */
+
+  const warranty = f.specs.find((s) => /warrant/i.test(s.k))?.v ?? "";
+
+  const workflowInput: WorkflowInput = {
+    slug,
+    name: f.name, brand: f.brand,
+    category: f.category, categories: f.categories,
+    description: f.description, features: f.features,
+    specCount: f.specs.filter((s) => s.k.trim()).length,
+    seoTitle: f.seo_title, seoDescription: f.seo_description, keywords: f.keywords,
+    videoUrl: f.video_url,
+    imageCount, heroImage: primaryUrl,
+    price: sellPrice, stock, sku: String(row.sku ?? ""),
+    warranty,
+    variantCount: Number(row.variant_count ?? 0),
+    variantIssues: 0,
+    status: normalizeStatus(status),
+  };
+
+  /** Flat, comparable snapshot of everything this editor owns. */
+  const snapshot = useMemo<Record<string, unknown>>(() => ({
+    name: f.name, brand: f.brand, product_type: f.product_type,
+    category: f.category, categories: f.categories, tags: f.tags,
+    description: f.description, features: f.features,
+    specs: f.specs, attrs: f.attrs, video_url: f.video_url,
+    seo_title: f.seo_title, seo_description: f.seo_description, keywords: f.keywords,
+    rating: f.rating, reviews: f.reviews,
+  }), [f]);
+
+  // Auto-snapshot: first mount + whenever the draft settles after edits.
+  const snapRef = useRef(snapshot);
+  snapRef.current = snapshot;
+  useEffect(() => {
+    saveVersion(slug, "draft", "Draft opened", snapRef.current);
+    logEvent(slug, "Editor opened");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
+  const setWorkflowStatus = useCallback(async (next: WorkflowStatus) => {
+    setPubBusy(true);
+    const { error } = await supabase
+      .from("products")
+      .update({ status: next, updated_at: new Date().toISOString() })
+      .eq("slug", slug);
+    setPubBusy(false);
+    if (error) { toast.error("Update failed", { description: error.message }); return; }
+    setStatus(next);
+    await invalidateProducts();
+    if (next === "published") saveVersion(slug, "publish", "Published snapshot", snapRef.current);
+    logEvent(slug, `Status → ${next.replace(/_/g, " ")}`);
+    toast.success(`Moved to ${next.replace(/_/g, " ")}`);
+  }, [slug]);
+
+  const jumpToTarget = useCallback((target: string) => {
+    if (target === "route:pricing") { navigate({ to: "/admin-product/$slug/pricing", params: { slug } }); return; }
+    if (target === "route:inventory") { navigate({ to: "/admin-product/$slug/inventory", params: { slug } }); return; }
+    if (target === "route:variants") { navigate({ to: "/admin-product/$slug/variants", params: { slug } }); return; }
+    focusEditorField(target);
+  }, [navigate, slug]);
+
+
+  const restoreSnapshot = useCallback((data: Record<string, unknown>) => {
+    saveVersion(slug, "manual", "Before restore", snapRef.current);
+    set(data as Partial<Form>);
+    logEvent(slug, "Version restored");
+    toast.success("Version restored into the draft", { description: "Nothing is saved until you save." });
+  }, [set, slug]);
+
 
   /* ------------------------- AI Copilot & automation ------------------------- */
 
@@ -556,9 +627,52 @@ function CommandCenter({ slug, f, set, row }: {
     },
   );
 
+  const openPublishingPanel = useCallback((p: "checklist" | "timeline" | "preview") => {
+    focusEditorField("publishing");
+    window.dispatchEvent(new CustomEvent("editor-publishing-panel", { detail: p }));
+  }, []);
+
+  function generateReport() {
+    const lines = [
+      `# ${f.name || slug}`,
+      `Status: ${status.replace(/_/g, " ")}`,
+      `Price: ${sellPrice > 0 ? `₹${sellPrice}` : "not set"} · Stock: ${stock} · Images: ${imageCount}`,
+      `Specs: ${f.specs.filter((s) => s.k.trim()).length} · Features: ${f.features.length}`,
+      `SEO: ${seoOk ? "complete" : `${seoScore}/3 fields`}`,
+      "",
+      "## Outstanding",
+      ...(warnings.length ? warnings.map((w) => `- ${RULES[w.key]?.title ?? w.key}`) : ["- Nothing outstanding"]),
+    ];
+    void navigator.clipboard?.writeText(lines.join("\n"));
+    toast.success("Product report copied to clipboard");
+  }
+
+  // Ctrl/Cmd + Shift + P — publish from anywhere in the editor.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        void setWorkflowStatus(status === "published" ? "draft" : "published");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setWorkflowStatus, status]);
+
   const commands: EditorCommand[] = [
-    { id: "publish", group: "Publish", icon: Send, label: status === "published" ? "Unpublish product" : "Publish product", run: togglePublish },
+    { id: "publish", group: "Publish", icon: Send, label: status === "published" ? "Unpublish product" : "Publish product", hint: "⇧⌘P", run: () => void setWorkflowStatus(status === "published" ? "draft" : "published") },
+    { id: "draft", group: "Publish", icon: FileText, label: "Save as draft", run: () => void setWorkflowStatus("draft") },
+    { id: "review", group: "Publish", icon: CheckCircle2, label: "Mark ready for review", run: () => void setWorkflowStatus("ready_for_review") },
+    { id: "archive", group: "Publish", icon: EyeOff, label: "Archive product", run: () => void setWorkflowStatus("archived") },
+    { id: "checklist", group: "Workflow", icon: ListChecks, label: "Open pre-publish checklist", run: () => openPublishingPanel("checklist") },
+    { id: "timeline", group: "Workflow", icon: Activity, label: "Open timeline & version history", run: () => openPublishingPanel("timeline") },
+    { id: "compare", group: "Workflow", icon: Layers, label: "Compare versions", run: () => openPublishingPanel("timeline") },
+    { id: "restore", group: "Workflow", icon: Activity, label: "Restore a version", run: () => openPublishingPanel("timeline") },
+    { id: "pv-mobile", group: "Workflow", icon: Eye, label: "Publishing preview — mobile & desktop", run: () => openPublishingPanel("preview") },
+    { id: "j-validation", group: "Workflow", icon: AlertTriangle, label: "Jump to validation", run: () => focusEditorField("health") },
+    { id: "report", group: "Workflow", icon: FileText, label: "Generate product report", run: generateReport },
     { id: "preview", group: "Publish", icon: Eye, label: "Open customer preview", run: () => navigate({ to: "/admin-product/$slug/preview", params: { slug } }) },
+
     { id: "gen-desc", group: "Generate", icon: Sparkles, label: "Generate description sections", run: generateDescription },
     { id: "gen-seo", group: "Generate", icon: Search, label: "Generate SEO title & meta", run: generateSeo },
     { id: "gen-feat", group: "Generate", icon: ListChecks, label: "Suggest features", run: generateFeatures },
@@ -612,13 +726,24 @@ function CommandCenter({ slug, f, set, row }: {
           <SummaryStat label="Price" value={sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "—"} />
           <SummaryStat label="Images" value={String(imageCount)} />
         </div>
-        <div className="mt-2 flex items-center gap-2">
-          <button type="button" onClick={togglePublish} disabled={pubBusy}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-[0.97] disabled:opacity-50 ${status === "published" ? "border border-white/15 text-muted-foreground hover:text-foreground" : "bg-accent text-accent-foreground hover:brightness-110"}`}>
-            {status === "published" ? <><EyeOff className="size-3.5" /> Unpublish</> : <><Send className="size-3.5" /> Publish</>}
-          </button>
-        </div>
       </div>
+
+      {/* Publishing Center — status, checklist, score, history, previews */}
+      <Suspense fallback={<div className="h-24 rounded-2xl border border-white/10 bg-white/[0.02]" />}>
+        <PublishingCenter
+          slug={slug}
+          input={workflowInput}
+          overlay={draftOverlayFromForm(f)}
+          images={primaryUrl ? [primaryUrl] : []}
+          snapshot={snapshot}
+          busy={pubBusy}
+          lastModified={row.updated_at ?? null}
+          onSetStatus={setWorkflowStatus}
+          onJump={jumpToTarget}
+          onRestore={restoreSnapshot}
+        />
+      </Suspense>
+
 
 
       {/* Media Center — images first, then video, with live health checks */}

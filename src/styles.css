@@ -3946,14 +3946,16 @@ body[data-immersive-ui] [data-scroll-top] {
 }
 .pdp-card-tap:active {
   transform: scale(0.985);
-  border-color: color-mix(in oklab, var(--accent) 38%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 34%, transparent);
   box-shadow:
-    0 26px 60px -30px rgba(0, 0, 0, 0.95),
-    0 0 26px -18px color-mix(in oklab, var(--accent) 46%, transparent),
+    0 27px 62px -30px rgba(0, 0, 0, 0.96),
+    0 0 24px -18px color-mix(in oklab, var(--accent) 44%, transparent),
     0 1px 0 0 color-mix(in oklab, #ffffff 8%, transparent) inset;
 }
 
-/* Left accent line — 3px, 36px, rounded, gradient + soft glow. */
+/* Left accent line — 3px × 36px, rounded, gradient + near-invisible glow.
+   Sits at the top of the card content column so its left edge shares the
+   exact vertical guide as the eyebrow, title, labels, values and dividers. */
 .pdp-accent-line {
   width: 3px;
   height: 36px;
@@ -3965,19 +3967,20 @@ body[data-immersive-ui] [data-scroll-top] {
     color-mix(in oklab, var(--accent) 70%, transparent) 62%,
     transparent
   );
-  box-shadow: 0 0 12px -2px color-mix(in oklab, var(--accent) 70%, transparent);
+  box-shadow: 0 0 10px 1px color-mix(in oklab, var(--accent) 4.5%, transparent);
 }
 
-/* Row divider: gradient hairline, brightest at centre, invisible at the edges. */
+/* Row divider: gradient hairline, brightest at centre, invisible at the edges.
+   Flush with the content grid (no inset) and ~25% quieter than before. */
 .pdp-row-divider {
   height: 1px;
-  margin-inline: 2px;
+  margin-inline: 0;
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in oklab, var(--foreground) 4%, transparent) 18%,
-    color-mix(in oklab, var(--foreground) 11%, transparent) 50%,
-    color-mix(in oklab, var(--foreground) 4%, transparent) 82%,
+    color-mix(in oklab, var(--foreground) 3%, transparent) 18%,
+    color-mix(in oklab, var(--foreground) 8%, transparent) 50%,
+    color-mix(in oklab, var(--foreground) 3%, transparent) 82%,
     transparent
   );
 }
@@ -3986,7 +3989,7 @@ body[data-immersive-ui] [data-scroll-top] {
 .pdp-spec-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
+  gap: 5px;
   padding-block: 8px;
 }
 @media (min-width: 480px) {

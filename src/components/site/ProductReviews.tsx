@@ -783,7 +783,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
               </div>
 
               </div>
-              <div className="space-y-2 self-center">
+              <div className="space-y-2.5 self-center">
                 {[5, 4, 3, 2, 1].map((star, idx) => {
                   const count = buckets[star - 1];
                   const pct = published.length ? (count / published.length) * 100 : 0;
@@ -791,25 +791,28 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                     <button
                       key={star}
                       onClick={() => setFilter(String(star) as ReviewFilter)}
-                      className="flex w-full items-center gap-3 text-xs group"
+                      aria-label={`Show ${star} star reviews (${count})`}
+                      className="flex w-full items-center gap-3 text-[12px] group py-1"
                     >
-                      <span className="flex w-8 items-center gap-1 font-mono text-muted-foreground">
+                      <span className="flex w-8 items-center gap-1 font-medium text-muted-foreground">
                         {star}<Star className="size-3 fill-accent/70 text-accent/70" />
                       </span>
-                      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+                      <span className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
                         <motion.span
-                          className="block h-full rounded-full bg-accent/80 group-hover:bg-accent"
+                          className="fom-meter"
                           initial={{ width: 0 }}
                           whileInView={{ width: `${pct}%` }}
                           viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: idx * 0.05, ease: "easeOut" }}
+                          transition={{ duration: 0.55, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
                         />
                       </span>
-                      <span className="w-10 text-right font-mono text-muted-foreground tabular-nums">{Math.round(pct)}%</span>
+                      <span className="w-9 text-right text-muted-foreground tabular-nums">{Math.round(pct)}%</span>
+                      <span className="w-8 text-right text-[11px] text-muted-foreground/60 tabular-nums">{count}</span>
                     </button>
                   );
                 })}
               </div>
+
             </motion.div>
           )}
 

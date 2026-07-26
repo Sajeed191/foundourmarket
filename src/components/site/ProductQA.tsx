@@ -1696,7 +1696,13 @@ export function ProductQA({
           </div>
         )
       ) : filtered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">No questions match your filters.</p>
+        <div className="py-14 px-6 text-center rounded-[20px] border border-white/[0.06] bg-white/[0.02]">
+          <div className="mx-auto mb-4 size-12 rounded-2xl grid place-items-center border border-white/10 text-muted-foreground">
+            <Search className="size-5" strokeWidth={1.5} />
+          </div>
+          <p className="text-[15px] font-display font-semibold">No matching questions</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">Try a different search term or sort order.</p>
+        </div>
 
       ) : (
         <ul className="space-y-3">
@@ -1940,6 +1946,7 @@ export function ProductQA({
             )}
             <div className="mt-7 flex flex-col-reverse gap-2.5">
               <button
+                autoFocus
                 onClick={() => setConfirmDeleteQ(null)}
                 disabled={deletingQ}
                 className="fom-btn fom-btn-ghost hover:border-accent/40 hover:text-accent"
@@ -1984,6 +1991,7 @@ export function ProductQA({
             )}
             <div className="mt-7 flex flex-col-reverse gap-2.5">
               <button
+                autoFocus
                 onClick={() => setConfirmDeleteA(null)}
                 disabled={deletingA}
                 className="fom-btn fom-btn-ghost hover:border-accent/40 hover:text-accent"

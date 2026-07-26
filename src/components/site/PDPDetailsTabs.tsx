@@ -207,21 +207,19 @@ function DetailCard({
       }
     >
       {title && (
-        <header className="mb-2.5 flex items-start gap-3">
-          <span aria-hidden className="pdp-accent-line mt-[3px]" />
-          <div className="min-w-0 flex-1">
-            {eyebrow && (
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/50">
-                {eyebrow}
-              </p>
-            )}
-            <h3 className="mt-[11px] text-[22px] font-bold leading-[1.15] tracking-[-0.02em] text-foreground">
-              {title}
-            </h3>
-            {subtitle && (
-              <p className="mt-1 text-[11px] leading-snug text-muted-foreground/55">{subtitle}</p>
-            )}
-          </div>
+        <header className="mb-3 flex flex-col items-start">
+          <span aria-hidden className="pdp-accent-line" />
+          {eyebrow && (
+            <p className="mt-3 text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-muted-foreground/[0.48]">
+              {eyebrow}
+            </p>
+          )}
+          <h3 className="mt-2.5 text-[20px] font-bold leading-[1.15] tracking-[-0.02em] text-foreground">
+            {title}
+          </h3>
+          {subtitle && (
+            <p className="mt-[7px] text-[11px] leading-snug text-muted-foreground/55">{subtitle}</p>
+          )}
         </header>
       )}
       {children}
@@ -238,7 +236,7 @@ function SpecRows({
   observe: (node: HTMLElement | null) => void;
 }) {
   return (
-    <dl className="mt-0.5">
+    <dl className="mt-0">
       {entries.map(([k, v], i) => (
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}
@@ -467,7 +465,8 @@ export function PDPDetailsTabs({
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50",
                     isActive
                       ? "text-accent-foreground"
-                      : "border border-white/[0.06] bg-white/[0.02] text-muted-foreground/80 backdrop-blur-xl hover:text-foreground/90",
+                      : "border border-white/[0.09] bg-white/[0.028] text-muted-foreground/90 backdrop-blur-xl hover:text-foreground",
+
                   )}
                 >
                   {t.label}
@@ -490,7 +489,7 @@ export function PDPDetailsTabs({
             <span aria-hidden className="pdp-panel-watermark">
               Specs
             </span>
-            <p className="-mt-1 text-[11.5px] leading-none text-muted-foreground/60">
+            <p className="-mt-1 mb-[10px] text-[11.5px] leading-none text-muted-foreground/60">
               {specCount} {specCount === 1 ? "specification" : "specifications"}
               <span className="mx-1.5 text-muted-foreground/35">•</span>
               {groups.length} {groups.length === 1 ? "category" : "categories"}

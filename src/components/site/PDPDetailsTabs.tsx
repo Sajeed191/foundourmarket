@@ -236,7 +236,7 @@ function SpecRows({
   observe: (node: HTMLElement | null) => void;
 }) {
   return (
-    <dl className="mt-0.5">
+    <dl className="mt-0">
       {entries.map(([k, v], i) => (
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}

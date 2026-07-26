@@ -536,9 +536,12 @@ function CommandCenter({ slug, f, set, row }: {
 
 
       {/* Product information */}
-      <Collapsible title="Product Information" icon={<Tag className="size-4" />} desc="Name, brand, type, category & tags">
+      <Collapsible fieldKey="information" title="Product Information" icon={<Tag className="size-4" />} desc="Name, brand, type, category & tags">
         <div className="space-y-3">
-          <Field label="Product Name" value={f.name} onChange={(v) => set({ name: v })} />
+          <div>
+            <Field label="Product Name" value={f.name} onChange={(v) => set({ name: v })} />
+            <InlineSuggestions items={nameTips} />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Brand" value={f.brand} onChange={(v) => set({ brand: v })} />
             <Field label="Product Type" value={f.product_type} onChange={(v) => set({ product_type: v })} />
@@ -549,17 +552,19 @@ function CommandCenter({ slug, f, set, row }: {
       </Collapsible>
 
       {/* Description */}
-      <Collapsible title="Description" icon={<FileText className="size-4" />} desc="Rich text — headings, bold & lists">
+      <Collapsible fieldKey="description" title="Description" icon={<FileText className="size-4" />} desc="Rich text — headings, bold & lists">
         <RichTextEditor value={f.description} onChange={(v) => set({ description: v })} rows={7} />
+        <InlineSuggestions items={descTips} />
       </Collapsible>
 
       {/* Features */}
-      <Collapsible title="Features" icon={<ListChecks className="size-4" />} desc="Key selling points">
+      <Collapsible fieldKey="features" title="Features" icon={<ListChecks className="size-4" />} desc="Key selling points">
         <FeaturesBuilder value={f.features} onChange={(v) => set({ features: v })} />
+        <InlineSuggestions items={featTips} />
       </Collapsible>
 
       {/* Specifications */}
-      <Collapsible title="Specifications" icon={<Layers className="size-4" />}
+      <Collapsible fieldKey="specs" title="Specifications" icon={<Layers className="size-4" />}
         desc="Paste anything — cards are built automatically"
         badge={
           <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
@@ -567,7 +572,9 @@ function CommandCenter({ slug, f, set, row }: {
           </span>
         }>
         <SmartSpecsBuilder rows={f.specs} onChange={(v) => set({ specs: v })} />
+        <InlineSuggestions items={specTips} />
       </Collapsible>
+
 
 
       {/* Attributes */}

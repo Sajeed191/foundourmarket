@@ -7,7 +7,7 @@ import {
   ImagePlus, X, Pin, Sparkles, ShieldCheck, EyeOff, Eye, MessageSquare, Play, Brain,
   Camera, BadgeCheck, PackageCheck, ChevronLeft, ChevronRight, ThumbsUp as Recommend,
   Users, TrendingUp, Check, ArrowRight, ArrowLeft, ZoomIn, Search, Video,
-  LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Bookmark, Truck, CalendarCheck,
+  LogIn, UserPlus, ShoppingBag, Repeat, HelpCircle, LifeBuoy, Bookmark, Truck, CalendarCheck, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { haptic, successToast } from "@/lib/premium-feedback";

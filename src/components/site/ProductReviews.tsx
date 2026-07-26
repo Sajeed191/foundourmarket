@@ -1650,7 +1650,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-[20rem] rounded-3xl border border-white/10 bg-card px-7 py-8 text-center shadow-[var(--shadow-float)]"
             >

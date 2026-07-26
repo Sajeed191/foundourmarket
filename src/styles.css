@@ -3586,3 +3586,15 @@ body[data-immersive-ui] [data-floating-promo] {
   visibility: hidden !important;
   transition: opacity 0.22s ease, visibility 0.22s ease;
 }
+
+/* Q&A v7.3 — premium delete confirmation: soft fade backdrop + 96%→100% scale. */
+@keyframes qa-delete-overlay-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes qa-delete-panel-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.qa-delete-overlay { animation: qa-delete-overlay-in 220ms ease-out both; }
+.qa-delete-panel { animation: qa-delete-panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .qa-delete-overlay, .qa-delete-panel { animation-duration: 1ms; }
+}

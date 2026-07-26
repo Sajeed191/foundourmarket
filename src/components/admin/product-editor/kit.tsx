@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye, MoreVertical, Copy, Archive, FileText, X } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye, MoreVertical, Copy, Archive, FileText, X, Undo2, Redo2 } from "lucide-react";
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
@@ -353,7 +354,44 @@ export function SectionEditor<T extends Record<string, any>>({
   }, []);
 
 
-  const set = (patch: Partial<T>) => setForm((f) => (f ? { ...f, ...patch } : f));
+  /* ---- unlimited editor history (Ctrl+Z / Ctrl+Y) ---- */
+  const past = useRef<T[]>([]);
+  const future = useRef<T[]>([]);
+  const [, bumpHistory] = useState(0);
+  const tickHistory = useCallback(() => bumpHistory((n) => n + 1), []);
+
+  const set = useCallback((patch: Partial<T>) => {
+    const cur = formRef.current;
+    if (!cur) return;
+    past.current = [...past.current, cur].slice(-300);
+    future.current = [];
+    tickHistory();
+    setForm({ ...cur, ...patch });
+  }, [tickHistory]);
+
+  const undo = useCallback(() => {
+    const cur = formRef.current;
+    if (!cur || past.current.length === 0) return;
+    const prev = past.current[past.current.length - 1];
+    past.current = past.current.slice(0, -1);
+    future.current = [cur, ...future.current].slice(0, 300);
+    tickHistory();
+    setForm(prev);
+  }, [tickHistory]);
+
+  const redo = useCallback(() => {
+    const cur = formRef.current;
+    if (!cur || future.current.length === 0) return;
+    const next = future.current[0];
+    future.current = future.current.slice(1);
+    past.current = [...past.current, cur].slice(-300);
+    tickHistory();
+    setForm(next);
+  }, [tickHistory]);
+
+  const canUndo = past.current.length > 0;
+  const canRedo = future.current.length > 0;
+
 
   const doSave = useCallback(
     async (silent: boolean) => {
@@ -455,6 +493,28 @@ export function SectionEditor<T extends Record<string, any>>({
     } finally { setActionBusy(false); }
   }
 
+  /* ---- keyboard-first workspace: Ctrl/Cmd + S / P / D / Z / Y ---- */
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const el = e.target as HTMLElement | null;
+      const typing = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      const k = e.key.toLowerCase();
+      if (k === "s") { e.preventDefault(); if (dirtyRef.current) void doSave(false); return; }
+      if (k === "p") { e.preventDefault(); navigate({ to: "/admin-product/$slug/preview", params: { slug } }); return; }
+      if (k === "d") { e.preventDefault(); void duplicateProduct(); return; }
+      if (typing) return; // let the browser own text-level undo inside fields
+      if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); return; }
+      if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doSave, undo, redo, slug]);
+
 
   const header: ProductHeaderInfo | null = row
     ? { id: row.id, slug: row.slug, name: row.name, image: row.image, sku: row.sku, status: row.status, category: row.category }
@@ -520,7 +580,43 @@ export function SectionEditor<T extends Record<string, any>>({
             className="fixed bottom-0 inset-x-0 lg:left-[17.5rem] z-[75] border-t border-border bg-background/95 backdrop-blur-xl"
             style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
           >
-            <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-2.5 pb-1">
+            {/* Workspace strip — live state + history, one thumb reach */}
+            <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-1.5">
+              <span className={`inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium ${statusMeta.tone}`}>
+                <span className={`size-1.5 shrink-0 rounded-full ${statusMeta.dot}`} />
+                <span className="truncate">
+                  {saveState === "saving"
+                    ? "Saving…"
+                    : dirty
+                      ? `${changedKeys.length} unsaved change${changedKeys.length === 1 ? "" : "s"}`
+                      : "All changes saved"}
+                </span>
+              </span>
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={undo}
+                  disabled={!canUndo}
+                  aria-label="Undo (Ctrl+Z)"
+                  title="Undo — Ctrl+Z"
+                  className="grid size-11 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-all hover:text-foreground hover:border-white/25 active:scale-95 disabled:opacity-30"
+                >
+                  <Undo2 className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={redo}
+                  disabled={!canRedo}
+                  aria-label="Redo (Ctrl+Y)"
+                  title="Redo — Ctrl+Y"
+                  className="grid size-11 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-all hover:text-foreground hover:border-white/25 active:scale-95 disabled:opacity-30"
+                >
+                  <Redo2 className="size-4" />
+                </button>
+              </span>
+            </div>
+            <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-2 pb-1">
+
               {/* More Actions */}
               <div className="relative shrink-0">
                 <button

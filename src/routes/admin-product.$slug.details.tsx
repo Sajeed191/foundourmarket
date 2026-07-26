@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,
   ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff,
@@ -23,8 +23,16 @@ import {
   UniversalPasteDialog, useUniversalPaste, type PasteApplyPayload,
 } from "@/components/admin/product-editor/UniversalPasteDialog";
 import { ValidationCards, type ValidationIssue } from "@/components/admin/product-editor/ValidationCards";
+import { HealthDashboard, type HealthCard } from "@/components/admin/product-editor/HealthDashboard";
+import { InlineSuggestions } from "@/components/admin/product-editor/InlineSuggestions";
+import {
+  titleSuggestions, descriptionSuggestions, featureSuggestions, specSuggestions, seoSuggestions,
+  type SuggestInput,
+} from "@/lib/product-suggestions";
+import { focusEditorField, focusFirstApplied } from "@/lib/editor-focus";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
+
 
 
 /** Unsaved editor state → live PDP overlay (presentation only). */
@@ -139,15 +147,26 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
 }
 
 
-function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }: {
+function Collapsible({ title, icon, desc, defaultOpen = true, badge, fieldKey, children }: {
   title: string; icon: React.ReactNode; desc?: string; defaultOpen?: boolean;
-  badge?: React.ReactNode; children: React.ReactNode;
+  badge?: React.ReactNode; fieldKey?: string; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  // Auto Field Focus can target a collapsed section — open it on demand.
+  useEffect(() => {
+    if (!fieldKey) return;
+    const handler = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === fieldKey) setOpen(true);
+    };
+    window.addEventListener("editor-focus-field", handler);
+    return () => window.removeEventListener("editor-focus-field", handler);
+  }, [fieldKey]);
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.02]">
-      <button type="button" onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+    <section data-editor-field={fieldKey} className="rounded-2xl border border-white/10 bg-white/[0.02]">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
+        className="flex min-h-11 w-full items-center gap-3 px-4 py-3.5 text-left">
         <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">{icon}</span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
@@ -162,6 +181,7 @@ function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }:
     </section>
   );
 }
+
 
 /* ----------------------------- rating manager ----------------------------- */
 
@@ -324,10 +344,17 @@ function CommandCenter({ slug, f, set, row }: {
       return;
     }
     set(patch);
+    // Auto Field Focus — scroll to the most important destination that changed.
+    focusFirstApplied(
+      (["name", "brand", "categories", "description", "features", "specs"] as const)
+        .filter((k) => k in patch)
+        .map((k) => (k === "brand" || k === "categories" ? "information" : k === "name" ? "information" : k)),
+    );
     toast.success("Imported into product", {
       description: `${notes.join(" · ")} — live preview updated. Save to publish.`,
     });
   }
+
 
 
   const sellPrice = Number(row.price_inr ?? row.price ?? 0);
@@ -370,10 +397,42 @@ function CommandCenter({ slug, f, set, row }: {
       onAction: () => {
         if (w.key === "Pricing") { navigate({ to: "/admin-product/$slug/pricing", params: { slug } }); return; }
         if (w.key === "Inventory" || w.key === "SKU") { navigate({ to: "/admin-product/$slug/inventory", params: { slug } }); return; }
-        if (w.key === "SEO") { generateSeo(); return; }
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        toast.info(`${w.key} — open the section above to complete it.`);
+        if (w.key === "SEO") { generateSeo(); focusEditorField("seo"); return; }
+        const target: Record<string, string> = {
+          Images: "media", Video: "media", Category: "information", Specifications: "specs",
+        };
+        focusEditorField(target[w.key] ?? "information");
       },
+    };
+  });
+
+  /* ---- inline field intelligence (suggestions only, never auto-applied) ---- */
+  const suggestInput: SuggestInput = {
+    name: f.name, brand: f.brand, description: f.description, features: f.features,
+    specs: f.specs, seoTitle: f.seo_title, seoDescription: f.seo_description,
+  };
+  const nameTips = titleSuggestions(suggestInput, (name) => set({ name }));
+  const descTips = descriptionSuggestions(suggestInput);
+  const featTips = featureSuggestions(suggestInput);
+  const specTips = specSuggestions(suggestInput);
+  const seoTips = seoSuggestions(suggestInput);
+
+  /* ---- health dashboard cards (traffic-light, one-click fix) ---- */
+  const healthCards: HealthCard[] = checks.map((c) => {
+    const rule = RULES[c.key];
+    const tone: HealthCard["tone"] = c.ok
+      ? "excellent"
+      : rule?.impact === "high" ? "bad" : rule?.impact === "low" ? "good" : "warn";
+    const issue = issues.find((i) => i.id === c.key);
+    return {
+      id: c.key,
+      label: c.key,
+      status: c.ok ? "Complete" : (rule?.title ?? "Missing"),
+      detail: c.ok ? undefined : rule?.action,
+      tone,
+      icon: c.icon,
+      onFix: c.ok ? undefined : issue?.onAction,
+      fixLabel: rule?.action,
     };
   });
 
@@ -495,9 +554,12 @@ function CommandCenter({ slug, f, set, row }: {
 
 
       {/* Product information */}
-      <Collapsible title="Product Information" icon={<Tag className="size-4" />} desc="Name, brand, type, category & tags">
+      <Collapsible fieldKey="information" title="Product Information" icon={<Tag className="size-4" />} desc="Name, brand, type, category & tags">
         <div className="space-y-3">
-          <Field label="Product Name" value={f.name} onChange={(v) => set({ name: v })} />
+          <div>
+            <Field label="Product Name" value={f.name} onChange={(v) => set({ name: v })} />
+            <InlineSuggestions items={nameTips} />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Brand" value={f.brand} onChange={(v) => set({ brand: v })} />
             <Field label="Product Type" value={f.product_type} onChange={(v) => set({ product_type: v })} />
@@ -508,17 +570,19 @@ function CommandCenter({ slug, f, set, row }: {
       </Collapsible>
 
       {/* Description */}
-      <Collapsible title="Description" icon={<FileText className="size-4" />} desc="Rich text — headings, bold & lists">
+      <Collapsible fieldKey="description" title="Description" icon={<FileText className="size-4" />} desc="Rich text — headings, bold & lists">
         <RichTextEditor value={f.description} onChange={(v) => set({ description: v })} rows={7} />
+        <InlineSuggestions items={descTips} />
       </Collapsible>
 
       {/* Features */}
-      <Collapsible title="Features" icon={<ListChecks className="size-4" />} desc="Key selling points">
+      <Collapsible fieldKey="features" title="Features" icon={<ListChecks className="size-4" />} desc="Key selling points">
         <FeaturesBuilder value={f.features} onChange={(v) => set({ features: v })} />
+        <InlineSuggestions items={featTips} />
       </Collapsible>
 
       {/* Specifications */}
-      <Collapsible title="Specifications" icon={<Layers className="size-4" />}
+      <Collapsible fieldKey="specs" title="Specifications" icon={<Layers className="size-4" />}
         desc="Paste anything — cards are built automatically"
         badge={
           <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
@@ -526,7 +590,9 @@ function CommandCenter({ slug, f, set, row }: {
           </span>
         }>
         <SmartSpecsBuilder rows={f.specs} onChange={(v) => set({ specs: v })} />
+        <InlineSuggestions items={specTips} />
       </Collapsible>
+
 
 
       {/* Attributes */}
@@ -555,12 +621,12 @@ function CommandCenter({ slug, f, set, row }: {
 
 
       {/* SEO center */}
-      <Collapsible title="SEO Center" icon={<Search className="size-4" />} defaultOpen={false}
+      <Collapsible fieldKey="seo" title="SEO Center" icon={<Search className="size-4" />} defaultOpen={false}
         desc="Search title, meta & keywords"
         badge={<span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>}>
         <div className="space-y-3">
           <button type="button" onClick={generateSeo}
-            className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 py-1.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 py-1.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
             <Sparkles className="size-3.5" /> Auto-generate SEO
           </button>
           <Field label="SEO Title" value={f.seo_title} onChange={(v) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
@@ -575,20 +641,20 @@ function CommandCenter({ slug, f, set, row }: {
             <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Canonical URL</label>
             <p className="truncate rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">{canonical}</p>
           </div>
+          <InlineSuggestions items={seoTips} />
         </div>
       </Collapsible>
 
       {/* Health center */}
-      <Collapsible title="Product Health Center" icon={<Activity className="size-4" />}
+      <Collapsible fieldKey="health" title="Product Health Center" icon={<Activity className="size-4" />}
         desc={`${okCount}/${checks.length} checks passing`}
         badge={<span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${tone.t} bg-white/5`}>{score}%</span>}>
         <div className="space-y-3">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
-            <div className={`h-full rounded-full transition-all duration-500 ${tone.b}`} style={{ width: `${score}%` }} />
-          </div>
+          <HealthDashboard score={score} ready={warnings.every((w) => RULES[w.key]?.impact !== "high")} cards={healthCards} />
           <ValidationCards issues={issues} />
         </div>
       </Collapsible>
+
 
       {pasteRaw && (
         <UniversalPasteDialog

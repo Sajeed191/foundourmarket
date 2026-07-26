@@ -485,38 +485,31 @@ export function PDPDetailsTabs({
         key={current}
         id={`pdp-tab-panel-${current}`}
         role="tabpanel"
-        className="relative mt-5 space-y-3"
+        className="relative mt-4 flex flex-col gap-[22px]"
       >
         {current === "specs" && (
           <>
             <span aria-hidden className="pdp-panel-watermark">
               Specs
             </span>
-            <div className="mb-4 flex gap-2">
-              {[
-                { value: String(specCount), label: "Specifications" },
-                { value: String(groups.length), label: "Categories" },
-                { value: "Verified", label: "Catalogue" },
-              ].map((s) => (
-                <div key={s.label} className="pdp-stat">
-                  <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">
-                    {s.value}
-                  </p>
-                  <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60">
-                    {s.label}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <p className="-mt-1 text-[11.5px] leading-none text-muted-foreground/60">
+              {specCount} {specCount === 1 ? "specification" : "specifications"}
+              <span className="mx-1.5 text-muted-foreground/35">•</span>
+              {groups.length} {groups.length === 1 ? "category" : "categories"}
+              <span className="mx-1.5 text-muted-foreground/35">•</span>
+              Verified catalog
+            </p>
             {groups.map(({ group, entries }, i) => {
               const meta = SPEC_GROUP_META[group as SpecGroupName];
               return (
                 <Reveal key={group} observe={observe} index={i} step={40}>
                   <DetailCard
                     eyebrow={group.toUpperCase()}
-                    title={meta?.subtitle ?? "Product information"}
+                    title={meta?.short ?? "Product Information"}
                     subtitle={`${entries.length} ${entries.length === 1 ? "specification" : "specifications"}`}
                     alt={i % 2 === 1}
+                    tint={meta?.tint}
+                    tintStrength={meta?.tintStrength}
                   >
                     <SpecRows entries={entries} observe={observe} />
                   </DetailCard>
@@ -525,6 +518,7 @@ export function PDPDetailsTabs({
             })}
           </>
         )}
+
 
 
         {current === "description" && (

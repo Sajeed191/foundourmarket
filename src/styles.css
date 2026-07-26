@@ -4090,3 +4090,91 @@ body[data-immersive-ui] [data-scroll-top] {
 @media (prefers-reduced-motion: reduce) {
   .editor-field-flash { animation-duration: 1ms; }
 }
+
+/* ============================================================
+   Product Editor 8.0 — unified motion + surface consistency
+   Presentation only. Every panel in the admin product editor
+   shares these radii, paddings, focus rings and durations so
+   the workspace reads as one system.
+   ============================================================ */
+
+:root {
+  --editor-motion-micro: 160ms;
+  --editor-motion-standard: 220ms;
+  --editor-motion-complex: 300ms;
+  --editor-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --editor-radius: 1rem;
+}
+
+/* Standard interactive transition: transform + opacity only. */
+.editor-motion {
+  transition:
+    transform var(--editor-motion-standard) var(--editor-ease),
+    opacity var(--editor-motion-standard) var(--editor-ease),
+    border-color var(--editor-motion-standard) var(--editor-ease),
+    background-color var(--editor-motion-standard) var(--editor-ease);
+}
+.editor-motion-micro { transition-duration: var(--editor-motion-micro); }
+.editor-motion-complex { transition-duration: var(--editor-motion-complex); }
+
+/* Shared panel surface — identical radius, border, shadow, spacing. */
+.editor-surface {
+  border-radius: var(--editor-radius);
+  border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  background: color-mix(in oklab, var(--foreground) 2%, transparent);
+  box-shadow: 0 1px 2px color-mix(in oklab, black 24%, transparent);
+}
+
+.editor-divider {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--foreground) 10%, transparent) 18%,
+    color-mix(in oklab, var(--foreground) 10%, transparent) 82%,
+    transparent
+  );
+}
+
+/* Consistent focus ring across every editor control. */
+.editor-surface :is(button, a, input, textarea, select, [tabindex]):focus-visible,
+.editor-motion:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+  border-radius: 0.625rem;
+}
+
+/* Shimmer skeleton — one loading language, no spinners. */
+.editor-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+.editor-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--foreground) 7%, transparent),
+    transparent
+  );
+  animation: editor-shimmer 1.4s infinite;
+}
+@keyframes editor-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-motion,
+  .editor-motion-micro,
+  .editor-motion-complex { transition-duration: 1ms; }
+  .editor-shimmer::after { animation: none; }
+}
+
+@media (prefers-contrast: more) {
+  .editor-surface { border-color: color-mix(in oklab, var(--foreground) 28%, transparent); }
+}

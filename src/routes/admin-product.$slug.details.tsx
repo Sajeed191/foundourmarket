@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   normalizeStatus, logEvent, saveVersion, type WorkflowInput, type WorkflowStatus,
 } from "@/lib/publishing-workflow";
 
 const PublishingCenter = lazy(() =>
   import("@/components/admin/product-editor/PublishingCenter").then((m) => ({ default: m.PublishingCenter })),
+);
+const EditorDiagnostics = lazy(() =>
+  import("@/components/admin/product-editor/EditorDiagnostics").then((m) => ({ default: m.EditorDiagnostics })),
 );
 
 import {
@@ -48,6 +51,8 @@ import {
   type SuggestInput,
 } from "@/lib/product-suggestions";
 import { focusEditorField, focusFirstApplied } from "@/lib/editor-focus";
+import { LazyPanel } from "@/components/admin/product-editor/LazyPanel";
+import { recordMetric } from "@/lib/editor-perf";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
 
@@ -518,10 +523,12 @@ function CommandCenter({ slug, f, set, row }: {
 
   const setWorkflowStatus = useCallback(async (next: WorkflowStatus) => {
     setPubBusy(true);
+    const startedAt = performance.now();
     const { error } = await supabase
       .from("products")
       .update({ status: next, updated_at: new Date().toISOString() })
       .eq("slug", slug);
+    recordMetric("publish-prepare", performance.now() - startedAt, next);
     setPubBusy(false);
     if (error) { toast.error("Update failed", { description: error.message }); return; }
     setStatus(next);
@@ -578,7 +585,9 @@ function CommandCenter({ slug, f, set, row }: {
       toast.info("Description already covers every section");
       return;
     }
+    const startedAt = performance.now();
     applyWithUndo({ description: draftMerge.text }, { description: f.description });
+    recordMetric("ai-generate", performance.now() - startedAt, "description");
     focusEditorField("description");
     toast.success(`Added ${draftMerge.addedSections.length} section${draftMerge.addedSections.length === 1 ? "" : "s"}`, {
       description: `${draftMerge.addedSections.join(" · ")} — your existing text was left untouched.`,
@@ -670,6 +679,7 @@ function CommandCenter({ slug, f, set, row }: {
     { id: "restore", group: "Workflow", icon: Activity, label: "Restore a version", run: () => openPublishingPanel("timeline") },
     { id: "pv-mobile", group: "Workflow", icon: Eye, label: "Publishing preview — mobile & desktop", run: () => openPublishingPanel("preview") },
     { id: "j-validation", group: "Workflow", icon: AlertTriangle, label: "Jump to validation", run: () => focusEditorField("health") },
+    { id: "diagnostics", group: "Workflow", icon: Activity, label: "Open editor performance diagnostics", run: () => focusEditorField("health") },
     { id: "report", group: "Workflow", icon: FileText, label: "Generate product report", run: generateReport },
     { id: "preview", group: "Publish", icon: Eye, label: "Open customer preview", run: () => navigate({ to: "/admin-product/$slug/preview", params: { slug } }) },
 
@@ -729,7 +739,7 @@ function CommandCenter({ slug, f, set, row }: {
       </div>
 
       {/* Publishing Center — status, checklist, score, history, previews */}
-      <Suspense fallback={<div className="h-24 rounded-2xl border border-white/10 bg-white/[0.02]" />}>
+      <LazyPanel name="Publishing Center" lines={4}>
         <PublishingCenter
           slug={slug}
           input={workflowInput}
@@ -742,7 +752,7 @@ function CommandCenter({ slug, f, set, row }: {
           onJump={jumpToTarget}
           onRestore={restoreSnapshot}
         />
-      </Suspense>
+      </LazyPanel>
 
 
 
@@ -888,6 +898,9 @@ function CommandCenter({ slug, f, set, row }: {
         <div className="space-y-3">
           <HealthDashboard score={score} ready={warnings.every((w) => RULES[w.key]?.impact !== "high")} cards={healthCards} />
           <ValidationCards issues={issues} />
+          <LazyPanel name="Editor performance" lines={5}>
+            <EditorDiagnostics />
+          </LazyPanel>
         </div>
       </Collapsible>
 

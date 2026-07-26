@@ -9,6 +9,7 @@ import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { resolveImage } from "@/lib/products";
 import { invalidateProducts } from "@/lib/use-products";
 import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
+import { recordMetric } from "@/lib/editor-perf";
 import { writeLocalDraft, readLocalDraft, clearLocalDraft, type SaveState } from "@/lib/drafts";
 import { COMPLETION_COLS, COMPLETION_SECTIONS, computeCompletion, type SectionCompletion, type SectionKey } from "@/lib/product-completion";
 import {
@@ -303,7 +304,7 @@ export function SectionEditor<T extends Record<string, any>>({
   const [form, setForm] = useState<T | null>(null);
   const baseline = useRef<string>("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [, setLastSavedAt] = useState<Date | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const savedFlash = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
@@ -314,6 +315,17 @@ export function SectionEditor<T extends Record<string, any>>({
   const formRef = useRef<T | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   formRef.current = form;
+
+  // Diagnostics only: time from editor mount to the first interactive form.
+  const mountedAt = useRef<number>(typeof performance !== "undefined" ? performance.now() : 0);
+  const startupLogged = useRef(false);
+  useEffect(() => {
+    if (!form || startupLogged.current) return;
+    startupLogged.current = true;
+    recordMetric("editor-startup", performance.now() - mountedAt.current, sectionKey);
+  }, [form, sectionKey]);
+
+
 
   // Seed isolated state once from the loaded row, and surface any newer local draft.
   useEffect(() => {
@@ -404,8 +416,10 @@ export function SectionEditor<T extends Record<string, any>>({
       }
       inFlight.current = true;
       setSaveState("saving");
+      const startedAt = performance.now();
       const patch = { ...toPatch(current), updated_at: new Date().toISOString() };
       const { error } = await supabase.from("products").update(patch).eq("slug", slug);
+      recordMetric("autosave", performance.now() - startedAt, silent ? "auto" : "manual");
       inFlight.current = false;
       if (error) {
         setSaveState("error");
@@ -582,15 +596,23 @@ export function SectionEditor<T extends Record<string, any>>({
           >
             {/* Workspace strip — live state + history, one thumb reach */}
             <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pt-1.5">
-              <span className={`inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium ${statusMeta.tone}`}>
-                <span className={`size-1.5 shrink-0 rounded-full ${statusMeta.dot}`} />
+              <span
+                className={`inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium ${statusMeta.tone}`}
+                aria-live="polite"
+              >
+                <span className={`size-1.5 shrink-0 rounded-full ${statusMeta.dot}`} aria-hidden="true" />
                 <span className="truncate">
                   {saveState === "saving"
-                    ? "Saving…"
+                    ? "Syncing changes…"
                     : dirty
-                      ? `${changedKeys.length} unsaved change${changedKeys.length === 1 ? "" : "s"}`
+                      ? `${changedKeys.length} unsaved field${changedKeys.length === 1 ? "" : "s"}`
                       : "All changes saved"}
                 </span>
+                {lastSavedAt && saveState !== "saving" && (
+                  <span className="hidden shrink-0 text-muted-foreground sm:inline">
+                    · auto-saved {lastSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                )}
               </span>
               <span className="ml-auto flex shrink-0 items-center gap-1">
                 <button

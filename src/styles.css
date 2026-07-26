@@ -4053,7 +4053,9 @@ body[data-immersive-ui] [data-scroll-top] {
   .pdp-reveal { opacity: 1; transform: none; animation: none !important; }
   .pdp-card, .pdp-tab-glow { transition: none; }
   .pdp-skel::after { animation: none; }
+  .pdp-details-stage::before, .pdp-watermark { animation: none !important; }
 }
+
 
 /* Watermark sitting behind the specification card stack. */
 .pdp-panel-watermark {

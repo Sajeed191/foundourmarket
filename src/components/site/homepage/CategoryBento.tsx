@@ -94,9 +94,6 @@ export function CategoryBento({
                   <h3 className="text-[12px] sm:text-sm font-semibold tracking-tight text-foreground truncate px-1">
                     {cat.name}
                   </h3>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">
-                    {cat.product_count ?? 0} products
-                  </p>
                 </div>
               </Link>
             </Reveal>

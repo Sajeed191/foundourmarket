@@ -728,7 +728,7 @@ function CommandCenter({ slug, f, set, row }: {
         nameTips={nameTips} descTips={descTips} featTips={featTips} specTips={specTips} seoTips={seoTips}
         seoOk={seoOk} seoScore={seoScore} canonical={canonical} generateSeo={generateSeo}
         checks={checks} okCount={okCount} healthCards={healthCards} issues={issues}
-        warnings={warnings} copilotRecs={copilotRecs} undoPatch={undoPatch} setUndoPatch={setUndoPatch}
+        healthReady={warnings.every((w) => RULES[w.key]?.impact !== "high")} copilotRecs={copilotRecs} undoPatch={undoPatch} setUndoPatch={setUndoPatch}
         commands={commands} pasteRaw={pasteRaw} setPasteRaw={setPasteRaw}
         catOptions={catOptions} applyPaste={applyPaste} navigate={navigate}
       />
@@ -744,7 +744,7 @@ function WorkflowBody(p: any) {
     imageCount, setImageCount, primaryUrl, setPrimaryUrl,
     workflowInput, snapshot, pubBusy, setWorkflowStatus, jumpToTarget, restoreSnapshot,
     nameTips, descTips, featTips, specTips, seoTips, seoOk, seoScore, canonical, generateSeo,
-    checks, okCount, healthCards, issues, warnings, copilotRecs, undoPatch, setUndoPatch,
+    checks, okCount, healthCards, issues, healthReady, copilotRecs, undoPatch, setUndoPatch,
     commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate,
   } = p;
   const { mode, setStep } = useEditorWorkflow();
@@ -988,7 +988,7 @@ function WorkflowBody(p: any) {
               {/* Health & diagnostics */}
               <div data-editor-field="health" className="space-y-3 border-t border-white/8 pt-3">
                 <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Product Health</p>
-                <HealthDashboard score={score} ready={warnings.every((w: any) => RULES[w.key]?.impact !== "high")} cards={healthCards} />
+                <HealthDashboard score={score} ready={healthReady} cards={healthCards} />
                 <ValidationCards issues={issues} />
                 <LazyPanel name="Editor performance" lines={5}>
                   <EditorDiagnostics />

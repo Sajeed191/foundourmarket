@@ -588,7 +588,7 @@ export function PDPDetailsTabs({
           <>
             {warranty && warranty.trim() && (
               <Reveal observe={observe}>
-                <DetailCard title="Warranty" subtitle="Coverage summary" icon={ShieldCheck}>
+                <DetailCard eyebrow="WARRANTY" title="Coverage summary">
                   <p className="break-words text-[14.5px] leading-relaxed text-muted-foreground">
                     {warranty}
                   </p>

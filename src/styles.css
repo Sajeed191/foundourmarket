@@ -3847,7 +3847,7 @@ body[data-immersive-ui] [data-scroll-top] {
 .pdp-watermark {
   position: absolute;
   top: -0.2em;
-  left: 82%;
+  left: calc(82% + 28px);
   z-index: -1;
   pointer-events: none;
   user-select: none;

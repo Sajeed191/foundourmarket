@@ -625,11 +625,11 @@ export function PDPDetailsTabs({
         {current === "box" && (
           <Reveal observe={observe}>
             <DetailCard
-              title="What's Included"
-              count={boxItems.length}
-              countLabel={boxItems.length === 1 ? "Item" : "Items"}
-              icon={Package}
+              eyebrow="WHAT'S INCLUDED"
+              title="In the box"
+              subtitle={`${boxItems.length} ${boxItems.length === 1 ? "item" : "items"}`}
             >
+
               <ul>
                 {boxItems.map((item, i) => (
                   <li key={i}>

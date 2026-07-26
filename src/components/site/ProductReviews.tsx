@@ -1127,9 +1127,9 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                           return (
                           <>
                             {/* Header: avatar + name + verified + rating; date right */}
-                            <div className="flex items-start gap-2.5">
+                            <div className="flex items-start gap-3">
                               <div className={cn(
-                                "size-9 rounded-full overflow-hidden grid place-items-center text-sm font-display shrink-0 ring-1",
+                                "size-11 rounded-full overflow-hidden grid place-items-center text-[15px] font-display shrink-0 ring-1",
                                 avatarUrl ? "bg-muted ring-white/10" : cn(swatch.bg, swatch.fg, swatch.ring),
                               )}>
                                 {avatarUrl
@@ -1137,23 +1137,26 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                                   : <span aria-hidden>{name.charAt(0).toUpperCase()}</span>}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <p className="text-[14px] font-display font-semibold leading-tight truncate">{name}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-[16px] font-display font-semibold leading-tight truncate">{name}</p>
                                   {r.verified_purchase && (
-                                    <Check className="size-3 text-emerald-400" strokeWidth={3} aria-label="Verified Buyer" />
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-400/[0.08] px-2 py-0.5 text-[10.5px] font-medium text-emerald-300">
+                                      <Check className="size-2.5" strokeWidth={3} aria-hidden /> Verified
+                                    </span>
                                   )}
                                 </div>
-                                <div className="mt-0.5 flex items-center gap-1">
+                                <div className="mt-1 flex items-center gap-1.5">
                                   <StarRating rating={r.rating} starClassName="size-3" />
-                                  <span className="text-[11px] font-medium text-muted-foreground tabular-nums">{r.rating.toFixed(1)}</span>
+                                  <span className="text-[12px] text-muted-foreground tabular-nums">{r.rating.toFixed(1)}</span>
                                 </div>
                               </div>
-                              <span className="shrink-0 text-[11px] text-muted-foreground/70 tabular-nums">{fmtDate(r.created_at)}</span>
+                              <span className="shrink-0 text-[12px] text-muted-foreground/60 tabular-nums">{fmtDate(r.created_at)}</span>
                             </div>
 
                             {/* Title + body — primary focus */}
-                            {r.title && <p className="mt-2 text-[15px] font-semibold leading-snug text-foreground">{r.title}</p>}
+                            {r.title && <p className="mt-3.5 text-[16px] font-semibold leading-snug text-foreground">{r.title}</p>}
                             {r.body && <ReviewBody text={r.body} />}
+
 
                             {/* Media gallery — after review text, compact fixed-height thumbnails */}
                             {r.media?.length > 0 && (() => {

@@ -58,7 +58,10 @@ import {
   StartOptions, HelpDot, useEditorWorkflow, type StepState,
 } from "@/components/admin/product-editor/GuidedWorkflow";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
+import { contextFlags, missingTemplateSpecs } from "@/lib/editor-context";
+import { PublishConfidence, SpecTemplateStrip } from "@/components/admin/product-editor/InvisibleUX";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
+
 
 
 
@@ -703,18 +706,46 @@ function CommandCenter({ slug, f, set, row }: {
   ];
 
 
+  const specCount = f.specs.filter((s) => s.k.trim()).length;
   const stepStates: StepState[] = [
-    { id: "basic", done: !!f.name.trim() && f.categories.length > 0 },
-    { id: "images", done: imageCount > 0 },
-    { id: "pricing", done: sellPrice > 0 },
+    {
+      id: "basic",
+      done: !!f.name.trim() && f.categories.length > 0,
+      level: f.name.trim() && f.categories.length > 0 ? "complete" : f.name.trim() ? "recommended" : "missing",
+    },
+    { id: "images", done: imageCount > 0, level: imageCount > 0 ? "complete" : "missing" },
+    { id: "pricing", done: sellPrice > 0, level: sellPrice > 0 ? "complete" : "missing" },
     {
       id: "specs",
-      done: f.specs.filter((s) => s.k.trim()).length >= 3,
-      note: `${Math.max(0, 3 - f.specs.filter((s) => s.k.trim()).length)} left`,
+      done: specCount >= 3,
+      level: specCount >= 3 ? "complete" : specCount > 0 ? "recommended" : "missing",
     },
-    { id: "inventory", done: stock > 0 },
-    { id: "publish", done: status === "published" },
+    { id: "inventory", done: stock > 0, level: stock > 0 ? "complete" : "missing" },
+    {
+      id: "publish",
+      done: status === "published",
+      level: status === "published" ? "complete" : score >= 60 ? "recommended" : "missing",
+    },
   ];
+
+  // Ctrl/Cmd + Enter — publish from anywhere in the editor.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        void setWorkflowStatus(status === "published" ? "draft" : "published");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setWorkflowStatus, status]);
+
+  // Publish confidence — a single prioritized suggestion, never a raw list.
+  const topIssue = [...issues].sort((a, b) => {
+    const w = { high: 0, medium: 1, low: 2 } as const;
+    return w[a.impact] - w[b.impact];
+  })[0];
+
 
   return (
     <GuidedWorkflow>
@@ -731,6 +762,8 @@ function CommandCenter({ slug, f, set, row }: {
         healthReady={warnings.every((w) => RULES[w.key]?.impact !== "high")} copilotRecs={copilotRecs} undoPatch={undoPatch} setUndoPatch={setUndoPatch}
         commands={commands} pasteRaw={pasteRaw} setPasteRaw={setPasteRaw}
         catOptions={catOptions} applyPaste={applyPaste} navigate={navigate}
+        topIssue={topIssue}
+
       />
     </GuidedWorkflow>
   );
@@ -745,16 +778,36 @@ function WorkflowBody(p: any) {
     workflowInput, snapshot, pubBusy, setWorkflowStatus, jumpToTarget, restoreSnapshot,
     nameTips, descTips, featTips, specTips, seoTips, seoOk, seoScore, canonical, generateSeo,
     checks, okCount, healthCards, issues, healthReady, copilotRecs, undoPatch, setUndoPatch,
-    commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate,
+    commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate, topIssue,
   } = p;
   const { mode, setStep } = useEditorWorkflow();
   const advanced = mode === "advanced";
   const isEmpty = !f.name.trim() && imageCount === 0;
 
+  // Smart Context — only surface the spec template that fits this product.
+  const ctx = contextFlags({
+    name: f.name, category: f.category, categories: f.categories,
+    productType: f.product_type, tags: f.tags,
+  });
+  const [tplDismissed, setTplDismissed] = useState<string | null>(null);
+  const missingTpl = missingTemplateSpecs(ctx.template, f.specs);
+  const showTpl = !!ctx.template && ctx.template.id !== tplDismissed && missingTpl.length > 0;
+
+  function addTemplateSpecs() {
+    if (!ctx.template) return;
+    set({ specs: [...f.specs, ...missingTpl.map((k: string) => ({ k, v: "" }))] });
+    focusEditorField("specs");
+    toast.success(`${missingTpl.length} ${ctx.template.label.toLowerCase()} specs added`, {
+      duration: 2000,
+      description: "Fill in the values — nothing is saved until you save.",
+    });
+  }
+
   function importFromUrl() {
     const url = window.prompt("Paste the product listing URL");
     if (url && url.trim()) setPasteRaw(url.trim());
   }
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
@@ -801,6 +854,15 @@ function WorkflowBody(p: any) {
         </div>
 
         <StepProgress states={stepStates} readiness={score} />
+
+        {/* Publish confidence — one number, one suggestion, one button */}
+        <PublishConfidence
+          score={score}
+          topSuggestion={topIssue?.title}
+          actionLabel={topIssue?.actionLabel}
+          onFix={topIssue?.onAction}
+        />
+
 
         {/* ① Basic information */}
         <Step id="basic" index={1} title="Basic Information" fieldKey="information"
@@ -895,7 +957,16 @@ function WorkflowBody(p: any) {
               <FeaturesBuilder value={f.features} onChange={(v: string[]) => set({ features: v })} />
               <InlineSuggestions items={featTips} />
             </div>
+            {showTpl && (
+              <SpecTemplateStrip
+                label={ctx.template!.label}
+                missing={missingTpl}
+                onAddAll={addTemplateSpecs}
+                onDismiss={() => setTplDismissed(ctx.template!.id)}
+              />
+            )}
             <SmartSpecsBuilder rows={f.specs} onChange={(v: KV[]) => set({ specs: v })} />
+
             <InlineSuggestions items={specTips} />
             {advanced && (
               <div>

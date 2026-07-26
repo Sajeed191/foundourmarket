@@ -437,10 +437,10 @@ export function SectionEditor<T extends Record<string, any>>({
       logActivity("product_updated", "product", row?.id, { slug, section: sectionKey, auto: silent });
       invalidateProducts();
       if (!silent) {
-        toast.success("Draft saved", {
-          description: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        });
+        // Quiet confirmation — self-dismisses, never blocks the workspace.
+        toast.success("Draft saved", { duration: 2000 });
       }
+
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [slug, sectionKey, title, row?.id],
@@ -694,7 +694,8 @@ export function SectionEditor<T extends Record<string, any>>({
               <button
                 type="button"
                 onClick={() => navigate({ to: "/admin-product/$slug/preview", params: { slug } })}
-                className="inline-flex h-11 basis-[35%] grow-0 items-center justify-center gap-1.5 rounded-lg border border-accent/35 bg-accent/10 px-3 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.98]"
+                title="Preview — Ctrl/⌘ P"
+                className="inline-flex h-11 basis-[35%] grow-0 items-center justify-center gap-1.5 rounded-lg border border-accent/35 bg-accent/10 px-3 text-xs font-semibold text-accent transition-[background-color,transform] duration-[var(--editor-motion-fast,160ms)] hover:bg-accent/20 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <Eye className="size-4" /> Preview
               </button>
@@ -704,8 +705,8 @@ export function SectionEditor<T extends Record<string, any>>({
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("editor-focus-field", { detail: "publish" }))}
                 aria-label="Go to review and publish"
-                title="Review & Publish"
-                className="grid size-11 shrink-0 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-all hover:border-white/25 hover:text-foreground active:scale-95"
+                title="Review & Publish — Ctrl/⌘ Enter"
+                className="grid size-11 shrink-0 place-items-center rounded-lg border border-white/12 bg-white/[0.03] text-muted-foreground transition-[background-color,transform] duration-[var(--editor-motion-fast,160ms)] hover:border-white/25 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <Send className="size-4" />
               </button>
@@ -715,8 +716,10 @@ export function SectionEditor<T extends Record<string, any>>({
                 type="button"
                 onClick={() => { if (dirty) setConfirmOpen(true); else void doSave(false); }}
                 disabled={(!dirty && !justSaved) || saveState === "saving" || !!validationError}
-                className={`inline-flex h-11 basis-[65%] grow items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${justSaved ? "bg-emerald-500 text-white" : "bg-accent text-accent-foreground hover:brightness-110"}`}
+                title="Save Draft — Ctrl/⌘ S"
+                className={`inline-flex h-11 basis-[65%] grow items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-[background-color,transform] duration-[var(--editor-motion-fast,160ms)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${justSaved ? "bg-emerald-500 text-white" : "bg-accent text-accent-foreground hover:brightness-110"}`}
               >
+
                 {saveState === "saving" ? (
                   <><Loader2 className="size-4 animate-spin" /> Saving…</>
                 ) : justSaved ? (

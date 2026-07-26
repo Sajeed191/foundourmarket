@@ -50,7 +50,12 @@ export function SmartSpecsBuilder({
 
   const update = (i: number, patch: Partial<SpecRow>) =>
     onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
-  const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
+  const remove = (i: number) => {
+    const before = rows;
+    onChange(rows.filter((_, idx) => idx !== i));
+    undoableToast("Specification removed", () => onChange(before));
+  };
+
   const add = () => onChange([...rows, { k: "", v: "" }]);
 
   function applyText(text: string) {

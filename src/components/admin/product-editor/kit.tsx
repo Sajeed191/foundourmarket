@@ -493,6 +493,28 @@ export function SectionEditor<T extends Record<string, any>>({
     } finally { setActionBusy(false); }
   }
 
+  /* ---- keyboard-first workspace: Ctrl/Cmd + S / P / D / Z / Y ---- */
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const el = e.target as HTMLElement | null;
+      const typing = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      const k = e.key.toLowerCase();
+      if (k === "s") { e.preventDefault(); if (dirtyRef.current) void doSave(false); return; }
+      if (k === "p") { e.preventDefault(); navigate({ to: "/admin-product/$slug/preview", params: { slug } }); return; }
+      if (k === "d") { e.preventDefault(); void duplicateProduct(); return; }
+      if (typing) return; // let the browser own text-level undo inside fields
+      if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); return; }
+      if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doSave, undo, redo, slug]);
+
 
   const header: ProductHeaderInfo | null = row
     ? { id: row.id, slug: row.slug, name: row.name, image: row.image, sku: row.sku, status: row.status, category: row.category }

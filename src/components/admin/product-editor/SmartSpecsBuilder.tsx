@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  parseSpecPaste, mergeSpecRows, cleanSpecRows, groupSpecs, groupForSpec, reorderRows,
+  parseSpecPaste, mergeSpecRows, cleanSpecRows, groupSpecs, groupForSpec, reorderRows, normalizeLabel,
   type SpecRow,
 } from "@/lib/spec-intelligence";
 
@@ -230,9 +230,8 @@ export function SmartSpecsBuilder({
                   value={r.k}
                   onChange={(e) => update(i, { k: e.target.value })}
                   onBlur={(e) => {
-                    const { normalizeLabel } = require("@/lib/spec-intelligence");
-                    void normalizeLabel;
-                    void e;
+                    const norm = normalizeLabel(e.target.value);
+                    if (norm !== r.k) update(i, { k: norm });
                   }}
                   placeholder="e.g. Battery Capacity"
                   aria-label="Specification label"

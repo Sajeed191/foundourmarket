@@ -759,6 +759,8 @@ function CommandCenter({ slug, f, set, row }: {
         healthReady={warnings.every((w) => RULES[w.key]?.impact !== "high")} copilotRecs={copilotRecs} undoPatch={undoPatch} setUndoPatch={setUndoPatch}
         commands={commands} pasteRaw={pasteRaw} setPasteRaw={setPasteRaw}
         catOptions={catOptions} applyPaste={applyPaste} navigate={navigate}
+        topIssue={topIssue}
+
       />
     </GuidedWorkflow>
   );

@@ -3576,15 +3576,57 @@ body[data-review-media-open] [data-sonner-toaster] {
    Cart), floating widgets (Live Chat orb, admin toolbars) and floating
    promotional buttons all recede. Toasts stay visible so success/error
    feedback is never swallowed. Restored in one frame on close — no flicker. */
+/* Immersive mode v2 — the overlay owns the viewport. Site chrome is removed
+   from the layout entirely (display:none), never faded or left as an invisible
+   placeholder, and restored the instant the last overlay closes. */
 body[data-immersive-ui] [data-app-header],
 body[data-immersive-ui] [data-app-bottom-nav],
 body[data-immersive-ui] [data-floating-control],
 body[data-immersive-ui] [data-product-cta],
-body[data-immersive-ui] [data-floating-promo] {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  visibility: hidden !important;
-  transition: opacity 0.22s ease, visibility 0.22s ease;
+body[data-immersive-ui] [data-floating-promo],
+body[data-immersive-ui] [data-floating-badge],
+body[data-immersive-ui] [data-scroll-top] {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   FoundOurMarket™ premium overlay system (Reviews & Q&A)
+   One backdrop treatment, one surface treatment, one motion curve — shared by
+   every write / edit / delete surface so they read as the same native screen.
+--------------------------------------------------------------------------- */
+@keyframes fom-overlay-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes fom-surface-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fom-overlay {
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(16px);
+  animation: fom-overlay-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
+}
+
+.fom-surface {
+  background: #121316;
+  border: 1px solid color-mix(in oklab, var(--accent) 14%, rgba(255, 255, 255, 0.09));
+  border-radius: 28px;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.85), 0 8px 24px -14px rgba(0, 0, 0, 0.5);
+  animation: fom-surface-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Nested blocks inside a premium surface stay translucent white — never a
+   second black card, so the surface reads as one continuous colour. */
+.fom-surface .fom-inset {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fom-overlay, .fom-surface { animation-duration: 1ms; }
 }
 
 /* Q&A v7.3 — premium delete confirmation: soft fade backdrop + 96%→100% scale. */
@@ -3593,7 +3635,7 @@ body[data-immersive-ui] [data-floating-promo] {
   from { opacity: 0; transform: translateY(8px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.qa-delete-overlay { animation: qa-delete-overlay-in 220ms ease-out both; }
+.qa-delete-overlay { animation: qa-delete-overlay-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 .qa-delete-panel { animation: qa-delete-panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @media (prefers-reduced-motion: reduce) {
   .qa-delete-overlay, .qa-delete-panel { animation-duration: 1ms; }

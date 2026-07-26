@@ -642,7 +642,7 @@ function QuestionModal({
 
         {/* Sticky footer — pinned above the safe area on all devices. */}
         <div
-          className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3 bg-background/95 backdrop-blur-sm"
+          className="px-5 sm:px-6 pt-4 pb-5 flex items-center justify-end gap-3"
           style={{
             borderTop: "1px solid rgba(255,255,255,0.06)",
             paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))",
@@ -767,26 +767,21 @@ function QuestionModalShell({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+      className="fom-overlay fixed inset-0 z-[80] flex items-center justify-center p-4"
       onClick={onClose}
       style={{
-        background: "rgba(5,6,8,0.72)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
         opacity: mounted ? 1 : 0,
-        transition: "opacity 220ms ease-out",
+        transition: "opacity 260ms cubic-bezier(0.22,1,0.36,1)",
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-[92vw] max-w-[520px] max-h-[85dvh] flex flex-col rounded-[26px] overflow-hidden"
+        className="fom-surface w-[92vw] max-w-[520px] max-h-[85dvh] flex flex-col overflow-hidden"
         style={{
-          background: "#121316",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
-          transform: mounted ? "translateY(0) scale(1)" : "translateY(8px) scale(0.95)",
+          animation: "none",
+          transform: mounted ? "scale(1)" : "scale(0.96)",
           opacity: mounted ? 1 : 0,
-          transition: "transform 250ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease-out",
+          transition: "transform 260ms cubic-bezier(0.22,1,0.36,1), opacity 260ms cubic-bezier(0.22,1,0.36,1)",
         }}
       >
         {children}
@@ -847,8 +842,7 @@ function DiscardDraftConfirm({
 
   return (
     <div
-      className="fixed inset-0 z-[90] grid place-items-center p-5 animate-in fade-in duration-150"
-      style={{ background: "rgba(5,6,8,0.72)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+      className="fom-overlay fixed inset-0 z-[90] grid place-items-center p-5"
       onClick={onContinue}
     >
       <div
@@ -858,12 +852,7 @@ function DiscardDraftConfirm({
         aria-labelledby="qa-discard-title"
         aria-describedby="qa-discard-desc"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[400px] rounded-3xl p-6 animate-in zoom-in-95 duration-150"
-        style={{
-          background: "#121316",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85)",
-        }}
+        className="fom-surface w-full max-w-[400px] p-6"
       >
         <h3 id="qa-discard-title" className="text-[17px] font-display font-semibold text-foreground leading-tight">
           Discard your question?
@@ -1697,7 +1686,7 @@ export function ProductQA({
                     {[...roots].sort((a, b) => Number(b.is_official) - Number(a.is_official)).map((a) => (
                       <div key={a.id} className="space-y-2">
                         {editing?.id === a.id ? (
-                          <div className="rounded-[14px] p-3.5 border border-border bg-background/40">
+                          <div className="rounded-[14px] p-3.5 border border-white/[0.07] bg-white/[0.04]">
                             <textarea
                               value={editing.body}
                               onChange={(e) => setEditing({ ...editing, body: e.target.value })}
@@ -1846,18 +1835,13 @@ export function ProductQA({
           role="alertdialog"
           aria-modal="true"
           aria-label="Delete question"
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4 qa-delete-overlay"
-          style={{ background: "rgba(5,6,8,0.72)", backdropFilter: "blur(8px)" }}
+          className="fom-overlay fixed inset-0 z-[80] flex items-center justify-center p-4"
           onClick={() => { if (!deletingQ) setConfirmDeleteQ(null); }}
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-[92vw] max-w-[20rem] rounded-[26px] px-7 py-8 text-center qa-delete-panel"
-            style={{
-              background: "#121316",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85)",
-            }}
+            className="fom-surface w-[92vw] max-w-[20rem] px-7 py-8 text-center"
           >
             <div className="mx-auto grid size-10 place-items-center rounded-full bg-destructive/10 text-destructive">
               <Trash2 className="size-4" />

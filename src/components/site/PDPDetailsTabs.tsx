@@ -465,7 +465,8 @@ export function PDPDetailsTabs({
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50",
                     isActive
                       ? "text-accent-foreground"
-                      : "border border-white/[0.06] bg-white/[0.02] text-muted-foreground/80 backdrop-blur-xl hover:text-foreground/90",
+                      : "border border-white/[0.09] bg-white/[0.028] text-muted-foreground/90 backdrop-blur-xl hover:text-foreground",
+
                   )}
                 >
                   {t.label}

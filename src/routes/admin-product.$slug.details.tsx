@@ -60,6 +60,8 @@ import {
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import { contextFlags, missingTemplateSpecs } from "@/lib/editor-context";
 import { PublishConfidence, SpecTemplateStrip } from "@/components/admin/product-editor/InvisibleUX";
+import { AiChip } from "@/components/admin/product-editor/EmptyStates";
+
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
 
 

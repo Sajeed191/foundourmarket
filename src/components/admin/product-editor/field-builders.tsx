@@ -5,7 +5,7 @@
 // ============================================================
 import { useRef } from "react";
 import { Plus, Trash2, GripVertical, Bold, Italic, List, ListOrdered, Heading2, Sparkles, Layers } from "lucide-react";
-import { SmartEmpty } from "@/components/admin/product-editor/EmptyStates";
+import { SmartEmpty, undoableToast } from "@/components/admin/product-editor/EmptyStates";
 
 
 export type KV = { k: string; v: string };

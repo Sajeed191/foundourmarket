@@ -1009,34 +1009,29 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                 <button
                   key={c.key}
                   onClick={() => setFilter(c.key)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-4 py-2 text-[11px] font-mono uppercase tracking-wider transition-all",
-                    filter === c.key
-                      ? "border-accent/40 bg-accent/15 text-accent shadow-[0_0_0_1px_oklch(0.74_0.19_49/0.2)]"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-white/20",
-                  )}
+                  aria-pressed={filter === c.key}
+                  className="fom-chip fom-tap"
                 >
                   {c.label}
                 </button>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <span className="shrink-0 self-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mr-1">Sort</span>
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <span className="shrink-0 self-center text-[11px] uppercase tracking-widest text-muted-foreground/60 mr-1">Sort</span>
                 {sortChips.map((c) => (
                   <button
                     key={c.key}
                     onClick={() => setSort(c.key)}
-                    className={cn(
-                      "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors",
-                      sort === c.key ? "bg-white/[0.07] text-foreground" : "text-muted-foreground hover:text-foreground",
-                    )}
+                    aria-pressed={sort === c.key}
+                    className="fom-chip fom-tap"
                   >
                     {c.label}
                   </button>
                 ))}
               </div>
             </div>
+
           </div>
           )}
 

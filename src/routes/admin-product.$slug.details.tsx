@@ -397,12 +397,26 @@ function CommandCenter({ slug, f, set, row }: {
       onAction: () => {
         if (w.key === "Pricing") { navigate({ to: "/admin-product/$slug/pricing", params: { slug } }); return; }
         if (w.key === "Inventory" || w.key === "SKU") { navigate({ to: "/admin-product/$slug/inventory", params: { slug } }); return; }
-        if (w.key === "SEO") { generateSeo(); return; }
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        toast.info(`${w.key} — open the section above to complete it.`);
+        if (w.key === "SEO") { generateSeo(); focusEditorField("seo"); return; }
+        const target: Record<string, string> = {
+          Images: "media", Video: "media", Category: "information", Specifications: "specs",
+        };
+        focusEditorField(target[w.key] ?? "information");
       },
     };
   });
+
+  /* ---- inline field intelligence (suggestions only, never auto-applied) ---- */
+  const suggestInput: SuggestInput = {
+    name: f.name, brand: f.brand, description: f.description, features: f.features,
+    specs: f.specs, seoTitle: f.seo_title, seoDescription: f.seo_description,
+  };
+  const nameTips = titleSuggestions(suggestInput, (name) => set({ name }));
+  const descTips = descriptionSuggestions(suggestInput);
+  const featTips = featureSuggestions(suggestInput);
+  const specTips = specSuggestions(suggestInput);
+  const seoTips = seoSuggestions(suggestInput);
+
 
 
   const tone = score >= 85 ? { t: "text-emerald-400", b: "bg-emerald-500", r: "stroke-emerald-400" }

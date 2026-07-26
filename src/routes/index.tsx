@@ -315,7 +315,7 @@ function ProductSection({
               items={preview}
               virtualizeThreshold={0}
               cols={{ base: 2, lg: 4 }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+              className="grid auto-rows-fr grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
               getKey={(p) => p.id ?? p.slug}
               getImageSrc={(p) => p.image}
               renderItem={(p) => (

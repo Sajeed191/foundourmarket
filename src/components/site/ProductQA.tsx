@@ -18,6 +18,8 @@ import {
   
 } from "lucide-react";
 import { toast } from "sonner";
+import { useModalScrollLock } from "@/lib/use-scroll-lock";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import type { ProductFaq } from "@/lib/product-faqs";

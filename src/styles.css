@@ -3871,30 +3871,43 @@ body[data-immersive-ui] [data-scroll-top] {
   will-change: transform, width;
 }
 
-/* Premium floating category / info card. */
+/* Premium floating category / info card — compact density. */
 .pdp-card {
   position: relative;
   overflow: hidden;
   border-radius: 22px;
-  padding: 24px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 7%, transparent);
+  padding: 16px 18px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
   background:
-    linear-gradient(160deg, color-mix(in oklab, var(--accent) 4%, transparent), transparent 45%),
-    color-mix(in oklab, var(--foreground) 2.6%, transparent);
+    linear-gradient(160deg, color-mix(in oklab, var(--accent) 3%, transparent), transparent 45%),
+    color-mix(in oklab, var(--foreground) 2.2%, transparent);
   box-shadow: 0 18px 46px -34px rgba(0, 0, 0, 0.9);
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, border-color 260ms ease;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease,
+    border-color 180ms ease, background-color 180ms ease;
   will-change: transform;
+}
+/* Subtle alternating surface (2–3% difference) for depth in a stack. */
+.pdp-card-alt {
+  background:
+    linear-gradient(160deg, color-mix(in oklab, var(--accent) 3%, transparent), transparent 45%),
+    color-mix(in oklab, var(--foreground) 4%, transparent);
 }
 @media (hover: hover) {
   .pdp-card:hover {
     transform: translate3d(0, -2px, 0);
-    border-color: color-mix(in oklab, var(--accent) 22%, transparent);
+    border-color: color-mix(in oklab, var(--accent) 34%, transparent);
+    background-color: color-mix(in oklab, var(--foreground) 2%, transparent);
     box-shadow:
-      0 26px 60px -36px rgba(0, 0, 0, 0.95),
-      0 0 32px -18px color-mix(in oklab, var(--accent) 55%, transparent);
+      0 28px 62px -34px rgba(0, 0, 0, 0.95),
+      0 0 34px -18px color-mix(in oklab, var(--accent) 55%, transparent);
   }
 }
-.pdp-card-tap:active { transform: scale(0.985); }
+.pdp-card-tap:active {
+  transform: scale(0.99);
+  border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  background-color: color-mix(in oklab, var(--foreground) 5%, transparent);
+  box-shadow: 0 26px 60px -32px rgba(0, 0, 0, 0.95);
+}
 
 /* Row divider: gradient hairline with faded edges, inset from card padding. */
 .pdp-row-divider {
@@ -3903,21 +3916,37 @@ body[data-immersive-ui] [data-scroll-top] {
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in oklab, var(--foreground) 11%, transparent) 18%,
-    color-mix(in oklab, var(--foreground) 11%, transparent) 82%,
+    color-mix(in oklab, var(--foreground) 8%, transparent) 22%,
+    color-mix(in oklab, var(--foreground) 8%, transparent) 78%,
     transparent
   );
 }
 
+/* Small premium statistic chip. */
+.pdp-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 16px;
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+  background: color-mix(in oklab, var(--foreground) 3%, transparent);
+}
+
 /* Progressive reveal — one time, transform + opacity only. */
-.pdp-reveal { opacity: 0; transform: translate3d(0, 14px, 0); will-change: transform, opacity; }
+.pdp-reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scale(0.985);
+  will-change: transform, opacity;
+}
 .pdp-reveal.is-in {
-  animation: pdp-reveal-in 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: pdp-reveal-in 550ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: var(--pdp-delay, 0ms);
 }
 @keyframes pdp-reveal-in {
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
+
 
 /* Luxury shimmer skeleton. */
 .pdp-skel {
@@ -3940,4 +3969,21 @@ body[data-immersive-ui] [data-scroll-top] {
   .pdp-reveal { opacity: 1; transform: none; animation: none !important; }
   .pdp-card, .pdp-tab-glow { transition: none; }
   .pdp-skel::after { animation: none; }
+}
+
+/* Watermark sitting behind the specification card stack. */
+.pdp-panel-watermark {
+  position: absolute;
+  top: -0.18em;
+  left: -0.04em;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  font-size: clamp(120px, 34vw, 220px);
+  color: var(--foreground);
+  opacity: 0.02;
+  filter: blur(1px);
 }

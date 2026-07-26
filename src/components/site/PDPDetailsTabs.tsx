@@ -16,7 +16,7 @@ import {
   Cpu,
   Info,
   Monitor,
-  Package,
+  
   Ruler,
   ShieldCheck,
   Signal,
@@ -156,51 +156,57 @@ function Reveal({
   );
 }
 
-/** Category / info card with orange accent line header and item count. */
+/** Title-cases raw spec keys so labels never shout in ALL CAPS. */
+function toTitleCase(raw: string): string {
+  return raw
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((w) =>
+      w.length <= 3 && w === w.toUpperCase() && /[A-Z]/.test(w)
+        ? w
+        : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+    )
+    .join(" ");
+}
+
+/** Category / info card: thin orange accent line, name, small caption. No icon. */
 function DetailCard({
   title,
   subtitle,
-  count,
-  countLabel,
-  icon: Icon,
+  eyebrow,
+  alt = false,
   children,
   className,
 }: {
   title?: string;
   subtitle?: string;
-  count?: number;
-  countLabel?: string;
-  icon?: LucideIcon;
+  eyebrow?: string;
+  alt?: boolean;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("pdp-card pdp-card-tap", className)}>
+    <section className={cn("pdp-card pdp-card-tap", alt && "pdp-card-alt", className)}>
       {title && (
-        <header className="mb-4 flex items-start gap-3">
+        <header className="mb-2.5 flex items-start gap-3">
           <span
             aria-hidden
-            className="mt-[3px] h-10 w-[3px] shrink-0 rounded-full bg-gradient-to-b from-accent via-accent/70 to-accent/5"
+            className="mt-[3px] h-8 w-[2px] shrink-0 rounded-full bg-gradient-to-b from-accent via-accent/60 to-transparent"
           />
           <div className="min-w-0 flex-1">
-            <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
+            {eyebrow && (
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/55">
+                {eyebrow}
+              </p>
+            )}
+            <h3 className="mt-0.5 text-[16px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
               {title}
             </h3>
-            {typeof count === "number" ? (
-              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-accent/80">
-                {count} {countLabel ?? (count === 1 ? "Specification" : "Specifications")}
-              </p>
-            ) : (
-              subtitle && (
-                <p className="mt-1 text-[11.5px] leading-snug text-muted-foreground/70">{subtitle}</p>
-              )
+            {subtitle && (
+              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/60">{subtitle}</p>
             )}
           </div>
-          {Icon && (
-            <span className="grid size-9 shrink-0 place-items-center rounded-2xl border border-accent/20 bg-accent/[0.08] text-accent">
-              <Icon className="size-4" strokeWidth={1.75} />
-            </span>
-          )}
         </header>
       )}
       {children}
@@ -208,7 +214,7 @@ function DetailCard({
   );
 }
 
-/** Uppercase label over a bright value, separated by faded gradient hairlines. */
+/** Sentence-case label over a bright value, separated by faded gradient hairlines. */
 function SpecRows({
   entries,
   observe,
@@ -222,11 +228,11 @@ function SpecRows({
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}
           <Reveal observe={observe} index={i} step={40}>
-            <div className="py-3.5">
-              <dt className="text-[10.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground/60">
-                {k}
+            <div className="py-2.5">
+              <dt className="text-[11px] font-medium leading-tight text-muted-foreground/70">
+                {toTitleCase(k)}
               </dt>
-              <dd className="mt-1.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
+              <dd className="mt-0.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
                 {v}
               </dd>
             </div>
@@ -236,6 +242,7 @@ function SpecRows({
     </dl>
   );
 }
+
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -370,23 +377,26 @@ export function PDPDetailsTabs({
     return () => window.removeEventListener("resize", sync);
   }, [current, tabs.length]);
 
+  const specCount = groups.reduce((n, g) => n + g.entries.length, 0);
+
   const hero = (
-    <header className="relative mb-6">
+    <header className="relative mb-5">
       <span aria-hidden className="pdp-watermark">
         Details
       </span>
-      <h2 className="text-[clamp(1.75rem,1.2rem+2.4vw,2.75rem)] font-semibold leading-[1.05] tracking-[-0.035em] text-foreground">
+      <h2 className="text-[28px] font-semibold uppercase leading-[1.05] tracking-[0.06em] text-foreground">
         Product Details
       </h2>
-      <p className="mt-2 max-w-[42ch] text-[13.5px] leading-relaxed text-muted-foreground/75">
-        Everything crafted for informed buying.
+      <p className="mt-2 max-w-[44ch] text-[13px] leading-relaxed text-muted-foreground/70">
+        Complete specifications, features and warranty information.
       </p>
       <div
         aria-hidden
-        className="mt-5 h-px w-full bg-gradient-to-r from-accent/40 via-white/[0.07] to-transparent"
+        className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-white/[0.14] to-transparent"
       />
     </header>
   );
+
 
   if (loading) {
     return (
@@ -416,12 +426,12 @@ export function PDPDetailsTabs({
             ref={listRef}
             role="tablist"
             aria-label="Product details"
-            className="no-scrollbar relative flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 py-2.5 sm:px-0"
+            className="no-scrollbar relative flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 py-2 sm:px-0"
           >
             {ind && (
               <span
                 aria-hidden
-                className="pdp-tab-glow top-2.5 h-11"
+                className="pdp-tab-glow top-2 h-[42px]"
                 style={{ width: ind.width, transform: `translate3d(${ind.left}px,0,0)`, left: 0 }}
               />
             )}
@@ -437,12 +447,12 @@ export function PDPDetailsTabs({
                   aria-controls={`pdp-tab-panel-${t.id}`}
                   onClick={() => setActive(t.id)}
                   className={cn(
-                    "relative z-[1] h-11 min-h-[44px] shrink-0 snap-start whitespace-nowrap rounded-full px-5 text-[13px] font-medium",
-                    "transition-colors duration-[260ms] ease-out",
+                    "relative z-[1] h-[42px] shrink-0 snap-start whitespace-nowrap rounded-full px-5 text-[13px] font-medium",
+                    "transition-colors duration-[180ms] ease-out",
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50",
                     isActive
                       ? "text-accent-foreground"
-                      : "border border-white/[0.07] bg-white/[0.025] text-muted-foreground shadow-[0_10px_28px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl hover:text-foreground/90",
+                      : "border border-white/[0.06] bg-white/[0.02] text-muted-foreground/80 backdrop-blur-xl hover:text-foreground/90",
                   )}
                 >
                   {t.label}
@@ -458,19 +468,47 @@ export function PDPDetailsTabs({
         key={current}
         id={`pdp-tab-panel-${current}`}
         role="tabpanel"
-        className="relative mt-6 space-y-[30px]"
+        className="relative mt-5 space-y-3"
       >
-        {current === "specs" &&
-          groups.map(({ group, entries }, i) => {
-            const meta = SPEC_GROUP_META[group as SpecGroupName];
-            return (
-              <Reveal key={group} observe={observe} index={i} step={60}>
-                <DetailCard title={group} count={entries.length} icon={meta?.icon}>
-                  <SpecRows entries={entries} observe={observe} />
-                </DetailCard>
-              </Reveal>
-            );
-          })}
+        {current === "specs" && (
+          <>
+            <span aria-hidden className="pdp-panel-watermark">
+              Specs
+            </span>
+            <div className="mb-4 flex gap-2">
+              {[
+                { value: String(specCount), label: "Specifications" },
+                { value: String(groups.length), label: "Categories" },
+                { value: "Verified", label: "Catalogue" },
+              ].map((s) => (
+                <div key={s.label} className="pdp-stat">
+                  <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">
+                    {s.value}
+                  </p>
+                  <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60">
+                    {s.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+            {groups.map(({ group, entries }, i) => {
+              const meta = SPEC_GROUP_META[group as SpecGroupName];
+              return (
+                <Reveal key={group} observe={observe} index={i} step={40}>
+                  <DetailCard
+                    eyebrow={group.toUpperCase()}
+                    title={meta?.subtitle ?? "Product information"}
+                    subtitle={`${entries.length} ${entries.length === 1 ? "specification" : "specifications"}`}
+                    alt={i % 2 === 1}
+                  >
+                    <SpecRows entries={entries} observe={observe} />
+                  </DetailCard>
+                </Reveal>
+              );
+            })}
+          </>
+        )}
+
 
         {current === "description" && (
           <Reveal observe={observe}>
@@ -550,7 +588,7 @@ export function PDPDetailsTabs({
           <>
             {warranty && warranty.trim() && (
               <Reveal observe={observe}>
-                <DetailCard title="Warranty" subtitle="Coverage summary" icon={ShieldCheck}>
+                <DetailCard eyebrow="WARRANTY" title="Coverage summary">
                   <p className="break-words text-[14.5px] leading-relaxed text-muted-foreground">
                     {warranty}
                   </p>
@@ -587,11 +625,11 @@ export function PDPDetailsTabs({
         {current === "box" && (
           <Reveal observe={observe}>
             <DetailCard
-              title="What's Included"
-              count={boxItems.length}
-              countLabel={boxItems.length === 1 ? "Item" : "Items"}
-              icon={Package}
+              eyebrow="WHAT'S INCLUDED"
+              title="In the box"
+              subtitle={`${boxItems.length} ${boxItems.length === 1 ? "item" : "items"}`}
             >
+
               <ul>
                 {boxItems.map((item, i) => (
                   <li key={i}>

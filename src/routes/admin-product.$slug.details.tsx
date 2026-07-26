@@ -16,6 +16,8 @@ import { ProductFaqManager } from "@/components/admin/ProductFaqManager";
 import {
   FeaturesBuilder, KeyValueBuilder, RichTextEditor, kvToArray, arrayToKv, type KV,
 } from "@/components/admin/product-editor/field-builders";
+import { SmartSpecsBuilder } from "@/components/admin/product-editor/SmartSpecsBuilder";
+
 
 export const Route = createFileRoute("/admin-product/$slug/details")({ component: DetailsPage });
 

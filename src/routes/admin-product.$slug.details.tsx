@@ -147,15 +147,26 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
 }
 
 
-function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }: {
+function Collapsible({ title, icon, desc, defaultOpen = true, badge, fieldKey, children }: {
   title: string; icon: React.ReactNode; desc?: string; defaultOpen?: boolean;
-  badge?: React.ReactNode; children: React.ReactNode;
+  badge?: React.ReactNode; fieldKey?: string; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  // Auto Field Focus can target a collapsed section — open it on demand.
+  useEffect(() => {
+    if (!fieldKey) return;
+    const handler = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === fieldKey) setOpen(true);
+    };
+    window.addEventListener("editor-focus-field", handler);
+    return () => window.removeEventListener("editor-focus-field", handler);
+  }, [fieldKey]);
+
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.02]">
-      <button type="button" onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+    <section data-editor-field={fieldKey} className="rounded-2xl border border-white/10 bg-white/[0.02]">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
+        className="flex min-h-11 w-full items-center gap-3 px-4 py-3.5 text-left">
         <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">{icon}</span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2">
@@ -170,6 +181,7 @@ function Collapsible({ title, icon, desc, defaultOpen = true, badge, children }:
     </section>
   );
 }
+
 
 /* ----------------------------- rating manager ----------------------------- */
 

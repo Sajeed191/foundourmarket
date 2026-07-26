@@ -1165,7 +1165,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                               const cols = count === 1 ? "grid-cols-1" : count === 2 ? "grid-cols-2" : count === 3 ? "grid-cols-3" : "grid-cols-4";
                               const shown = media.slice(0, 4);
                               return (
-                                <div className={cn("mt-2.5 grid gap-1.5", cols)}>
+                                <div className={cn("mt-3.5 grid gap-2", cols)}>
                                   {shown.map((m, i) => {
                                     const showOverlay = i === 3 && count > 4;
                                     return (

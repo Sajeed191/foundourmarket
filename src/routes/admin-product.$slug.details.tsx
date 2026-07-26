@@ -732,7 +732,7 @@ function CommandCenter({ slug, f, set, row }: {
       </div>
 
       {/* Publishing Center — status, checklist, score, history, previews */}
-      <Suspense fallback={<div className="h-24 rounded-2xl border border-white/10 bg-white/[0.02]" />}>
+      <LazyPanel name="Publishing Center" lines={4}>
         <PublishingCenter
           slug={slug}
           input={workflowInput}
@@ -745,7 +745,7 @@ function CommandCenter({ slug, f, set, row }: {
           onJump={jumpToTarget}
           onRestore={restoreSnapshot}
         />
-      </Suspense>
+      </LazyPanel>
 
 
 

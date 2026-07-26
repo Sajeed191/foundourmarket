@@ -449,7 +449,8 @@ export function PDPDetailsTabs({
               <span
                 aria-hidden
                 className="pdp-tab-glow top-2 h-[42px]"
-                style={{ width: ind.width, transform: `translate3d(${ind.left}px,0,0)`, left: 0 }}
+                style={{ width: ind.width, transform: `translate3d(${ind.left}px,-2px,0)`, left: 0 }}
+
               />
             )}
             {tabs.map((t) => {

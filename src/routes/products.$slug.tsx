@@ -1217,7 +1217,6 @@ function ProductPage() {
 
             {/* Product Details — horizontal tab experience over the same product data */}
             <section className="mt-16">
-              <PdpSectionHeading title="Product Details" subtitle="Everything you need to know" />
               <PDPDetailsTabs
                 description={product.description}
                 features={product.features as string[] | null}

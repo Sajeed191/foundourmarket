@@ -1,18 +1,17 @@
 /**
- * PDP Details Tabs v2 — Ultra Premium (presentation only).
+ * PDP Details Tabs v2.0 — Ultra Premium (presentation only).
  *
- * Amazon/Flipkart/Apple-inspired horizontal tab experience over the *existing*
- * product data (description, features, specifications, warranty). No new data
- * sources, no business logic: this component only reorganises what the PDP
- * already had into a compact, scannable, luxury layout.
+ * A luxury "product brochure" reading experience over the *existing* product
+ * data (description, features, specifications, warranty). No new data sources,
+ * no business logic: this component only reorganises what the PDP already had.
  *
- * Performance: only the active tab's panel is mounted; entrance animations are
- * transform/opacity only and disabled under prefers-reduced-motion.
+ * Performance: only the active tab's panel is mounted; reveals run through a
+ * single IntersectionObserver; animations are transform/opacity only and are
+ * disabled under prefers-reduced-motion.
  */
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   BatteryCharging,
-  Boxes,
   Check,
   Cpu,
   Info,
@@ -91,66 +90,114 @@ function splitList(value: string): string[] {
     .filter((s) => s.length > 0);
 }
 
-/** Shared entrance: fade + 12px rise, 35ms stagger, motion-safe only, once. */
-function Enter({
+/**
+ * One-time progressive reveal driven by a shared IntersectionObserver.
+ * Falls back to visible immediately when IO is unavailable (SSR / old engines).
+ */
+function useReveal() {
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-in");
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
+    );
+    observerRef.current = io;
+    return () => io.disconnect();
+  }, []);
+
+  return useCallback((node: HTMLElement | null) => {
+    if (!node) return;
+    if (typeof IntersectionObserver === "undefined") {
+      node.classList.add("is-in");
+      return;
+    }
+    // Observer may not exist yet on the very first paint; retry on next frame.
+    const attach = () => {
+      const io = observerRef.current;
+      if (io) io.observe(node);
+      else node.classList.add("is-in");
+    };
+    if (observerRef.current) attach();
+    else requestAnimationFrame(attach);
+  }, []);
+}
+
+/** Shared entrance wrapper: fade + rise, staggered, once. */
+function Reveal({
   index = 0,
+  step = 40,
   className,
+  observe,
   children,
 }: {
   index?: number;
+  step?: number;
   className?: string;
+  observe: (node: HTMLElement | null) => void;
   children: React.ReactNode;
 }) {
   return (
     <div
-      className={cn("motion-safe:animate-fade-in", className)}
-      style={{ animationDelay: `${Math.min(index, 12) * 35}ms`, animationFillMode: "both" }}
+      ref={observe}
+      className={cn("pdp-reveal", className)}
+      style={{ ["--pdp-delay" as string]: `${Math.min(index, 14) * step}ms` }}
     >
       {children}
     </div>
   );
 }
 
-/** Premium glass card used by every detail surface. */
+/** Category / info card with orange accent line header and item count. */
 function DetailCard({
   title,
   subtitle,
+  count,
+  countLabel,
   icon: Icon,
   children,
   className,
 }: {
   title?: string;
   subtitle?: string;
+  count?: number;
+  countLabel?: string;
   icon?: LucideIcon;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section
-      className={cn(
-        "relative overflow-hidden rounded-[24px] border border-white/[0.07]",
-        "bg-[linear-gradient(160deg,color-mix(in_oklab,var(--accent)_4%,transparent),transparent_42%)]",
-        "px-5 py-5 backdrop-blur-xl",
-        className,
-      )}
-      style={{ backgroundColor: "color-mix(in oklab, var(--foreground) 2.5%, transparent)" }}
-    >
+    <section className={cn("pdp-card pdp-card-tap", className)}>
       {title && (
         <header className="mb-4 flex items-start gap-3">
           <span
             aria-hidden
-            className="mt-[3px] h-9 w-[3px] shrink-0 rounded-full bg-gradient-to-b from-accent to-accent/10"
+            className="mt-[3px] h-10 w-[3px] shrink-0 rounded-full bg-gradient-to-b from-accent via-accent/70 to-accent/5"
           />
           <div className="min-w-0 flex-1">
-            <h3 className="text-[16px] font-semibold leading-tight tracking-tight text-foreground">
+            <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
               {title}
             </h3>
-            {subtitle && (
-              <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground/70">{subtitle}</p>
+            {typeof count === "number" ? (
+              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-accent/80">
+                {count} {countLabel ?? (count === 1 ? "Specification" : "Specifications")}
+              </p>
+            ) : (
+              subtitle && (
+                <p className="mt-1 text-[11.5px] leading-snug text-muted-foreground/70">{subtitle}</p>
+              )
             )}
           </div>
           {Icon && (
-            <span className="grid size-8 shrink-0 place-items-center rounded-xl border border-accent/20 bg-accent/[0.08] text-accent">
+            <span className="grid size-9 shrink-0 place-items-center rounded-2xl border border-accent/20 bg-accent/[0.08] text-accent">
               <Icon className="size-4" strokeWidth={1.75} />
             </span>
           )}
@@ -161,22 +208,29 @@ function DetailCard({
   );
 }
 
-/** Label above value rows with soft gradient dividers. */
-function SpecRows({ entries }: { entries: SpecEntry[] }) {
+/** Uppercase label over a bright value, separated by faded gradient hairlines. */
+function SpecRows({
+  entries,
+  observe,
+}: {
+  entries: SpecEntry[];
+  observe: (node: HTMLElement | null) => void;
+}) {
   return (
     <dl>
       {entries.map(([k, v], i) => (
         <div key={k}>
-          {i > 0 && (
-            <div
-              aria-hidden
-              className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.09] to-transparent"
-            />
-          )}
-          <div className="py-3.5">
-            <dt className="text-[11px] uppercase tracking-[0.13em] text-muted-foreground/65">{k}</dt>
-            <dd className="mt-1 break-words text-[14.5px] font-medium leading-snug text-foreground">{v}</dd>
-          </div>
+          {i > 0 && <div aria-hidden className="pdp-row-divider" />}
+          <Reveal observe={observe} index={i} step={40}>
+            <div className="py-3.5">
+              <dt className="text-[10.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground/60">
+                {k}
+              </dt>
+              <dd className="mt-1.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
+                {v}
+              </dd>
+            </div>
+          </Reveal>
         </div>
       ))}
     </dl>
@@ -185,32 +239,48 @@ function SpecRows({ entries }: { entries: SpecEntry[] }) {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="grid place-items-center rounded-[24px] border border-dashed border-white/[0.08] px-6 py-14 text-center">
-      <span className="grid size-12 place-items-center rounded-2xl border border-accent/20 bg-accent/[0.07] text-accent">
-        <Sparkles className="size-5" strokeWidth={1.5} />
+    <div className="pdp-card grid place-items-center px-6 py-16 text-center">
+      <span
+        aria-hidden
+        className="grid size-14 place-items-center rounded-[20px] border border-accent/20 bg-accent/[0.07] text-accent"
+      >
+        <Sparkles className="size-6" strokeWidth={1.4} />
       </span>
-      <p className="mt-4 text-[14px] font-medium text-foreground/90">Information coming soon</p>
-      <p className="mt-1 max-w-[26ch] text-[12.5px] leading-relaxed text-muted-foreground/70">{message}</p>
+      <p className="mt-5 text-[15px] font-semibold tracking-[-0.01em] text-foreground">
+        Specifications will be available soon.
+      </p>
+      <p className="mt-1.5 max-w-[30ch] text-[12.5px] leading-relaxed text-muted-foreground/70">{message}</p>
     </div>
   );
 }
 
 export function PDPDetailsTabsSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5" aria-hidden>
+      <div className="space-y-3">
+        <div className="pdp-skel h-8 w-56 rounded-2xl" />
+        <div className="pdp-skel h-3.5 w-72" />
+      </div>
       <div className="flex gap-2 overflow-hidden">
-        {[72, 96, 84, 88].map((w, i) => (
-          <div key={i} className="h-11 shrink-0 rounded-full bg-white/[0.04]" style={{ width: w }} />
+        {[112, 104, 92, 96].map((w, i) => (
+          <div key={i} className="pdp-skel h-11 shrink-0" style={{ width: w }} />
         ))}
       </div>
       {[0, 1].map((i) => (
-        <div key={i} className="rounded-[24px] border border-white/[0.06] bg-white/[0.018] p-5">
-          <div className="mb-4 h-4 w-32 rounded-full bg-white/[0.06]" />
-          <div className="space-y-4">
+        <div key={i} className="pdp-card">
+          <div className="mb-5 flex items-start gap-3">
+            <div className="pdp-skel h-10 w-[3px]" />
+            <div className="flex-1 space-y-2">
+              <div className="pdp-skel h-4 w-36" />
+              <div className="pdp-skel h-2.5 w-24" />
+            </div>
+            <div className="pdp-skel size-9 rounded-2xl" />
+          </div>
+          <div className="space-y-5">
             {[0, 1, 2].map((r) => (
-              <div key={r}>
-                <div className="h-2.5 w-20 rounded-full bg-white/[0.045]" />
-                <div className="mt-2 h-3.5 w-2/3 rounded-full bg-white/[0.055]" />
+              <div key={r} className="space-y-2">
+                <div className="pdp-skel h-2.5 w-24" />
+                <div className="pdp-skel h-4 w-2/3" />
               </div>
             ))}
           </div>
@@ -233,6 +303,8 @@ export function PDPDetailsTabs({
   warranty?: string | null;
   loading?: boolean;
 }) {
+  const observe = useReveal();
+
   const { groups, boxItems, warrantyEntries } = useMemo(() => {
     const bucket = new Map<string, SpecEntry[]>();
     const box: string[] = [];
@@ -273,7 +345,7 @@ export function PDPDetailsTabs({
     if (hasDescription) t.push({ id: "description", label: "Description" });
     if (featureList.length > 0) t.push({ id: "features", label: "Features" });
     if (hasWarranty) t.push({ id: "warranty", label: "Warranty" });
-    if (boxItems.length > 0) t.push({ id: "box", label: "In the Box" });
+    if (boxItems.length > 0) t.push({ id: "box", label: "What's Included" });
     return t;
   }, [groups.length, hasDescription, featureList.length, hasWarranty, boxItems.length]);
 
@@ -287,28 +359,57 @@ export function PDPDetailsTabs({
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
+    const sync = () => {
+      const el = list.querySelector<HTMLElement>(`[data-tab-id="${current}"]`);
+      if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    sync();
     const el = list.querySelector<HTMLElement>(`[data-tab-id="${current}"]`);
-    if (!el) return;
-    setInd({ left: el.offsetLeft, width: el.offsetWidth });
-    el.scrollIntoView({ block: "nearest", inline: "nearest" });
+    el?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
   }, [current, tabs.length]);
 
-  if (loading) return <PDPDetailsTabsSkeleton />;
+  const hero = (
+    <header className="relative mb-6">
+      <span aria-hidden className="pdp-watermark">
+        Details
+      </span>
+      <h2 className="text-[clamp(1.75rem,1.2rem+2.4vw,2.75rem)] font-semibold leading-[1.05] tracking-[-0.035em] text-foreground">
+        Product Details
+      </h2>
+      <p className="mt-2 max-w-[42ch] text-[13.5px] leading-relaxed text-muted-foreground/75">
+        Everything crafted for informed buying.
+      </p>
+      <div
+        aria-hidden
+        className="mt-5 h-px w-full bg-gradient-to-r from-accent/40 via-white/[0.07] to-transparent"
+      />
+    </header>
+  );
+
+  if (loading) {
+    return (
+      <div className="pdp-details-stage">
+        <PDPDetailsTabsSkeleton />
+      </div>
+    );
+  }
+
   if (tabs.length === 0) {
-    return <EmptyState message="Detailed product information for this item is being prepared." />;
+    return (
+      <div className="pdp-details-stage">
+        {hero}
+        <EmptyState message="Detailed product information for this item is being prepared." />
+      </div>
+    );
   }
 
   return (
-    <div className="relative">
-      {/* Oversized watermark word behind the section. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -top-6 -right-4 select-none overflow-hidden text-[19vw] font-black uppercase leading-none tracking-tighter text-foreground/[0.04] motion-safe:animate-fade-in sm:text-[9rem]"
-      >
-        Details
-      </span>
+    <div className="pdp-details-stage relative">
+      {hero}
 
-      {/* Sticky glass tab bar with sliding indicator. */}
+      {/* Floating glass tab pills with a sliding gradient indicator. */}
       <div className="sticky top-[var(--app-header-height,0px)] z-20 -mx-4 sm:mx-0">
         <div className="border-b border-white/[0.05] bg-background/70 backdrop-blur-2xl">
           <div
@@ -320,8 +421,8 @@ export function PDPDetailsTabs({
             {ind && (
               <span
                 aria-hidden
-                className="pointer-events-none absolute top-2.5 h-11 rounded-full bg-accent shadow-[0_8px_26px_-14px_color-mix(in_oklab,var(--accent)_80%,transparent)] transition-[transform,width] duration-[220ms] ease-out"
-                style={{ width: ind.width, transform: `translateX(${ind.left}px)`, left: 0 }}
+                className="pdp-tab-glow top-2.5 h-11"
+                style={{ width: ind.width, transform: `translate3d(${ind.left}px,0,0)`, left: 0 }}
               />
             )}
             {tabs.map((t) => {
@@ -336,12 +437,12 @@ export function PDPDetailsTabs({
                   aria-controls={`pdp-tab-panel-${t.id}`}
                   onClick={() => setActive(t.id)}
                   className={cn(
-                    "relative z-[1] snap-start shrink-0 whitespace-nowrap rounded-full px-4 min-h-[44px] text-[13px] font-medium",
-                    "transition-colors duration-[220ms] ease-out",
+                    "relative z-[1] h-11 min-h-[44px] shrink-0 snap-start whitespace-nowrap rounded-full px-5 text-[13px] font-medium",
+                    "transition-colors duration-[260ms] ease-out",
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50",
                     isActive
                       ? "text-accent-foreground"
-                      : "border border-white/[0.07] bg-white/[0.02] text-muted-foreground hover:text-foreground/90",
+                      : "border border-white/[0.07] bg-white/[0.025] text-muted-foreground shadow-[0_10px_28px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl hover:text-foreground/90",
                   )}
                 >
                   {t.label}
@@ -357,27 +458,27 @@ export function PDPDetailsTabs({
         key={current}
         id={`pdp-tab-panel-${current}`}
         role="tabpanel"
-        className="relative mt-4 space-y-4"
+        className="relative mt-6 space-y-[30px]"
       >
         {current === "specs" &&
           groups.map(({ group, entries }, i) => {
             const meta = SPEC_GROUP_META[group as SpecGroupName];
             return (
-              <Enter key={group} index={i}>
-                <DetailCard title={group} subtitle={meta?.subtitle} icon={meta?.icon}>
-                  <SpecRows entries={entries} />
+              <Reveal key={group} observe={observe} index={i} step={60}>
+                <DetailCard title={group} count={entries.length} icon={meta?.icon}>
+                  <SpecRows entries={entries} observe={observe} />
                 </DetailCard>
-              </Enter>
+              </Reveal>
             );
           })}
 
         {current === "description" && (
-          <Enter>
+          <Reveal observe={observe}>
             <DetailCard title="About this product" subtitle="Everything you need to know">
               <div
                 className={cn(
-                  "relative mx-auto max-w-[68ch]",
-                  !expanded && "max-h-[420px] overflow-hidden",
+                  "relative mx-auto max-w-[68ch] text-[15px] leading-[1.75]",
+                  !expanded && "max-h-[14rem] overflow-hidden",
                 )}
               >
                 <ProductDescription description={description} />
@@ -391,37 +492,55 @@ export function PDPDetailsTabs({
               <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}
-                className="mt-3 min-h-[44px] text-[12.5px] font-medium uppercase tracking-[0.14em] text-accent transition-opacity duration-[220ms] hover:opacity-80"
+                className="mt-3 min-h-[44px] text-[12px] font-medium uppercase tracking-[0.16em] text-accent transition-opacity duration-[260ms] hover:opacity-80"
               >
-                {expanded ? "Read less" : "Read more"}
+                {expanded ? "Show less" : "Show more"}
               </button>
             </DetailCard>
-          </Enter>
+          </Reveal>
         )}
 
         {current === "features" && (
-          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+          <div className="flex flex-wrap gap-2.5">
             {featureList.map((f, i) => {
               const [head, ...rest] = f.split(/[:—–-]\s+/);
               const body = rest.join(" ").trim();
+              const short = (body ? head : f).trim();
+              const compact = short.length <= 42;
               return (
-                <Enter key={i} index={i}>
-                  <div className="flex h-full items-start gap-3 rounded-[24px] border border-white/[0.07] bg-white/[0.02] p-5 backdrop-blur-xl">
-                    <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border border-accent/25 bg-accent/[0.1] text-accent">
-                      <Check className="size-3.5" strokeWidth={2.5} />
+                <Reveal
+                  key={i}
+                  observe={observe}
+                  index={i}
+                  step={40}
+                  className={compact ? "" : "w-full"}
+                >
+                  {compact ? (
+                    <span
+                      title={body || undefined}
+                      className="pdp-card-tap inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-4 text-[13.5px] font-medium text-foreground backdrop-blur-xl transition-colors duration-[260ms] hover:border-accent/25"
+                    >
+                      <Check className="size-3.5 shrink-0 text-accent" strokeWidth={2.75} />
+                      {short}
                     </span>
-                    <div className="min-w-0">
-                      <p className="break-words text-[14.5px] font-medium leading-snug text-foreground">
-                        {body ? head : f}
-                      </p>
-                      {body && (
-                        <p className="mt-1 break-words text-[13px] leading-relaxed text-muted-foreground">
-                          {body}
+                  ) : (
+                    <div className="pdp-card pdp-card-tap flex items-start gap-3">
+                      <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border border-accent/25 bg-accent/[0.1] text-accent">
+                        <Check className="size-3.5" strokeWidth={2.5} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="break-words text-[15px] font-medium leading-snug text-foreground">
+                          {short}
                         </p>
-                      )}
+                        {body && (
+                          <p className="mt-1 break-words text-[13px] leading-relaxed text-muted-foreground">
+                            {body}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Enter>
+                  )}
+                </Reveal>
               );
             })}
           </div>
@@ -430,30 +549,34 @@ export function PDPDetailsTabs({
         {current === "warranty" && (
           <>
             {warranty && warranty.trim() && (
-              <Enter>
+              <Reveal observe={observe}>
                 <DetailCard title="Warranty" subtitle="Coverage summary" icon={ShieldCheck}>
-                  <p className="break-words text-[14px] leading-relaxed text-muted-foreground">{warranty}</p>
+                  <p className="break-words text-[14.5px] leading-relaxed text-muted-foreground">
+                    {warranty}
+                  </p>
                 </DetailCard>
-              </Enter>
+              </Reveal>
             )}
             {warrantyEntries.length > 0 && (
-              <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
                 {warrantyEntries.map(([k, v], i) => {
                   const Icon = WARRANTY_ICONS.find((w) => w.test.test(k))?.icon ?? ShieldCheck;
                   return (
-                    <Enter key={k} index={i}>
-                      <div className="flex h-full items-start gap-3 rounded-[24px] border border-white/[0.07] bg-white/[0.02] p-5 backdrop-blur-xl">
-                        <span className="grid size-8 shrink-0 place-items-center rounded-xl border border-accent/20 bg-accent/[0.08] text-accent">
+                    <Reveal key={k} observe={observe} index={i} step={50}>
+                      <div className="pdp-card pdp-card-tap flex h-full items-start gap-3">
+                        <span className="grid size-9 shrink-0 place-items-center rounded-2xl border border-accent/20 bg-accent/[0.08] text-accent">
                           <Icon className="size-4" strokeWidth={1.75} />
                         </span>
                         <div className="min-w-0">
-                          <p className="text-[11px] uppercase tracking-[0.13em] text-muted-foreground/65">{k}</p>
-                          <p className="mt-1 break-words text-[14.5px] font-medium leading-snug text-foreground">
+                          <p className="text-[10.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground/60">
+                            {k}
+                          </p>
+                          <p className="mt-1.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
                             {v}
                           </p>
                         </div>
                       </div>
-                    </Enter>
+                    </Reveal>
                   );
                 })}
               </div>
@@ -462,30 +585,32 @@ export function PDPDetailsTabs({
         )}
 
         {current === "box" && (
-          <Enter>
-            <DetailCard title="In the Box" subtitle="What you receive" icon={Package}>
+          <Reveal observe={observe}>
+            <DetailCard
+              title="What's Included"
+              count={boxItems.length}
+              countLabel={boxItems.length === 1 ? "Item" : "Items"}
+              icon={Package}
+            >
               <ul>
                 {boxItems.map((item, i) => (
                   <li key={i}>
-                    {i > 0 && (
-                      <div
-                        aria-hidden
-                        className="h-px w-full bg-gradient-to-r from-transparent via-white/[0.09] to-transparent"
-                      />
-                    )}
-                    <div className="flex items-center gap-3 py-3.5">
-                      <span className="grid size-7 shrink-0 place-items-center rounded-full border border-accent/25 bg-accent/[0.1] text-accent">
-                        <Boxes className="size-3.5" strokeWidth={2} />
-                      </span>
-                      <span className="min-w-0 break-words text-[14.5px] font-medium leading-snug text-foreground">
-                        {item}
-                      </span>
-                    </div>
+                    {i > 0 && <div aria-hidden className="pdp-row-divider" />}
+                    <Reveal observe={observe} index={i} step={40}>
+                      <div className="flex items-center gap-3 py-3.5">
+                        <span className="grid size-7 shrink-0 place-items-center rounded-full border border-accent/25 bg-accent/[0.1] text-accent">
+                          <Check className="size-3.5" strokeWidth={2.5} />
+                        </span>
+                        <span className="min-w-0 break-words text-[15px] font-medium leading-snug text-foreground">
+                          {item}
+                        </span>
+                      </div>
+                    </Reveal>
                   </li>
                 ))}
               </ul>
             </DetailCard>
-          </Enter>
+          </Reveal>
         )}
       </div>
     </div>

@@ -404,8 +404,10 @@ export function SectionEditor<T extends Record<string, any>>({
       }
       inFlight.current = true;
       setSaveState("saving");
+      const startedAt = performance.now();
       const patch = { ...toPatch(current), updated_at: new Date().toISOString() };
       const { error } = await supabase.from("products").update(patch).eq("slug", slug);
+      recordMetric("autosave", performance.now() - startedAt, silent ? "auto" : "manual");
       inFlight.current = false;
       if (error) {
         setSaveState("error");

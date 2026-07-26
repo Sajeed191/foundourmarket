@@ -3846,8 +3846,8 @@ body[data-immersive-ui] [data-scroll-top] {
 /* Oversized DETAILS watermark — pushed right and cropped, blurred, slow float. */
 .pdp-watermark {
   position: absolute;
-  top: -0.24em;
-  left: 74%;
+  top: -0.2em;
+  left: 82%;
   z-index: -1;
   pointer-events: none;
   user-select: none;
@@ -3855,10 +3855,11 @@ body[data-immersive-ui] [data-scroll-top] {
   font-weight: 900;
   letter-spacing: -0.06em;
   line-height: 0.78;
-  font-size: clamp(110px, 30vw, 200px);
+  font-size: clamp(120px, 26vw, 240px);
   color: color-mix(in oklab, var(--foreground) 100%, transparent);
-  opacity: 0.025;
+  opacity: 0.02;
   filter: blur(1px);
+
   will-change: transform;
 }
 @media (prefers-reduced-motion: no-preference) {

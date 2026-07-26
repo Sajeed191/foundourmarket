@@ -16,7 +16,7 @@ import {
   Cpu,
   Info,
   Monitor,
-  Package,
+  
   Ruler,
   ShieldCheck,
   Signal,

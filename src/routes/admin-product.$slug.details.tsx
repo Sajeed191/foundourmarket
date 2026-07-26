@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  normalizeStatus, logEvent, saveVersion, type WorkflowInput, type WorkflowStatus,
+} from "@/lib/publishing-workflow";
+
+const PublishingCenter = lazy(() =>
+  import("@/components/admin/product-editor/PublishingCenter").then((m) => ({ default: m.PublishingCenter })),
+);
+
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,
   ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff, Eye,

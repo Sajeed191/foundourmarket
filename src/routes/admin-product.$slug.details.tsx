@@ -2,9 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,
-  ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff,
+  ChevronDown, Sparkles, CheckCircle2, AlertTriangle, Send, EyeOff, Eye,
   Package, Star, HelpCircle,
 } from "lucide-react";
+import {
+  buildDescriptionSections, mergeDescriptionSections, generateFeatureChips,
+  generateKeywordChips, type DescriptionInput,
+} from "@/lib/description-builder";
+import { buildCopilotRecs } from "@/lib/product-copilot";
+import { AiCopilot } from "@/components/admin/product-editor/AiCopilot";
+import {
+  EditorCommandPalette, type EditorCommand,
+} from "@/components/admin/product-editor/EditorCommandPalette";
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateProducts } from "@/lib/use-products";

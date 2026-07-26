@@ -303,7 +303,7 @@ export function SectionEditor<T extends Record<string, any>>({
   const [form, setForm] = useState<T | null>(null);
   const baseline = useRef<string>("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [, setLastSavedAt] = useState<Date | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const savedFlash = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();

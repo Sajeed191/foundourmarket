@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useModalScrollLock } from "@/lib/use-scroll-lock";
+import { useImmersiveChrome } from "@/lib/use-immersive-chrome";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -735,6 +736,7 @@ function QuestionModalShell({
   // - Hide LiveChat/admin widgets that subscribe to the floating-stack context.
   // Scroll lock + instant, jump-free restore lives in the shared hook.
   useModalScrollLock(open, "data-qa-modal-open");
+  useImmersiveChrome(open);
 
   useEffect(() => {
     if (!open) return;
@@ -1252,6 +1254,10 @@ export function ProductQA({
   const [asStore, setAsStore] = useState(true);
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
   const [visible, setVisible] = useState(PAGE_SIZE);
+
+  // Q&A v7.3 — immersive mode while answering / editing an answer or reply, so
+  // the composer reads as its own premium screen.
+  useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen);
 
   // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
   // answers get the smooth reveal animation.

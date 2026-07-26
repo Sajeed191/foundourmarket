@@ -23,6 +23,7 @@ import {
 import { analyzeReviews } from "@/lib/reviews-ai.functions";
 import { cn } from "@/lib/utils";
 import { useModalScrollLock } from "@/lib/use-scroll-lock";
+import { useImmersiveChrome } from "@/lib/use-immersive-chrome";
 
 import { StarRating } from "@/components/site/StarRating";
 
@@ -138,6 +139,10 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   const keepReviewRef = useRef<HTMLButtonElement | null>(null);
 
   const [deleteMode, setDeleteMode] = useState<"customer" | "admin_soft" | "admin_hard">("customer");
+  // Reviews v7.3 — immersive mode for the delete confirmation and the inline
+  // review editor: header, bottom nav, sticky purchase docks and floating
+  // widgets recede so only the surface itself is visible.
+  useImmersiveChrome(!!confirmDeleteId || !!editingId);
   const [deleteReason, setDeleteReason] = useState("");
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -1907,6 +1912,7 @@ function WriteReviewModal(props: {
   // v7.2 — Shared, jump-free scroll lock (freeze + instant restore, no smooth
   // scroll animation, focus restored with preventScroll).
   useModalScrollLock(true, "data-review-wizard-open");
+  useImmersiveChrome(true);
 
   // Escape closes (through the same guarded path as the X / backdrop).
   const panelRef = useRef<HTMLDivElement | null>(null);

@@ -52,6 +52,7 @@ import {
 } from "@/lib/product-suggestions";
 import { focusEditorField, focusFirstApplied } from "@/lib/editor-focus";
 import { LazyPanel } from "@/components/admin/product-editor/LazyPanel";
+import { recordMetric } from "@/lib/editor-perf";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
 

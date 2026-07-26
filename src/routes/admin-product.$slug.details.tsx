@@ -7,6 +7,9 @@ import {
 const PublishingCenter = lazy(() =>
   import("@/components/admin/product-editor/PublishingCenter").then((m) => ({ default: m.PublishingCenter })),
 );
+const EditorDiagnostics = lazy(() =>
+  import("@/components/admin/product-editor/EditorDiagnostics").then((m) => ({ default: m.EditorDiagnostics })),
+);
 
 import {
   FileText, ImageIcon, Film, Tag, Layers, ListChecks, Search, Activity,

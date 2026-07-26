@@ -682,92 +682,12 @@ function Home() {
   return (
     <>
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} query={query} onQueryChange={setQuery} />
-      {/* Hero starts immediately below the main navigation (announcement bar removed). */}
 
+      {/* Hero v2 — cinematic, search-first, personalized greeting */}
+      <HeroV2 onOpenSearch={() => setSearchOpen(true)} />
 
-      {/* 2 · Premium rotating product showcase hero */}
-      <section
-        className="relative z-30 px-3 sm:px-6 lg:px-10 pb-3 sm:pb-5"
-        style={{
-          background: "var(--gradient-hero)",
-          // Pull the hero up so its own background fills the area behind the
-          // floating top nav — no separate reserved band renders behind it.
-          marginTop: "calc(-1 * var(--app-header-h, 4.75rem))",
-          paddingTop: "calc(var(--app-header-h, 4.75rem) + 1rem)",
-        }}
-      >
-        {/* full-bleed ambient layer — seamless navbar blend + soft orange glow,
-            stretches edge-to-edge so there are never black side gaps */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
-
-          {/* (Top softener removed — the hero now owns the full area behind the
-              nav pill, so there is no seam or band to blend.) */}
-          {/* warm ambient orange lighting matching the accent */}
-          <div className="absolute left-1/2 -top-[6%] -translate-x-1/2 h-[420px] w-[140%] opacity-70" style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.74 0.19 49 / 0.16), transparent 60%)" }} />
-        </div>
-        <div className="relative z-10 mx-auto max-w-3xl px-1 pt-1 sm:pt-4 pb-2 text-center">
-          <h1 className="font-display font-semibold tracking-[-0.02em] leading-[1.02] text-[clamp(2.6rem,11vw,4.5rem)]">
-            <span className="block text-foreground">Whatever you need.</span>
-            <span className="block bg-gradient-to-r from-foreground via-accent to-accent bg-clip-text text-transparent">
-              All in one place.
-            </span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-[15px] sm:text-lg leading-relaxed text-muted-foreground">
-            A premium independent marketplace, sourcing top-quality products from
-            across the world — delivered with cinematic precision.
-          </p>
-
-          {/* ── search trigger — opens the full search destination ── */}
-          <div className="relative z-10 mx-auto mt-8 max-w-2xl">
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Open search"
-              className="group relative w-full rounded-full border border-white/10 shadow-[0_16px_40px_-20px_oklch(0_0_0/0.7)] transition-[border-color,box-shadow,transform] duration-300 hover:border-accent/40 active:scale-[0.995]"
-              style={{ background: "oklch(0.19 0.008 60)" }}
-            >
-              <span className="absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 grid size-10 sm:size-11 place-items-center rounded-full bg-white/[0.05] text-muted-foreground transition-colors duration-300 group-hover:bg-accent/15 group-hover:text-accent">
-                <Search className="size-[19px] sm:size-[21px]" />
-              </span>
-              <span className="flex h-14 sm:h-16 w-full items-center pl-14 sm:pl-16 pr-[120px] sm:pr-[140px] text-left text-base sm:text-[17px] font-medium tracking-[-0.01em] text-muted-foreground/65">
-                {query.trim() || rotatingPlaceholder}
-              </span>
-              <span className="pointer-events-none absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 inline-flex h-11 sm:h-12 items-center gap-1.5 rounded-full bg-accent px-5 sm:px-6 text-sm font-semibold uppercase tracking-[0.06em] text-accent-foreground shadow-[0_8px_24px_-8px_oklch(0.74_0.19_49/0.7)]">
-                Search
-              </span>
-            </button>
-          </div>
-
-
-
-          {/* Primary actions */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/search"
-              search={{ q: "" }}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-8 text-sm font-semibold uppercase tracking-[0.08em] text-accent-foreground shadow-[0_10px_30px_-10px_oklch(0.74_0.19_49/0.7)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
-            >
-              Shop Now
-            </Link>
-            <a
-              href="#categories"
-              className="inline-flex h-12 items-center justify-center rounded-full glass-strong px-8 text-sm font-semibold uppercase tracking-[0.08em] text-foreground ring-1 ring-white/12 transition-colors duration-200 hover:ring-accent/40"
-            >
-              Browse Categories
-            </a>
-          </div>
-        </div>
-
-
-
-
-
-
-      </section>
-
-
-      {/* Trust strip — compact, between hero and categories */}
-      <TrustBadgesStrip />
+      {/* Trust strip v2 — single glass credibility row */}
+      <TrustStripV2 />
 
       {/* 3 · Main Categories — premium 2-column marketplace grid */}
       <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">

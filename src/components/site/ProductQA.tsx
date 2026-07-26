@@ -731,6 +731,7 @@ function QuestionModalShell({
   // Scroll lock + instant, jump-free restore lives in the shared hook.
   useModalScrollLock(open, "data-qa-modal-open");
   useImmersiveChrome(open);
+  useFocusReturn(open);
 
   useEffect(() => {
     if (!open) return;
@@ -1274,6 +1275,10 @@ export function ProductQA({
   // Q&A v7.3 — immersive mode while answering / editing an answer or reply, so
   // the composer reads as its own premium screen.
   useImmersiveChrome(!!answerOpen || !!editing || !!replyOpen || !!confirmDeleteQ || !!confirmDeleteA);
+  // Polish: focus returns to the control that opened each overlay.
+  useFocusReturn(!!confirmDeleteQ);
+  useFocusReturn(!!confirmDeleteA);
+  useFocusReturn(!!editing);
 
   // v6.7 — Track answer IDs present at initial load so ONLY realtime-arrived
   // answers get the smooth reveal animation.

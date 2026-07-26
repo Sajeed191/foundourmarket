@@ -144,6 +144,9 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   // review editor: header, bottom nav, sticky purchase docks and floating
   // widgets recede so only the surface itself is visible.
   useImmersiveChrome(!!confirmDeleteId || !!editingId);
+  // Polish: focus returns to the control that opened each overlay.
+  useFocusReturn(!!confirmDeleteId);
+  useFocusReturn(!!editingId);
   const [deleteReason, setDeleteReason] = useState("");
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);

@@ -612,13 +612,24 @@ function CommandCenter({ slug, f, set, row }: {
           <SummaryStat label="Price" value={sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "—"} />
           <SummaryStat label="Images" value={String(imageCount)} />
         </div>
-        <div className="mt-2 flex items-center gap-2">
-          <button type="button" onClick={togglePublish} disabled={pubBusy}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-[0.97] disabled:opacity-50 ${status === "published" ? "border border-white/15 text-muted-foreground hover:text-foreground" : "bg-accent text-accent-foreground hover:brightness-110"}`}>
-            {status === "published" ? <><EyeOff className="size-3.5" /> Unpublish</> : <><Send className="size-3.5" /> Publish</>}
-          </button>
-        </div>
       </div>
+
+      {/* Publishing Center — status, checklist, score, history, previews */}
+      <Suspense fallback={<div className="h-24 rounded-2xl border border-white/10 bg-white/[0.02]" />}>
+        <PublishingCenter
+          slug={slug}
+          input={workflowInput}
+          overlay={draftOverlayFromForm(f)}
+          images={primaryUrl ? [primaryUrl] : []}
+          snapshot={snapshot}
+          busy={pubBusy}
+          lastModified={row.updated_at ?? null}
+          onSetStatus={setWorkflowStatus}
+          onJump={jumpToTarget}
+          onRestore={restoreSnapshot}
+        />
+      </Suspense>
+
 
 
       {/* Media Center — images first, then video, with live health checks */}

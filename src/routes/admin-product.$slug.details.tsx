@@ -332,10 +332,17 @@ function CommandCenter({ slug, f, set, row }: {
       return;
     }
     set(patch);
+    // Auto Field Focus — scroll to the most important destination that changed.
+    focusFirstApplied(
+      (["name", "brand", "categories", "description", "features", "specs"] as const)
+        .filter((k) => k in patch)
+        .map((k) => (k === "brand" || k === "categories" ? "information" : k === "name" ? "information" : k)),
+    );
     toast.success("Imported into product", {
       description: `${notes.join(" · ")} — live preview updated. Save to publish.`,
     });
   }
+
 
 
   const sellPrice = Number(row.price_inr ?? row.price ?? 0);

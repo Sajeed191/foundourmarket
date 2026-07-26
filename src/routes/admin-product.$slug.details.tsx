@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   normalizeStatus, logEvent, saveVersion, type WorkflowInput, type WorkflowStatus,
 } from "@/lib/publishing-workflow";
@@ -51,6 +51,7 @@ import {
   type SuggestInput,
 } from "@/lib/product-suggestions";
 import { focusEditorField, focusFirstApplied } from "@/lib/editor-focus";
+import { LazyPanel } from "@/components/admin/product-editor/LazyPanel";
 import { mergeSpecRows } from "@/lib/spec-intelligence";
 import type { DraftOverlay } from "@/lib/pdp-preview-channel";
 
@@ -673,6 +674,7 @@ function CommandCenter({ slug, f, set, row }: {
     { id: "restore", group: "Workflow", icon: Activity, label: "Restore a version", run: () => openPublishingPanel("timeline") },
     { id: "pv-mobile", group: "Workflow", icon: Eye, label: "Publishing preview — mobile & desktop", run: () => openPublishingPanel("preview") },
     { id: "j-validation", group: "Workflow", icon: AlertTriangle, label: "Jump to validation", run: () => focusEditorField("health") },
+    { id: "diagnostics", group: "Workflow", icon: Activity, label: "Open editor performance diagnostics", run: () => focusEditorField("health") },
     { id: "report", group: "Workflow", icon: FileText, label: "Generate product report", run: generateReport },
     { id: "preview", group: "Publish", icon: Eye, label: "Open customer preview", run: () => navigate({ to: "/admin-product/$slug/preview", params: { slug } }) },
 
@@ -891,6 +893,9 @@ function CommandCenter({ slug, f, set, row }: {
         <div className="space-y-3">
           <HealthDashboard score={score} ready={warnings.every((w) => RULES[w.key]?.impact !== "high")} cards={healthCards} />
           <ValidationCards issues={issues} />
+          <LazyPanel name="Editor performance" lines={5}>
+            <EditorDiagnostics />
+          </LazyPanel>
         </div>
       </Collapsible>
 

@@ -536,7 +536,14 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
     if (myReview?.id === id && deleteMode !== "admin_soft") setMyReview(null);
     try {
       const { deleteReview } = await import("@/lib/review-delete");
-      const res = await deleteReview({ id, mode: deleteMode, reason: deleteReason });
+      const target = prevList.find((r) => r.id === id) ?? prevMine;
+      const res = await deleteReview({
+        id,
+        mode: deleteMode,
+        reason: deleteReason,
+        productId: productSlug,
+        ownerUserId: (target as { user_id?: string | null } | null)?.user_id ?? null,
+      });
       if (!res.ok) {
         setReviews(prevList);
         setMyReview(prevMine);

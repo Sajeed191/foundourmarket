@@ -699,211 +699,300 @@ function CommandCenter({ slug, f, set, row }: {
   ];
 
 
+  const stepStates: StepState[] = [
+    { id: "basic", done: !!f.name.trim() && f.categories.length > 0 },
+    { id: "images", done: imageCount > 0 },
+    { id: "pricing", done: sellPrice > 0 },
+    {
+      id: "specs",
+      done: f.specs.filter((s) => s.k.trim()).length >= 3,
+      note: `${Math.max(0, 3 - f.specs.filter((s) => s.k.trim()).length)} left`,
+    },
+    { id: "inventory", done: stock > 0 },
+    { id: "publish", done: status === "published" },
+  ];
+
+  return (
+    <GuidedWorkflow>
+      <WorkflowBody
+        slug={slug} f={f} set={set} row={row}
+        stepStates={stepStates} score={score} tone={tone} status={status}
+        stock={stock} sellPrice={sellPrice} imageCount={imageCount} setImageCount={setImageCount}
+        primaryUrl={primaryUrl} setPrimaryUrl={setPrimaryUrl}
+        workflowInput={workflowInput} snapshot={snapshot} pubBusy={pubBusy}
+        setWorkflowStatus={setWorkflowStatus} jumpToTarget={jumpToTarget} restoreSnapshot={restoreSnapshot}
+        nameTips={nameTips} descTips={descTips} featTips={featTips} specTips={specTips} seoTips={seoTips}
+        seoOk={seoOk} seoScore={seoScore} canonical={canonical} generateSeo={generateSeo}
+        checks={checks} okCount={okCount} healthCards={healthCards} issues={issues}
+        warnings={warnings} copilotRecs={copilotRecs} undoPatch={undoPatch} setUndoPatch={setUndoPatch}
+        commands={commands} pasteRaw={pasteRaw} setPasteRaw={setPasteRaw}
+        catOptions={catOptions} applyPaste={applyPaste} navigate={navigate}
+      />
+    </GuidedWorkflow>
+  );
+}
+
+/* ---------------- guided workflow body (Product Editor 9.0) ---------------- */
+
+function WorkflowBody(p: any) {
+  const {
+    slug, f, set, row, stepStates, score, tone, status, stock, sellPrice,
+    imageCount, setImageCount, primaryUrl, setPrimaryUrl,
+    workflowInput, snapshot, pubBusy, setWorkflowStatus, jumpToTarget, restoreSnapshot,
+    nameTips, descTips, featTips, specTips, seoTips, seoOk, seoScore, canonical, generateSeo,
+    checks, okCount, healthCards, issues, warnings, copilotRecs, undoPatch, setUndoPatch,
+    commands, pasteRaw, setPasteRaw, catOptions, applyPaste, navigate,
+  } = p;
+  const { mode, setStep } = useEditorWorkflow();
+  const advanced = mode === "advanced";
+  const isEmpty = !f.name.trim() && imageCount === 0;
+
+  function importFromUrl() {
+    const url = window.prompt("Paste the product listing URL");
+    if (url && url.trim()) setPasteRaw(url.trim());
+  }
+
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
       <div className="min-w-0 space-y-4">
 
-      {/* Compact summary + health card */}
-      <div className="card-premium rounded-2xl p-3.5">
-        <div className="flex items-center gap-3">
-          <div className="size-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 grid place-items-center">
-            {primaryUrl ? <img loading="lazy" decoding="async" src={resolveImage(primaryUrl)} alt={f.name} className="size-full object-cover" /> : <Package className="size-6 text-muted-foreground" />}
+        {/* Mode + universal field search */}
+        <div className="grid gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+          <ModeSwitch />
+          <FieldSearch />
+        </div>
+
+        {/* Compact summary + health ring */}
+        <div className="card-premium rounded-2xl p-3.5">
+          <div className="flex items-center gap-3">
+            <div className="size-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 grid place-items-center">
+              {primaryUrl ? <img loading="lazy" decoding="async" src={resolveImage(primaryUrl)} alt={f.name} className="size-full object-cover" /> : <Package className="size-6 text-muted-foreground" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{f.name || "Untitled product"}</p>
+              <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+                <span className="font-mono truncate">SKU {row.sku || "—"}</span>
+                <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-mono uppercase tracking-wider ${status === "published" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>
+                  {status.replace(/_/g, " ")}
+                </span>
+              </div>
+            </div>
+            <div className="relative size-16 shrink-0">
+              <svg viewBox="0 0 36 36" className="size-full -rotate-90">
+                <circle cx="18" cy="18" r="15.5" className="fill-none stroke-white/10" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15.5" className={`fill-none ${tone.r}`} strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray={`${(score / 100) * 97.4} 97.4`} />
+              </svg>
+              <div className="absolute inset-0 grid place-content-center text-center">
+                <span className={`text-base font-bold leading-none ${tone.t}`}>{score}%</span>
+                <span className="text-[7px] font-mono uppercase tracking-widest text-muted-foreground">Complete</span>
+              </div>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{f.name || "Untitled product"}</p>
-            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="font-mono truncate">SKU {row.sku || "—"}</span>
-              <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-mono uppercase tracking-wider ${status === "published" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>
-                {status.replace(/_/g, " ")}
+          <div className="mt-3 grid grid-cols-3 gap-1.5">
+            <SummaryStat label="Stock" value={String(stock)} />
+            <SummaryStat label="Price" value={sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "—"} />
+            <SummaryStat label="Images" value={String(imageCount)} />
+          </div>
+        </div>
+
+        <StepProgress states={stepStates} readiness={score} />
+
+        {/* ① Basic information */}
+        <Step id="basic" index={1} title="Basic Information" fieldKey="information"
+          desc="Name, brand & category" help="Start with the product name — everything else gets easier once it is set.">
+          <div className="space-y-4">
+            {isEmpty && (
+              <StartOptions
+                onPaste={() => setPasteRaw(" ")}
+                onImport={importFromUrl}
+                onScratch={() => focusEditorField("information")}
+              />
+            )}
+            <div>
+              <Field label="Product Name" value={f.name} onChange={(v: string) => set({ name: v })} />
+              <InlineSuggestions items={nameTips} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Brand" value={f.brand} onChange={(v: string) => set({ brand: v })} />
+              {advanced && <Field label="Product Type" value={f.product_type} onChange={(v: string) => set({ product_type: v })} />}
+            </div>
+            <CategorySelector value={f.categories} onChange={(v: string[]) => set({ categories: v, category: v[0] ?? "" })} />
+            {advanced && <Field label="Tags (comma separated)" value={f.tags} onChange={(v: string) => set({ tags: v })} />}
+            <div data-editor-field="description">
+              <p className="mb-1.5 flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                Description <HelpDot text="Short, factual copy. Buyers scan it — three tight paragraphs beat one long one." />
+              </p>
+              <RichTextEditor value={f.description} onChange={(v: string) => set({ description: v })} rows={7} />
+              <InlineSuggestions items={descTips} />
+            </div>
+            <NextStep label="Next — Images" onClick={() => setStep("images")} />
+          </div>
+        </Step>
+
+        {/* ② Images */}
+        <Step id="images" index={2} title="Images" fieldKey="media"
+          desc={`${imageCount} image${imageCount === 1 ? "" : "s"} • ${primaryUrl ? "hero set" : "no hero"}`}
+          help="Add the hero image first — it is what customers see everywhere on the marketplace.">
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-2">
+              <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] ${imageCount > 0 ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-amber-500/20 bg-amber-500/5 text-amber-400"}`}>
+                {imageCount > 0 ? <CheckCircle2 className="size-3.5 shrink-0" /> : <AlertTriangle className="size-3.5 shrink-0" />}
+                {imageCount > 0 ? "Images Added" : "Missing Images"}
+              </span>
+              <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] ${f.video_url.trim() ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-white/10 bg-white/[0.02] text-muted-foreground"}`}>
+                {f.video_url.trim() ? <CheckCircle2 className="size-3.5 shrink-0" /> : <Film className="size-3.5 shrink-0" />}
+                {f.video_url.trim() ? "Video Added" : "Video Optional"}
               </span>
             </div>
-          </div>
-          {/* Health ring */}
-          <div className="relative size-16 shrink-0">
-            <svg viewBox="0 0 36 36" className="size-full -rotate-90">
-              <circle cx="18" cy="18" r="15.5" className="fill-none stroke-white/10" strokeWidth="3" />
-              <circle cx="18" cy="18" r="15.5" className={`fill-none ${tone.r}`} strokeWidth="3" strokeLinecap="round"
-                strokeDasharray={`${(score / 100) * 97.4} 97.4`} />
-            </svg>
-            <div className="absolute inset-0 grid place-content-center text-center">
-              <span className={`text-base font-bold leading-none ${tone.t}`}>{score}%</span>
-              <span className="text-[7px] font-mono uppercase tracking-widest text-muted-foreground">Complete</span>
-            </div>
-          </div>
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-1.5">
-          <SummaryStat label="Stock" value={String(stock)} />
-          <SummaryStat label="Price" value={sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "—"} />
-          <SummaryStat label="Images" value={String(imageCount)} />
-        </div>
-      </div>
-
-      {/* Publishing Center — status, checklist, score, history, previews */}
-      <LazyPanel name="Publishing Center" lines={4}>
-        <PublishingCenter
-          slug={slug}
-          input={workflowInput}
-          overlay={draftOverlayFromForm(f)}
-          images={primaryUrl ? [primaryUrl] : []}
-          snapshot={snapshot}
-          busy={pubBusy}
-          lastModified={row.updated_at ?? null}
-          onSetStatus={setWorkflowStatus}
-          onJump={jumpToTarget}
-          onRestore={restoreSnapshot}
-        />
-      </LazyPanel>
-
-
-
-      {/* Media Center — images first, then video, with live health checks */}
-      <Collapsible fieldKey="media" title="Media Center" icon={<ImageIcon className="size-4" />}
-        desc={`${imageCount} Image${imageCount === 1 ? "" : "s"} • ${primaryUrl ? "Hero Set" : "No Hero"} • ${f.video_url.trim() ? "Video" : "No Video"}`}
-        badge={
-          <span className="flex items-center gap-1">
-            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${primaryUrl ? "bg-accent/15 text-accent" : "bg-amber-500/15 text-amber-400"}`}>HERO</span>
-            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${f.video_url.trim() ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>VID</span>
-          </span>
-        }>
-
-        <div className="space-y-5">
-          {/* Health checks */}
-          <div className="grid grid-cols-2 gap-2">
-            <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] ${imageCount > 0 ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-amber-500/20 bg-amber-500/5 text-amber-400"}`}>
-              {imageCount > 0 ? <CheckCircle2 className="size-3.5 shrink-0" /> : <AlertTriangle className="size-3.5 shrink-0" />}
-              {imageCount > 0 ? "Images Added" : "Missing Images"}
-            </span>
-            <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] ${f.video_url.trim() ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" : "border-amber-500/20 bg-amber-500/5 text-amber-400"}`}>
-              {f.video_url.trim() ? <CheckCircle2 className="size-3.5 shrink-0" /> : <AlertTriangle className="size-3.5 shrink-0" />}
-              {f.video_url.trim() ? "Video Added" : "Missing Video"}
-            </span>
-          </div>
-
-          {/* 1. Product Images */}
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-              <ImageIcon className="size-3.5 text-accent" /> Product Images
-            </div>
             <ProductMediaGallery slug={slug} name={f.name} primaryUrl={primaryUrl}
-              onPrimaryChange={(u) => setPrimaryUrl(u)} onCountChange={setImageCount} />
+              onPrimaryChange={(u: string | null) => setPrimaryUrl(u)} onCountChange={setImageCount} />
+            {advanced && (
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  <Film className="size-3.5 text-accent" /> Product Video
+                </div>
+                <ProductVideoUploader slug={slug} value={f.video_url} onChange={(u: string) => set({ video_url: u })} />
+              </div>
+            )}
+            <NextStep label="Next — Pricing" onClick={() => setStep("pricing")} />
           </div>
+        </Step>
 
-          {/* 2. Product Video */}
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-              <Film className="size-3.5 text-accent" /> Product Video
+        {/* ③ Pricing */}
+        <Step id="pricing" index={3} title="Pricing" fieldKey="pricing"
+          desc={sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "Not priced yet"}
+          help="Selling price, MRP and margins live in the pricing workspace so currency rules stay consistent.">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-1.5">
+              <SummaryStat label="Selling price" value={sellPrice > 0 ? `₹${sellPrice.toLocaleString("en-IN")}` : "—"} />
+              <SummaryStat label="Status" value={status.replace(/_/g, " ")} />
             </div>
-            <ProductVideoUploader slug={slug} value={f.video_url} onChange={(u) => set({ video_url: u })} />
+            <button type="button" onClick={() => navigate({ to: "/admin-product/$slug/pricing", params: { slug } })}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-4 text-sm font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.98]">
+              <Tag className="size-4" /> Open pricing
+            </button>
+            <NextStep label="Next — Specifications" onClick={() => setStep("specs")} />
           </div>
-        </div>
-      </Collapsible>
+        </Step>
 
-
-      {/* Product information */}
-      <Collapsible fieldKey="information" title="Product Information" icon={<Tag className="size-4" />} desc="Name, brand, type, category & tags">
-        <div className="space-y-3">
-          <div>
-            <Field label="Product Name" value={f.name} onChange={(v) => set({ name: v })} />
-            <InlineSuggestions items={nameTips} />
+        {/* ④ Specifications */}
+        <Step id="specs" index={4} title="Specifications" fieldKey="specs"
+          desc="Paste anything — cards are built automatically"
+          help="Paste a spec sheet from Amazon, Excel or a PDF. It is cleaned up and grouped for you."
+          badge={
+            <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
+              {f.specs.filter((s: KV) => s.k.trim()).length}
+            </span>
+          }>
+          <div className="space-y-4">
+            <div data-editor-field="features">
+              <p className="mb-1.5 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Key Features</p>
+              <FeaturesBuilder value={f.features} onChange={(v: string[]) => set({ features: v })} />
+              <InlineSuggestions items={featTips} />
+            </div>
+            <SmartSpecsBuilder rows={f.specs} onChange={(v: KV[]) => set({ specs: v })} />
+            <InlineSuggestions items={specTips} />
+            {advanced && (
+              <div>
+                <p className="mb-1.5 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Attributes</p>
+                <KeyValueBuilder rows={f.attrs} onChange={(v: KV[]) => set({ attrs: v })}
+                  keyPlaceholder="e.g. Color" valuePlaceholder="e.g. Black" addLabel="Add Attribute" />
+              </div>
+            )}
+            <NextStep label="Next — Inventory" onClick={() => setStep("inventory")} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Brand" value={f.brand} onChange={(v) => set({ brand: v })} />
-            <Field label="Product Type" value={f.product_type} onChange={(v) => set({ product_type: v })} />
+        </Step>
+
+        {/* ⑤ Inventory */}
+        <Step id="inventory" index={5} title="Inventory" fieldKey="inventory"
+          desc={stock > 0 ? `${stock} in stock` : "No stock recorded"}
+          help="Stock, SKU and warehouse rules live in the inventory workspace.">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-1.5">
+              <SummaryStat label="Stock" value={String(stock)} />
+              <SummaryStat label="SKU" value={row.sku || "—"} />
+            </div>
+            <button type="button" onClick={() => navigate({ to: "/admin-product/$slug/inventory", params: { slug } })}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-4 text-sm font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.98]">
+              <Package className="size-4" /> Open inventory
+            </button>
+            <NextStep label="Next — Review & Publish" onClick={() => setStep("publish")} />
           </div>
-          <CategorySelector value={f.categories} onChange={(v) => set({ categories: v, category: v[0] ?? "" })} />
-          <Field label="Tags (comma separated)" value={f.tags} onChange={(v) => set({ tags: v })} />
-        </div>
-      </Collapsible>
+        </Step>
 
-      {/* Description */}
-      <Collapsible fieldKey="description" title="Description" icon={<FileText className="size-4" />} desc="Rich text — headings, bold & lists">
-        <RichTextEditor value={f.description} onChange={(v) => set({ description: v })} rows={7} />
-        <InlineSuggestions items={descTips} />
-      </Collapsible>
+        {/* ⑥ Review & publish */}
+        <Step id="publish" index={6} title="Review & Publish" fieldKey="publish"
+          desc={`${okCount}/${checks.length} checks passing`}
+          help="Everything below is optional polish. Publish when the checklist is green.">
+          <div className="space-y-3">
+            <LazyPanel name="Publishing Center" lines={4}>
+              <PublishingCenter
+                slug={slug}
+                input={workflowInput}
+                overlay={draftOverlayFromForm(f)}
+                images={primaryUrl ? [primaryUrl] : []}
+                snapshot={snapshot}
+                busy={pubBusy}
+                lastModified={row.updated_at ?? null}
+                onSetStatus={setWorkflowStatus}
+                onJump={jumpToTarget}
+                onRestore={restoreSnapshot}
+              />
+            </LazyPanel>
 
-      {/* Features */}
-      <Collapsible fieldKey="features" title="Features" icon={<ListChecks className="size-4" />} desc="Key selling points">
-        <FeaturesBuilder value={f.features} onChange={(v) => set({ features: v })} />
-        <InlineSuggestions items={featTips} />
-      </Collapsible>
+            <AdvancedSettings>
+              {/* SEO */}
+              <div data-editor-field="seo" className="space-y-3">
+                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  SEO Center
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>
+                </p>
+                <button type="button" onClick={generateSeo}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
+                  <Sparkles className="size-3.5" /> Improve
+                </button>
+                <Field label="SEO Title" value={f.seo_title} onChange={(v: string) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
+                <div>
+                  <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Meta Description</label>
+                  <textarea value={f.seo_description} rows={3} onChange={(e) => set({ seo_description: e.target.value })}
+                    className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm focus:border-accent/40 focus:outline-none" />
+                  <p className="mt-1 text-[10px] text-muted-foreground">{f.seo_description.length}/160 characters</p>
+                </div>
+                <Field label="Keywords (comma separated)" value={f.keywords} onChange={(v: string) => set({ keywords: v })} />
+                <p className="truncate rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">{canonical}</p>
+                <InlineSuggestions items={seoTips} />
+              </div>
 
-      {/* Specifications */}
-      <Collapsible fieldKey="specs" title="Specifications" icon={<Layers className="size-4" />}
-        desc="Paste anything — cards are built automatically"
-        badge={
-          <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
-            {f.specs.filter((s) => s.k.trim()).length}
-          </span>
-        }>
-        <SmartSpecsBuilder rows={f.specs} onChange={(v) => set({ specs: v })} />
-        <InlineSuggestions items={specTips} />
-      </Collapsible>
+              {/* FAQs */}
+              <div className="space-y-2 border-t border-white/8 pt-3">
+                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Product FAQs</p>
+                <ProductFaqManager productSlug={slug} />
+              </div>
 
+              {/* Rating */}
+              <div className="space-y-2 border-t border-white/8 pt-3">
+                <p className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                  Rating Management
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-400">
+                    <Star className="size-2.5 fill-current" /> {(Number(f.rating) || 0).toFixed(1)}
+                  </span>
+                </p>
+                <RatingManager f={f} set={set} />
+              </div>
 
-
-      {/* Attributes */}
-      <Collapsible title="Attributes" icon={<Tag className="size-4" />} desc="Variant & buyer-facing attributes">
-        <KeyValueBuilder rows={f.attrs} onChange={(v) => set({ attrs: v })}
-          keyPlaceholder="e.g. Color" valuePlaceholder="e.g. Black" addLabel="Add Attribute" />
-      </Collapsible>
-
-      {/* FAQs */}
-      <Collapsible title="Product FAQs" icon={<HelpCircle className="size-4" />} defaultOpen={false}
-        desc="Add, edit, reorder & toggle buyer FAQs">
-        <ProductFaqManager productSlug={slug} />
-      </Collapsible>
-
-      {/* Rating management */}
-      <Collapsible title="Rating Management" icon={<Star className="size-4" />}
-        desc="Star rating, review count & source"
-        badge={
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-amber-400">
-            <Star className="size-2.5 fill-current" /> {(Number(f.rating) || 0).toFixed(1)}
-          </span>
-        }>
-        <RatingManager f={f} set={set} />
-      </Collapsible>
-
-
-
-      {/* SEO center */}
-      <Collapsible fieldKey="seo" title="SEO Center" icon={<Search className="size-4" />} defaultOpen={false}
-        desc="Search title, meta & keywords"
-        badge={<span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${seoOk ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{seoScore}/3</span>}>
-        <div className="space-y-3">
-          <button type="button" onClick={generateSeo}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3.5 py-1.5 text-xs font-semibold text-accent transition-all hover:bg-accent/20 active:scale-[0.97]">
-            <Sparkles className="size-3.5" /> Auto-generate SEO
-          </button>
-          <Field label="SEO Title" value={f.seo_title} onChange={(v) => set({ seo_title: v })} hint={`${f.seo_title.length}/60 characters`} />
-          <div>
-            <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Meta Description</label>
-            <textarea value={f.seo_description} rows={3} onChange={(e) => set({ seo_description: e.target.value })}
-              className="w-full resize-y rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm focus:border-accent/40 focus:outline-none" />
-            <p className="mt-1 text-[10px] text-muted-foreground">{f.seo_description.length}/160 characters</p>
+              {/* Health & diagnostics */}
+              <div data-editor-field="health" className="space-y-3 border-t border-white/8 pt-3">
+                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Product Health</p>
+                <HealthDashboard score={score} ready={warnings.every((w: any) => RULES[w.key]?.impact !== "high")} cards={healthCards} />
+                <ValidationCards issues={issues} />
+                <LazyPanel name="Editor performance" lines={5}>
+                  <EditorDiagnostics />
+                </LazyPanel>
+              </div>
+            </AdvancedSettings>
           </div>
-          <Field label="Keywords (comma separated)" value={f.keywords} onChange={(v) => set({ keywords: v })} />
-          <div>
-            <label className="mb-1.5 block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">Canonical URL</label>
-            <p className="truncate rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">{canonical}</p>
-          </div>
-          <InlineSuggestions items={seoTips} />
-        </div>
-      </Collapsible>
-
-      {/* Health center */}
-      <Collapsible fieldKey="health" title="Product Health Center" icon={<Activity className="size-4" />}
-        desc={`${okCount}/${checks.length} checks passing`}
-        badge={<span className={`rounded-full px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider ${tone.t} bg-white/5`}>{score}%</span>}>
-        <div className="space-y-3">
-          <HealthDashboard score={score} ready={warnings.every((w) => RULES[w.key]?.impact !== "high")} cards={healthCards} />
-          <ValidationCards issues={issues} />
-          <LazyPanel name="Editor performance" lines={5}>
-            <EditorDiagnostics />
-          </LazyPanel>
-        </div>
-      </Collapsible>
-
+        </Step>
 
         {pasteRaw && (
           <UniversalPasteDialog
@@ -915,15 +1004,26 @@ function CommandCenter({ slug, f, set, row }: {
         )}
       </div>
 
-      {/* AI Copilot — docked right on desktop, bottom sheet on mobile */}
-      <AiCopilot
-        recs={copilotRecs}
-        canUndo={!!undoPatch}
-        onUndo={() => { if (undoPatch) { set(undoPatch); setUndoPatch(null); toast.success("Reverted"); } }}
-      />
+      {/* AI Copilot — advanced mode only, so simple mode stays quiet */}
+      {advanced && (
+        <AiCopilot
+          recs={copilotRecs}
+          canUndo={!!undoPatch}
+          onUndo={() => { if (undoPatch) { set(undoPatch); setUndoPatch(null); toast.success("Reverted"); } }}
+        />
+      )}
 
       <EditorCommandPalette commands={commands} />
     </div>
   );
+}
 
+function NextStep({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick}
+      className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-white/[0.03] px-4 text-sm font-semibold text-foreground transition-[background-color,transform] duration-[var(--editor-motion-fast,160ms)] hover:bg-white/[0.07] active:scale-[0.99] sm:w-auto">
+      {label} <ChevronDown className="size-4 -rotate-90" />
+    </button>
+  );
+}
 }

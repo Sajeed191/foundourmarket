@@ -585,7 +585,9 @@ function CommandCenter({ slug, f, set, row }: {
       toast.info("Description already covers every section");
       return;
     }
+    const startedAt = performance.now();
     applyWithUndo({ description: draftMerge.text }, { description: f.description });
+    recordMetric("ai-generate", performance.now() - startedAt, "description");
     focusEditorField("description");
     toast.success(`Added ${draftMerge.addedSections.length} section${draftMerge.addedSections.length === 1 ? "" : "s"}`, {
       description: `${draftMerge.addedSections.join(" · ")} — your existing text was left untouched.`,

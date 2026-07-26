@@ -1953,7 +1953,8 @@ function WriteReviewModal(props: {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md overscroll-contain"
+          className="fixed inset-0 z-[var(--z-modal-overlay)] flex items-center justify-center p-4 backdrop-blur-lg overscroll-contain"
+          style={{ background: "rgba(5,6,8,0.72)" }}
           onClick={requestClose}
           onTouchMove={onOverlayTouchMove}
         >
@@ -1964,7 +1965,12 @@ function WriteReviewModal(props: {
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="w-[92vw] max-w-[520px] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-[26px] border border-white/10 bg-card/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[var(--shadow-float)] [-webkit-overflow-scrolling:touch]"
+            className="w-[92vw] max-w-[520px] max-h-[85dvh] overflow-y-auto overscroll-contain rounded-[26px] p-6 sm:p-8 [-webkit-overflow-scrolling:touch]"
+            style={{
+              background: "#121316",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 30px 80px -30px rgba(0,0,0,0.85), 0 8px 24px -14px rgba(0,0,0,0.55)",
+            }}
           >
 
             <div className="flex items-center justify-between mb-5">

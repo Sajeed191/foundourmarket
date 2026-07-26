@@ -765,6 +765,9 @@ function CommandCenter({ slug, f, set, row }: {
         commands={commands} pasteRaw={pasteRaw} setPasteRaw={setPasteRaw}
         catOptions={catOptions} applyPaste={applyPaste} navigate={navigate}
         topIssue={topIssue}
+        generateDescription={generateDescription} generateFeatures={generateFeatures}
+        generateKeywords={generateKeywords}
+
 
       />
     </GuidedWorkflow>

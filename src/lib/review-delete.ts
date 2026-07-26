@@ -110,12 +110,71 @@ async function callRpc(fn: string, args: Record<string, unknown>): Promise<PgLik
   }
 }
 
+/**
+ * Development-only structured diagnostics. Stripped from production bundles by
+ * the `import.meta.env.DEV` guard, so customers never see internal identifiers,
+ * Postgres messages or user IDs in their console.
+ */
+async function logDiagnostics(ctx: {
+  fn: string;
+  reviewId: string;
+  productId?: string | null;
+  ownerUserId?: string | null;
+  mode: ReviewDeleteMode;
+  retryCount: number;
+  startedAt: number;
+  err: PgLikeError;
+  outcome: string;
+}) {
+  if (!import.meta.env.DEV) return;
+  let authUserId: string | null = null;
+  let sessionStatus = "none";
+  let expiresIn: number | null = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+    if (session) {
+      authUserId = session.user?.id ?? null;
+      const expiresAt = (session.expires_at ?? 0) * 1000;
+      expiresIn = expiresAt ? Math.round((expiresAt - Date.now()) / 1000) : null;
+      sessionStatus = expiresAt && expiresAt <= Date.now() ? "expired" : "active";
+    }
+  } catch {
+    sessionStatus = "unavailable";
+  }
+  console.groupCollapsed(`[reviews:delete] ${ctx.outcome} — ${ctx.fn}`);
+  console.table({
+    reviewId: ctx.reviewId,
+    productId: ctx.productId ?? "(not provided)",
+    reviewOwnerUserId: ctx.ownerUserId ?? "(unknown)",
+    authenticatedUserId: authUserId ?? "(anon)",
+    ownerMatchesSession: ctx.ownerUserId ? String(ctx.ownerUserId === authUserId) : "(unknown)",
+    sessionStatus,
+    accessTokenExpiresInSec: expiresIn ?? "(unknown)",
+    mode: ctx.mode,
+    rpc: ctx.fn,
+    supabaseErrorCode: ctx.err.code ?? "(none)",
+    httpStatus: ctx.err.status ?? "(none)",
+    postgresMessage: ctx.err.message ?? "(none)",
+    details: ctx.err.details ?? "(none)",
+    hint: ctx.err.hint ?? "(none)",
+    retryCount: ctx.retryCount,
+    durationMs: Date.now() - ctx.startedAt,
+  });
+  console.groupEnd();
+}
+
 export async function deleteReview(input: {
   id: string;
   mode: ReviewDeleteMode;
   reason?: string | null;
+  /** Diagnostics only — never sent to the database. */
+  productId?: string | null;
+  ownerUserId?: string | null;
 }): Promise<ReviewDeleteOutcome> {
   const { id, mode } = input;
+  const startedAt = Date.now();
+  let retryCount = 0;
 
   const fn =
     mode === "admin_hard" ? "admin_hard_delete_review"
@@ -143,13 +202,10 @@ export async function deleteReview(input: {
 
   // 3. One forced-refresh retry for auth failures only.
   if (isAuthError(err)) {
-    console.warn("[reviews] delete auth failure, refreshing session and retrying", {
-      fn,
-      code: err.code,
-      message: err.message,
-    });
+    await logDiagnostics({ fn, reviewId: id, productId: input.productId, ownerUserId: input.ownerUserId, mode, retryCount, startedAt, err, outcome: "auth failure — refreshing session and retrying" });
     const refreshed = await ensureFreshSession(true);
     if (refreshed.ok) {
+      retryCount += 1;
       err = await callRpc(fn, args);
       if (!err) return { ok: true, queued: false, alreadyGone: false };
       if (isNotFound(err)) return { ok: true, queued: false, alreadyGone: true };
@@ -167,16 +223,7 @@ export async function deleteReview(input: {
     }
   }
 
-  console.error("[reviews] delete failed", {
-    fn,
-    reviewId: id,
-    mode,
-    code: err.code,
-    status: err.status,
-    message: err.message,
-    details: err.details,
-    hint: err.hint,
-  });
+  await logDiagnostics({ fn, reviewId: id, productId: input.productId, ownerUserId: input.ownerUserId, mode, retryCount, startedAt, err, outcome: "failed" });
 
   return { ok: false, ...classify(err) };
 }

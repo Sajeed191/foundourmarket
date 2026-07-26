@@ -67,7 +67,7 @@ export function WhyFoundOurMarket() {
   }, [reduced]);
 
   return (
-    <section ref={ref} className="px-4 sm:px-6 py-8 sm:py-12 max-w-7xl mx-auto">
+    <section ref={ref} className="px-4 sm:px-6 pt-9 pb-10 sm:pt-12 sm:pb-12 max-w-7xl mx-auto">
       <PremiumSectionHeading
         title="Why FoundOurMarket"
         eyebrow="The Difference"

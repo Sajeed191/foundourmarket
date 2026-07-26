@@ -45,7 +45,7 @@ export function CategoryBento({
   onEdit: () => void;
 }) {
   return (
-    <section id="categories" className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="categories" className="px-4 sm:px-6 pt-6 pb-8 sm:pt-8 sm:pb-10 max-w-7xl mx-auto scroll-mt-24">
       <div className="relative">
         <PremiumSectionHeading
           title="Main Categories"

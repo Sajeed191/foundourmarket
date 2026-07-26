@@ -84,7 +84,7 @@ export function HeroV2({ onOpenSearch }: { onOpenSearch: () => void }) {
   return (
     <section
       ref={ref}
-      className="relative z-30 px-3 sm:px-6 lg:px-10 pb-3 sm:pb-5"
+      className="relative z-30 px-3 sm:px-6 lg:px-10 pb-5 sm:pb-6"
       style={{
         background: "var(--gradient-hero)",
         marginTop: "calc(-1 * var(--app-header-h, 4.75rem))",

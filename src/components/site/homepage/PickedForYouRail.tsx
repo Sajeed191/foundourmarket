@@ -54,7 +54,7 @@ export function PickedForYouRail({ products }: { products: Product[] }) {
   if (picks.length === 0) return null;
 
   return (
-    <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24">
+    <section className="px-4 sm:px-6 py-9 sm:py-10 max-w-7xl mx-auto scroll-mt-24">
       <PremiumSectionHeading title={title} eyebrow={eyebrow} subtitle={subtitle} />
       <LazyMount minHeight={260}>
         <div data-product-grid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

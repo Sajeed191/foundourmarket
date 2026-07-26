@@ -294,7 +294,7 @@ function ProductSection({
   return (
     <SectionTracker
       sectionKey={sectionKey}
-      className={`px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto scroll-mt-24 block`}
+      className={`px-4 sm:px-6 py-9 sm:py-10 max-w-7xl mx-auto scroll-mt-24 block`}
     >
       <SectionHeader
         eyebrow={eyebrow}
@@ -770,10 +770,12 @@ function Home() {
       <CinematicDivider />
 
       {/* 7 · Social Proof — verified customer reviews */}
-      <section className="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
-        <Reveal className="text-center mb-4 sm:mb-6">
-          <h2 className="text-fluid-2xl font-display tracking-tight">What our customers say</h2>
-        </Reveal>
+      <section className="px-4 sm:px-6 pt-10 pb-9 sm:pt-12 sm:pb-10 max-w-7xl mx-auto">
+        <PremiumSectionHeading
+          eyebrow="Social Proof"
+          title="What our customers say"
+          subtitle="Verified reviews from shoppers around the world."
+        />
 
 
         {testimonials.length > 0 && (

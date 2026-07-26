@@ -48,18 +48,22 @@ const SPEC_GROUP_ORDER = [
 
 type SpecGroupName = (typeof SPEC_GROUP_ORDER)[number];
 
-const SPEC_GROUP_META: Record<SpecGroupName, { icon: LucideIcon; subtitle: string }> = {
-  Display: { icon: Monitor, subtitle: "Screen, resolution and visual quality" },
-  Performance: { icon: Cpu, subtitle: "Processor, memory and storage" },
-  Camera: { icon: CameraIcon, subtitle: "Imaging and video capability" },
-  Battery: { icon: BatteryCharging, subtitle: "Power and charging information" },
-  Connectivity: { icon: Signal, subtitle: "Networks, wireless and ports" },
-  Audio: { icon: Volume2, subtitle: "Sound output and microphones" },
-  "Build & Design": { icon: Layers, subtitle: "Materials, finish and protection" },
-  "Dimensions & Weight": { icon: Ruler, subtitle: "Physical size and weight" },
-  Sensors: { icon: Radar, subtitle: "Onboard sensing hardware" },
-  General: { icon: Info, subtitle: "Additional product information" },
+const SPEC_GROUP_META: Record<
+  SpecGroupName,
+  { icon: LucideIcon; subtitle: string; short: string; tint?: string; tintStrength?: number }
+> = {
+  Display: { icon: Monitor, subtitle: "Screen, resolution and visual quality", short: "Screen & Visuals", tint: "#7dd3fc", tintStrength: 0.03 },
+  Performance: { icon: Cpu, subtitle: "Processor, memory and storage", short: "Processor & Memory", tint: "#a78bfa", tintStrength: 0.03 },
+  Camera: { icon: CameraIcon, subtitle: "Imaging and video capability", short: "Imaging & Video", tint: "#f0abfc", tintStrength: 0.025 },
+  Battery: { icon: BatteryCharging, subtitle: "Power and charging information", short: "Power & Charging", tint: "#fb923c", tintStrength: 0.035 },
+  Connectivity: { icon: Signal, subtitle: "Networks, wireless and ports", short: "Network & Ports", tint: "#5eead4", tintStrength: 0.025 },
+  Audio: { icon: Volume2, subtitle: "Sound output and microphones", short: "Sound & Audio", tint: "#93c5fd", tintStrength: 0.025 },
+  "Build & Design": { icon: Layers, subtitle: "Materials, finish and protection", short: "Materials & Finish", tint: "#d6a06a", tintStrength: 0.035 },
+  "Dimensions & Weight": { icon: Ruler, subtitle: "Physical size and weight", short: "Size & Weight", tint: "#cbd5e1", tintStrength: 0.02 },
+  Sensors: { icon: Radar, subtitle: "Onboard sensing hardware", short: "Sensing Hardware", tint: "#86efac", tintStrength: 0.022 },
+  General: { icon: Info, subtitle: "Additional product information", short: "General Information", tint: "#94a3b8", tintStrength: 0.02 },
 };
+
 
 const SPEC_GROUP_PATTERNS: Array<{ group: SpecGroupName; test: RegExp }> = [
   { group: "Display", test: /display|screen|resolution|refresh|panel|nits|hdr|ppi/i },
@@ -170,12 +174,14 @@ function toTitleCase(raw: string): string {
     .join(" ");
 }
 
-/** Category / info card: thin orange accent line, name, small caption. No icon. */
+/** Category / info card: glowing accent line, category eyebrow, larger title. */
 function DetailCard({
   title,
   subtitle,
   eyebrow,
   alt = false,
+  tint,
+  tintStrength,
   children,
   className,
 }: {
@@ -183,28 +189,37 @@ function DetailCard({
   subtitle?: string;
   eyebrow?: string;
   alt?: boolean;
+  tint?: string;
+  tintStrength?: number;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={cn("pdp-card pdp-card-tap", alt && "pdp-card-alt", className)}>
+    <section
+      className={cn("pdp-card pdp-card-tap", alt && "pdp-card-alt", className)}
+      style={
+        tint
+          ? ({
+              ["--pdp-tint" as string]: tint,
+              ["--pdp-tint-strength" as string]: String(tintStrength ?? 0.03),
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       {title && (
-        <header className="mb-2.5 flex items-start gap-3">
-          <span
-            aria-hidden
-            className="mt-[3px] h-8 w-[2px] shrink-0 rounded-full bg-gradient-to-b from-accent via-accent/60 to-transparent"
-          />
+        <header className="mb-2 flex items-start gap-3">
+          <span aria-hidden className="pdp-accent-line mt-[2px]" />
           <div className="min-w-0 flex-1">
             {eyebrow && (
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/55">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/50">
                 {eyebrow}
               </p>
             )}
-            <h3 className="mt-0.5 text-[16px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
+            <h3 className="mt-[7px] text-[18px] font-semibold leading-tight tracking-[-0.015em] text-foreground">
               {title}
             </h3>
             {subtitle && (
-              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/60">{subtitle}</p>
+              <p className="mt-1 text-[11px] leading-snug text-muted-foreground/55">{subtitle}</p>
             )}
           </div>
         </header>
@@ -223,16 +238,16 @@ function SpecRows({
   observe: (node: HTMLElement | null) => void;
 }) {
   return (
-    <dl>
+    <dl className="mt-1">
       {entries.map(([k, v], i) => (
         <div key={k}>
           {i > 0 && <div aria-hidden className="pdp-row-divider" />}
           <Reveal observe={observe} index={i} step={40}>
-            <div className="py-2.5">
+            <div className="py-2">
               <dt className="text-[11px] font-medium leading-tight text-muted-foreground/70">
                 {toTitleCase(k)}
               </dt>
-              <dd className="mt-0.5 break-words text-[17px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
+              <dd className="mt-[3px] break-words text-[16.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground">
                 {v}
               </dd>
             </div>
@@ -242,6 +257,8 @@ function SpecRows({
     </dl>
   );
 }
+
+
 
 
 function EmptyState({ message }: { message: string }) {
@@ -432,7 +449,8 @@ export function PDPDetailsTabs({
               <span
                 aria-hidden
                 className="pdp-tab-glow top-2 h-[42px]"
-                style={{ width: ind.width, transform: `translate3d(${ind.left}px,0,0)`, left: 0 }}
+                style={{ width: ind.width, transform: `translate3d(${ind.left}px,-2px,0)`, left: 0 }}
+
               />
             )}
             {tabs.map((t) => {
@@ -468,38 +486,31 @@ export function PDPDetailsTabs({
         key={current}
         id={`pdp-tab-panel-${current}`}
         role="tabpanel"
-        className="relative mt-5 space-y-3"
+        className="relative mt-4 flex flex-col gap-[22px]"
       >
         {current === "specs" && (
           <>
             <span aria-hidden className="pdp-panel-watermark">
               Specs
             </span>
-            <div className="mb-4 flex gap-2">
-              {[
-                { value: String(specCount), label: "Specifications" },
-                { value: String(groups.length), label: "Categories" },
-                { value: "Verified", label: "Catalogue" },
-              ].map((s) => (
-                <div key={s.label} className="pdp-stat">
-                  <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-foreground">
-                    {s.value}
-                  </p>
-                  <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60">
-                    {s.label}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <p className="-mt-1 text-[11.5px] leading-none text-muted-foreground/60">
+              {specCount} {specCount === 1 ? "specification" : "specifications"}
+              <span className="mx-1.5 text-muted-foreground/35">•</span>
+              {groups.length} {groups.length === 1 ? "category" : "categories"}
+              <span className="mx-1.5 text-muted-foreground/35">•</span>
+              Verified catalog
+            </p>
             {groups.map(({ group, entries }, i) => {
               const meta = SPEC_GROUP_META[group as SpecGroupName];
               return (
                 <Reveal key={group} observe={observe} index={i} step={40}>
                   <DetailCard
                     eyebrow={group.toUpperCase()}
-                    title={meta?.subtitle ?? "Product information"}
+                    title={meta?.short ?? "Product Information"}
                     subtitle={`${entries.length} ${entries.length === 1 ? "specification" : "specifications"}`}
                     alt={i % 2 === 1}
+                    tint={meta?.tint}
+                    tintStrength={meta?.tintStrength}
                   >
                     <SpecRows entries={entries} observe={observe} />
                   </DetailCard>
@@ -508,6 +519,7 @@ export function PDPDetailsTabs({
             })}
           </>
         )}
+
 
 
         {current === "description" && (
@@ -596,7 +608,7 @@ export function PDPDetailsTabs({
               </Reveal>
             )}
             {warrantyEntries.length > 0 && (
-              <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-[22px] sm:grid-cols-2">
                 {warrantyEntries.map(([k, v], i) => {
                   const Icon = WARRANTY_ICONS.find((w) => w.test.test(k))?.icon ?? ShieldCheck;
                   return (

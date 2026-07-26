@@ -417,6 +417,24 @@ function CommandCenter({ slug, f, set, row }: {
   const specTips = specSuggestions(suggestInput);
   const seoTips = seoSuggestions(suggestInput);
 
+  /* ---- health dashboard cards (traffic-light, one-click fix) ---- */
+  const healthCards: HealthCard[] = checks.map((c) => {
+    const rule = RULES[c.key];
+    const tone: HealthCard["tone"] = c.ok
+      ? "excellent"
+      : rule?.impact === "high" ? "bad" : rule?.impact === "low" ? "good" : "warn";
+    const issue = issues.find((i) => i.id === c.key);
+    return {
+      id: c.key,
+      label: c.key,
+      status: c.ok ? "Complete" : (rule?.title ?? "Missing"),
+      detail: c.ok ? undefined : rule?.action,
+      tone,
+      icon: c.icon,
+      onFix: c.ok ? undefined : issue?.onAction,
+      fixLabel: rule?.action,
+    };
+  });
 
 
   const tone = score >= 85 ? { t: "text-emerald-400", b: "bg-emerald-500", r: "stroke-emerald-400" }

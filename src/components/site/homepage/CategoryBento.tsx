@@ -99,6 +99,30 @@ export function CategoryBento({
             </Reveal>
           );
         })}
+
+        <Reveal delay={categories.length}>
+          <Link
+            to="/categories"
+            aria-label="View all categories"
+            className="group relative flex h-full flex-col items-center gap-2.5 sm:gap-3 p-2.5 sm:p-4 text-center rounded-2xl border border-accent/25 bg-card/60 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 hover:shadow-[0_8px_32px_-8px_oklch(0.74_0.19_49/0.45)] active:scale-[0.97]"
+          >
+            <div className="relative w-full aspect-square overflow-hidden rounded-2xl border border-accent/20 bg-muted/40 grid place-items-center">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-40 blur-xl transition-opacity duration-300 group-hover:opacity-70"
+                style={{ background: "var(--gradient-ember)" }}
+              />
+              <span className="relative grid size-14 sm:size-16 place-items-center rounded-full bg-accent/15 text-accent ring-1 ring-accent/30 shadow-[0_0_28px_-6px_oklch(0.74_0.19_49/0.6)] transition-transform duration-300 group-hover:scale-105">
+                <LayoutGrid className="size-6 sm:size-7" />
+              </span>
+            </div>
+            <div className="w-full pb-0.5">
+              <h3 className="text-[12px] sm:text-sm font-semibold tracking-tight text-accent truncate px-1">
+                View All
+              </h3>
+            </div>
+          </Link>
+        </Reveal>
       </div>
     </section>
   );

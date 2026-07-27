@@ -151,12 +151,12 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={`${p.name} — flash deal${off > 0 ? `, ${off}% off` : ""}`}
-      className="group relative flex h-[232px] w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-4 overflow-hidden rounded-[26px] border border-white/[0.09] bg-card/50 p-4 backdrop-blur-2xl transition-[transform,border-color,box-shadow] duration-[240ms] ease-out will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-1 hover:border-white/[0.15] shadow-[0_30px_66px_-46px_rgba(0,0,0,0.95),0_2px_10px_-6px_rgba(0,0,0,0.6)] sm:h-[248px] sm:w-[540px] sm:gap-5 sm:p-5 lg:h-[268px] lg:w-full lg:max-w-none lg:gap-7 lg:rounded-[28px] lg:p-6"
+      className="group relative flex min-h-[232px] w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-4 overflow-visible rounded-[26px] border border-white/[0.09] bg-card/50 p-4 backdrop-blur-2xl transition-[transform,border-color,box-shadow] duration-[240ms] ease-out will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-1 hover:border-white/[0.15] shadow-[0_30px_66px_-46px_rgba(0,0,0,0.95),0_2px_10px_-6px_rgba(0,0,0,0.6)] sm:min-h-[248px] sm:w-[540px] sm:gap-5 sm:p-5 lg:min-h-[268px] lg:w-full lg:max-w-none lg:gap-7 lg:rounded-[28px] lg:p-6"
     >
       {/* Near-invisible warm radial depth */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[inherit]"
         style={{
           background:
             "radial-gradient(110% 76% at 16% 2%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.045), transparent 28%)",
@@ -170,12 +170,12 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
 
       {/* 60% content */}
       <div className="flex min-w-0 flex-1 flex-col justify-center text-left">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-2 py-[2px] text-[9px] font-semibold uppercase tracking-[0.16em] text-[hsl(35_45%_78%)] backdrop-blur-md">
+        <div className="flex flex-wrap items-center gap-1.5 gap-y-1.5">
+          <span className="whitespace-nowrap rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-2 py-[3px] text-[9px] font-semibold uppercase leading-none tracking-[0.16em] text-[hsl(35_45%_78%)] backdrop-blur-md">
             {badge}
           </span>
           {stock && (
-            <span className={`rounded-full border px-2 py-[2px] text-[9px] font-semibold tracking-wide ${stock.tone}`}>
+            <span className={`whitespace-nowrap rounded-full border px-2 py-[3px] text-[9px] font-semibold leading-none tracking-wide ${stock.tone}`}>
               {stock.label}
             </span>
           )}
@@ -238,7 +238,7 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       params={{ slug: p.slug }}
       aria-label={p.name}
       style={{ animationDelay: `${index * 80}ms` }}
-      className="group relative flex w-[158px] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-white/[0.07] bg-card/45 p-2.5 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-out will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_20px_42px_-36px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)] sm:w-[165px] lg:w-full"
+      className="group relative flex w-[158px] shrink-0 snap-start flex-col overflow-visible rounded-[20px] border border-white/[0.07] bg-card/45 p-2.5 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-out will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_20px_42px_-36px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)] sm:w-[165px] lg:w-full"
     >
       <DealFrame src={p.image} alt={p.name} variant="mini" radius={18} />
       <div className="flex flex-col px-0.5 pb-0.5 pt-2.5">

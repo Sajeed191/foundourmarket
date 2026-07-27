@@ -7,7 +7,7 @@ import { Price } from "@/components/site/Price";
 import { LazyMount } from "@/components/site/LazyMount";
 
 /** One short, elegant badge per hero — rotated deterministically, never stock-shouting. */
-const BADGES = ["Limited Deal", "Today's Pick", "Best Price", "Lightning Deal"] as const;
+const BADGES = ["Limited Deal", "Today's Pick", "Hot Price", "Flash Pick", "Weekend Deal", "Best Value"] as const;
 
 function useDealPricing(item: FlashItem) {
   const { priceOf } = useRegion();
@@ -32,23 +32,27 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={`${p.name} — flash deal${off > 0 ? `, ${off}% off` : ""}`}
-      className="group relative flex w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center gap-4 overflow-hidden rounded-[26px] border border-white/[0.07] bg-card/50 p-4 backdrop-blur-xl transition-[transform,border-color,box-shadow] duration-200 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1 hover:border-white/[0.13] hover:shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] sm:w-[520px] lg:w-full lg:max-w-none lg:gap-6 lg:p-6"
+      className="group relative flex w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-4 overflow-hidden rounded-[26px] border border-white/[0.08] bg-card/50 p-3.5 backdrop-blur-xl transition-[transform,border-color,box-shadow] duration-200 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1.5 hover:border-white/[0.14] hover:shadow-[0_34px_80px_-42px_rgba(0,0,0,0.95)] sm:w-[520px] lg:w-full lg:max-w-none lg:gap-6 lg:p-5"
     >
-      {/* Top lighting + warm ambient wash */}
+      {/* Ambient glow + inner highlight */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(120% 70% at 22% 0%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.05), transparent 40%)",
+            "radial-gradient(120% 75% at 20% 0%, color-mix(in oklab, var(--accent) 11%, transparent), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.06), transparent 38%)",
         }}
       />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 rounded-[26px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+      />
 
-      {/* Square image — 38% of card width */}
-      <div className="relative aspect-square w-[38%] shrink-0 self-center overflow-hidden rounded-[18px] border border-white/[0.05] bg-white/[0.03]">
+      {/* Square image — ~44% of hero width, vertically centered */}
+      <div className="relative aspect-square w-[44%] shrink-0 self-center overflow-hidden rounded-[18px] border border-white/[0.06] bg-white/[0.035]">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-4 rounded-full opacity-[0.16] blur-2xl"
+          className="pointer-events-none absolute inset-5 rounded-full opacity-[0.18] blur-2xl"
           style={{ background: "var(--gradient-ember)" }}
         />
         {p.image && (
@@ -57,10 +61,11 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
             alt={p.name}
             loading="lazy"
             decoding="async"
-            className="relative size-full object-contain p-3 drop-shadow-[0_18px_30px_rgba(0,0,0,0.55)] transition-transform duration-[260ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.04]"
+            className="relative size-full object-contain p-2.5 drop-shadow-[0_18px_30px_rgba(0,0,0,0.55)] transition-transform duration-[260ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.04]"
           />
         )}
       </div>
+
 
       {/* Content — name → price → discount → rating → CTA */}
       <div className="flex min-w-0 flex-1 flex-col justify-center">
@@ -68,7 +73,7 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           {badge}
         </span>
 
-        <h3 className="mt-2.5 line-clamp-2 font-display text-[17px] font-bold leading-snug tracking-tight text-foreground lg:text-[22px]">
+        <h3 className="mt-2.5 line-clamp-2 font-display text-[18px] font-bold leading-[1.28] tracking-tight text-foreground sm:text-[20px] lg:text-[22px]">
           {p.name}
         </h3>
 
@@ -80,17 +85,17 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           </div>
         )}
 
-        <div className="mt-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
           <Price
             value={deal}
-            className="font-display text-[26px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[32px]"
+            className="font-display text-[27px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[32px]"
           />
           {deal < regular && (
             <>
               <Price
                 value={regular}
                 variant="compare"
-                className="text-[12.5px] tabular-nums text-muted-foreground/70 line-through"
+                className="text-[12.5px] tabular-nums text-muted-foreground/65 line-through"
               />
               {off > 0 && (
                 <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10.5px] font-bold tabular-nums tracking-wide text-accent">
@@ -101,10 +106,11 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           )}
         </div>
 
-        <span className="mt-4 inline-flex h-12 w-full max-w-[260px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent/85 text-[12px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_32px_-16px_rgba(255,138,0,0.7)] transition-transform duration-200 group-active:scale-[0.98]">
+        <span className="mt-3.5 inline-flex h-11 w-full max-w-[230px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent/85 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_12px_28px_-14px_rgba(255,138,0,0.75)] transition-transform duration-[180ms] ease-out group-active:scale-[0.97]">
           Grab Deal
-          <ArrowRight className="size-4 transition-transform duration-200 motion-safe:group-hover:translate-x-1" aria-hidden />
+          <ArrowRight className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1" aria-hidden />
         </span>
+
       </div>
     </Link>
   );
@@ -121,9 +127,10 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       params={{ slug: p.slug }}
       aria-label={`${p.name}${off > 0 ? ` — ${off}% off` : ""}`}
       style={{ animationDelay: `${index * 120}ms` }}
-      className="group flex w-[44vw] max-w-[190px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-white/[0.06] bg-card/45 p-2.5 backdrop-blur-md transition-[transform,border-color] duration-200 will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1 hover:border-white/[0.13] lg:w-full lg:max-w-none"
+      className="group flex w-[40.5vw] max-w-[178px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-white/[0.06] bg-card/45 p-2 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-200 will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1.5 hover:border-white/[0.13] hover:shadow-[0_24px_50px_-32px_rgba(0,0,0,0.9)] lg:w-full lg:max-w-none"
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-[13px] bg-white/[0.03]">
+      {/* Image occupies ~75% of the card */}
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-[13px] bg-white/[0.03]">
         {p.image && (
           <img
             src={p.image}
@@ -139,13 +146,17 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
           </span>
         )}
       </div>
-      <p className="mt-2 line-clamp-2 text-[12px] leading-snug text-muted-foreground">{p.name}</p>
-      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-        <Price value={deal} className="font-display text-[15px] font-bold tabular-nums text-foreground" />
-        <span className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-colors duration-200 group-hover:border-accent/40 group-hover:text-accent">
-          <ArrowRight className="size-3.5" aria-hidden />
-        </span>
+      {/* Bottom ~25% */}
+      <div className="flex flex-1 flex-col px-1 pb-0.5 pt-1.5">
+        <p className="line-clamp-2 text-[11.5px] leading-[1.3] text-muted-foreground">{p.name}</p>
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
+          <Price value={deal} className="font-display text-[15px] font-bold tabular-nums text-foreground" />
+          <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-colors duration-200 group-hover:border-accent/40 group-hover:text-accent">
+            <ArrowRight className="size-3.5" aria-hidden />
+          </span>
+        </div>
       </div>
+
     </Link>
   );
 }
@@ -179,7 +190,7 @@ export function FlashDealsBand() {
   return (
     <section
       aria-labelledby="flash-deals-heading"
-      className="relative mx-auto max-w-7xl scroll-mt-24 pb-7 pt-10 motion-safe:animate-fade-in"
+      className="relative mx-auto max-w-7xl scroll-mt-24 pb-8 pt-8 motion-safe:animate-fade-in"
     >
       <div
         aria-hidden
@@ -194,11 +205,11 @@ export function FlashDealsBand() {
         <div className="min-w-0">
           <h2
             id="flash-deals-heading"
-            className="font-display text-[22px] font-semibold uppercase tracking-[0.18em] text-foreground sm:text-[28px]"
+            className="font-display text-[24px] font-bold uppercase leading-none tracking-[0.2em] text-foreground sm:text-[30px]"
           >
             Flash Deals
           </h2>
-          <p className="mt-2 text-[12.5px] text-muted-foreground sm:text-[13.5px]">Today's biggest savings</p>
+          <p className="mt-2.5 text-[12px] text-muted-foreground sm:text-[13px]">Today's biggest savings</p>
         </div>
         <Link
           to="/deals"
@@ -212,6 +223,7 @@ export function FlashDealsBand() {
       <LazyMount minHeight={380}>
         {/* Desktop: hero 60% + compact column. Mobile/tablet: hero carousel then rail. */}
         <div className="mt-6 lg:grid lg:grid-cols-[1.5fr_1fr] lg:gap-6 lg:px-6">
+
           <div
             ref={railRef}
             onScroll={onScroll}
@@ -238,12 +250,12 @@ export function FlashDealsBand() {
         </div>
 
         {heroes.length > 1 && (
-          <div className="mt-5 flex justify-center gap-1.5 lg:hidden" aria-hidden>
+          <div className="mt-4 flex justify-center gap-1.5 lg:hidden" aria-hidden>
             {heroes.map((item, i) => (
               <span
                 key={item.dealId ?? item.product.slug}
                 className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
-                  i === active ? "w-7 bg-accent" : "w-1.5 bg-white/20"
+                  i === active ? "w-7 bg-accent shadow-[0_0_12px_-2px_var(--accent)]" : "w-1.5 bg-white/18"
                 }`}
               />
             ))}
@@ -252,6 +264,7 @@ export function FlashDealsBand() {
 
         {minis.length > 0 && (
           <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
+
             {minis.map((item, i) => (
               <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
             ))}

@@ -114,9 +114,6 @@ function DealFrame({
     </div>
   );
 }
-    </div>
-  );
-}
 
 
 /** Tiny, monochrome inline trust row — icon + one word, no pills. */

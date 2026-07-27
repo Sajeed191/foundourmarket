@@ -73,7 +73,7 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           {badge}
         </span>
 
-        <h3 className="mt-2.5 line-clamp-2 font-display text-[17px] font-bold leading-snug tracking-tight text-foreground lg:text-[22px]">
+        <h3 className="mt-2.5 line-clamp-2 font-display text-[18px] font-bold leading-[1.28] tracking-tight text-foreground sm:text-[20px] lg:text-[22px]">
           {p.name}
         </h3>
 
@@ -85,17 +85,17 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           </div>
         )}
 
-        <div className="mt-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
           <Price
             value={deal}
-            className="font-display text-[26px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[32px]"
+            className="font-display text-[27px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[32px]"
           />
           {deal < regular && (
             <>
               <Price
                 value={regular}
                 variant="compare"
-                className="text-[12.5px] tabular-nums text-muted-foreground/70 line-through"
+                className="text-[12.5px] tabular-nums text-muted-foreground/65 line-through"
               />
               {off > 0 && (
                 <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10.5px] font-bold tabular-nums tracking-wide text-accent">
@@ -106,10 +106,11 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           )}
         </div>
 
-        <span className="mt-4 inline-flex h-12 w-full max-w-[260px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent/85 text-[12px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_32px_-16px_rgba(255,138,0,0.7)] transition-transform duration-200 group-active:scale-[0.98]">
+        <span className="mt-3.5 inline-flex h-11 w-full max-w-[230px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent/85 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_12px_28px_-14px_rgba(255,138,0,0.75)] transition-transform duration-[180ms] ease-out group-active:scale-[0.97]">
           Grab Deal
-          <ArrowRight className="size-4 transition-transform duration-200 motion-safe:group-hover:translate-x-1" aria-hidden />
+          <ArrowRight className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1" aria-hidden />
         </span>
+
       </div>
     </Link>
   );

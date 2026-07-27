@@ -127,9 +127,10 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       params={{ slug: p.slug }}
       aria-label={`${p.name}${off > 0 ? ` — ${off}% off` : ""}`}
       style={{ animationDelay: `${index * 120}ms` }}
-      className="group flex w-[44vw] max-w-[190px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-white/[0.06] bg-card/45 p-2.5 backdrop-blur-md transition-[transform,border-color] duration-200 will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1 hover:border-white/[0.13] lg:w-full lg:max-w-none"
+      className="group flex w-[40.5vw] max-w-[178px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-white/[0.06] bg-card/45 p-2 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-200 will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1.5 hover:border-white/[0.13] hover:shadow-[0_24px_50px_-32px_rgba(0,0,0,0.9)] lg:w-full lg:max-w-none"
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-[13px] bg-white/[0.03]">
+      {/* Image occupies ~75% of the card */}
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-[13px] bg-white/[0.03]">
         {p.image && (
           <img
             src={p.image}
@@ -145,13 +146,17 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
           </span>
         )}
       </div>
-      <p className="mt-2 line-clamp-2 text-[12px] leading-snug text-muted-foreground">{p.name}</p>
-      <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-        <Price value={deal} className="font-display text-[15px] font-bold tabular-nums text-foreground" />
-        <span className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-colors duration-200 group-hover:border-accent/40 group-hover:text-accent">
-          <ArrowRight className="size-3.5" aria-hidden />
-        </span>
+      {/* Bottom ~25% */}
+      <div className="flex flex-1 flex-col px-1 pb-0.5 pt-1.5">
+        <p className="line-clamp-2 text-[11.5px] leading-[1.3] text-muted-foreground">{p.name}</p>
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
+          <Price value={deal} className="font-display text-[15px] font-bold tabular-nums text-foreground" />
+          <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-colors duration-200 group-hover:border-accent/40 group-hover:text-accent">
+            <ArrowRight className="size-3.5" aria-hidden />
+          </span>
+        </div>
       </div>
+
     </Link>
   );
 }

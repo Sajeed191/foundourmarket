@@ -69,8 +69,8 @@ function DealFrame({
     const h = el.naturalHeight;
     if (!w || !h) return;
     const ratio = w / h;
-    if (ratio < 0.85) setScale(1.06);
-    else if (ratio > 1.25) setScale(0.94);
+    if (ratio < 0.85) setScale(1.04);
+    else if (ratio > 1.25) setScale(0.98);
     else setScale(1);
     setLoaded(true);
   }, []);

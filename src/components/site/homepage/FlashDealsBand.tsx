@@ -151,12 +151,12 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={`${p.name} — flash deal${off > 0 ? `, ${off}% off` : ""}`}
-      className="group relative flex h-[232px] w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-4 overflow-hidden rounded-[26px] border border-white/[0.09] bg-card/50 p-4 backdrop-blur-2xl transition-[transform,border-color,box-shadow] duration-[240ms] ease-out will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-1 hover:border-white/[0.15] shadow-[0_30px_66px_-46px_rgba(0,0,0,0.95),0_2px_10px_-6px_rgba(0,0,0,0.6)] sm:h-[248px] sm:w-[540px] sm:gap-5 sm:p-5 lg:h-[268px] lg:w-full lg:max-w-none lg:gap-7 lg:rounded-[28px] lg:p-6"
+      className="group relative flex min-h-[232px] w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-4 overflow-visible rounded-[26px] border border-white/[0.09] bg-card/50 p-4 backdrop-blur-2xl transition-[transform,border-color,box-shadow] duration-[240ms] ease-out will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-1 hover:border-white/[0.15] shadow-[0_30px_66px_-46px_rgba(0,0,0,0.95),0_2px_10px_-6px_rgba(0,0,0,0.6)] sm:min-h-[248px] sm:w-[540px] sm:gap-5 sm:p-5 lg:min-h-[268px] lg:w-full lg:max-w-none lg:gap-7 lg:rounded-[28px] lg:p-6"
     >
       {/* Near-invisible warm radial depth */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[inherit]"
         style={{
           background:
             "radial-gradient(110% 76% at 16% 2%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.045), transparent 28%)",

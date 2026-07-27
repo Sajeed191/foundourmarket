@@ -30,15 +30,13 @@ function DealImageFrame({
   alt,
   radius,
   eager = false,
-  hoverScale = "1.05",
   children,
 }: {
   src?: string | null;
   alt: string;
-  /** Outer frame radius in px — inner safe zone scales with it. */
+  /** Outer frame radius in px. */
   radius: number;
   eager?: boolean;
-  hoverScale?: string;
   children?: React.ReactNode;
 }) {
   const [loaded, setLoaded] = useState(false);
@@ -75,21 +73,15 @@ function DealImageFrame({
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           onLoad={() => setLoaded(true)}
-          className="absolute inset-0 size-full object-contain object-center drop-shadow-[0_16px_28px_rgba(0,0,0,0.5)] transition-[transform,opacity] duration-[280ms] ease-out will-change-transform"
-          style={{
-            // ~10% safe zone on every side — products never touch the corners.
-            padding: "10%",
-            opacity: loaded ? 1 : 0,
-            imageRendering: "auto",
-            // GPU-accelerated hover lift handled via CSS var below.
-            ["--deal-img-scale" as string]: hoverScale,
-          }}
+          className="absolute inset-0 size-full object-contain object-center p-[10%] drop-shadow-[0_16px_28px_rgba(0,0,0,0.5)] transition-[transform,opacity] duration-[280ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.045]"
+          style={{ opacity: loaded ? 1 : 0 }}
         />
       )}
       {children}
     </div>
   );
 }
+
 
 
 /**

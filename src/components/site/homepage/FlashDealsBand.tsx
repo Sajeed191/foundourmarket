@@ -114,28 +114,12 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
         className="pointer-events-none absolute inset-0 -z-10 rounded-[26px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.09),inset_0_0_0_1px_rgba(255,255,255,0.035)]"
       />
 
-      {/* Square image — ~48% of hero width, vertically centered */}
-      <div className="relative aspect-square w-[48%] shrink-0 self-center overflow-hidden rounded-[19px] border border-white/[0.08] bg-white/[0.04] shadow-[0_16px_36px_-24px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.07)]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-4 rounded-full opacity-[0.2] blur-2xl"
-          style={{ background: "var(--gradient-ember)" }}
-        />
-        {/* Glass reflection */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[19px] bg-gradient-to-b from-white/[0.07] to-transparent"
-        />
-        {p.image && (
-          <img
-            src={p.image}
-            alt={p.name}
-            loading="lazy"
-            decoding="async"
-            className="relative size-full object-contain p-1.5 drop-shadow-[0_18px_30px_rgba(0,0,0,0.55)] transition-transform duration-[260ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.05]"
-          />
-        )}
+      {/* Product frame — ~52% of hero width (≈+8%), vertically centered */}
+      <div className="w-[52%] shrink-0 self-center">
+        <DealImageFrame src={p.image} alt={p.name} radius={19} eager={index === 0} />
       </div>
+
+
 
 
 

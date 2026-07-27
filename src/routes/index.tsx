@@ -47,7 +47,7 @@ import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
 import { HeroV2 } from "@/components/site/homepage/HeroV2";
 import { TrustStripV2 } from "@/components/site/homepage/TrustStripV2";
 import { CategoryBento } from "@/components/site/homepage/CategoryBento";
-import { PickedForYouRail } from "@/components/site/homepage/PickedForYouRail";
+
 import { FlashDealsBand } from "@/components/site/homepage/FlashDealsBand";
 import { WhyFoundOurMarket } from "@/components/site/homepage/WhyFoundOurMarket";
 
@@ -703,8 +703,6 @@ function Home() {
 
       <CinematicDivider />
 
-      {/* Picked For You / Trending rail */}
-      <PickedForYouRail products={products} excludeSlugs={trending.preview.map((p) => p.slug)} />
 
       {/* Flash Deals band */}
       {ffFlashDeals && (

@@ -38,32 +38,54 @@ function stockChip(qty: number | undefined | null) {
 
 /**
  * Unified premium media frame — one image presentation system for hero and mini
- * cards. Dark gradient bed, soft inner shadow, hairline border, 18px radius and
- * always `object-contain` with an internal safe zone so nothing is ever cropped
- * or distorted. The square box is reserved up front so fade-in can't shift layout.
+ * cards. Dark gradient bed, soft inner glow, hairline border, inset shadow,
+ * rounded window that clips the image, and a responsive safe zone so products
+ * never touch the edges. Always `object-contain` (never cover/stretch), with
+ * adaptive scaling by detected orientation so portrait/landscape/square
+ * products read at a visually consistent size. The square box is reserved up
+ * front so fade-in can't shift layout.
  */
 function DealFrame({
   src,
   alt,
-  padding,
-  radius = 18,
+  variant = "hero",
+  radius = 22,
   eager = false,
 }: {
   src?: string | null;
   alt: string;
-  /** Inner safe-zone padding in px so products never touch the edges. */
-  padding: number;
+  variant?: "hero" | "mini";
   radius?: number;
   eager?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
+  const [scale, setScale] = useState(1);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // Adaptive framing: portrait products get a touch more presence, landscape a
+  // touch less, so the *visible* product looks the same size on every card.
+  const measure = useCallback((el: HTMLImageElement) => {
+    const w = el.naturalWidth;
+    const h = el.naturalHeight;
+    if (!w || !h) return;
+    const ratio = w / h;
+    if (ratio < 0.85) setScale(1.06);
+    else if (ratio > 1.25) setScale(0.94);
+    else setScale(1);
+    setLoaded(true);
+  }, []);
 
   // Cached/instant images can fire `load` before React attaches the handler.
   useEffect(() => {
     const el = imgRef.current;
-    if (el?.complete && el.naturalWidth > 0) setLoaded(true);
-  }, [src]);
+    if (el?.complete && el.naturalWidth > 0) measure(el);
+  }, [src, measure]);
+
+  // Safe zone: mobile 14–18px, tablet 16–20px, desktop 18–24px.
+  const safeZone =
+    variant === "hero"
+      ? "clamp(14px, 4.2vw, 24px)"
+      : "clamp(12px, 3.4vw, 18px)";
 
   return (
     <div
@@ -86,14 +108,20 @@ function DealFrame({
           alt={alt}
           loading={eager ? "eager" : "lazy"}
           decoding="async"
-          onLoad={() => setLoaded(true)}
-          className="absolute inset-0 size-full object-contain object-center transition-[transform,opacity] duration-[320ms] ease-out will-change-transform drop-shadow-[0_14px_22px_rgba(0,0,0,0.45)] motion-safe:group-hover:scale-[1.04]"
-          style={{ opacity: loaded ? 1 : 0, padding }}
+          onLoad={(e) => measure(e.currentTarget)}
+          className="absolute inset-0 size-full object-contain object-center transition-[transform,opacity] duration-[320ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.02] motion-safe:group-active:scale-[0.99]"
+          style={{
+            opacity: loaded ? 1 : 0,
+            padding: safeZone,
+            transform: `scale(${scale})`,
+            borderRadius: radius,
+          }}
         />
       )}
     </div>
   );
 }
+
 
 /** Tiny, monochrome inline trust row — icon + one word, no pills. */
 function TrustRow() {

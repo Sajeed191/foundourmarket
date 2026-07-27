@@ -121,21 +121,13 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
 
 
 
-
-
-      {/* Content — name → price → discount → rating → CTA */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
+      {/* Content — badge → name → rating → price → CTA */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
         <span className="w-fit rounded-full border border-[hsl(30_35%_60%/0.26)] bg-[hsl(30_30%_55%/0.09)] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[hsl(35_45%_78%)] backdrop-blur-md">
           {badge}
         </span>
 
-        <h3
-          className="mt-2.5 line-clamp-2 font-display text-[18px] font-bold leading-[1.15] tracking-tight text-foreground sm:text-[20px] lg:text-[22px]"
-          style={{
-            maskImage: "linear-gradient(180deg, #000 76%, rgba(0,0,0,0.35) 100%)",
-            WebkitMaskImage: "linear-gradient(180deg, #000 76%, rgba(0,0,0,0.35) 100%)",
-          }}
-        >
+        <h3 className="mt-2 line-clamp-2 font-display text-[17px] font-semibold leading-[1.2] tracking-tight text-foreground/95 sm:text-[19px] lg:text-[21px]">
           {p.name}
         </h3>
 
@@ -147,32 +139,31 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           </div>
         )}
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <Price
             value={deal}
-            className="font-display text-[27px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[32px]"
+            className="font-display text-[29px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[34px]"
           />
-          {deal < regular && (
-            <Price
-              value={regular}
-              variant="compare"
-              className="text-[12.5px] tabular-nums text-muted-foreground/60 line-through"
-            />
-          )}
           {off > 0 && (
             <span className="rounded-full border border-accent/25 bg-accent/[0.13] px-2 py-[3px] text-[10.5px] font-bold tabular-nums tracking-wide text-accent">
               {off}% OFF
             </span>
           )}
+          {deal < regular && (
+            <Price
+              value={regular}
+              variant="compare"
+              className="w-full text-[12px] tabular-nums text-muted-foreground/60 line-through"
+            />
+          )}
         </div>
 
-        <span className="mt-3.5 inline-flex h-12 w-full max-w-[196px] items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-accent to-accent/85 px-7 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-14px_rgba(255,138,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-transform duration-[180ms] ease-out group-active:scale-[0.96]">
+        <span className="mt-3.5 inline-flex h-11 w-full max-w-[172px] items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-14px_rgba(255,138,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-transform duration-[180ms] ease-out group-active:scale-[0.96]">
           Grab Deal
           <ArrowRight className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1" aria-hidden />
         </span>
-
-
       </div>
+
     </Link>
   );
 }

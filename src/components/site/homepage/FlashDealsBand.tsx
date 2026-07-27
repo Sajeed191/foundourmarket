@@ -19,28 +19,25 @@ function useDealPricing(item: FlashItem) {
 }
 
 /**
- * Unified luxury showcase frame — one image presentation system for hero and
- * mini cards. Soft dark gradient bed, thin border, whisper-soft ember glow,
- * generous inner padding so the product never touches the corners, and
+ * Unified showcase — one image presentation system for hero and mini cards.
+ * The product floats on the card surface (no heavy boxed bed), sits on a soft
+ * ember halo with a whisper reflection underneath, and is always
  * `object-contain` so nothing is ever cropped. The square box is reserved up
  * front so the fade-in can never shift layout.
  */
-function DealImageFrame({
+function DealShowcase({
   src,
   alt,
-  radius,
   padding,
   eager = false,
-  children,
+  reflection = true,
 }: {
   src?: string | null;
   alt: string;
-  /** Outer frame radius in px. */
-  radius: number;
-  /** Inner safe-zone padding in px. */
+  /** Inner safe-zone padding in px so products never touch the edges. */
   padding: number;
   eager?: boolean;
-  children?: React.ReactNode;
+  reflection?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -52,25 +49,12 @@ function DealImageFrame({
   }, [src]);
 
   return (
-    <div
-      className="relative aspect-square w-full overflow-hidden border border-white/[0.07]"
-      style={{
-        borderRadius: radius,
-        background:
-          "linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012) 42%, rgba(0,0,0,0.28))",
-      }}
-    >
-      {/* Whisper-soft ember warmth behind the product */}
+    <div className="relative aspect-square w-full">
+      {/* Ambient halo behind the product */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-[16%] rounded-full opacity-[0.13] blur-2xl"
+        className="pointer-events-none absolute inset-[10%] rounded-full opacity-[0.16] blur-2xl"
         style={{ background: "var(--gradient-ember)" }}
-      />
-      {/* Glass reflection */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.06] to-transparent"
-        style={{ borderTopLeftRadius: radius, borderTopRightRadius: radius }}
       />
       {src && (
         <img
@@ -80,29 +64,36 @@ function DealImageFrame({
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           onLoad={() => setLoaded(true)}
-          className="absolute inset-0 size-full object-contain object-center transition-[transform,opacity] duration-[280ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.04]"
+          className="absolute inset-0 size-full rounded-[18px] object-contain object-center transition-[transform,opacity] duration-[320ms] ease-out will-change-transform drop-shadow-[0_18px_26px_rgba(0,0,0,0.5)] motion-safe:group-hover:scale-[1.05]"
           style={{ opacity: loaded ? 1 : 0, padding }}
         />
       )}
-      {children}
+      {/* Soft floor reflection */}
+      {reflection && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-[18%] bottom-[4%] h-[7%] rounded-[50%] blur-md"
+          style={{ background: "radial-gradient(closest-side, rgba(0,0,0,0.55), transparent)" }}
+        />
+      )}
     </div>
   );
 }
 
-/** Tiny, low-weight trust row — icon + one word. */
+/** Tiny, low-contrast inline trust row — icon + one word, no pills. */
 function TrustRow() {
   return (
-    <ul className="mt-3 flex items-center gap-3.5 text-[10px] font-medium text-muted-foreground/70">
+    <ul className="mt-3.5 flex items-center gap-4 text-[10px] font-medium text-muted-foreground/60">
       <li className="flex items-center gap-1">
-        <BadgeCheck className="size-3.5 shrink-0 text-foreground/45" strokeWidth={1.75} aria-hidden />
+        <BadgeCheck className="size-3.5 shrink-0 text-foreground/35" strokeWidth={1.75} aria-hidden />
         Verified
       </li>
       <li className="flex items-center gap-1">
-        <Truck className="size-3.5 shrink-0 text-foreground/45" strokeWidth={1.75} aria-hidden />
-        Fast
+        <Truck className="size-3.5 shrink-0 text-foreground/35" strokeWidth={1.75} aria-hidden />
+        Fast Delivery
       </li>
       <li className="flex items-center gap-1">
-        <ShieldCheck className="size-3.5 shrink-0 text-foreground/45" strokeWidth={1.75} aria-hidden />
+        <ShieldCheck className="size-3.5 shrink-0 text-foreground/35" strokeWidth={1.75} aria-hidden />
         Returns
       </li>
     </ul>
@@ -110,8 +101,8 @@ function TrustRow() {
 }
 
 /**
- * Editorial hero — showcase image left (42%), vertically-aligned hierarchy
- * right (58%). Everything fits without vertical scrolling inside the card.
+ * Editorial hero — floating showcase left (45%), hierarchy right (55%):
+ * badge → title → rating → price → trust → CTA.
  */
 function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
   const { regular, deal, off, save } = useDealPricing(item);
@@ -123,7 +114,7 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={`${p.name} — flash deal${off > 0 ? `, ${off}% off` : ""}`}
-      className="group relative flex w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-4 overflow-hidden rounded-[28px] border border-white/[0.08] bg-card/45 p-4 backdrop-blur-xl transition-[transform,border-color,box-shadow] duration-[220ms] ease-out will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-1.5 hover:border-white/[0.14] shadow-[0_28px_64px_-46px_rgba(0,0,0,0.9)] hover:shadow-[0_34px_78px_-42px_rgba(0,0,0,0.95)] sm:w-[520px] lg:w-full lg:max-w-none lg:gap-9 lg:p-8"
+      className="group relative flex min-h-[280px] w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-5 overflow-hidden rounded-[30px] border border-white/[0.09] bg-card/50 p-5 backdrop-blur-2xl transition-[transform,border-color,box-shadow] duration-[240ms] ease-out will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-1.5 hover:border-white/[0.15] shadow-[0_34px_74px_-48px_rgba(0,0,0,0.95),0_2px_10px_-6px_rgba(0,0,0,0.6)] hover:shadow-[0_42px_92px_-44px_rgba(0,0,0,1)] sm:w-[540px] lg:min-h-[380px] lg:w-full lg:max-w-none lg:gap-10 lg:rounded-[32px] lg:p-9"
     >
       {/* Layered ambient depth: ember glow, top highlight, base fade */}
       <div
@@ -131,50 +122,43 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(120% 74% at 16% 0%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 64%), linear-gradient(180deg, rgba(255,255,255,0.05), transparent 32%), linear-gradient(0deg, rgba(0,0,0,0.24), transparent 40%)",
+            "radial-gradient(115% 78% at 18% 4%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.055), transparent 30%), linear-gradient(0deg, rgba(0,0,0,0.26), transparent 42%)",
         }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 rounded-[28px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),inset_0_0_0_1px_rgba(255,255,255,0.03)]"
+        className="pointer-events-none absolute inset-0 -z-10 rounded-[30px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.09),inset_0_0_0_1px_rgba(255,255,255,0.03)] lg:rounded-[32px]"
       />
 
-      {/* Showcase — 42% of hero width, vertically centered */}
-      <div className="w-[42%] shrink-0 self-center lg:w-[46%]">
-        <DealImageFrame src={p.image} alt={p.name} radius={18} padding={14} eager={index === 0} />
+      {/* Showcase — 45% of hero width, vertically centered, floating */}
+      <div className="w-[45%] shrink-0 self-center">
+        <DealShowcase src={p.image} alt={p.name} padding={6} eager={index === 0} />
       </div>
 
-      {/* Vertical hierarchy: badge → title → rating → price block → trust → CTA */}
+      {/* 55% content column */}
       <div className="flex min-w-0 flex-1 flex-col justify-center">
         <span className="w-fit rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-2.5 py-[3px] text-[9px] font-semibold uppercase tracking-[0.18em] text-[hsl(35_45%_78%)] backdrop-blur-md">
           {badge}
         </span>
 
-        <h3 className="mt-3 line-clamp-2 font-display text-[17px] font-bold leading-[1.28] tracking-tight text-foreground/95 sm:text-[18px] lg:text-[22px]">
+        <h3 className="mt-3.5 line-clamp-2 font-display text-[16px] font-semibold leading-[1.3] tracking-tight text-foreground/90 sm:text-[17px] lg:text-[21px]">
           {p.name}
         </h3>
 
         {(p.rating ?? 0) > 0 && (
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Star className="size-3 fill-foreground/60 text-foreground/60" strokeWidth={0} aria-hidden />
-            <span className="font-semibold tabular-nums text-foreground/85">{p.rating.toFixed(1)}</span>
+            <Star className="size-3 fill-foreground/55 text-foreground/55" strokeWidth={0} aria-hidden />
+            <span className="font-semibold tabular-nums text-foreground/80">{p.rating.toFixed(1)}</span>
             <span className="tabular-nums">({(p.reviews ?? 0).toLocaleString()})</span>
           </div>
         )}
 
-        {/* Price block — old price above, current price dominant, savings below */}
-        <div className="mt-3.5">
-          {deal < regular && (
-            <Price
-              value={regular}
-              variant="compare"
-              className="block text-[11.5px] tabular-nums text-muted-foreground/55 line-through"
-            />
-          )}
-          <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        {/* Price dominates */}
+        <div className="mt-4">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <Price
               value={deal}
-              className="font-display text-[28px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[36px]"
+              className="font-display text-[30px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[40px]"
             />
             {off > 0 && (
               <span className="rounded-full border border-accent/20 bg-accent/[0.11] px-2 py-[2px] text-[10px] font-bold tabular-nums tracking-wide text-accent">
@@ -182,16 +166,25 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
               </span>
             )}
           </div>
-          {save > 0 && (
-            <p className="mt-1.5 flex items-baseline gap-1 text-[11px] font-medium text-emerald-300/75">
-              Save <Price value={save} variant="plain" className="tabular-nums" />
-            </p>
-          )}
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+            {deal < regular && (
+              <Price
+                value={regular}
+                variant="compare"
+                className="text-[11.5px] tabular-nums text-muted-foreground/50 line-through"
+              />
+            )}
+            {save > 0 && (
+              <p className="flex items-baseline gap-1 text-[11px] font-medium text-emerald-300/70">
+                Save <Price value={save} variant="plain" className="tabular-nums" />
+              </p>
+            )}
+          </div>
         </div>
 
         <TrustRow />
 
-        <span className="mt-4 inline-flex h-[52px] w-full max-w-[190px] items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_16px_34px_-16px_rgba(255,138,0,0.75),inset_0_1px_0_0_rgba(255,255,255,0.2)] transition-transform duration-[180ms] ease-out group-active:scale-[0.97]">
+        <span className="mt-5 inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-[18px] bg-gradient-to-r from-accent to-accent/85 px-6 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_18px_38px_-18px_rgba(255,138,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-[transform,box-shadow] duration-[180ms] ease-out group-hover:shadow-[0_22px_46px_-16px_rgba(255,138,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.26)] group-active:scale-[0.975] lg:max-w-[260px]">
           Grab Deal
           <ArrowRight
             className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1"
@@ -203,9 +196,9 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
   );
 }
 
-/** Premium mini deal card — 70% showcase, price, one-line title, arrow. */
+/** Mini deal — same showcase system, ~70% image height, price left, arrow bottom-right. */
 function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
-  const { deal } = useDealPricing(item);
+  const { deal, off } = useDealPricing(item);
   const p = item.product;
 
   return (
@@ -213,18 +206,21 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={p.name}
-      style={{ animationDelay: `${index * 110}ms` }}
-      className="group flex w-[42vw] max-w-[178px] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-white/[0.06] bg-card/40 p-2 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-out will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1 hover:border-white/[0.12] shadow-[0_18px_38px_-34px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.04)] lg:w-full lg:max-w-none"
+      style={{ animationDelay: `${index * 90}ms` }}
+      className="group relative flex w-[46vw] max-w-[196px] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-white/[0.07] bg-card/45 p-2.5 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-out will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_20px_42px_-36px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-[0_26px_54px_-30px_rgba(0,0,0,0.95)] lg:w-full lg:max-w-none"
     >
-      <DealImageFrame src={p.image} alt={p.name} radius={16} padding={12} />
-      <div className="flex flex-col px-1.5 pb-1 pt-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <Price value={deal} className="font-display text-[15px] font-bold tabular-nums text-foreground" />
-          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/75 transition-[color,border-color,transform] duration-200 group-hover:border-accent/40 group-hover:text-accent motion-safe:group-hover:translate-x-0.5">
+      <DealShowcase src={p.image} alt={p.name} padding={6} />
+      <div className="flex flex-col px-1 pb-0.5 pt-2">
+        <p className="line-clamp-2 min-h-[30px] text-[11px] leading-[1.35] text-muted-foreground/85">{p.name}</p>
+        <div className="mt-2 flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            <Price value={deal} className="block font-display text-[16px] font-bold tabular-nums text-foreground" />
+            {off > 0 && <span className="text-[10px] font-semibold tabular-nums text-accent">{off}% off</span>}
+          </div>
+          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/70 transition-[color,border-color,transform] duration-200 group-hover:border-accent/40 group-hover:text-accent motion-safe:group-hover:translate-x-0.5">
             <ArrowRight className="size-3.5" aria-hidden />
           </span>
         </div>
-        <p className="mt-1 truncate text-[11px] leading-[1.35] text-muted-foreground/85">{p.name}</p>
       </div>
     </Link>
   );
@@ -259,7 +255,7 @@ export function FlashDealsBand() {
   return (
     <section
       aria-labelledby="flash-deals-heading"
-      className="relative mx-auto max-w-7xl scroll-mt-24 pb-12 pt-10 motion-safe:animate-fade-in"
+      className="relative mx-auto max-w-7xl scroll-mt-24 pb-14 pt-12 motion-safe:animate-fade-in"
     >
       {/* Layered, near-invisible warm depth behind the hero */}
       <div
@@ -267,32 +263,23 @@ export function FlashDealsBand() {
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(85% 50% at 50% 12%, color-mix(in oklab, var(--accent) 6%, transparent), transparent 70%), linear-gradient(180deg, rgba(255,255,255,0.018), transparent 30%)",
+            "radial-gradient(85% 50% at 50% 12%, color-mix(in oklab, var(--accent) 7%, transparent), transparent 70%), linear-gradient(180deg, rgba(255,255,255,0.018), transparent 30%)",
         }}
       />
 
-      <header className="relative flex items-end justify-between gap-4 px-4 sm:px-6">
-        <div className="min-w-0">
-          <h2
-            id="flash-deals-heading"
-            className="font-display text-[25px] font-bold uppercase leading-none tracking-[0.08em] text-foreground sm:text-[32px]"
-          >
-            Flash Deals
-          </h2>
-          <p className="mt-2 text-[12px] text-muted-foreground sm:text-[13px]">Today's biggest savings</p>
-        </div>
-        <Link
-          to="/deals"
-          className="inline-flex shrink-0 items-center gap-1.5 py-2 text-[12px] font-medium text-accent transition-colors hover:text-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      <header className="relative px-4 sm:px-6">
+        <h2
+          id="flash-deals-heading"
+          className="font-display text-[25px] font-bold uppercase leading-none tracking-[0.06em] text-foreground sm:text-[32px]"
         >
-          View All
-          <ArrowRight className="size-3.5" aria-hidden />
-        </Link>
+          Flash Deals
+        </h2>
+        <p className="mt-2 text-[12px] text-muted-foreground sm:text-[13px]">Today's biggest savings</p>
       </header>
 
-      <LazyMount minHeight={400}>
+      <LazyMount minHeight={420}>
         {/* Desktop: editorial hero + compact rail. Mobile/tablet: hero carousel then rail. */}
-        <div className="mt-7 lg:grid lg:grid-cols-[1.55fr_1fr] lg:gap-8 lg:px-6">
+        <div className="mt-8 lg:grid lg:grid-cols-[1.55fr_1fr] lg:gap-8 lg:px-6">
           <div
             ref={railRef}
             onScroll={onScroll}
@@ -318,13 +305,16 @@ export function FlashDealsBand() {
           </div>
         </div>
 
+        {/* Thin animated progress capsules */}
         {heroes.length > 1 && (
-          <div className="mt-5 flex items-center justify-center gap-2 lg:hidden" aria-hidden>
+          <div className="mt-6 flex items-center justify-center gap-1.5 lg:hidden" aria-hidden>
             {heroes.map((item, i) => (
               <span
                 key={item.dealId ?? item.product.slug}
-                className={`h-[7px] rounded-full transition-[width,background-color] duration-300 ease-out ${
-                  i === active ? "w-8 bg-accent shadow-[0_0_14px_-3px_var(--accent)]" : "w-[7px] bg-white/[0.16]"
+                className={`h-[3px] rounded-full transition-[width,background-color,box-shadow] duration-[320ms] ease-out ${
+                  i === active
+                    ? "w-9 bg-accent shadow-[0_0_12px_-2px_var(--accent)]"
+                    : "w-4 bg-white/[0.14]"
                 }`}
               />
             ))}
@@ -332,12 +322,26 @@ export function FlashDealsBand() {
         )}
 
         {minis.length > 0 && (
-          <div className="mt-7 flex snap-x snap-mandatory scroll-px-4 gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
+          <div className="mt-8 flex snap-x snap-mandatory scroll-px-4 gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
             {minis.map((item, i) => (
               <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
             ))}
           </div>
         )}
+
+        {/* Centered outline explore action */}
+        <div className="mt-9 flex justify-center px-4 sm:px-6">
+          <Link
+            to="/deals"
+            className="group inline-flex h-11 items-center gap-2 rounded-full border border-accent/35 bg-transparent px-6 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent transition-[background-color,border-color,transform] duration-200 hover:border-accent/60 hover:bg-accent/[0.07] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+          >
+            View All Flash Deals
+            <ArrowRight
+              className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1"
+              aria-hidden
+            />
+          </Link>
+        </div>
       </LazyMount>
     </section>
   );

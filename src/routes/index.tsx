@@ -704,7 +704,7 @@ function Home() {
       <CinematicDivider />
 
       {/* Picked For You / Trending rail */}
-      <PickedForYouRail products={products} />
+      <PickedForYouRail products={products} excludeSlugs={trending.preview.map((p) => p.slug)} />
 
       {/* Flash Deals band */}
       {ffFlashDeals && (

@@ -7,7 +7,7 @@ import { Price } from "@/components/site/Price";
 import { LazyMount } from "@/components/site/LazyMount";
 
 /** One short, elegant badge per hero — rotated deterministically, never stock-shouting. */
-const BADGES = ["Limited Deal", "Today's Pick", "Best Price", "Lightning Deal"] as const;
+const BADGES = ["Limited Deal", "Today's Pick", "Hot Price", "Flash Pick", "Weekend Deal", "Best Value"] as const;
 
 function useDealPricing(item: FlashItem) {
   const { priceOf } = useRegion();

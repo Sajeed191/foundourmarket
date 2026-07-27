@@ -170,12 +170,12 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
 
       {/* 60% content */}
       <div className="flex min-w-0 flex-1 flex-col justify-center text-left">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-2 py-[2px] text-[9px] font-semibold uppercase tracking-[0.16em] text-[hsl(35_45%_78%)] backdrop-blur-md">
+        <div className="flex flex-wrap items-center gap-1.5 gap-y-1.5">
+          <span className="whitespace-nowrap rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-2 py-[3px] text-[9px] font-semibold uppercase leading-none tracking-[0.16em] text-[hsl(35_45%_78%)] backdrop-blur-md">
             {badge}
           </span>
           {stock && (
-            <span className={`rounded-full border px-2 py-[2px] text-[9px] font-semibold tracking-wide ${stock.tone}`}>
+            <span className={`whitespace-nowrap rounded-full border px-2 py-[3px] text-[9px] font-semibold leading-none tracking-wide ${stock.tone}`}>
               {stock.label}
             </span>
           )}

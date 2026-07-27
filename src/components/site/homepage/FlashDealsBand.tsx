@@ -238,7 +238,7 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       params={{ slug: p.slug }}
       aria-label={p.name}
       style={{ animationDelay: `${index * 80}ms` }}
-      className="group relative flex w-[158px] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-white/[0.07] bg-card/45 p-2.5 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-out will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_20px_42px_-36px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)] sm:w-[165px] lg:w-full"
+      className="group relative flex w-[158px] shrink-0 snap-start flex-col overflow-visible rounded-[20px] border border-white/[0.07] bg-card/45 p-2.5 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-out will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_20px_42px_-36px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)] sm:w-[165px] lg:w-full"
     >
       <DealFrame src={p.image} alt={p.name} variant="mini" radius={18} />
       <div className="flex flex-col px-0.5 pb-0.5 pt-2.5">

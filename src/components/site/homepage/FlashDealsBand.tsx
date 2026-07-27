@@ -223,6 +223,7 @@ export function FlashDealsBand() {
       <LazyMount minHeight={380}>
         {/* Desktop: hero 60% + compact column. Mobile/tablet: hero carousel then rail. */}
         <div className="mt-6 lg:grid lg:grid-cols-[1.5fr_1fr] lg:gap-6 lg:px-6">
+
           <div
             ref={railRef}
             onScroll={onScroll}

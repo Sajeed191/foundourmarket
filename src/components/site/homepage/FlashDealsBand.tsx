@@ -19,6 +19,80 @@ function useDealPricing(item: FlashItem) {
 }
 
 /**
+ * Unified premium product frame — one image presentation system for hero and
+ * mini cards. Dark glass display box, thin border, inner highlight, ambient
+ * shadow, ~10% safe zone so no product ever collides with the rounded corners,
+ * `object-contain` so nothing is ever cropped, and a lightweight fade-in that
+ * cannot shift layout (the square box is reserved up front).
+ */
+function DealImageFrame({
+  src,
+  alt,
+  radius,
+  eager = false,
+  hoverScale = "1.05",
+  children,
+}: {
+  src?: string | null;
+  alt: string;
+  /** Outer frame radius in px — inner safe zone scales with it. */
+  radius: number;
+  eager?: boolean;
+  hoverScale?: string;
+  children?: React.ReactNode;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Cached/instant images can fire `load` before React attaches the handler.
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el?.complete && el.naturalWidth > 0) setLoaded(true);
+  }, [src]);
+
+  return (
+    <div
+      className="relative aspect-square w-full overflow-hidden border border-white/[0.08] bg-white/[0.04] shadow-[0_16px_38px_-26px_rgba(0,0,0,0.92),inset_0_1px_0_0_rgba(255,255,255,0.07)]"
+      style={{ borderRadius: radius }}
+    >
+      {/* Ambient warmth behind the product */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-[18%] rounded-full opacity-[0.16] blur-2xl"
+        style={{ background: "var(--gradient-ember)" }}
+      />
+      {/* Glass reflection */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.07] to-transparent"
+        style={{ borderTopLeftRadius: radius, borderTopRightRadius: radius }}
+      />
+      {src && (
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          className="absolute inset-0 size-full object-contain object-center drop-shadow-[0_16px_28px_rgba(0,0,0,0.5)] transition-[transform,opacity] duration-[280ms] ease-out will-change-transform"
+          style={{
+            // ~10% safe zone on every side — products never touch the corners.
+            padding: "10%",
+            opacity: loaded ? 1 : 0,
+            imageRendering: "auto",
+            // GPU-accelerated hover lift handled via CSS var below.
+            ["--deal-img-scale" as string]: hoverScale,
+          }}
+        />
+      )}
+      {children}
+    </div>
+  );
+}
+
+
+/**
  * Horizontal editorial hero — square image left (~38%), hierarchy right.
  * Everything fits without vertical scrolling inside the card.
  */

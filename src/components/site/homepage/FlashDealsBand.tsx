@@ -190,7 +190,7 @@ export function FlashDealsBand() {
   return (
     <section
       aria-labelledby="flash-deals-heading"
-      className="relative mx-auto max-w-7xl scroll-mt-24 pb-7 pt-10 motion-safe:animate-fade-in"
+      className="relative mx-auto max-w-7xl scroll-mt-24 pb-8 pt-8 motion-safe:animate-fade-in"
     >
       <div
         aria-hidden

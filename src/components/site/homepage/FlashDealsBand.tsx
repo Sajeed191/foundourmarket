@@ -205,11 +205,11 @@ export function FlashDealsBand() {
         <div className="min-w-0">
           <h2
             id="flash-deals-heading"
-            className="font-display text-[22px] font-semibold uppercase tracking-[0.18em] text-foreground sm:text-[28px]"
+            className="font-display text-[24px] font-bold uppercase leading-none tracking-[0.2em] text-foreground sm:text-[30px]"
           >
             Flash Deals
           </h2>
-          <p className="mt-2 text-[12.5px] text-muted-foreground sm:text-[13.5px]">Today's biggest savings</p>
+          <p className="mt-2.5 text-[12px] text-muted-foreground sm:text-[13px]">Today's biggest savings</p>
         </div>
         <Link
           to="/deals"

@@ -217,19 +217,19 @@ export function FlashDealsBand() {
         }}
       />
 
-      <header className="relative flex items-end justify-between gap-4 px-4 sm:px-6">
+      <header className="relative flex items-baseline justify-between gap-4 px-4 sm:px-6">
         <div className="min-w-0">
           <h2
             id="flash-deals-heading"
-            className="font-display text-[24px] font-bold uppercase leading-none tracking-[0.2em] text-foreground sm:text-[30px]"
+            className="font-display text-[24px] font-bold uppercase leading-none tracking-[0.11em] text-foreground sm:text-[30px]"
           >
             Flash Deals
           </h2>
-          <p className="mt-2.5 text-[12px] text-muted-foreground sm:text-[13px]">Today's biggest savings</p>
+          <p className="mt-1.5 text-[12px] text-muted-foreground sm:text-[13px]">Today's biggest savings</p>
         </div>
         <Link
           to="/deals"
-          className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-[12px] font-medium text-accent transition-colors hover:text-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+          className="inline-flex shrink-0 items-center gap-1.5 py-2 text-[12px] font-medium text-accent transition-colors hover:text-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
         >
           View All
           <ArrowRight className="size-3.5" aria-hidden />
@@ -238,14 +238,14 @@ export function FlashDealsBand() {
 
       <LazyMount minHeight={380}>
         {/* Desktop: hero 60% + compact column. Mobile/tablet: hero carousel then rail. */}
-        <div className="mt-6 lg:grid lg:grid-cols-[1.5fr_1fr] lg:gap-6 lg:px-6">
+        <div className="mt-5 lg:grid lg:grid-cols-[1.5fr_1fr] lg:gap-6 lg:px-6">
 
           <div
             ref={railRef}
             onScroll={onScroll}
             role="group"
             aria-label="Featured flash deals"
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:px-6 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:px-6 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
           >
             {heroes.slice(0, 1).map((item, i) => (
               <HeroDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
@@ -266,12 +266,12 @@ export function FlashDealsBand() {
         </div>
 
         {heroes.length > 1 && (
-          <div className="mt-4 flex justify-center gap-1.5 lg:hidden" aria-hidden>
+          <div className="mt-3 flex justify-center gap-1.5 lg:hidden" aria-hidden>
             {heroes.map((item, i) => (
               <span
                 key={item.dealId ?? item.product.slug}
-                className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
-                  i === active ? "w-7 bg-accent shadow-[0_0_12px_-2px_var(--accent)]" : "w-1.5 bg-white/18"
+                className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ease-out ${
+                  i === active ? "w-7 bg-accent shadow-[0_0_12px_-2px_var(--accent)]" : "w-1.5 bg-white/[0.18]"
                 }`}
               />
             ))}
@@ -279,13 +279,14 @@ export function FlashDealsBand() {
         )}
 
         {minis.length > 0 && (
-          <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
+          <div className="mt-3.5 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
 
             {minis.map((item, i) => (
               <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
             ))}
           </div>
         )}
+
       </LazyMount>
     </section>
   );

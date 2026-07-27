@@ -250,12 +250,12 @@ export function FlashDealsBand() {
         </div>
 
         {heroes.length > 1 && (
-          <div className="mt-5 flex justify-center gap-1.5 lg:hidden" aria-hidden>
+          <div className="mt-4 flex justify-center gap-1.5 lg:hidden" aria-hidden>
             {heroes.map((item, i) => (
               <span
                 key={item.dealId ?? item.product.slug}
                 className={`h-1.5 rounded-full transition-all duration-300 ease-out ${
-                  i === active ? "w-7 bg-accent" : "w-1.5 bg-white/20"
+                  i === active ? "w-7 bg-accent shadow-[0_0_12px_-2px_var(--accent)]" : "w-1.5 bg-white/18"
                 }`}
               />
             ))}
@@ -264,6 +264,7 @@ export function FlashDealsBand() {
 
         {minis.length > 0 && (
           <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
+
             {minis.map((item, i) => (
               <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
             ))}

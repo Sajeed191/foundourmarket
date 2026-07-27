@@ -81,12 +81,6 @@ function DealFrame({
     if (el?.complete && el.naturalWidth > 0) measure(el);
   }, [src, measure]);
 
-  // Safe zone: minimal breathing room so the product fills the rounded frame.
-  const safeZone =
-    variant === "hero"
-      ? "clamp(6px, 1.6vw, 10px)"
-      : "clamp(5px, 1.4vw, 9px)";
-
   return (
     <div
       className="relative aspect-square w-full overflow-hidden border border-white/[0.07] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),inset_0_-18px_28px_-24px_rgba(0,0,0,0.9)]"
@@ -109,15 +103,17 @@ function DealFrame({
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           onLoad={(e) => measure(e.currentTarget)}
-          className="absolute inset-0 size-full object-contain object-center transition-[transform,opacity] duration-[320ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.02] motion-safe:group-active:scale-[0.99]"
+          className="absolute inset-0 size-full object-cover object-center transition-[transform,opacity] duration-[320ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.03]"
           style={{
             opacity: loaded ? 1 : 0,
-            padding: safeZone,
             transform: `scale(${scale})`,
             borderRadius: radius,
           }}
         />
       )}
+    </div>
+  );
+}
     </div>
   );
 }

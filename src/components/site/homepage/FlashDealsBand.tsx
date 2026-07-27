@@ -32,23 +32,27 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={`${p.name} — flash deal${off > 0 ? `, ${off}% off` : ""}`}
-      className="group relative flex w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center gap-4 overflow-hidden rounded-[26px] border border-white/[0.07] bg-card/50 p-4 backdrop-blur-xl transition-[transform,border-color,box-shadow] duration-200 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1 hover:border-white/[0.13] hover:shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] sm:w-[520px] lg:w-full lg:max-w-none lg:gap-6 lg:p-6"
+      className="group relative flex w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-4 overflow-hidden rounded-[26px] border border-white/[0.08] bg-card/50 p-3.5 backdrop-blur-xl transition-[transform,border-color,box-shadow] duration-200 will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-safe:hover:-translate-y-1.5 hover:border-white/[0.14] hover:shadow-[0_34px_80px_-42px_rgba(0,0,0,0.95)] sm:w-[520px] lg:w-full lg:max-w-none lg:gap-6 lg:p-5"
     >
-      {/* Top lighting + warm ambient wash */}
+      {/* Ambient glow + inner highlight */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(120% 70% at 22% 0%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.05), transparent 40%)",
+            "radial-gradient(120% 75% at 20% 0%, color-mix(in oklab, var(--accent) 11%, transparent), transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.06), transparent 38%)",
         }}
       />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 rounded-[26px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+      />
 
-      {/* Square image — 38% of card width */}
-      <div className="relative aspect-square w-[38%] shrink-0 self-center overflow-hidden rounded-[18px] border border-white/[0.05] bg-white/[0.03]">
+      {/* Square image — ~44% of hero width, vertically centered */}
+      <div className="relative aspect-square w-[44%] shrink-0 self-center overflow-hidden rounded-[18px] border border-white/[0.06] bg-white/[0.035]">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-4 rounded-full opacity-[0.16] blur-2xl"
+          className="pointer-events-none absolute inset-5 rounded-full opacity-[0.18] blur-2xl"
           style={{ background: "var(--gradient-ember)" }}
         />
         {p.image && (
@@ -57,10 +61,11 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
             alt={p.name}
             loading="lazy"
             decoding="async"
-            className="relative size-full object-contain p-3 drop-shadow-[0_18px_30px_rgba(0,0,0,0.55)] transition-transform duration-[260ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.04]"
+            className="relative size-full object-contain p-2.5 drop-shadow-[0_18px_30px_rgba(0,0,0,0.55)] transition-transform duration-[260ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.04]"
           />
         )}
       </div>
+
 
       {/* Content — name → price → discount → rating → CTA */}
       <div className="flex min-w-0 flex-1 flex-col justify-center">

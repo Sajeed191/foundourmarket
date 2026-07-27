@@ -181,37 +181,25 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       style={{ animationDelay: `${index * 120}ms` }}
       className="group flex w-[41vw] max-w-[172px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-white/[0.07] bg-card/45 p-1.5 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-200 will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.97] motion-safe:hover:-translate-y-1 hover:border-white/[0.14] shadow-[0_18px_40px_-34px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-[0_24px_50px_-30px_rgba(0,0,0,0.95)] lg:w-full lg:max-w-none"
     >
-      {/* Image occupies ~75% of the card */}
-      <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-[13px] border border-white/[0.05] bg-white/[0.035]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[13px] bg-gradient-to-b from-white/[0.06] to-transparent"
-        />
-        {p.image && (
-          <img
-            src={p.image}
-            alt={p.name}
-            loading="lazy"
-            decoding="async"
-            className="relative size-full object-contain p-1.5 transition-transform duration-300 will-change-transform motion-safe:group-hover:scale-[1.06]"
-          />
-        )}
+      {/* Same unified image framing system as the hero */}
+      <DealImageFrame src={p.image} alt={p.name} radius={14}>
         {off > 0 && (
           <span className="absolute left-1.5 top-1.5 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-accent backdrop-blur-md">
             {off}%
           </span>
         )}
-      </div>
-      {/* Bottom ~25% — fixed rhythm so every card aligns */}
+      </DealImageFrame>
+      {/* Compact info — fixed rhythm so every card aligns */}
       <div className="flex flex-col px-1 pb-0.5 pt-1.5">
         <p className="line-clamp-2 h-[30px] text-[11.5px] leading-[1.3] text-muted-foreground">{p.name}</p>
         <div className="mt-1 flex items-center justify-between gap-2">
           <Price value={deal} className="font-display text-[15px] font-bold tabular-nums text-foreground" />
-          <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-colors duration-200 group-hover:border-accent/40 group-hover:text-accent">
+          <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-[color,border-color,transform] duration-200 group-hover:border-accent/40 group-hover:text-accent motion-safe:group-hover:rotate-[-12deg]">
             <ArrowRight className="size-3.5" aria-hidden />
           </span>
         </div>
       </div>
+
 
 
     </Link>

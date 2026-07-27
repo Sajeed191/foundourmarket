@@ -69,8 +69,8 @@ function DealFrame({
     const h = el.naturalHeight;
     if (!w || !h) return;
     const ratio = w / h;
-    if (ratio < 0.85) setScale(1.06);
-    else if (ratio > 1.25) setScale(0.94);
+    if (ratio < 0.85) setScale(1.04);
+    else if (ratio > 1.25) setScale(0.98);
     else setScale(1);
     setLoaded(true);
   }, []);
@@ -81,11 +81,11 @@ function DealFrame({
     if (el?.complete && el.naturalWidth > 0) measure(el);
   }, [src, measure]);
 
-  // Safe zone: mobile 14–18px, tablet 16–20px, desktop 18–24px.
+  // Safe zone: minimal breathing room so the product fills the rounded frame.
   const safeZone =
     variant === "hero"
-      ? "clamp(14px, 4.2vw, 24px)"
-      : "clamp(12px, 3.4vw, 18px)";
+      ? "clamp(6px, 1.6vw, 10px)"
+      : "clamp(5px, 1.4vw, 9px)";
 
   return (
     <div

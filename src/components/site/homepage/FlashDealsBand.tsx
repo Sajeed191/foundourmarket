@@ -19,6 +19,72 @@ function useDealPricing(item: FlashItem) {
 }
 
 /**
+ * Unified premium product frame — one image presentation system for hero and
+ * mini cards. Dark glass display box, thin border, inner highlight, ambient
+ * shadow, ~10% safe zone so no product ever collides with the rounded corners,
+ * `object-contain` so nothing is ever cropped, and a lightweight fade-in that
+ * cannot shift layout (the square box is reserved up front).
+ */
+function DealImageFrame({
+  src,
+  alt,
+  radius,
+  eager = false,
+  children,
+}: {
+  src?: string | null;
+  alt: string;
+  /** Outer frame radius in px. */
+  radius: number;
+  eager?: boolean;
+  children?: React.ReactNode;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Cached/instant images can fire `load` before React attaches the handler.
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el?.complete && el.naturalWidth > 0) setLoaded(true);
+  }, [src]);
+
+  return (
+    <div
+      className="relative aspect-square w-full overflow-hidden border border-white/[0.08] bg-white/[0.04] shadow-[0_16px_38px_-26px_rgba(0,0,0,0.92),inset_0_1px_0_0_rgba(255,255,255,0.07)]"
+      style={{ borderRadius: radius }}
+    >
+      {/* Ambient warmth behind the product */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-[18%] rounded-full opacity-[0.16] blur-2xl"
+        style={{ background: "var(--gradient-ember)" }}
+      />
+      {/* Glass reflection */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.07] to-transparent"
+        style={{ borderTopLeftRadius: radius, borderTopRightRadius: radius }}
+      />
+      {src && (
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          className="absolute inset-0 size-full object-contain object-center p-[10%] drop-shadow-[0_16px_28px_rgba(0,0,0,0.5)] transition-[transform,opacity] duration-[280ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.045]"
+          style={{ opacity: loaded ? 1 : 0 }}
+        />
+      )}
+      {children}
+    </div>
+  );
+}
+
+
+
+/**
  * Horizontal editorial hero — square image left (~38%), hierarchy right.
  * Everything fits without vertical scrolling inside the card.
  */
@@ -48,44 +114,20 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
         className="pointer-events-none absolute inset-0 -z-10 rounded-[26px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.09),inset_0_0_0_1px_rgba(255,255,255,0.035)]"
       />
 
-      {/* Square image — ~48% of hero width, vertically centered */}
-      <div className="relative aspect-square w-[48%] shrink-0 self-center overflow-hidden rounded-[19px] border border-white/[0.08] bg-white/[0.04] shadow-[0_16px_36px_-24px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.07)]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-4 rounded-full opacity-[0.2] blur-2xl"
-          style={{ background: "var(--gradient-ember)" }}
-        />
-        {/* Glass reflection */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[19px] bg-gradient-to-b from-white/[0.07] to-transparent"
-        />
-        {p.image && (
-          <img
-            src={p.image}
-            alt={p.name}
-            loading="lazy"
-            decoding="async"
-            className="relative size-full object-contain p-1.5 drop-shadow-[0_18px_30px_rgba(0,0,0,0.55)] transition-transform duration-[260ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.05]"
-          />
-        )}
+      {/* Product frame — ~52% of hero width (≈+8%), vertically centered */}
+      <div className="w-[52%] shrink-0 self-center">
+        <DealImageFrame src={p.image} alt={p.name} radius={19} eager={index === 0} />
       </div>
 
 
 
-      {/* Content — name → price → discount → rating → CTA */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
+      {/* Content — badge → name → rating → price → CTA */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
         <span className="w-fit rounded-full border border-[hsl(30_35%_60%/0.26)] bg-[hsl(30_30%_55%/0.09)] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[hsl(35_45%_78%)] backdrop-blur-md">
           {badge}
         </span>
 
-        <h3
-          className="mt-2.5 line-clamp-2 font-display text-[18px] font-bold leading-[1.15] tracking-tight text-foreground sm:text-[20px] lg:text-[22px]"
-          style={{
-            maskImage: "linear-gradient(180deg, #000 76%, rgba(0,0,0,0.35) 100%)",
-            WebkitMaskImage: "linear-gradient(180deg, #000 76%, rgba(0,0,0,0.35) 100%)",
-          }}
-        >
+        <h3 className="mt-2 line-clamp-2 font-display text-[17px] font-semibold leading-[1.2] tracking-tight text-foreground/95 sm:text-[19px] lg:text-[21px]">
           {p.name}
         </h3>
 
@@ -97,32 +139,31 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           </div>
         )}
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <Price
             value={deal}
-            className="font-display text-[27px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[32px]"
+            className="font-display text-[29px] font-extrabold tabular-nums leading-none tracking-tight text-foreground lg:text-[34px]"
           />
-          {deal < regular && (
-            <Price
-              value={regular}
-              variant="compare"
-              className="text-[12.5px] tabular-nums text-muted-foreground/60 line-through"
-            />
-          )}
           {off > 0 && (
             <span className="rounded-full border border-accent/25 bg-accent/[0.13] px-2 py-[3px] text-[10.5px] font-bold tabular-nums tracking-wide text-accent">
               {off}% OFF
             </span>
           )}
+          {deal < regular && (
+            <Price
+              value={regular}
+              variant="compare"
+              className="w-full text-[12px] tabular-nums text-muted-foreground/60 line-through"
+            />
+          )}
         </div>
 
-        <span className="mt-3.5 inline-flex h-12 w-full max-w-[196px] items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-accent to-accent/85 px-7 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-14px_rgba(255,138,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-transform duration-[180ms] ease-out group-active:scale-[0.96]">
+        <span className="mt-3.5 inline-flex h-11 w-full max-w-[172px] items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-14px_rgba(255,138,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-transform duration-[180ms] ease-out group-active:scale-[0.96]">
           Grab Deal
           <ArrowRight className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1" aria-hidden />
         </span>
-
-
       </div>
+
     </Link>
   );
 }
@@ -140,37 +181,25 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       style={{ animationDelay: `${index * 120}ms` }}
       className="group flex w-[41vw] max-w-[172px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-white/[0.07] bg-card/45 p-1.5 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-200 will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.97] motion-safe:hover:-translate-y-1 hover:border-white/[0.14] shadow-[0_18px_40px_-34px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-[0_24px_50px_-30px_rgba(0,0,0,0.95)] lg:w-full lg:max-w-none"
     >
-      {/* Image occupies ~75% of the card */}
-      <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-[13px] border border-white/[0.05] bg-white/[0.035]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[13px] bg-gradient-to-b from-white/[0.06] to-transparent"
-        />
-        {p.image && (
-          <img
-            src={p.image}
-            alt={p.name}
-            loading="lazy"
-            decoding="async"
-            className="relative size-full object-contain p-1.5 transition-transform duration-300 will-change-transform motion-safe:group-hover:scale-[1.06]"
-          />
-        )}
+      {/* Same unified image framing system as the hero */}
+      <DealImageFrame src={p.image} alt={p.name} radius={14}>
         {off > 0 && (
           <span className="absolute left-1.5 top-1.5 rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-accent backdrop-blur-md">
             {off}%
           </span>
         )}
-      </div>
-      {/* Bottom ~25% — fixed rhythm so every card aligns */}
+      </DealImageFrame>
+      {/* Compact info — fixed rhythm so every card aligns */}
       <div className="flex flex-col px-1 pb-0.5 pt-1.5">
         <p className="line-clamp-2 h-[30px] text-[11.5px] leading-[1.3] text-muted-foreground">{p.name}</p>
         <div className="mt-1 flex items-center justify-between gap-2">
           <Price value={deal} className="font-display text-[15px] font-bold tabular-nums text-foreground" />
-          <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-colors duration-200 group-hover:border-accent/40 group-hover:text-accent">
+          <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/80 transition-[color,border-color,transform] duration-200 group-hover:border-accent/40 group-hover:text-accent motion-safe:group-hover:rotate-[-12deg]">
             <ArrowRight className="size-3.5" aria-hidden />
           </span>
         </div>
       </div>
+
 
 
     </Link>

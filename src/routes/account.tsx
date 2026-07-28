@@ -945,7 +945,55 @@ function SheetOption({ icon: Icon, label, desc, tone = "default", onClick }: { i
   );
 }
 
-function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; avatarUrl: string; firstName: string; signOut: () => void | Promise<void> }) {
+/* ---------- Simplified support hub primitives (UI only) ---------- */
+function QuickHelpChip({ icon: Icon, label, onClick }: { icon: typeof Package; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="snap-start shrink-0 min-h-[44px] inline-flex items-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl px-4 py-2.5 text-[12.5px] font-medium text-foreground/90 transition-colors hover:border-accent/30 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+    >
+      <Icon className="size-4 shrink-0 text-accent" strokeWidth={1.7} />
+      <span className="whitespace-nowrap">{label}</span>
+    </button>
+  );
+}
+
+function SupportHubCard({ title, subtitle, children, lowMotion }: { title: string; subtitle: string; children: ReactNode; lowMotion: boolean }) {
+  return (
+    <motion.div
+      initial={lowMotion ? false : { opacity: 0, y: 8 }}
+      whileInView={lowMotion ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="rounded-2xl bg-white/[0.03] backdrop-blur-xl p-5 sm:p-6 shadow-[0_0_40px_-24px_var(--color-accent)] ring-1 ring-white/[0.05]"
+    >
+      <p className="text-[17px] font-display font-semibold leading-tight tracking-tight">{title}</p>
+      <p className="mt-1 text-[12.5px] text-muted-foreground">{subtitle}</p>
+      <div className="mt-4 space-y-2">{children}</div>
+    </motion.div>
+  );
+}
+
+function HubAction({ icon: Icon, label, onClick, primary }: { icon: typeof Package; label: string; onClick: () => void; primary?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full min-h-[48px] flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[13.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+        primary
+          ? "bg-accent/[0.12] text-accent hover:bg-accent/[0.18]"
+          : "bg-white/[0.03] text-foreground/90 hover:bg-white/[0.06]"
+      }`}
+    >
+      <Icon className={`size-[18px] shrink-0 ${primary ? "text-accent" : "text-muted-foreground"}`} strokeWidth={1.7} />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <ChevronRight className="size-4 shrink-0 opacity-50" />
+    </button>
+  );
+}
+
+function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder = false }: { user: any; avatarUrl: string; firstName: string; signOut: () => void | Promise<void>; hasActiveOrder?: boolean }) {
   const nav = useNavigate();
   const lowMotion = useIsLowMotion();
   const { settings } = useSupportSettings();

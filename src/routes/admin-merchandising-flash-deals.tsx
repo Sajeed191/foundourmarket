@@ -112,17 +112,27 @@ function FlashManagePage() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
   const savedViews = useSavedViews();
-
+  /** v10 — executive layer state. */
+  const [reportRange, setReportRange] = useState<ReportRange>("today");
+  const [journeyKey, setJourneyKey] = useState<string | null>(null);
+  const [myActions, setMyActions] = useState<{ id: string; at: number; text: string }[]>([]);
 
   const dragKey = useRef<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const undoStack = useRef<{ label: string; run: () => Promise<void> }[]>([]);
+  const undoStack = useRef<{ label: string; run: () => Promise<void>; redo?: () => Promise<void> }[]>([]);
+  const redoStack = useRef<{ label: string; run: () => Promise<void> }[]>([]);
   const [undoCount, setUndoCount] = useState(0);
+  const [redoCount, setRedoCount] = useState(0);
 
-  const pushUndo = useCallback((label: string, run: () => Promise<void>) => {
-    undoStack.current = [...undoStack.current.slice(-9), { label, run }];
+  const logMine = useCallback((text: string) => {
+    setMyActions((prev) => [{ id: `me:${Date.now()}:${Math.random().toString(36).slice(2, 7)}`, at: Date.now(), text }, ...prev].slice(0, 30));
+  }, []);
+
+  const pushUndo = useCallback((label: string, run: () => Promise<void>, redo?: () => Promise<void>) => {
+    undoStack.current = [...undoStack.current.slice(-9), { label, run, redo }];
     setUndoCount(undoStack.current.length);
   }, []);
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

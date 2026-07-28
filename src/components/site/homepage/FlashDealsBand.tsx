@@ -59,21 +59,13 @@ function DealFrame({
   eager?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
-  const [scale, setScale] = useState(1);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Adaptive framing: portrait products get a touch more presence, landscape a
-  // touch less, so the *visible* product looks the same size on every card.
   const measure = useCallback((el: HTMLImageElement) => {
-    const w = el.naturalWidth;
-    const h = el.naturalHeight;
-    if (!w || !h) return;
-    const ratio = w / h;
-    if (ratio < 0.85) setScale(1.04);
-    else if (ratio > 1.25) setScale(0.98);
-    else setScale(1);
+    if (!el.naturalWidth || !el.naturalHeight) return;
     setLoaded(true);
   }, []);
+
 
   // Cached/instant images can fire `load` before React attaches the handler.
   useEffect(() => {

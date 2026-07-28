@@ -767,6 +767,22 @@ function FlashManagePage() {
         );
       })()}
 
+      {adviceKey && (() => {
+        const entry = data.entries.find((e) => e.key === adviceKey);
+        if (!entry) return null;
+        return (
+          <FlashAdviceSheet
+            entry={entry}
+            intel={ai.scores.get(adviceKey) ?? null}
+            advice={adviceByKey.get(adviceKey) ?? []}
+            onApply={(e, action) => void applyAdvice(e, action)}
+            onClose={() => setAdviceKey(null)}
+          />
+        );
+      })()}
+
+
+
       {settingsOpen && (
         <FlashSettings ops={data.ops} onClose={() => setSettingsOpen(false)} onSaved={data.refresh} />
       )}

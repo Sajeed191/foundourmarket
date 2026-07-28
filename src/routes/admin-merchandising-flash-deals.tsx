@@ -149,6 +149,51 @@ function FlashCommandCenter() {
     data.refresh();
   }
 
+  /** Opens the read-only intelligence sheet for a deal. */
+  const openIntel = useCallback((key: string) => setIntelKey(key), []);
+
+  /** One-click fixes coming from the assistant, hero optimizer and conflict center. */
+  async function applyFix(c: Conflict) {
+    const fix = c.fix;
+    if (!fix) return;
+    const byKey = (k: string) => data.entries.find((e) => e.key === k);
+    if (fix.kind === "review") { setIntelKey(fix.entryKey); return; }
+    if (fix.kind === "create_deal") {
+      const product = data.products.find((p) => p.slug === fix.slug) ?? null;
+      setWizard({ open: true, deal: null, presetProduct: product });
+      return;
+    }
+    if (fix.kind === "assign_badge") {
+      const badge = data.badgeTypes.find((b) => b.badgeKey === "flash_deal" && b.enabled && !b.archived);
+      if (!badge) { toast.error("The flash deal badge is not available"); return; }
+      try {
+        await assignBadge(fix.slug, badge.id);
+        logAction("flash_deal_badge_assigned", null, { slug: fix.slug, source: "intelligence" });
+        toast.success("Flash badge assigned");
+        data.refresh();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not assign the badge");
+      }
+      return;
+    }
+    const entry = byKey(fix.entryKey);
+    if (!entry?.deal) { toast.error("That deal is no longer available"); return; }
+    if (fix.kind === "end_deal") {
+      await updateDeal(entry, { active: false, end_at: new Date().toISOString() }, "flash_deal_ended_early");
+      toast.success("Deal ended");
+    } else if (fix.kind === "extend_deal") {
+      await updateDeal(entry, {
+        end_at: new Date(new Date(entry.deal.end_at).getTime() + 24 * 3600_000).toISOString(),
+      }, "flash_deal_duration_changed");
+      toast.success("Deal extended by 24 hours");
+    } else if (fix.kind === "clear_priority") {
+      await updateDeal(entry, { priority: 0 }, "flash_deal_priority_changed");
+      toast.success("Priority cleared");
+    }
+  }
+
+
+
   async function bulk(action: "activate" | "deactivate" | "delete" | "badge" | "unbadge" | "extend") {
     if (selectedEntries.length === 0) return toast.error("Select at least one deal");
     const flashBadge = data.badgeTypes.find((b) => b.badgeKey === "flash_deal" && b.enabled && !b.archived);

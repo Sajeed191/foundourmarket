@@ -22,6 +22,7 @@ import { FlashDealIntelligenceSheet } from "@/components/admin/flash/FlashDealIn
 import { FlashDealTile, tileStatus, type TileActions } from "@/components/admin/flash/manage/FlashDealTile";
 import { FlashSectionShell, FlashEmpty } from "@/components/admin/flash/manage/FlashSectionShell";
 import { FlashCriticalAlerts } from "@/components/admin/flash/manage/FlashCriticalAlerts";
+import { PromoEligibilityPanel } from "@/components/admin/PromoEligibilityPanel";
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
 import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceSheet";
@@ -943,6 +944,7 @@ function FlashManagePage() {
           {show("alerts") && (
             <FlashSectionShell eyebrow="Fix first" title="Critical alerts" count={ai.conflicts.length}>
               <FlashCriticalAlerts conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
+              <div className="mt-3"><PromoEligibilityPanel only={["flash_deals"]} /></div>
             </FlashSectionShell>
           )}
 

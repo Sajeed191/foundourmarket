@@ -17,6 +17,7 @@ import {
   bulkUpdateAssignments,
   type BadgeType,
 } from "@/lib/use-product-badges";
+import { PromoEligibilityPanel } from "@/components/admin/PromoEligibilityPanel";
 
 export const Route = createFileRoute("/admin-badges-bulk")({
   head: () => ({
@@ -140,6 +141,8 @@ function BulkInner() {
 
   return (
     <div className="space-y-5 pb-32">
+      <PromoEligibilityPanel />
+
       {/* Action builder */}
       <div className="card-premium rounded-2xl p-4 border border-white/10 space-y-4">
         <div className="flex flex-wrap gap-2">

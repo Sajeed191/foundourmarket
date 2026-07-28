@@ -91,6 +91,11 @@ function FlashManagePage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [intelKey, setIntelKey] = useState<string | null>(null);
   const [adviceKey, setAdviceKey] = useState<string | null>(null);
+  /** v9 — suggestion ids the admin ignored or snoozed for this session. */
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [compareOpen, setCompareOpen] = useState(false);
+  const savedViews = useSavedViews();
+
 
   const dragKey = useRef<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);

@@ -5,7 +5,8 @@
  * touches the backend directly.
  */
 import { useMemo, useState } from "react";
-import { Check, Clock, BellOff, ChevronDown, Inbox, Eye } from "lucide-react";
+import { Check, Clock, BellOff, ChevronDown, Inbox, Eye, ShieldCheck } from "lucide-react";
+import { isLowRisk } from "@/lib/flash/flash-marketplace";
 import type { QueueItem } from "@/lib/flash/flash-autonomy";
 import { TASK_CATEGORY_LABEL, taskCategory, type TaskCategory, type TaskDiff } from "@/lib/flash/flash-assistant";
 
@@ -32,7 +33,7 @@ const FILTERS: { id: "all" | TaskCategory; label: string }[] = [
 ];
 
 export function FlashTaskInbox({
-  items, diffFor, onApprove, onReject, onSnooze, onPreview, limit = 10,
+  items, diffFor, onApprove, onReject, onSnooze, onPreview, onApproveMany, onRejectMany, limit = 10,
 }: {
   items: QueueItem[];
   diffFor: (item: QueueItem) => TaskDiff;
@@ -40,10 +41,14 @@ export function FlashTaskInbox({
   onReject: (item: QueueItem) => void;
   onSnooze: (item: QueueItem) => void;
   onPreview: (item: QueueItem) => void;
+  /** v12 — one-click operations. Both route through the same mutations. */
+  onApproveMany?: (items: QueueItem[]) => void;
+  onRejectMany?: (items: QueueItem[]) => void;
   limit?: number;
 }) {
   const [filter, setFilter] = useState<"all" | TaskCategory>("all");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(() => new Set());
 
   const tagged = useMemo(() => items.map((i) => ({ item: i, category: taskCategory(i) })), [items]);
   const visible = filter === "all" ? tagged : tagged.filter((t) => t.category === filter);
@@ -52,6 +57,16 @@ export function FlashTaskInbox({
     for (const t of tagged) m.set(t.category, (m.get(t.category) ?? 0) + 1);
     return m;
   }, [tagged]);
+
+  const lowRisk = useMemo(() => items.filter((i) => isLowRisk(i.confidence, i.urgency)), [items]);
+  const selected = useMemo(() => items.filter((i) => picked.has(i.id)), [items, picked]);
+  const clearPicked = () => setPicked(new Set());
+  const togglePick = (id: string) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   const chip =
     "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[10px] font-mono uppercase tracking-widest transition";
@@ -82,6 +97,44 @@ export function FlashTaskInbox({
         ))}
       </div>
 
+      {(onApproveMany || onRejectMany) && items.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/8 bg-white/[0.02] p-2">
+          {onApproveMany && (
+            <button
+              onClick={() => { onApproveMany(lowRisk); clearPicked(); }}
+              disabled={lowRisk.length === 0}
+              className={`${btn} border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/10 disabled:opacity-40`}
+            >
+              <ShieldCheck className="size-3" /> Approve all low-risk
+              <span className="tabular-nums opacity-70">{lowRisk.length}</span>
+            </button>
+          )}
+          {onApproveMany && (
+            <button
+              onClick={() => { onApproveMany(selected); clearPicked(); }}
+              disabled={selected.length === 0}
+              className={`${btn} border-accent/40 text-accent hover:bg-accent/10 disabled:opacity-40`}
+            >
+              <Check className="size-3" /> Approve selected
+            </button>
+          )}
+          {onRejectMany && (
+            <button
+              onClick={() => { onRejectMany(selected); clearPicked(); }}
+              disabled={selected.length === 0}
+              className={`${btn} border-white/10 text-muted-foreground hover:bg-white/5 disabled:opacity-40`}
+            >
+              <BellOff className="size-3" /> Reject selected
+            </button>
+          )}
+          {selected.length > 0 && (
+            <span className="px-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+              {selected.length} selected
+            </span>
+          )}
+        </div>
+      )}
+
       {visible.length === 0 ? (
         <p className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-6 text-center text-sm text-emerald-200">
           🟢 Inbox zero — nothing needs your attention right now.
@@ -96,6 +149,15 @@ export function FlashTaskInbox({
               <li key={item.id} className="overflow-hidden rounded-2xl border border-border bg-card transition hover:border-white/15">
                 <div className="p-3 sm:p-4">
                   <div className="flex flex-wrap items-center gap-1.5">
+                    {(onApproveMany || onRejectMany) && (
+                      <input
+                        type="checkbox"
+                        checked={picked.has(item.id)}
+                        onChange={() => togglePick(item.id)}
+                        aria-label={`Select ${item.title}`}
+                        className="mr-1 size-4 accent-[var(--color-accent)]"
+                      />
+                    )}
                     <span className={`rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${u.cls}`}>
                       {u.label} priority
                     </span>

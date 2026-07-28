@@ -60,6 +60,15 @@ import {
   type SectionId, type AuditIssue, type NextBestAction as NextAction, type Reminder,
 } from "@/lib/flash/flash-assistant";
 import { useFlashWorkspace } from "@/lib/flash/use-flash-workspace";
+import {
+  marketplaceImpact, categoryShare, crossSectionConflicts, journeyStage,
+  groupEventsByDay, type SectionConflict,
+} from "@/lib/flash/flash-marketplace";
+import { lifecycleStage } from "@/lib/flash/flash-executive";
+import { FlashCrossSection } from "@/components/admin/flash/manage/FlashCrossSection";
+import { FlashCampaignJourney, type JourneyRow } from "@/components/admin/flash/manage/FlashCampaignJourney";
+import { FlashCampaignLibrary } from "@/components/admin/flash/manage/FlashCampaignLibrary";
+import { FlashMarketplaceEvents } from "@/components/admin/flash/manage/FlashMarketplaceEvents";
 
 
 
@@ -356,6 +365,62 @@ function FlashManagePage() {
     [ws.mode, ws.focus],
   );
 
+  /* ------------------------------ v12 — marketplace merchandising layer */
+
+  /** Deals that actually reach a homepage slot in the current window. */
+  const visibleEntries = useMemo(
+    () => data.entries.filter((e) => e.rotationRank != null && e.rotationRank < data.cap),
+    [data.entries, data.cap],
+  );
+
+  const impactCtx = useMemo(() => {
+    const prices = visibleEntries.map((e) => e.dealPrice).filter((n) => n > 0);
+    return {
+      cap: data.cap,
+      categoryShare: categoryShare(visibleEntries),
+      avgCtr: ai.averages.avgCtr,
+      avgPrice: prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0,
+      now: data.now,
+    };
+  }, [visibleEntries, data.cap, ai.averages.avgCtr, data.now]);
+
+  const impactByKey = useMemo(() => {
+    const m = new Map<string, ReturnType<typeof marketplaceImpact>>();
+    for (const e of data.entries) m.set(e.key, marketplaceImpact(e, impactCtx));
+    return m;
+  }, [data.entries, impactCtx]);
+
+  const sectionConflicts = useMemo(
+    () => crossSectionConflicts(data.entries, data.cap, data.now),
+    [data.entries, data.cap, data.now],
+  );
+
+  const journeyRows = useMemo<JourneyRow[]>(
+    () =>
+      data.entries
+        .filter((e) => e.deal)
+        .slice(0, 12)
+        .map((e) => {
+          const stage = journeyStage(lifecycleStage(e, ai.averages.avgCtr, data.now));
+          return {
+            key: e.key,
+            name: e.product.name,
+            stage,
+            note:
+              e.campaign
+                ? `${e.campaign} · ${e.discountPct}% off · ${e.stats.purchases} order${e.stats.purchases === 1 ? "" : "s"} so far.`
+                : `${e.discountPct}% off · ${e.stats.views} impressions · ${e.stats.purchases} order${e.stats.purchases === 1 ? "" : "s"} so far.`,
+          };
+        }),
+    [data.entries, ai.averages.avgCtr, data.now],
+  );
+
+  const eventDays = useMemo(() => groupEventsByDay(feed, data.now), [feed, data.now]);
+
+  const previewConflict = useCallback((c: SectionConflict) => {
+    window.open(`/products/${c.slug}`, "_blank", "noopener");
+  }, []);
+
   /** Recommendations minus anything ignored or still snoozed. */
   const inboxItems = useMemo(
     () => queue.filter((q) => !ws.hiddenTaskIds.has(q.id)),
@@ -424,6 +489,23 @@ function FlashManagePage() {
       toast.success("Reminder set for later today");
     },
     [ws.snoozeTask, ws.logDecision],
+  );
+
+  const approveMany = useCallback(
+    (items: QueueItem[]) => {
+      if (items.length === 0) return;
+      for (const item of items) approveTask(item);
+      toast.success(`${items.length} recommendation${items.length === 1 ? "" : "s"} approved`);
+    },
+    [approveTask],
+  );
+
+  const rejectMany = useCallback(
+    (items: QueueItem[]) => {
+      if (items.length === 0) return;
+      for (const item of items) rejectTask(item);
+    },
+    [rejectTask],
   );
 
   const runNextAction = useCallback(
@@ -884,6 +966,8 @@ function FlashManagePage() {
                 onReject={rejectTask}
                 onSnooze={snoozeTaskItem}
                 onPreview={(item) => setAdviceKey(item.entryKey)}
+                onApproveMany={approveMany}
+                onRejectMany={rejectMany}
               />
             </div>
           )}
@@ -960,6 +1044,7 @@ function FlashManagePage() {
                         onDrop={() => void reorder(e.key)}
                         cap={data.cap}
                         adviceCount={adviceByKey.get(e.key)?.length ?? 0}
+                        impact={impactByKey.get(e.key)}
                         actions={actions}
                         onQuickSave={quickSave}
                       />
@@ -1050,6 +1135,34 @@ function FlashManagePage() {
                 />
               </FlashSectionShell>
             </div>
+          )}
+
+          {/* v12 — cross-section conflicts */}
+          {show("cross") && (
+            <FlashSectionShell eyebrow="Marketplace" title="Cross-section conflicts" count={sectionConflicts.length}>
+              <FlashCrossSection conflicts={sectionConflicts} onPreview={previewConflict} />
+            </FlashSectionShell>
+          )}
+
+          {/* v12 — campaign journey */}
+          {show("journey") && (
+            <FlashSectionShell eyebrow="Journey" title="Campaign journey" count={journeyRows.length}>
+              <FlashCampaignJourney rows={journeyRows} />
+            </FlashSectionShell>
+          )}
+
+          {/* v12 — smart campaign library */}
+          {show("library") && (
+            <FlashSectionShell eyebrow="Library" title="Smart campaign library">
+              <FlashCampaignLibrary onUse={(t) => setWizard({ open: true, deal: null, presetTemplate: t })} />
+            </FlashSectionShell>
+          )}
+
+          {/* v12 — marketplace events, grouped by day */}
+          {show("events") && (
+            <FlashSectionShell eyebrow="Marketplace" title="Marketplace events">
+              <FlashMarketplaceEvents days={eventDays} />
+            </FlashSectionShell>
           )}
 
           {/* 10 — Deal lifecycle */}

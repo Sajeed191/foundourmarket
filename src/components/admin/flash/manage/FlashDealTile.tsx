@@ -15,6 +15,8 @@ import type { DealEntry, FlashDealRow } from "@/lib/flash/use-flash-admin";
 import {
   COUNTDOWN_CLASS, HEALTH_TONE_CLASS, countdownPhase, healthVerdict,
 } from "@/lib/flash/flash-advice";
+import { FlashImpactChips } from "@/components/admin/flash/manage/FlashImpactChips";
+import type { ImpactTag } from "@/lib/flash/flash-marketplace";
 import { FlashProductFrame } from "./FlashProductFrame";
 import { FlashQuickEdit } from "./FlashQuickEdit";
 
@@ -104,7 +106,7 @@ export type TileActions = {
 };
 
 export const FlashDealTile = memo(function FlashDealTile({
-  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions, cap, adviceCount, onQuickSave,
+  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions, cap, adviceCount, onQuickSave, impact,
 }: {
   entry: DealEntry;
   intel?: { score: number; recommendation: string } | null;
@@ -118,6 +120,8 @@ export const FlashDealTile = memo(function FlashDealTile({
   /** Visible homepage slots, used to show whether this deal is on screen. */
   cap?: number;
   adviceCount?: number;
+  /** v12 — marketplace impact chips derived from existing signals. */
+  impact?: ImpactTag[];
   /** Enables the inline quick-edit panel when provided. */
   onQuickSave?: (entry: DealEntry, patch: Partial<FlashDealRow>) => void | Promise<void>;
 }) {
@@ -242,6 +246,8 @@ export const FlashDealTile = memo(function FlashDealTile({
               })}
             </div>
           )}
+
+          {impact && impact.length > 0 && <FlashImpactChips tags={impact} />}
         </div>
       </div>
 

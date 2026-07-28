@@ -31,24 +31,28 @@ export type SectionId =
   | "brief" | "next" | "inbox" | "audit" | "reminders" | "notes" | "history"
   | "active" | "scheduled" | "suggested" | "preview" | "alerts"
   | "campaigns" | "forecast" | "schedule" | "balance" | "lifecycle"
-  | "feed" | "report" | "heatmap" | "summary" | "advanced";
+  | "feed" | "report" | "heatmap" | "summary" | "advanced"
+  /** v12 — marketplace merchandising intelligence sections. */
+  | "cross" | "journey" | "library" | "events";
 
 const MODE_SECTIONS: Record<WorkspaceMode, SectionId[]> = {
   operations: [
     "brief", "next", "inbox", "audit", "reminders", "alerts", "active",
     "scheduled", "suggested", "preview", "notes", "history", "feed", "advanced",
+    "cross", "journey", "events",
   ],
   marketing: [
     "brief", "next", "inbox", "alerts", "active", "scheduled", "suggested",
     "preview", "schedule", "balance", "campaigns", "notes", "advanced",
+    "library", "journey", "cross",
   ],
   analytics: [
     "summary", "campaigns", "forecast", "balance", "lifecycle", "heatmap",
-    "feed", "report", "active", "advanced",
+    "feed", "report", "active", "advanced", "events", "journey",
   ],
   executive: [
     "summary", "brief", "next", "inbox", "forecast", "campaigns", "report",
-    "balance", "history",
+    "balance", "history", "cross", "events",
   ],
 };
 

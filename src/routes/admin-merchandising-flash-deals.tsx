@@ -567,7 +567,15 @@ function FlashManagePage() {
         <div className="grid place-items-center py-24"><Loader2 className="size-6 animate-spin text-accent" /></div>
       ) : (
         <div className="space-y-8 pb-4">
+          {/* 0 — Today's brief */}
+          <FlashBriefing
+            briefing={briefing}
+            queueCount={queue.length}
+            onOptimize={() => document.getElementById("flash-priority-queue")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          />
+
           {/* Search + compact KPIs + filter chips */}
+
           <div className="space-y-3">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <div className="relative min-w-0">

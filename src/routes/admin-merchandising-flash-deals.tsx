@@ -29,6 +29,14 @@ import { FlashKpiV7 } from "@/components/admin/flash/manage/FlashKpiV7";
 import { FlashActivityFeed } from "@/components/admin/flash/manage/FlashActivityFeed";
 import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceSheet";
 import { dealAdvice, type AdviceAction, type DealAdvice } from "@/lib/flash/flash-advice";
+import { FlashBriefing } from "@/components/admin/flash/manage/FlashBriefing";
+import { FlashPriorityQueue } from "@/components/admin/flash/manage/FlashPriorityQueue";
+import { FlashCompareSheet } from "@/components/admin/flash/manage/FlashCompareSheet";
+import { FlashRotationHeatmap } from "@/components/admin/flash/manage/FlashRotationHeatmap";
+import { FlashRevenueSimulator } from "@/components/admin/flash/manage/FlashRevenueSimulator";
+import { FlashSavedViews, useSavedViews, type SavedView } from "@/components/admin/flash/manage/FlashSavedViews";
+import { morningBriefing, priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
+
 
 import { FlashFilterChips, FLASH_FILTERS, type FlashFilter } from "@/components/admin/flash/manage/FlashFilterChips";
 import { FlashScheduledGroups } from "@/components/admin/flash/manage/FlashScheduledGroups";

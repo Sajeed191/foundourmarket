@@ -5,15 +5,19 @@
  */
 import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 import {
   GripVertical, Pencil, Pause, Play, Square, Trash2, Copy, CalendarClock,
-  AlertTriangle, Clock, ImageOff, PackageX, BadgeX, EyeOff, Percent, Layers,
+  AlertTriangle, Clock, PackageX, BadgeX, EyeOff, Percent, Layers, Eye, SlidersHorizontal,
 } from "lucide-react";
 import type { WarningKey } from "@/lib/flash/flash-health";
-import type { DealEntry } from "@/lib/flash/use-flash-admin";
+import type { DealEntry, FlashDealRow } from "@/lib/flash/use-flash-admin";
 import {
   COUNTDOWN_CLASS, HEALTH_TONE_CLASS, countdownPhase, healthVerdict,
 } from "@/lib/flash/flash-advice";
+import { FlashProductFrame } from "./FlashProductFrame";
+import { FlashQuickEdit } from "./FlashQuickEdit";
+
 
 
 /** Visual status derived from existing status + remaining time. No new logic. */

@@ -18,15 +18,6 @@ import type { Product } from "@/lib/products";
 
 export type CollectionSort = "trending" | "newest" | "best_sellers";
 
-/** Which stored badge keys make a product eligible for a given rail. */
-const BADGE_MAP: Record<HomepageCollectionKey, BadgeKey[]> = {
-  flash_deals: ["flash_deal", "hot_deal"],
-  trending: ["trending"],
-  best_sellers: ["bestseller"],
-  new_arrivals: ["new"],
-  featured: [],
-};
-
 /**
  * Full collection page for a homepage rail's "View All" destination. Reads the
  * admin-editable display limit + rotation interval from Site Rules and slices
@@ -78,7 +69,7 @@ export function ProductCollection({
       eligible = evaluatePromoEligibility(
         products,
         badgeAssignments,
-        collectionKey === "flash_deals" ? "flash_deals" : collectionKey,
+        collectionKey,
         nowMs,
       ).eligible;
     } else if (filterFlag) {

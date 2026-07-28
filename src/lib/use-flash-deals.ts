@@ -5,6 +5,7 @@ import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
 import { hasAssignedCollectionBadge, productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
+import { evaluatePromoEligibility } from "@/lib/promo-eligibility";
 import { useHomepageCollectionRules } from "@/lib/site-rules";
 
 /** Absolute upper bound on visibly-promoted Flash Deals, regardless of admin config. */

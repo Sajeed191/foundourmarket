@@ -401,9 +401,38 @@ function FlashManagePage() {
     setUndoCount(undoStack.current.length);
     if (!last) return;
     await last.run();
+    if (last.redo) {
+      redoStack.current = [...redoStack.current.slice(-9), { label: last.label, run: last.redo }];
+      setRedoCount(redoStack.current.length);
+    }
+    logMine(`Undid: ${last.label.replace(/_/g, " ")}`);
     toast.success("Last change undone");
     data.refresh();
   }
+
+  async function redo() {
+    const next = redoStack.current.pop();
+    setRedoCount(redoStack.current.length);
+    if (!next) return;
+    await next.run();
+    logMine(`Redid: ${next.label.replace(/_/g, " ")}`);
+    toast.success("Change reapplied");
+    data.refresh();
+  }
+
+  /** Approves every safe Auto Pilot recommendation in one pass. */
+  async function bulkApprove() {
+    const safe = queue.filter((q) => q.advice.confidence >= 0.6);
+    if (!safe.length) { toast.info("No high-confidence recommendations to approve"); return; }
+    for (const item of safe) {
+      const entry = data.entries.find((e) => e.key === item.entryKey);
+      if (entry) await applyAdvice(entry, item.advice.action);
+    }
+    logMine(`Approved ${safe.length} recommendations`);
+    toast.success(`${safe.length} recommendation${safe.length === 1 ? "" : "s"} applied`);
+  }
+
+
 
   const actions: TileActions = useMemo(() => ({
     onEdit: (e) => setWizard({ open: true, deal: e.deal }),

@@ -363,6 +363,34 @@ function FlashManagePage() {
 
   const ws = useFlashWorkspace();
 
+  /* ------------------------------------------- v13 — command centre layer */
+
+  const automation = useFlashAutomation();
+
+  /** Smoothly focuses a section without changing any state. */
+  const jumpTo = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  /** Assistant confidence: share of open recommendations it rates high/medium. */
+  const aiConfidence = useMemo(() => {
+    if (queue.length === 0) return 100;
+    const weight = queue.reduce(
+      (a, q) => a + (q.confidence === "high" ? 1 : q.confidence === "medium" ? 0.6 : 0.25),
+      0,
+    );
+    return Math.round((weight / queue.length) * 100);
+  }, [queue]);
+
+  /** Deals that had a live window at any point today. */
+  const dealsRanToday = useMemo(() => {
+    const dayStart = new Date(data.now);
+    dayStart.setHours(0, 0, 0, 0);
+    return data.entries.filter(
+      (e) => e.deal && new Date(e.deal.start_at).getTime() <= data.now && new Date(e.deal.end_at).getTime() >= dayStart.getTime(),
+    ).length;
+  }, [data.entries, data.now]);
+
   const show = useCallback(
     (id: SectionId) => sectionVisible(ws.mode, ws.focus, id),
     [ws.mode, ws.focus],

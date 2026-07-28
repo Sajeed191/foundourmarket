@@ -47,6 +47,20 @@ import {
   explainQueueItem, marketplaceFeed, executiveReport, productJourney, type ReportRange,
 } from "@/lib/flash/flash-executive";
 import { triggerGlobalReshuffle } from "@/lib/use-rotation-nonce";
+import { FlashDailyBrief } from "@/components/admin/flash/manage/FlashDailyBrief";
+import { FlashTaskInbox } from "@/components/admin/flash/manage/FlashTaskInbox";
+import { FlashNextBestAction } from "@/components/admin/flash/manage/FlashNextBestAction";
+import { FlashHealthAudit } from "@/components/admin/flash/manage/FlashHealthAudit";
+import { FlashReminders } from "@/components/admin/flash/manage/FlashReminders";
+import { FlashDecisionHistory } from "@/components/admin/flash/manage/FlashDecisionHistory";
+import { FlashModeBar } from "@/components/admin/flash/manage/FlashModeBar";
+import { FlashTeamNotes } from "@/components/admin/flash/manage/FlashTeamNotes";
+import {
+  dailyBrief, healthAudit, nextBestAction, suggestedReminders, taskDiff,
+  parseSearchIntent, applyIntent, sectionVisible, SEARCH_EXAMPLES,
+  type SectionId, type AuditIssue, type NextBestAction as NextAction, type Reminder,
+} from "@/lib/flash/flash-assistant";
+import { useFlashWorkspace } from "@/lib/flash/use-flash-workspace";
 
 
 
@@ -700,19 +714,48 @@ function FlashManagePage() {
             }}
           />
 
+          {/* v11 — workspace modes + focus */}
+          <FlashModeBar mode={ws.mode} focus={ws.focus} onMode={ws.setMode} onToggleFocus={ws.toggleFocus} />
+
+          {/* v11 — daily merchandising brief */}
+          {show("brief") && ws.briefVisible && (
+            <FlashDailyBrief
+              brief={brief}
+              onReview={() => document.getElementById("flash-task-inbox")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              onDismiss={ws.dismissBriefToday}
+              onNeverShow={() => { ws.dismissBriefToday(); toast.success("Brief hidden — reopen it from Focus mode tomorrow"); }}
+            />
+          )}
+
+          {/* v11 — next best action */}
+          {show("next") && <FlashNextBestAction action={nextAction} onAct={runNextAction} />}
+
           {/* Sticky search + filters */}
           <div className="space-y-3">
             <div className="sticky top-0 z-20 -mx-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-background/85 px-1 py-2 backdrop-blur-xl">
               <div className="relative min-w-0">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input id="flash-search" value={query} onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search product, SKU, campaign, brand…" aria-label="Search deals"
+                  placeholder="Try “ending today”, “low stock”, “highest revenue”…" aria-label="Search deals"
                   className="w-full rounded-full border border-border bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:border-accent" />
               </div>
               <p className="shrink-0 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
                 rotation {nextRotationLabel(data.now)}
               </p>
             </div>
+
+            {intent.label ? (
+              <p className="px-1 text-[10px] font-mono uppercase tracking-widest text-accent">Understood: {intent.label}</p>
+            ) : query.trim() === "" ? (
+              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {SEARCH_EXAMPLES.map((s) => (
+                  <button key={s} onClick={() => setQuery(s)}
+                    className="shrink-0 rounded-full border border-white/10 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground transition hover:bg-white/5">
+                    {s}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
 
@@ -730,22 +773,32 @@ function FlashManagePage() {
             />
           </div>
 
-          {/* 1 — AI Auto Pilot */}
-          <div id="flash-priority-queue">
-            <FlashSectionShell eyebrow="Auto Pilot" title="AI recommendations" count={queue.length}>
-              <FlashAutoPilot
-                items={queue}
-                explain={(item) => explainQueueItem(item, data.entries.find((e) => e.key === item.entryKey))}
-                onApprove={applyQueueItem}
+          {/* v11 — automatic health check */}
+          {show("audit") && <FlashHealthAudit issues={audit} onJump={jumpToIssue} />}
+
+          {/* v11 — AI task inbox (single home for every recommendation) */}
+          {show("inbox") && (
+            <div id="flash-task-inbox">
+              <FlashTaskInbox
+                items={inboxItems}
+                diffFor={(item) => taskDiff(item, data.entries.find((e) => e.key === item.entryKey))}
+                onApprove={approveTask}
+                onReject={rejectTask}
+                onSnooze={snoozeTask}
                 onPreview={(item) => setAdviceKey(item.entryKey)}
-                onReject={(item) => {
-                  setDismissed((p) => new Set(p).add(item.id));
-                  logMine(`Rejected: ${item.title} — ${item.productName}`);
-                  toast.success("Recommendation rejected");
-                }}
               />
-            </FlashSectionShell>
-          </div>
+            </div>
+          )}
+
+          {/* v11 — smart reminders */}
+          {show("reminders") && (
+            <FlashReminders
+              reminders={reminders}
+              states={ws.reminders}
+              onDone={(r: Reminder) => { ws.setReminder(r.id, "done"); ws.logDecision({ action: "completed", title: r.title, product: null, expected: null }); }}
+              onSnooze={(r: Reminder) => ws.setReminder(r.id, Date.now() + 6 * 3600_000)}
+            />
+          )}
 
 
           {/* Comparison of the current selection */}
@@ -774,146 +827,169 @@ function FlashManagePage() {
 
 
           {/* 1 — Critical alerts: what needs attention right now */}
-          <FlashSectionShell eyebrow="Fix first" title="Critical alerts" count={ai.conflicts.length}>
-            <FlashCriticalAlerts conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
-          </FlashSectionShell>
+          {show("alerts") && (
+            <FlashSectionShell eyebrow="Fix first" title="Critical alerts" count={ai.conflicts.length}>
+              <FlashCriticalAlerts conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
+            </FlashSectionShell>
+          )}
 
           {/* 2 — Active flash deals */}
-          <FlashSectionShell eyebrow="Live now" title="Active flash deals" count={liveList.length}>
-            {liveList.length === 0 ? (
-              <FlashEmpty
-                text="No live flash deals match this view."
-                action={
-                  <button onClick={() => setWizard({ open: true, deal: null })}
-                    className="inline-flex items-center gap-2 rounded-full bg-accent px-4 min-h-11 text-[10px] font-mono uppercase tracking-widest text-accent-foreground">
-                    <Plus className="size-3.5" /> Create a deal
-                  </button>
-                }
-              />
-            ) : (
-              <>
-                <div className="grid gap-2 xl:grid-cols-2">
-                  {liveList.slice(0, visible).map((e) => (
-                    <FlashDealTile
-                      key={e.key}
-                      entry={e}
-                      intel={ai.scores.get(e.key) ?? null}
-                      selected={selected.has(e.key)}
-                      onSelect={toggleSelect}
-                      draggable
-                      onDragStart={() => { dragKey.current = e.key; }}
-                      onDragOver={(ev) => ev.preventDefault()}
-                      onDrop={() => void reorder(e.key)}
-                      cap={data.cap}
-                      adviceCount={adviceByKey.get(e.key)?.length ?? 0}
-                      actions={actions}
-                      onQuickSave={quickSave}
-                    />
-                  ))}
-                </div>
-                {liveList.length > visible && (
-                  <button onClick={() => setVisible((v) => v + PAGE_SIZE)}
-                    className="w-full rounded-full border border-white/10 min-h-11 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:bg-white/5">
-                    Show more ({liveList.length - visible})
-                  </button>
-                )}
-              </>
-            )}
-          </FlashSectionShell>
-
-
-
+          {show("active") && (
+            <FlashSectionShell eyebrow="Live now" title="Active flash deals" count={liveList.length}>
+              {liveList.length === 0 ? (
+                <FlashEmpty
+                  text="No live flash deals match this view."
+                  action={
+                    <button onClick={() => setWizard({ open: true, deal: null })}
+                      className="inline-flex items-center gap-2 rounded-full bg-accent px-4 min-h-11 text-[10px] font-mono uppercase tracking-widest text-accent-foreground">
+                      <Plus className="size-3.5" /> Create a deal
+                    </button>
+                  }
+                />
+              ) : (
+                <>
+                  <div className="grid gap-2 xl:grid-cols-2">
+                    {liveList.slice(0, visible).map((e) => (
+                      <FlashDealTile
+                        key={e.key}
+                        entry={e}
+                        intel={ai.scores.get(e.key) ?? null}
+                        selected={selected.has(e.key)}
+                        onSelect={toggleSelect}
+                        draggable
+                        onDragStart={() => { dragKey.current = e.key; }}
+                        onDragOver={(ev) => ev.preventDefault()}
+                        onDrop={() => void reorder(e.key)}
+                        cap={data.cap}
+                        adviceCount={adviceByKey.get(e.key)?.length ?? 0}
+                        actions={actions}
+                        onQuickSave={quickSave}
+                      />
+                    ))}
+                  </div>
+                  {liveList.length > visible && (
+                    <button onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                      className="w-full rounded-full border border-white/10 min-h-11 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:bg-white/5">
+                      Show more ({liveList.length - visible})
+                    </button>
+                  )}
+                </>
+              )}
+            </FlashSectionShell>
+          )}
 
           {/* 3 — Scheduled */}
-          <FlashSectionShell eyebrow="Upcoming" title="Scheduled deals" count={scheduledList.length}>
-            {scheduledList.length === 0 ? (
-              <FlashEmpty text="Nothing scheduled yet — plan your next campaign." />
-            ) : (
-              <FlashScheduledGroups
-                entries={scheduledList}
-                onEdit={(e) => setWizard({ open: true, deal: e.deal })}
-                onDuplicate={(e) => void duplicateDeal(e)}
-                onCancel={(e) => void deleteDeal(e)}
-              />
-            )}
-          </FlashSectionShell>
+          {show("scheduled") && (
+            <FlashSectionShell eyebrow="Upcoming" title="Scheduled deals" count={scheduledList.length}>
+              {scheduledList.length === 0 ? (
+                <FlashEmpty text="Nothing scheduled yet — plan your next campaign." />
+              ) : (
+                <FlashScheduledGroups
+                  entries={scheduledList}
+                  onEdit={(e) => setWizard({ open: true, deal: e.deal })}
+                  onDuplicate={(e) => void duplicateDeal(e)}
+                  onCancel={(e) => void deleteDeal(e)}
+                />
+              )}
+            </FlashSectionShell>
+          )}
 
           {/* 4 — Suggested products */}
-          <FlashSectionShell eyebrow="Assistant" title="Suggested products">
-            <FlashSuggestedRail
-              recommendations={ai.recommendations}
-              onFeature={(product) => setWizard({ open: true, deal: null, presetProduct: product })}
-            />
-          </FlashSectionShell>
-
-          {/* 5 — Homepage preview */}
-          <div ref={previewRef}>
-            <FlashSectionShell eyebrow="Storefront" title="Homepage preview">
-              <FlashPreviewCompact />
-            </FlashSectionShell>
-          </div>
-
-          {/* 6 — Campaign health */}
-          <FlashSectionShell eyebrow="Campaigns" title="Campaign health" count={campaigns.length}>
-            <FlashCampaignHealth rows={campaigns} />
-          </FlashSectionShell>
-
-          {/* 7 — Revenue forecast */}
-          <FlashSectionShell eyebrow="Forecast" title="Expected revenue">
-            <FlashForecast rows={forecast} />
-          </FlashSectionShell>
-
-          {/* 8 — Smart scheduling assistant */}
-          <FlashSectionShell eyebrow="Planning" title="Smart scheduling assistant">
-            <FlashScheduleAssistant
-              suggestion={schedule}
-              onUse={() => setWizard({ open: true, deal: null })}
-            />
-          </FlashSectionShell>
-
-          {/* 9 — Homepage balance monitor */}
-          <div id="flash-balance">
-            <FlashSectionShell eyebrow="Balance" title="Homepage balance monitor">
-              <FlashBalanceMonitor
-                report={balance}
-                onReshuffle={() => {
-                  void triggerGlobalReshuffle().then((ok) => {
-                    toast[ok ? "success" : "error"](ok ? "Rotation reshuffled" : "Reshuffle blocked — admin access required");
-                    if (ok) { logMine("Reshuffled the homepage rotation"); data.refresh(); }
-                  });
-                }}
+          {show("suggested") && (
+            <FlashSectionShell eyebrow="Assistant" title="Suggested products">
+              <FlashSuggestedRail
+                recommendations={ai.recommendations}
+                onFeature={(product) => setWizard({ open: true, deal: null, presetProduct: product })}
               />
             </FlashSectionShell>
-          </div>
+          )}
+
+          {/* 5 — Homepage preview */}
+          {show("preview") && (
+            <div ref={previewRef}>
+              <FlashSectionShell eyebrow="Storefront" title="Homepage preview">
+                <FlashPreviewCompact />
+              </FlashSectionShell>
+            </div>
+          )}
+
+          {/* 6 — Campaign health */}
+          {show("campaigns") && (
+            <FlashSectionShell eyebrow="Campaigns" title="Campaign health" count={campaigns.length}>
+              <FlashCampaignHealth rows={campaigns} />
+            </FlashSectionShell>
+          )}
+
+          {/* 7 — Revenue forecast */}
+          {show("forecast") && (
+            <FlashSectionShell eyebrow="Forecast" title="Expected revenue">
+              <FlashForecast rows={forecast} />
+            </FlashSectionShell>
+          )}
+
+          {/* 8 — Smart scheduling assistant */}
+          {show("schedule") && (
+            <FlashSectionShell eyebrow="Planning" title="Smart scheduling assistant">
+              <FlashScheduleAssistant
+                suggestion={schedule}
+                onUse={() => setWizard({ open: true, deal: null })}
+              />
+            </FlashSectionShell>
+          )}
+
+          {/* 9 — Homepage balance monitor */}
+          {show("balance") && (
+            <div id="flash-balance">
+              <FlashSectionShell eyebrow="Balance" title="Homepage balance monitor">
+                <FlashBalanceMonitor
+                  report={balance}
+                  onReshuffle={() => {
+                    void triggerGlobalReshuffle().then((ok) => {
+                      toast[ok ? "success" : "error"](ok ? "Rotation reshuffled" : "Reshuffle blocked — admin access required");
+                      if (ok) { logMine("Reshuffled the homepage rotation"); data.refresh(); }
+                    });
+                  }}
+                />
+              </FlashSectionShell>
+            </div>
+          )}
 
           {/* 10 — Deal lifecycle */}
-          <FlashSectionShell eyebrow="Lifecycle" title="Deal lifecycle">
-            <FlashLifecycle
-              entries={filtered}
-              avgCtr={ai.averages.avgCtr}
-              now={data.now}
-              onOpen={(e) => setJourneyKey(e.key)}
-            />
-          </FlashSectionShell>
+          {show("lifecycle") && (
+            <FlashSectionShell eyebrow="Lifecycle" title="Deal lifecycle">
+              <FlashLifecycle
+                entries={filtered}
+                avgCtr={ai.averages.avgCtr}
+                now={data.now}
+                onOpen={(e) => setJourneyKey(e.key)}
+              />
+            </FlashSectionShell>
+          )}
 
           {/* 11 — Live marketplace feed */}
-          <FlashSectionShell eyebrow="Realtime" title="Live marketplace feed">
-            <FlashLiveFeed items={feed} now={data.now} />
-          </FlashSectionShell>
+          {show("feed") && (
+            <FlashSectionShell eyebrow="Realtime" title="Live marketplace feed">
+              <FlashLiveFeed items={feed} now={data.now} />
+            </FlashSectionShell>
+          )}
 
           {/* 12 — Executive reports */}
-          <FlashSectionShell eyebrow="Reporting" title="Executive report">
-            <FlashExecutiveReport report={report} range={reportRange} onRange={setReportRange} />
-          </FlashSectionShell>
+          {show("report") && (
+            <FlashSectionShell eyebrow="Reporting" title="Executive report">
+              <FlashExecutiveReport report={report} range={reportRange} onRange={setReportRange} />
+            </FlashSectionShell>
+          )}
 
           {/* 13 — Rotation heatmap */}
-          <FlashSectionShell eyebrow="Rotation" title="Visibility heatmap" count={heatRows.length}>
-            <FlashRotationHeatmap rows={heatRows} />
-          </FlashSectionShell>
+          {show("heatmap") && (
+            <FlashSectionShell eyebrow="Rotation" title="Visibility heatmap" count={heatRows.length}>
+              <FlashRotationHeatmap rows={heatRows} />
+            </FlashSectionShell>
+          )}
 
 
           {/* 8 — Advanced tools, collapsed by default */}
-          <div className="space-y-3">
+          {show("advanced") && (<div className="space-y-3">
             <CollapsibleModule eyebrow="What-if" title="Revenue simulator" sectionId="flash-revenue-sim" defaultOpen={false}>
               <FlashRevenueSimulator
                 entries={data.entries}
@@ -1010,7 +1086,21 @@ function FlashManagePage() {
                 </label>
               </div>
             </CollapsibleModule>
-          </div>
+          </div>)}
+
+          {/* 15 — Decision history */}
+          {show("history") && (
+            <FlashSectionShell eyebrow="Audit" title="Decision history" count={ws.decisions.length}>
+              <FlashDecisionHistory decisions={ws.decisions} />
+            </FlashSectionShell>
+          )}
+
+          {/* 16 — Team notes */}
+          {show("notes") && (
+            <FlashSectionShell eyebrow="Team" title="Internal notes" count={ws.notes.length}>
+              <FlashTeamNotes notes={ws.notes} onAdd={(t) => ws.addNote(t)} onRemove={ws.removeNote} />
+            </FlashSectionShell>
+          )}
 
           {/* 14 — Sticky command center */}
           <FlashCommandBar

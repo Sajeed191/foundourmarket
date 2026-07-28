@@ -346,15 +346,20 @@ function FlashManagePage() {
     if (error) { toast.error(error.message); return; }
     logAction(action, before.id, { before, after: patch });
     if (undoable) {
-      pushUndo(action, async () => {
-        await supabase.from("flash_deals").update({
-          flash_price: before.flash_price, start_at: before.start_at,
-          end_at: before.end_at, priority: before.priority, active: before.active,
-        }).eq("id", before.id);
-      });
+      pushUndo(
+        action,
+        async () => {
+          await supabase.from("flash_deals").update({
+            flash_price: before.flash_price, start_at: before.start_at,
+            end_at: before.end_at, priority: before.priority, active: before.active,
+          }).eq("id", before.id);
+        },
+        async () => { await supabase.from("flash_deals").update(patch).eq("id", before.id); },
+      );
     }
     data.refresh();
   }
+
 
   async function deleteDeal(entry: DealEntry) {
     if (!entry.deal) return;

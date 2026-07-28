@@ -254,7 +254,18 @@ export const FlashDealTile = memo(function FlashDealTile({
         </div>
 
         {deal && (
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
+            <Link to="/products/$slug" params={{ slug: p.slug }} target="_blank"
+              aria-label={`Preview ${p.name} on the storefront`} className={btn}>
+              <Eye className="size-3.5" />
+            </Link>
+            {onQuickSave && (
+              <button onClick={() => setQuickOpen((v) => !v)} aria-expanded={quickOpen}
+                aria-label="Quick edit price, priority and end time"
+                className={`${btn} ${quickOpen ? "border-accent/50 text-accent" : ""}`}>
+                <SlidersHorizontal className="size-3.5" />
+              </button>
+            )}
             <button onClick={() => actions.onEdit(entry)} aria-label="Edit deal" className={btn}><Pencil className="size-3.5" /></button>
             <button onClick={() => actions.onPause(entry)} aria-label={deal.active ? "Pause deal" : "Resume deal"} className={btn}>
               {deal.active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
@@ -272,6 +283,10 @@ export const FlashDealTile = memo(function FlashDealTile({
         )}
       </div>
 
+      {quickOpen && deal && onQuickSave && (
+        <FlashQuickEdit entry={entry} onSave={onQuickSave} onClose={() => setQuickOpen(false)} />
+      )}
+
       {scheduleOpen && deal && (
         <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 px-3 py-2">
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Move window</span>
@@ -283,6 +298,7 @@ export const FlashDealTile = memo(function FlashDealTile({
           ))}
         </div>
       )}
+
 
       {intel && (
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-t border-border/60 px-3 py-2">

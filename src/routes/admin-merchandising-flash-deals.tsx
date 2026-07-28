@@ -21,7 +21,7 @@ import { FlashCoveragePanel } from "@/components/admin/flash/FlashCoveragePanel"
 import { FlashDealIntelligenceSheet } from "@/components/admin/flash/FlashDealIntelligenceSheet";
 import { FlashDealTile, tileStatus, type TileActions } from "@/components/admin/flash/manage/FlashDealTile";
 import { FlashSectionShell, FlashEmpty } from "@/components/admin/flash/manage/FlashSectionShell";
-import { FlashAttentionList } from "@/components/admin/flash/manage/FlashAttentionList";
+import { FlashCriticalAlerts } from "@/components/admin/flash/manage/FlashCriticalAlerts";
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
 import { FlashQuickBar } from "@/components/admin/flash/manage/FlashQuickBar";
@@ -323,6 +323,16 @@ function FlashManagePage() {
     setAdviceKey(null);
   }
 
+  /** Inline quick edit — reuses the existing deal update mutation. */
+  const quickSave = useCallback(
+    async (entry: DealEntry, patch: Partial<FlashDealRow>) => {
+      await updateDeal(entry, patch, "flash_deal_quick_edited");
+      toast.success("Deal updated");
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.entries],
+  );
+
 
   const toggleSelect = useCallback((key: string, next: boolean) => {
     setSelected((prev) => {
@@ -542,7 +552,12 @@ function FlashManagePage() {
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
           </div>
 
-          {/* 1 — Active flash deals */}
+          {/* 1 — Critical alerts: what needs attention right now */}
+          <FlashSectionShell eyebrow="Fix first" title="Critical alerts" count={ai.conflicts.length}>
+            <FlashCriticalAlerts conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
+          </FlashSectionShell>
+
+          {/* 2 — Active flash deals */}
           <FlashSectionShell eyebrow="Live now" title="Active flash deals" count={liveList.length}>
             {liveList.length === 0 ? (
               <FlashEmpty
@@ -571,7 +586,7 @@ function FlashManagePage() {
                       cap={data.cap}
                       adviceCount={adviceByKey.get(e.key)?.length ?? 0}
                       actions={actions}
-
+                      onQuickSave={quickSave}
                     />
                   ))}
                 </div>
@@ -585,15 +600,6 @@ function FlashManagePage() {
             )}
           </FlashSectionShell>
 
-          {/* 2 — Needs attention */}
-          <FlashSectionShell eyebrow="Fix first" title="Needs attention" count={ai.conflicts.length}>
-            <FlashAttentionList conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
-          </FlashSectionShell>
-
-          {/* 2b — Live activity */}
-          <FlashSectionShell eyebrow="Realtime" title="Live activity">
-            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
-          </FlashSectionShell>
 
 
 
@@ -625,6 +631,12 @@ function FlashManagePage() {
               <FlashPreviewCompact />
             </FlashSectionShell>
           </div>
+
+          {/* 6 — Live activity */}
+          <FlashSectionShell eyebrow="Realtime" title="Live activity">
+            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
+          </FlashSectionShell>
+
 
           {/* 6 — Advanced tools, collapsed by default */}
           <div className="space-y-3">

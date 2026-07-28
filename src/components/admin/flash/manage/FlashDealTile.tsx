@@ -5,15 +5,19 @@
  */
 import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 import {
   GripVertical, Pencil, Pause, Play, Square, Trash2, Copy, CalendarClock,
-  AlertTriangle, Clock, ImageOff, PackageX, BadgeX, EyeOff, Percent, Layers,
+  AlertTriangle, Clock, PackageX, BadgeX, EyeOff, Percent, Layers, Eye, SlidersHorizontal,
 } from "lucide-react";
 import type { WarningKey } from "@/lib/flash/flash-health";
-import type { DealEntry } from "@/lib/flash/use-flash-admin";
+import type { DealEntry, FlashDealRow } from "@/lib/flash/use-flash-admin";
 import {
   COUNTDOWN_CLASS, HEALTH_TONE_CLASS, countdownPhase, healthVerdict,
 } from "@/lib/flash/flash-advice";
+import { FlashProductFrame } from "./FlashProductFrame";
+import { FlashQuickEdit } from "./FlashQuickEdit";
+
 
 
 /** Visual status derived from existing status + remaining time. No new logic. */
@@ -100,7 +104,7 @@ export type TileActions = {
 };
 
 export const FlashDealTile = memo(function FlashDealTile({
-  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions, cap, adviceCount,
+  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions, cap, adviceCount, onQuickSave,
 }: {
   entry: DealEntry;
   intel?: { score: number; recommendation: string } | null;
@@ -114,10 +118,14 @@ export const FlashDealTile = memo(function FlashDealTile({
   /** Visible homepage slots, used to show whether this deal is on screen. */
   cap?: number;
   adviceCount?: number;
+  /** Enables the inline quick-edit panel when provided. */
+  onQuickSave?: (entry: DealEntry, patch: Partial<FlashDealRow>) => void | Promise<void>;
 }) {
   const status = tileStatus(entry);
   useTick(status === "active" || status === "ending_soon" || status === "scheduled");
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+
 
   const p = entry.product;
   const deal = entry.deal;
@@ -173,18 +181,19 @@ export const FlashDealTile = memo(function FlashDealTile({
           </div>
         )}
 
-        <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-black/40 ring-1 ring-white/10 sm:size-24">
-          {p.image ? (
-            <img loading="lazy" decoding="async" src={p.image} alt="" className="size-full object-cover" />
-          ) : (
-            <span className="grid size-full place-items-center text-muted-foreground"><ImageOff className="size-5" /></span>
-          )}
-          {entry.discountPct > 0 && (
-            <span className="absolute left-1 top-1 rounded-md bg-accent px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
-              -{entry.discountPct}%
-            </span>
-          )}
-        </div>
+        <FlashProductFrame
+          src={p.image}
+          alt={p.name}
+          className="size-20 shrink-0 sm:size-24"
+          overlay={
+            entry.discountPct > 0 ? (
+              <span className="absolute left-1 top-1 rounded-md bg-accent px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
+                -{entry.discountPct}%
+              </span>
+            ) : null
+          }
+        />
+
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
@@ -245,7 +254,18 @@ export const FlashDealTile = memo(function FlashDealTile({
         </div>
 
         {deal && (
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
+            <Link to="/products/$slug" params={{ slug: p.slug }} target="_blank"
+              aria-label={`Preview ${p.name} on the storefront`} className={btn}>
+              <Eye className="size-3.5" />
+            </Link>
+            {onQuickSave && (
+              <button onClick={() => setQuickOpen((v) => !v)} aria-expanded={quickOpen}
+                aria-label="Quick edit price, priority and end time"
+                className={`${btn} ${quickOpen ? "border-accent/50 text-accent" : ""}`}>
+                <SlidersHorizontal className="size-3.5" />
+              </button>
+            )}
             <button onClick={() => actions.onEdit(entry)} aria-label="Edit deal" className={btn}><Pencil className="size-3.5" /></button>
             <button onClick={() => actions.onPause(entry)} aria-label={deal.active ? "Pause deal" : "Resume deal"} className={btn}>
               {deal.active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
@@ -263,6 +283,10 @@ export const FlashDealTile = memo(function FlashDealTile({
         )}
       </div>
 
+      {quickOpen && deal && onQuickSave && (
+        <FlashQuickEdit entry={entry} onSave={onQuickSave} onClose={() => setQuickOpen(false)} />
+      )}
+
       {scheduleOpen && deal && (
         <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 px-3 py-2">
           <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Move window</span>
@@ -274,6 +298,7 @@ export const FlashDealTile = memo(function FlashDealTile({
           ))}
         </div>
       )}
+
 
       {intel && (
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-t border-border/60 px-3 py-2">

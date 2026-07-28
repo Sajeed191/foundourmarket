@@ -321,7 +321,7 @@ function FlashCommandCenter() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm truncate">{r.product.name}</p>
-                        <p className="text-[11px] text-muted-foreground">{r.reason}</p>
+                        <p className="text-[11px] text-muted-foreground">{r.reasons[0]}</p>
                       </div>
                       <button onClick={() => setWizard({ open: true, deal: null, presetProduct: r.product })}
                         className="rounded-full border border-accent/40 text-accent px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest hover:bg-accent/10">

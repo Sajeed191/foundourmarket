@@ -979,82 +979,57 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
 
   return (
     <>
-      {/* Section header — title on the left, live status pill + avg reply on the right */}
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-[22px] sm:text-2xl font-display font-semibold leading-tight tracking-tight">Support &amp; Account</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">We're here to help you anytime, anywhere.</p>
-        </div>
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${online ? "border-emerald-400/25 bg-emerald-400/[0.06] text-emerald-300" : "border-amber-400/25 bg-amber-400/[0.06] text-amber-300"}`}>
-            <span className={`size-1.5 rounded-full ${online ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-            {online ? "We're Online" : "High Volume"}
-          </span>
-          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Clock className="size-3" strokeWidth={1.6} />
-            Avg reply · <span className="text-accent font-medium">&lt; {minutes} min</span>
-          </span>
+      {/* Quick help row — one tap, four essentials */}
+      <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2.5 overflow-x-auto scrollbar-hide snap-x">
+          <QuickHelpChip icon={MessageCircle} label={online ? "Live Chat" : "Message"} onClick={openLiveChat} />
+          <QuickHelpChip icon={Package} label="Track Order" onClick={() => nav({ to: "/account/orders" })} />
+          <QuickHelpChip icon={RotateCcw} label="Returns" onClick={() => nav({ to: "/account/returns" })} />
+          <QuickHelpChip icon={HelpCircle} label="FAQ" onClick={() => nav({ to: "/help", hash: "faqs" })} />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <PremiumSupportCard
-          tone="accent"
-          icon={Headset}
-          title="Help & Support"
-          desc="Chat live with our support team or submit a request."
-          rows={[
-            { icon: Users, label: "Live Chat", value: online ? "Online now" : "Away", valueClass: online ? "text-emerald-400" : "text-amber-400" },
-            { icon: Clock, label: "Response Time", value: `< ${minutes} min`, valueClass: "text-accent" },
-          ]}
-          cta="Start Live Chat"
-          lowMotion={lowMotion}
-          onClick={() => setSupportOpen(true)}
-        />
-        <PremiumSupportCard
-          tone="sky"
-          icon={BookOpen}
-          title="Help Articles"
-          desc="Browse guides, tutorials and FAQs."
-          rows={[
-            { icon: FileText, label: "Articles", value: "14" },
-            { icon: BookOpen, label: "Guides", value: "3" },
-          ]}
-          chips={["Orders", "Payments", "Returns", "Shipping"]}
-          cta="Browse Articles"
-          lowMotion={lowMotion}
-          onClick={() => nav({ to: "/help", hash: "faqs" })}
-        />
-        <PremiumSupportCard
-          tone="emerald"
-          icon={PhoneCall}
-          title="Contact Us"
-          desc="Choose your preferred way to reach us."
-          pills={[
-            { icon: Smartphone, label: "WhatsApp", tone: "emerald" },
-            { icon: Mail, label: "Email", tone: "accent" },
-            { icon: MessageCircle, label: "Live Chat", tone: "sky" },
-            { icon: Phone, label: "Callback", tone: "sky" },
-          ]}
-          cta="Choose Channel"
-          lowMotion={lowMotion}
-          onClick={() => setContactOpen(true)}
-        />
-        <PremiumSupportCard
-          tone="violet"
-          icon={ShieldCheck}
-          title="Profile & Security"
-          desc="Manage your account, privacy and security settings."
-          rows={[
-            { icon: Lock, label: "Account Security", value: "Secure", valueClass: "text-emerald-400" },
-            { icon: UserIcon, label: "Verification", value: "100%", valueClass: "text-emerald-400" },
-            { icon: Smartphone, label: "Devices", value: "Trusted", valueClass: "text-emerald-400" },
-          ]}
-          cta="Manage Account"
-          lowMotion={lowMotion}
-          onClick={() => setAccountOpen(true)}
-        />
+      {/* Section header — quiet, no chips */}
+      <div className="mb-4">
+        <h2 className="text-[22px] sm:text-2xl font-display font-semibold leading-tight tracking-tight">Support &amp; Account</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          {hasActiveOrder ? "Track your latest order or get help anytime." : "Need help choosing products? We're here."}
+        </p>
       </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        {/* Card 1 — Need Help? */}
+        <HubCard title="Need Help?" subtitle="We're here whenever you need us." lowMotion={lowMotion}>
+          <HubAction
+            icon={MessageCircle}
+            label={online ? "Live Chat" : "Leave a Message"}
+            primary
+            onClick={openLiveChat}
+          />
+          <HubAction icon={PhoneCall} label="Contact Us" onClick={() => setContactOpen(true)} />
+          <HubAction icon={BookOpen} label="Help Center" onClick={() => nav({ to: "/help", hash: "faqs" })} />
+          <p className="pt-1 text-[11.5px] text-muted-foreground">
+            <span className={online ? "text-emerald-400" : "text-amber-400"}>
+              {online ? "Support Online" : "High volume"}
+            </span>
+            <span className="mx-1.5 opacity-40">·</span>
+            Average reply: {minutes} min
+          </p>
+        </HubCard>
+
+        {/* Card 2 — Account & Security */}
+        <HubCard title="Account" subtitle="Manage your account securely." lowMotion={lowMotion}>
+          <HubAction icon={UserIcon} label="Profile" onClick={() => nav({ to: "/account/profile" })} />
+          <HubAction icon={MapPin} label="Addresses" onClick={() => nav({ to: "/account/addresses" })} />
+          <HubAction icon={CreditCard} label="Payment Methods" onClick={() => nav({ to: "/account/payments" })} />
+          <HubAction icon={ShieldCheck} label="Security" onClick={() => setAccountOpen(true)} />
+          <p className="pt-1 flex items-center gap-3 text-[11.5px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Account Verified</span>
+            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Secure Login</span>
+          </p>
+        </HubCard>
+      </div>
+
 
 
 

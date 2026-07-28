@@ -498,10 +498,27 @@ function FlashCommandCenter() {
           badgeTypes={data.badgeTypes}
           ops={data.ops}
           deal={wizard.deal}
+          presetProduct={wizard.presetProduct ?? null}
+          presetTemplate={wizard.presetTemplate ?? null}
           onClose={() => setWizard(null)}
           onSaved={data.refresh}
         />
       )}
+
+      {intelKey && (() => {
+        const entry = data.entries.find((e) => e.key === intelKey);
+        const intel = ai.scores.get(intelKey);
+        if (!entry || !intel) return null;
+        return (
+          <FlashDealIntelligenceSheet
+            entry={entry}
+            intel={intel}
+            averages={ai.averages}
+            onClose={() => setIntelKey(null)}
+          />
+        );
+      })()}
+
 
       {settingsOpen && (
         <FlashSettings ops={data.ops} onClose={() => setSettingsOpen(false)} onSaved={data.refresh} />

@@ -11,6 +11,9 @@ const FRAMES = [
   { key: "mobile", label: "Mobile", width: 393, scale: 0.85 },
 ] as const;
 
+/** Reserved render height for the band inside each scaled device frame. */
+const PREVIEW_HEIGHT = 780;
+
 export function FlashLivePreview() {
   return (
     <div className="grid lg:grid-cols-2 gap-4">

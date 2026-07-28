@@ -14,6 +14,17 @@ import { FlashRotationPanel } from "@/components/admin/flash/FlashRotationPanel"
 import { FlashLivePreview } from "@/components/admin/flash/FlashLivePreview";
 import { FlashAuditTimeline } from "@/components/admin/flash/FlashAuditTimeline";
 import { useFlashAdminData, type DealEntry, type FlashDealRow } from "@/lib/flash/use-flash-admin";
+import { useFlashIntelligence } from "@/lib/flash/use-flash-intelligence";
+import {
+  FlashHomepageHealth, FlashAssistant, FlashHeroOptimizer, FlashConflictCenter,
+} from "@/components/admin/flash/FlashIntelligencePanels";
+import { FlashRecommendationCenter } from "@/components/admin/flash/FlashRecommendationCenter";
+import { FlashSimulator } from "@/components/admin/flash/FlashSimulator";
+import { FlashCoveragePanel } from "@/components/admin/flash/FlashCoveragePanel";
+import { FlashDealIntelligenceSheet } from "@/components/admin/flash/FlashDealIntelligenceSheet";
+import type { Conflict } from "@/lib/flash/flash-intelligence";
+import type { CampaignTemplate } from "@/lib/flash/campaign-templates";
+import type { Product } from "@/lib/products";
 import { FLASH_CAMPAIGNS, saveFlashOps } from "@/lib/flash/flash-ops";
 import { assignBadge, unassignBadge } from "@/lib/use-product-badges";
 

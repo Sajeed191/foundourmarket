@@ -1091,6 +1091,7 @@ function FlashManagePage() {
         );
       })()}
 
+      {journey && <FlashProductJourney journey={journey} onClose={() => setJourneyKey(null)} />}
 
 
       {settingsOpen && (

@@ -744,9 +744,21 @@ function FlashManagePage() {
             <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
           </FlashSectionShell>
 
+          {/* 7 — Rotation heatmap */}
+          <FlashSectionShell eyebrow="Rotation" title="Visibility heatmap" count={heatRows.length}>
+            <FlashRotationHeatmap rows={heatRows} />
+          </FlashSectionShell>
 
-          {/* 6 — Advanced tools, collapsed by default */}
+          {/* 8 — Advanced tools, collapsed by default */}
           <div className="space-y-3">
+            <CollapsibleModule eyebrow="What-if" title="Revenue simulator" sectionId="flash-revenue-sim" defaultOpen={false}>
+              <FlashRevenueSimulator
+                entries={data.entries}
+                baselineCtr={ai.averages.avgCtr}
+                baselineConversion={ai.averages.avgConversion}
+              />
+            </CollapsibleModule>
+
             <CollapsibleModule eyebrow="Optional" title="Analytics" sectionId="flash-analytics" defaultOpen={false}>
               <div className="space-y-3">
                 <FlashKpiGrid totals={data.totals} />

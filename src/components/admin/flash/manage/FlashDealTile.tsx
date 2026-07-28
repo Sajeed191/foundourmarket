@@ -92,10 +92,11 @@ export type TileActions = {
   onEndNow: (e: DealEntry) => void;
   onDelete: (e: DealEntry) => void;
   onOpenIntel?: (key: string) => void;
+  onOpenAdvice?: (key: string) => void;
 };
 
 export const FlashDealTile = memo(function FlashDealTile({
-  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions,
+  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions, cap, adviceCount,
 }: {
   entry: DealEntry;
   intel?: { score: number; recommendation: string } | null;
@@ -106,6 +107,9 @@ export const FlashDealTile = memo(function FlashDealTile({
   onDragOver?: (ev: React.DragEvent) => void;
   onDrop?: () => void;
   actions: TileActions;
+  /** Visible homepage slots, used to show whether this deal is on screen. */
+  cap?: number;
+  adviceCount?: number;
 }) {
   const status = tileStatus(entry);
   useTick(status === "active" || status === "ending_soon" || status === "scheduled");
@@ -114,18 +118,30 @@ export const FlashDealTile = memo(function FlashDealTile({
   const p = entry.product;
   const deal = entry.deal;
   const now = Date.now();
+  const msLeft = deal ? new Date(deal.end_at).getTime() - now : null;
   const countdown = deal
     ? status === "scheduled"
       ? `Starts in ${remaining(new Date(deal.start_at).getTime() - now)}`
       : status === "active" || status === "ending_soon"
-        ? `Ends in ${remaining(new Date(deal.end_at).getTime() - now)}`
+        ? `Ends in ${remaining(msLeft ?? 0)}`
         : STATUS_LABEL[status]
     : "No schedule";
+  const phase = countdownPhase(
+    status === "active" || status === "ending_soon" ? msLeft : null,
+    status === "expired",
+  );
+
+  const verdict = healthVerdict(intel as never, entry);
+  const qty = p.stockQuantity ?? 0;
+  const stockPct = Math.max(0, Math.min(100, (qty / Math.max(qty, 100)) * 100));
+  const revenue = Math.round(entry.stats.purchases * entry.dealPrice);
+  const visible = cap != null && entry.rotationRank != null && entry.rotationRank < cap;
 
   const showWarnings = entry.warnings;
 
 
   const btn = "size-11 grid place-items-center rounded-full border border-white/10 hover:bg-white/5 transition";
+
 
   return (
     <motion.article

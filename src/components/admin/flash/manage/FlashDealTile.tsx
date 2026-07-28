@@ -275,13 +275,26 @@ export const FlashDealTile = memo(function FlashDealTile({
         </div>
       )}
 
-      {intel && actions.onOpenIntel && (
-        <button onClick={() => actions.onOpenIntel!(entry.key)}
-          className="flex w-full items-center justify-between gap-2 border-t border-border/60 px-3 min-h-11 text-left transition hover:bg-white/5">
-          <span className="truncate text-[11px] text-muted-foreground">{intel.recommendation}</span>
-          <span className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-accent">Score {intel.score}</span>
-        </button>
+      {intel && (
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-t border-border/60 px-3 py-2">
+          <button onClick={() => actions.onOpenAdvice?.(entry.key) ?? actions.onOpenIntel?.(entry.key)}
+            aria-label={`Health ${verdict.label}, score ${verdict.score}`}
+            className={`shrink-0 rounded-full border px-2.5 min-h-9 text-[10px] font-mono uppercase tracking-widest transition hover:brightness-125 ${HEALTH_TONE_CLASS[verdict.tone]}`}>
+            {verdict.label} · {verdict.score}
+          </button>
+          <button onClick={() => actions.onOpenIntel?.(entry.key)}
+            className="min-w-0 truncate text-left text-[11px] text-muted-foreground transition hover:text-foreground">
+            {intel.recommendation}
+          </button>
+          {actions.onOpenAdvice && (
+            <button onClick={() => actions.onOpenAdvice!(entry.key)}
+              className="shrink-0 rounded-full border border-accent/40 px-3 min-h-9 text-[10px] font-mono uppercase tracking-widest text-accent transition hover:bg-accent/10">
+              {adviceCount ? `${adviceCount} tips` : "Improve"}
+            </button>
+          )}
+        </div>
       )}
+
     </motion.article>
   );
 });

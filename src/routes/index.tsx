@@ -606,9 +606,7 @@ function Home() {
   const HOMEPAGE_PREVIEW = 8;
 
   const trending = useMemo(() => {
-    const eligible = products.filter((p) =>
-      productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["trending"]),
-    );
+    const eligible = evaluatePromoEligibility(products, badgeAssignments, "trending", rotationNow).eligible;
     const preview = fairPagedSlice(
       eligible,
       rules.limits.trending,
@@ -621,8 +619,8 @@ function Home() {
   }, [products, badgeAssignments, rules.limits.trending, rules.rotationHours, rotationNonce, rotationNow]);
 
   const newArrivals = useMemo(() => {
-    const eligible = products
-      .filter((p) => productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["new"]))
+    const eligible = evaluatePromoEligibility(products, badgeAssignments, "new_arrivals", rotationNow)
+      .eligible.slice()
       .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
     const preview = fairPagedSlice(
       eligible,
@@ -636,9 +634,7 @@ function Home() {
   }, [products, badgeAssignments, rules.limits.new_arrivals, rules.rotationHours, rotationNonce, rotationNow]);
 
   const bestSellers = useMemo(() => {
-    const eligible = products.filter((p) =>
-      productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["bestseller"]),
-    );
+    const eligible = evaluatePromoEligibility(products, badgeAssignments, "best_sellers", rotationNow).eligible;
     const preview = fairPagedSlice(
       eligible,
       rules.limits.best_sellers,
@@ -651,9 +647,7 @@ function Home() {
   }, [products, badgeAssignments, rules.limits.best_sellers, rules.rotationHours, rotationNonce, rotationNow]);
 
   const featured = useMemo(() => {
-    const eligible = products.filter((p) =>
-      productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["featured"]),
-    );
+    const eligible = evaluatePromoEligibility(products, badgeAssignments, "featured", rotationNow).eligible;
     const preview = fairPagedSlice(
       eligible,
       rules.limits.featured,

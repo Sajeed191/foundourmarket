@@ -4178,3 +4178,25 @@ body[data-immersive-ui] [data-scroll-top] {
 @media (prefers-contrast: more) {
   .editor-surface { border-color: color-mix(in oklab, var(--foreground) 28%, transparent); }
 }
+
+/* ── Flash Deals v3.4 — countdown + autoplay progress ─────────────────────── */
+@keyframes fd-progress-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.fd-progress-fill {
+  transform-origin: left center;
+  animation: fd-progress-fill linear forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fd-progress-fill { animation: none; transform: scaleX(1); }
+}
+
+@keyframes fd-countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.fd-countdown-final { animation: fd-countdown-pulse 1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .fd-countdown-final { animation: none; }
+}

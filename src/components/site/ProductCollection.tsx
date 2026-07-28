@@ -74,10 +74,12 @@ export function ProductCollection({
   const items = useMemo(() => {
     let eligible: Product[];
     if (collectionKey) {
-      const badgeKeys = BADGE_MAP[collectionKey];
-      eligible = products.filter((p) =>
-        productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), badgeKeys),
-      );
+      eligible = evaluatePromoEligibility(
+        products,
+        badgeAssignments,
+        collectionKey === "flash_deals" ? "flash_deals" : collectionKey,
+        nowMs,
+      ).eligible;
     } else if (filterFlag) {
       eligible = products.filter((p) => Boolean(p[filterFlag]));
     } else {

@@ -1063,46 +1063,64 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder 
   return (
     <>
       {/* Section header */}
-      <div className="mb-4">
-        <h2 className="text-[22px] sm:text-2xl font-display font-semibold leading-tight tracking-tight">Support &amp; Account</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          {hasActiveOrder ? "Track your latest order or get help anytime." : "Need help choosing products? We're here."}
+      <div className="mb-3">
+        <h2 className="text-[20px] sm:text-[22px] font-display font-semibold leading-tight tracking-tight">Support &amp; Account</h2>
+        <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+          {hasActiveOrder ? "Track your order or get help anytime." : "Get help or manage your account."}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Card 1 — Need Help? */}
-        <SupportHubCard title="Need Help?" subtitle="We're here whenever you need us." lowMotion={lowMotion}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Card 1 — Need Help */}
+        <SupportHubCard title="Need Help" subtitle="We're here whenever you need us." lowMotion={lowMotion}>
           <HubAction
             icon={MessageCircle}
-            label={online ? "Live Chat" : "Leave a Message"}
+            label={online ? "Chat Now" : "Leave a Message"}
             primary
             onClick={openLiveChat}
           />
           <HubAction icon={PhoneCall} label="Contact Us" onClick={() => setContactOpen(true)} />
           <HubAction icon={BookOpen} label="Help Center" onClick={() => nav({ to: "/help", hash: "faqs" })} />
           <HubStatusRow>
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex shrink-0 items-center gap-1.5">
               <span className={`size-1.5 rounded-full ${online ? "bg-emerald-400" : "bg-amber-400"}`} aria-hidden />
-              <span className={online ? "text-emerald-400" : "text-amber-400"}>{online ? "Online" : "Busy"}</span>
+              <span className={online ? "text-emerald-400" : "text-amber-400"}>{online ? "Support Online" : "Support Busy"}</span>
             </span>
-            <span>Average reply: {minutes} min</span>
-            <span>24×7 Support</span>
+            <span className="inline-flex shrink-0 items-center gap-1"><Clock className="size-3" aria-hidden /> &lt; {minutes} min</span>
+            <span className="inline-flex shrink-0 items-center gap-1"><Globe className="size-3" aria-hidden /> 24×7</span>
           </HubStatusRow>
         </SupportHubCard>
 
         {/* Card 2 — Account */}
-        <SupportHubCard title="Account" subtitle="Manage your account securely." lowMotion={lowMotion}>
-          <HubAction icon={UserIcon} label="Profile" onClick={() => nav({ to: "/account/profile" })} />
-          <HubAction icon={MapPin} label="Addresses" onClick={() => nav({ to: "/account/addresses" })} />
-          <HubAction icon={CreditCard} label="Payment Methods" onClick={() => nav({ to: "/account/payments" })} />
-          <HubAction icon={ShieldCheck} label="Security" onClick={() => setAccountOpen(true)} />
-          <HubStatusRow>
-            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" aria-hidden /> Account Verified</span>
-            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" aria-hidden /> Secure Login</span>
-          </HubStatusRow>
-        </SupportHubCard>
+        {user ? (
+          <SupportHubCard title="Account" subtitle="Manage your account." lowMotion={lowMotion}>
+            <HubAction icon={UserIcon} label="Profile" onClick={() => nav({ to: "/account/profile" })} />
+            <HubAction icon={MapPin} label="Addresses" onClick={() => nav({ to: "/account/addresses" })} />
+            <HubAction icon={CreditCard} label="Payment Methods" onClick={() => nav({ to: "/account/payments" })} />
+            <HubAction icon={ShieldCheck} label="Security" badge="Verified" onClick={() => setAccountOpen(true)} />
+            <HubStatusRow>
+              <HubPill><Check className="size-3" aria-hidden /> Verified</HubPill>
+              <HubPill><Lock className="size-3" aria-hidden /> Secure Login</HubPill>
+            </HubStatusRow>
+          </SupportHubCard>
+        ) : (
+          <SupportHubCard title="Account" subtitle="Sign in to manage your orders." lowMotion={lowMotion}>
+            <HubAction icon={UserIcon} label="Sign In" primary onClick={() => nav({ to: "/auth" })} />
+            <HubAction icon={Plus} label="Create Account" onClick={() => nav({ to: "/auth" })} />
+            <HubStatusRow>
+              <HubPill><Lock className="size-3" aria-hidden /> Secure Login</HubPill>
+            </HubStatusRow>
+          </SupportHubCard>
+        )}
       </div>
+
+      {/* Quick actions */}
+      <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+        <QuickChip icon={Truck} label="Track Order" onClick={() => nav({ to: "/account/orders" })} />
+        <QuickChip icon={RotateCcw} label="Returns" onClick={() => nav({ to: "/return" })} />
+        <QuickChip icon={FileText} label="FAQs" onClick={() => nav({ to: "/help", hash: "faqs" })} />
+      </div>
+
 
 
 

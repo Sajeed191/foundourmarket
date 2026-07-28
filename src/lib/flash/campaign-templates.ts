@@ -31,7 +31,12 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
   { key: "midnight", label: "Midnight Drop", blurb: "Short overnight burst for urgency.", durationHours: 8, priority: 70, discountPct: 30, accent: "border-indigo-500/30 bg-indigo-500/10 text-indigo-200" },
   { key: "launch", label: "New Launch", blurb: "Introductory pricing for a fresh arrival.", durationHours: 48, priority: 80, discountPct: 12, accent: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200" },
   { key: "school", label: "Back to School", blurb: "Essentials bundle window.", durationHours: 120, priority: 35, discountPct: 22, accent: "border-violet-500/30 bg-violet-500/10 text-violet-200" },
+  { key: "midnight_madness", label: "Midnight Madness", blurb: "Four-hour overnight blitz at top priority.", durationHours: 4, priority: 95, discountPct: 40, accent: "border-indigo-500/30 bg-indigo-500/10 text-indigo-200" },
+  { key: "electronics_hour", label: "Electronics Hour", blurb: "Single-hour tech spotlight for urgency.", durationHours: 1, priority: 85, discountPct: 15, accent: "border-cyan-500/30 bg-cyan-500/10 text-cyan-200" },
+  { key: "fashion_friday", label: "Fashion Friday", blurb: "One-day style event to close the week.", durationHours: 24, priority: 55, discountPct: 30, accent: "border-pink-500/30 bg-pink-500/10 text-pink-200" },
+  { key: "home_essentials", label: "Home Essentials", blurb: "Steady week-long push on everyday home goods.", durationHours: 168, priority: 25, discountPct: 20, accent: "border-teal-500/30 bg-teal-500/10 text-teal-200" },
 ];
+
 
 export function templateWindow(t: CampaignTemplate, from = Date.now()) {
   return {

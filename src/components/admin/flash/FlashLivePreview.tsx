@@ -22,13 +22,13 @@ export function FlashLivePreview() {
           <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-3">
             {f.label} · {f.width}px
           </p>
-          <div className="overflow-hidden rounded-xl bg-background">
+          <div className="overflow-hidden rounded-xl bg-background" style={{ height: PREVIEW_HEIGHT * f.scale }}>
             <div
               style={{
                 width: f.width,
+                height: PREVIEW_HEIGHT,
                 transform: `scale(${f.scale})`,
                 transformOrigin: "top left",
-                height: `calc(var(--fd-h, 720px) * ${f.scale})`,
               }}
             >
               <FlashDealsBand />

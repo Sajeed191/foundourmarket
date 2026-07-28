@@ -14,6 +14,17 @@ import { FlashRotationPanel } from "@/components/admin/flash/FlashRotationPanel"
 import { FlashLivePreview } from "@/components/admin/flash/FlashLivePreview";
 import { FlashAuditTimeline } from "@/components/admin/flash/FlashAuditTimeline";
 import { useFlashAdminData, type DealEntry, type FlashDealRow } from "@/lib/flash/use-flash-admin";
+import { useFlashIntelligence } from "@/lib/flash/use-flash-intelligence";
+import {
+  FlashHomepageHealth, FlashAssistant, FlashHeroOptimizer, FlashConflictCenter,
+} from "@/components/admin/flash/FlashIntelligencePanels";
+import { FlashRecommendationCenter } from "@/components/admin/flash/FlashRecommendationCenter";
+import { FlashSimulator } from "@/components/admin/flash/FlashSimulator";
+import { FlashCoveragePanel } from "@/components/admin/flash/FlashCoveragePanel";
+import { FlashDealIntelligenceSheet } from "@/components/admin/flash/FlashDealIntelligenceSheet";
+import type { Conflict } from "@/lib/flash/flash-intelligence";
+import type { CampaignTemplate } from "@/lib/flash/campaign-templates";
+import type { Product } from "@/lib/products";
 import { FLASH_CAMPAIGNS, saveFlashOps } from "@/lib/flash/flash-ops";
 import { assignBadge, unassignBadge } from "@/lib/use-product-badges";
 
@@ -27,7 +38,9 @@ export const Route = createFileRoute("/admin-merchandising-flash-deals")({
   component: FlashCommandCenter,
 });
 
-const TABS = ["Overview", "Deals", "Timeline", "Rotation", "Preview", "Audit"] as const;
+const TABS = [
+  "Overview", "Intelligence", "Recommend", "Deals", "Timeline", "Simulator", "Coverage", "Rotation", "Preview", "Audit",
+] as const;
 type Tab = (typeof TABS)[number];
 
 type StatusFilter = "all" | "active" | "scheduled" | "expired" | "paused" | "no_deal" | "warning";
@@ -43,14 +56,19 @@ function logAction(action: string, dealId: string | null, metadata: Record<strin
 
 function FlashCommandCenter() {
   const data = useFlashAdminData();
+  const ai = useFlashIntelligence(data);
   const [tab, setTab] = useState<Tab>("Overview");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [category, setCategory] = useState("all");
   const [campaignFilter, setCampaignFilter] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [wizard, setWizard] = useState<{ open: boolean; deal: FlashDealRow | null; product?: string } | null>(null);
+  const [wizard, setWizard] = useState<{
+    open: boolean; deal: FlashDealRow | null;
+    presetProduct?: Product | null; presetTemplate?: CampaignTemplate | null;
+  } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [intelKey, setIntelKey] = useState<string | null>(null);
 
   // Keyboard shortcuts: "/" search, "n" new deal, "r" reshuffle tab.
   useEffect(() => {
@@ -83,23 +101,6 @@ function FlashCommandCenter() {
     });
   }, [data.entries, query, category, campaignFilter, status]);
 
-  const recommendations = useMemo(() => {
-    const badged = new Set(data.entries.map((e) => e.product.slug));
-    return data.products
-      .filter((p) => p.status === "published" && p.inStock && p.stockQuantity > 0 && !badged.has(p.slug))
-      .map((p) => {
-        const margin = p.costPriceInr != null ? p.price - p.costPriceInr : 0;
-        const score = p.soldCount * 3 + p.viewsCount * 0.2 + Math.max(0, margin) * 0.05 + Math.min(p.stockQuantity, 100) * 0.2;
-        const reason =
-          p.soldCount > 5 ? "Selling fast" :
-          margin > p.price * 0.4 ? "High margin" :
-          p.stockQuantity > 50 ? "High stock" :
-          p.viewsCount > 100 ? "Recently viewed a lot" : "Never featured";
-        return { product: p, score, reason };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6);
-  }, [data.products, data.entries]);
 
   const toggleSelect = useCallback((key: string, next: boolean) => {
     setSelected((prev) => {
@@ -130,6 +131,51 @@ function FlashCommandCenter() {
     toast.success("Flash deal removed");
     data.refresh();
   }
+
+  /** Opens the read-only intelligence sheet for a deal. */
+  const openIntel = useCallback((key: string) => setIntelKey(key), []);
+
+  /** One-click fixes coming from the assistant, hero optimizer and conflict center. */
+  async function applyFix(c: Conflict) {
+    const fix = c.fix;
+    if (!fix) return;
+    const byKey = (k: string) => data.entries.find((e) => e.key === k);
+    if (fix.kind === "review") { setIntelKey(fix.entryKey); return; }
+    if (fix.kind === "create_deal") {
+      const product = data.products.find((p) => p.slug === fix.slug) ?? null;
+      setWizard({ open: true, deal: null, presetProduct: product });
+      return;
+    }
+    if (fix.kind === "assign_badge") {
+      const badge = data.badgeTypes.find((b) => b.badgeKey === "flash_deal" && b.enabled && !b.archived);
+      if (!badge) { toast.error("The flash deal badge is not available"); return; }
+      try {
+        await assignBadge(fix.slug, badge.id);
+        logAction("flash_deal_badge_assigned", null, { slug: fix.slug, source: "intelligence" });
+        toast.success("Flash badge assigned");
+        data.refresh();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not assign the badge");
+      }
+      return;
+    }
+    const entry = byKey(fix.entryKey);
+    if (!entry?.deal) { toast.error("That deal is no longer available"); return; }
+    if (fix.kind === "end_deal") {
+      await updateDeal(entry, { active: false, end_at: new Date().toISOString() }, "flash_deal_ended_early");
+      toast.success("Deal ended");
+    } else if (fix.kind === "extend_deal") {
+      await updateDeal(entry, {
+        end_at: new Date(new Date(entry.deal.end_at).getTime() + 24 * 3600_000).toISOString(),
+      }, "flash_deal_duration_changed");
+      toast.success("Deal extended by 24 hours");
+    } else if (fix.kind === "clear_priority") {
+      await updateDeal(entry, { priority: 0 }, "flash_deal_priority_changed");
+      toast.success("Priority cleared");
+    }
+  }
+
+
 
   async function bulk(action: "activate" | "deactivate" | "delete" | "badge" | "unbadge" | "extend") {
     if (selectedEntries.length === 0) return toast.error("Select at least one deal");
@@ -244,33 +290,71 @@ function FlashCommandCenter() {
                 </button>
               )}
 
+              <FlashHomepageHealth quality={ai.quality} />
+
               <section className="rounded-2xl border border-border bg-card p-4">
                 <p className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-3">
                   <Sparkles className="size-3.5 text-accent" /> Suggested products
                 </p>
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                  {recommendations.map((r) => (
+                  {ai.recommendations.slice(0, 6).map((r) => (
                     <div key={r.product.slug} className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-2.5">
                       <div className="size-10 shrink-0 rounded-lg overflow-hidden bg-black/40 ring-1 ring-white/10">
                         {r.product.image && <img loading="lazy" decoding="async" src={r.product.image} alt="" className="size-full object-cover" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm truncate">{r.product.name}</p>
-                        <p className="text-[11px] text-muted-foreground">{r.reason}</p>
+                        <p className="text-[11px] text-muted-foreground">{r.reasons[0]}</p>
                       </div>
-                      <button onClick={() => setWizard({ open: true, deal: null })}
+                      <button onClick={() => setWizard({ open: true, deal: null, presetProduct: r.product })}
                         className="rounded-full border border-accent/40 text-accent px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest hover:bg-accent/10">
                         Feature
                       </button>
                     </div>
                   ))}
-                  {recommendations.length === 0 && (
+                  {ai.recommendations.length === 0 && (
                     <p className="text-xs text-muted-foreground">Every eligible product is already featured.</p>
                   )}
                 </div>
               </section>
             </div>
           )}
+
+          {tab === "Intelligence" && (
+            <div className="space-y-3">
+              <FlashHomepageHealth quality={ai.quality} />
+              <div className="grid lg:grid-cols-2 gap-3">
+                <FlashAssistant insights={ai.insights} onOpen={openIntel} />
+                <FlashHeroOptimizer hero={ai.hero} onReview={openIntel} />
+              </div>
+              <FlashConflictCenter conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
+            </div>
+          )}
+
+          {tab === "Recommend" && (
+            <FlashRecommendationCenter
+              recommendations={ai.recommendations}
+              onCreate={(product, template) =>
+                setWizard({ open: true, deal: null, presetProduct: product, presetTemplate: template })
+              }
+            />
+          )}
+
+          {tab === "Simulator" && (
+            <FlashSimulator windows={ai.windows} cap={data.cap} nonce={data.nonce} />
+          )}
+
+          {tab === "Coverage" && (
+            <FlashCoveragePanel
+              categories={ai.categories}
+              brands={ai.brands}
+              fairness={ai.fairness}
+              stock={ai.stock}
+              rotationStreaks={ai.rotationStreaks}
+              cap={data.cap}
+            />
+          )}
+
 
           {tab === "Deals" && (
             <div className="space-y-3">
@@ -338,20 +422,34 @@ function FlashCommandCenter() {
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {filtered.map((e) => (
-                    <FlashDealCard
-                      key={e.key}
-                      entry={e}
-                      selected={selected.has(e.key)}
-                      onSelect={toggleSelect}
-                      onEdit={(x) => setWizard({ open: true, deal: x.deal })}
-                      onToggle={(x) => updateDeal(x, { active: !x.deal!.active }, x.deal!.active ? "flash_deal_paused" : "flash_deal_resumed")}
-                      onDelete={deleteDeal}
-                      onPin={(x) => updateDeal(x, { priority: (x.deal!.priority ?? 0) > 0 ? 0 : 100 }, "flash_deal_priority_changed")}
-                      onCreate={() => setWizard({ open: true, deal: null })}
-                    />
-                  ))}
+                  {filtered.map((e) => {
+                    const intel = ai.scores.get(e.key);
+                    return (
+                      <div key={e.key} className="space-y-1">
+                        <FlashDealCard
+                          entry={e}
+                          selected={selected.has(e.key)}
+                          onSelect={toggleSelect}
+                          onEdit={(x) => setWizard({ open: true, deal: x.deal })}
+                          onToggle={(x) => updateDeal(x, { active: !x.deal!.active }, x.deal!.active ? "flash_deal_paused" : "flash_deal_resumed")}
+                          onDelete={deleteDeal}
+                          onPin={(x) => updateDeal(x, { priority: (x.deal!.priority ?? 0) > 0 ? 0 : 100 }, "flash_deal_priority_changed")}
+                          onCreate={() => setWizard({ open: true, deal: null, presetProduct: e.product })}
+                        />
+                        {intel && (
+                          <button onClick={() => openIntel(e.key)}
+                            className="w-full flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 min-h-11 text-left hover:bg-white/5 transition">
+                            <span className="text-[11px] text-muted-foreground truncate">{intel.recommendation}</span>
+                            <span className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-accent">
+                              Score {intel.score}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+
               )}
             </div>
           )}
@@ -400,10 +498,27 @@ function FlashCommandCenter() {
           badgeTypes={data.badgeTypes}
           ops={data.ops}
           deal={wizard.deal}
+          presetProduct={wizard.presetProduct ?? null}
+          presetTemplate={wizard.presetTemplate ?? null}
           onClose={() => setWizard(null)}
           onSaved={data.refresh}
         />
       )}
+
+      {intelKey && (() => {
+        const entry = data.entries.find((e) => e.key === intelKey);
+        const intel = ai.scores.get(intelKey);
+        if (!entry || !intel) return null;
+        return (
+          <FlashDealIntelligenceSheet
+            entry={entry}
+            intel={intel}
+            averages={ai.averages}
+            onClose={() => setIntelKey(null)}
+          />
+        );
+      })()}
+
 
       {settingsOpen && (
         <FlashSettings ops={data.ops} onClose={() => setSettingsOpen(false)} onSaved={data.refresh} />

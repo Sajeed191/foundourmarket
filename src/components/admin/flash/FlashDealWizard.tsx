@@ -11,6 +11,7 @@ import type { BadgeType } from "@/lib/use-product-badges";
 import { assignBadge } from "@/lib/use-product-badges";
 import { FLASH_CAMPAIGNS, saveFlashOps, type FlashOps } from "@/lib/flash/flash-ops";
 import type { FlashDealRow } from "@/lib/flash/use-flash-admin";
+import type { CampaignTemplate } from "@/lib/flash/campaign-templates";
 
 type Step = 0 | 1 | 2 | 3;
 const STEP_LABELS = ["Product", "Discount", "Time", "Publish"];
@@ -21,26 +22,44 @@ function toLocalInput(iso: string) {
 }
 
 export function FlashDealWizard({
-  products, badgeTypes, ops, deal, onClose, onSaved,
+  products, badgeTypes, ops, deal, presetProduct, presetTemplate, onClose, onSaved,
 }: {
   products: Product[];
   badgeTypes: BadgeType[];
   ops: FlashOps;
   deal: FlashDealRow | null;
+  /** Prefilled product coming from a recommendation or one-click fix. */
+  presetProduct?: Product | null;
+  /** Campaign template prefilling duration, discount, priority and label. */
+  presetTemplate?: CampaignTemplate | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const initialProduct = deal ? products.find((p) => p.id === deal.product_id) ?? null : null;
-  const [step, setStep] = useState<Step>(deal ? 1 : 0);
+  const initialProduct = deal
+    ? products.find((p) => p.id === deal.product_id) ?? null
+    : presetProduct ?? null;
+  const [step, setStep] = useState<Step>(deal || presetProduct ? 1 : 0);
   const [query, setQuery] = useState("");
   const [product, setProduct] = useState<Product | null>(initialProduct);
-  const [price, setPrice] = useState(deal ? String(deal.flash_price) : "");
+  const [price, setPrice] = useState(() => {
+    if (deal) return String(deal.flash_price);
+    if (presetProduct) {
+      const pct = presetTemplate?.discountPct ?? 20;
+      return String(Math.max(0, Math.round(presetProduct.price * (1 - pct / 100))));
+    }
+    return "";
+  });
   const [startAt, setStartAt] = useState(toLocalInput(deal?.start_at ?? new Date().toISOString()));
   const [endAt, setEndAt] = useState(
-    toLocalInput(deal?.end_at ?? new Date(Date.now() + 24 * 3600_000).toISOString()),
+    toLocalInput(
+      deal?.end_at ??
+        new Date(Date.now() + (presetTemplate?.durationHours ?? 24) * 3600_000).toISOString(),
+    ),
   );
-  const [priority, setPriority] = useState(String(deal?.priority ?? 0));
-  const [campaign, setCampaign] = useState(deal ? ops.dealCampaigns[deal.id] ?? "" : "");
+  const [priority, setPriority] = useState(String(deal?.priority ?? presetTemplate?.priority ?? 0));
+  const [campaign, setCampaign] = useState(
+    deal ? ops.dealCampaigns[deal.id] ?? "" : presetTemplate?.label ?? "",
+  );
   const [autoBadge, setAutoBadge] = useState(true);
   const [saving, setSaving] = useState(false);
 

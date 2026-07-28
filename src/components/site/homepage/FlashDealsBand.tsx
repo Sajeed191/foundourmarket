@@ -111,7 +111,37 @@ function DealFrame({
 
 
 
+/**
+ * Live "Ends in" line — driven strictly by the deal's real `end_at`.
+ * Renders nothing when there is no scheduled end or the window has passed.
+ */
+function DealCountdown({ endAt }: { endAt: string | null | undefined }) {
+  const cd = useDealCountdown(endAt);
+  if (!cd || cd.urgency === "expired") return null;
+
+  const tone =
+    cd.urgency === "normal"
+      ? "text-accent/80"
+      : cd.urgency === "last-hour"
+        ? "text-accent"
+        : "text-accent fd-countdown-final";
+
+  return (
+    <p
+      className={`mt-1.5 flex items-center gap-1.5 text-[10.5px] font-medium leading-none ${tone}`}
+      style={{ textShadow: "0 0 12px color-mix(in oklab, var(--accent) 45%, transparent)" }}
+    >
+      <Clock className="size-3 shrink-0" strokeWidth={2} aria-hidden />
+      <span className="text-muted-foreground/60">Ends in</span>
+      <span className="font-mono font-semibold tabular-nums tracking-tight transition-opacity duration-200">
+        {cd.label}
+      </span>
+    </p>
+  );
+}
+
 /** Tiny, monochrome inline trust row — icon + one word, no pills, never wraps. */
+
 function TrustRow() {
   return (
     <ul className="mt-2.5 flex flex-nowrap items-center gap-x-3 overflow-hidden text-[10px] font-medium leading-none text-muted-foreground/45">

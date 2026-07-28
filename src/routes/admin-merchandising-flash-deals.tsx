@@ -82,6 +82,8 @@ function FlashManagePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [intelKey, setIntelKey] = useState<string | null>(null);
+  const [adviceKey, setAdviceKey] = useState<string | null>(null);
+
   const dragKey = useRef<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const undoStack = useRef<{ label: string; run: () => Promise<void> }[]>([]);

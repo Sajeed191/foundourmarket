@@ -9,22 +9,14 @@ import {
   useHomepageCollectionRules,
   type HomepageCollectionKey,
 } from "@/lib/site-rules";
-import { productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
+import { useBadgeCatalog } from "@/lib/use-product-badges";
+import { evaluatePromoEligibility } from "@/lib/promo-eligibility";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { BadgeKey } from "@/lib/badges";
 import type { Product } from "@/lib/products";
 
 export type CollectionSort = "trending" | "newest" | "best_sellers";
-
-/** Which stored badge keys make a product eligible for a given rail. */
-const BADGE_MAP: Record<HomepageCollectionKey, BadgeKey[]> = {
-  flash_deals: ["flash_deal", "hot_deal"],
-  trending: ["trending"],
-  best_sellers: ["bestseller"],
-  new_arrivals: ["new"],
-  featured: [],
-};
 
 /**
  * Full collection page for a homepage rail's "View All" destination. Reads the
@@ -74,10 +66,12 @@ export function ProductCollection({
   const items = useMemo(() => {
     let eligible: Product[];
     if (collectionKey) {
-      const badgeKeys = BADGE_MAP[collectionKey];
-      eligible = products.filter((p) =>
-        productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), badgeKeys),
-      );
+      eligible = evaluatePromoEligibility(
+        products,
+        badgeAssignments,
+        collectionKey,
+        nowMs,
+      ).eligible;
     } else if (filterFlag) {
       eligible = products.filter((p) => Boolean(p[filterFlag]));
     } else {

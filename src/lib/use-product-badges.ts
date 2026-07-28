@@ -320,15 +320,34 @@ export function hasAssignedCollectionBadge(
   now = Date.now(),
 ): boolean {
   if (!badges?.length) return false;
+  return badges.some((b) => isRenderBadgeLive(b, now) && matchesBadgeKeys(b, keys));
+}
+
+/**
+ * Key/label match for a badge assignment, ignoring its schedule. Used by the
+ * eligibility pipeline to tell "no badge at all" apart from "badge expired".
+ */
+export function matchesBadgeKeys(b: RenderBadge, keys: readonly string[]): boolean {
   const allowed = new Set(
     keys.flatMap((key) => BADGE_ALIASES[normalizeBadgeToken(key)] ?? [key]).map(normalizeBadgeToken),
   );
-  return badges.some((b) => {
-    if (!isRenderBadgeLive(b, now)) return false;
-    const key = normalizeBadgeToken(b.badgeKey || "");
-    const label = normalizeBadgeToken(b.label || "");
-    return allowed.has(key) || allowed.has(label);
-  });
+  const key = normalizeBadgeToken(b.badgeKey || "");
+  const label = normalizeBadgeToken(b.label || "");
+  return allowed.has(key) || allowed.has(label);
+}
+
+/** Why a single badge assignment is not currently live. */
+export function renderBadgeInactiveReason(
+  b: RenderBadge,
+  now = Date.now(),
+): "inactive" | "expired" | "scheduled" | null {
+  if (b.assignArchived) return "inactive";
+  if (!b.enabled) return "inactive";
+  if (b.assignStartAt && new Date(b.assignStartAt).getTime() > now) return "scheduled";
+  if (b.assignEndAt && new Date(b.assignEndAt).getTime() < now) return "expired";
+  const state = badgeScheduleState(b, now);
+  if (state === "live") return null;
+  return state === "disabled" ? "inactive" : state;
 }
 
 // ============================================================================

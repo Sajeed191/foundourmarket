@@ -77,8 +77,6 @@ export function executiveSummary(args: {
     (a, e) => a + e.dealPrice * Math.max(0, e.product.stockQuantity ?? 0),
     0,
   );
-  const upside = queue.reduce((a, q) => a + q.revenueDelta, 0);
-  const opportunity = Math.round(clamp(40 + Math.min(60, (upside / Math.max(1, revenueOpportunity)) * 400)));
 
   // Risk — conflicts, guardrail breaches and sell-out exposure.
   const risky = entries.filter((e) => e.warnings.length > 0).length;
@@ -99,7 +97,6 @@ export function executiveSummary(args: {
   const metrics: ExecutiveMetric[] = [
     { key: "marketplace", label: "Marketplace health", score: marketplace, tone: toneForScore(marketplace), value: `${visibleCount}/${cap} slots filled` },
     { key: "deals", label: "Flash deal health", score: dealHealth, tone: toneForScore(dealHealth), value: `${live.length} live` },
-    { key: "revenue", label: "Revenue opportunity", score: opportunity, tone: toneForScore(opportunity), value: `${money(revenueOpportunity)} in play` },
     { key: "risk", label: "Risk level", score: risk, tone: toneForScore(risk), value: critical ? `${critical} critical` : risky ? `${risky} warnings` : "No issues" },
     { key: "rotation", label: "Rotation status", score: rotation, tone: toneForScore(rotation), value: `${reaching} on the homepage` },
     { key: "inventory", label: "Inventory health", score: inventory, tone: toneForScore(inventory), value: `${safe}/${Math.max(1, verdicts.length)} safe` },
@@ -108,7 +105,7 @@ export function executiveSummary(args: {
   ];
 
   const overall = Math.round(
-    marketplace * 0.18 + dealHealth * 0.2 + opportunity * 0.12 + risk * 0.18 +
+    marketplace * 0.3 + dealHealth * 0.2 + risk * 0.18 +
     rotation * 0.12 + inventory * 0.1 + campaign * 0.05 + balance.score * 0.05,
   );
 
@@ -118,11 +115,6 @@ export function executiveSummary(args: {
       : overall >= 70 ? "Flash Deals are healthy."
       : overall >= 50 ? "Flash Deals need some attention."
       : "Flash Deals are underperforming.",
-  );
-  parts.push(
-    opportunity >= 70 ? "Revenue opportunity is high."
-      : opportunity >= 45 ? "Revenue opportunity is moderate."
-      : "Revenue opportunity is limited right now.",
   );
   const needs = critical || queue.filter((q) => q.urgency === "now").length;
   if (needs > 0) parts.push(`${needs} deal${needs === 1 ? "" : "s"} require${needs === 1 ? "s" : ""} immediate attention.`);

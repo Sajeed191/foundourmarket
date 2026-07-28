@@ -29,13 +29,10 @@ import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceShe
 import { dealAdvice, type AdviceAction, type DealAdvice } from "@/lib/flash/flash-advice";
 import { FlashCompareSheet } from "@/components/admin/flash/manage/FlashCompareSheet";
 import { FlashRotationHeatmap } from "@/components/admin/flash/manage/FlashRotationHeatmap";
-import { FlashRevenueSimulator } from "@/components/admin/flash/manage/FlashRevenueSimulator";
 import { FlashSavedViews, useSavedViews, type SavedView } from "@/components/admin/flash/manage/FlashSavedViews";
 import { priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
 import { FlashExecutiveSummary } from "@/components/admin/flash/manage/FlashExecutiveSummary";
 import { FlashCampaignHealth } from "@/components/admin/flash/manage/FlashCampaignHealth";
-import { FlashForecast } from "@/components/admin/flash/manage/FlashForecast";
-import { FlashScheduleAssistant } from "@/components/admin/flash/manage/FlashScheduleAssistant";
 import { FlashBalanceMonitor } from "@/components/admin/flash/manage/FlashBalanceMonitor";
 import { FlashLifecycle } from "@/components/admin/flash/manage/FlashLifecycle";
 import { FlashProductJourney } from "@/components/admin/flash/manage/FlashProductJourney";
@@ -43,11 +40,12 @@ import { FlashLiveFeed } from "@/components/admin/flash/manage/FlashLiveFeed";
 import { FlashExecutiveReport } from "@/components/admin/flash/manage/FlashExecutiveReport";
 import { FlashCommandBar } from "@/components/admin/flash/manage/FlashCommandBar";
 import {
-  executiveSummary, campaignHealth, revenueForecast, scheduleSuggestion, balanceReport,
+  executiveSummary, campaignHealth, balanceReport,
   marketplaceFeed, executiveReport, productJourney, type ReportRange,
 } from "@/lib/flash/flash-executive";
 import { triggerGlobalReshuffle } from "@/lib/use-rotation-nonce";
-import { FlashDailyBrief } from "@/components/admin/flash/manage/FlashDailyBrief";
+import { FlashRealStatus } from "@/components/admin/flash/manage/FlashRealStatus";
+import { flashFacts } from "@/lib/flash/flash-facts";
 import { FlashTaskInbox } from "@/components/admin/flash/manage/FlashTaskInbox";
 import { FlashNextBestAction } from "@/components/admin/flash/manage/FlashNextBestAction";
 import { FlashHealthAudit } from "@/components/admin/flash/manage/FlashHealthAudit";
@@ -56,7 +54,7 @@ import { FlashDecisionHistory } from "@/components/admin/flash/manage/FlashDecis
 import { FlashModeBar } from "@/components/admin/flash/manage/FlashModeBar";
 import { FlashTeamNotes } from "@/components/admin/flash/manage/FlashTeamNotes";
 import {
-  dailyBrief, healthAudit, nextBestAction, suggestedReminders, taskDiff,
+  healthAudit, nextBestAction, suggestedReminders, taskDiff,
   parseSearchIntent, applyIntent, sectionVisible, SEARCH_EXAMPLES,
   type SectionId, type AuditIssue, type NextBestAction as NextAction, type Reminder,
 } from "@/lib/flash/flash-assistant";
@@ -327,13 +325,6 @@ function FlashManagePage() {
     [data.entries, ai.averages.avgCtr],
   );
 
-  const forecast = useMemo(() => revenueForecast(data.entries, data.now), [data.entries, data.now]);
-
-  const schedule = useMemo(
-    () => scheduleSuggestion(data.entries, data.events),
-    [data.entries, data.events],
-  );
-
   const feed = useMemo(
     () => marketplaceFeed({ entries: data.entries, events: data.events, now: data.now, myActions }),
     [data.entries, data.events, data.now, myActions],
@@ -373,15 +364,11 @@ function FlashManagePage() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  /** Assistant confidence: share of open recommendations it rates high/medium. */
-  const aiConfidence = useMemo(() => {
-    if (queue.length === 0) return 100;
-    const weight = queue.reduce(
-      (a, q) => a + (q.confidence === "high" ? 1 : q.confidence === "medium" ? 0.6 : 0.25),
-      0,
-    );
-    return Math.round((weight / queue.length) * 100);
-  }, [queue]);
+  /** Counted marketplace facts — database rows only, never estimates. */
+  const facts = useMemo(
+    () => flashFacts({ entries: data.entries, events: data.events, now: data.now }),
+    [data.entries, data.events, data.now],
+  );
 
   /** Deals that had a live window at any point today. */
   const dealsRanToday = useMemo(() => {
@@ -459,11 +446,6 @@ function FlashManagePage() {
     // hiddenTaskIds is rebuilt each render from persisted state
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [queue, ws.ignored, ws.snoozed],
-  );
-
-  const brief = useMemo(
-    () => dailyBrief({ entries: data.entries, conflicts: ai.conflicts, queue: inboxItems, now: data.now }),
-    [data.entries, ai.conflicts, inboxItems, data.now],
   );
 
   const audit = useMemo(
@@ -915,13 +897,13 @@ function FlashManagePage() {
             live={data.totals.active}
             scheduled={data.totals.scheduled}
             endingSoon={endingTwoHours}
-            revenueToday={report.revenue || data.totals.estRevenue}
+            revenueToday={facts.todayRevenue}
             ctr={data.totals.ctr}
             conversion={data.totals.conversion}
             health={summary.overall}
-            confidence={aiConfidence}
+            impressions={facts.todayImpressions}
             onSelect={(k) => {
-              if (k === "live" || k === "revenue" || k === "ctr" || k === "conversion") setFilter("active");
+              if (k === "live" || k === "revenue" || k === "ctr" || k === "conversion" || k === "impressions") setFilter("active");
               else if (k === "scheduled") setFilter("scheduled");
               else if (k === "ending") setFilter("ending_soon");
               else jumpTo("flash-assistant");
@@ -930,15 +912,8 @@ function FlashManagePage() {
 
           <FlashModeBar mode={ws.mode} focus={ws.focus} onMode={ws.setMode} onToggleFocus={ws.toggleFocus} />
 
-          {/* 2 — Today's brief: one card, one action */}
-          {show("brief") && ws.briefVisible && (
-            <FlashDailyBrief
-              brief={brief}
-              onReview={() => jumpTo("flash-assistant")}
-              onDismiss={ws.dismissBriefToday}
-              onNeverShow={() => { ws.dismissBriefToday(); toast.success("Brief hidden — reopen it from Focus mode tomorrow"); }}
-            />
-          )}
+          {/* 2 — Real marketplace facts, counted from the database */}
+          <FlashRealStatus facts={facts} />
 
           {/* 3 — Critical alerts */}
           {show("alerts") && (
@@ -1145,21 +1120,6 @@ function FlashManagePage() {
                 <FlashCrossSection conflicts={sectionConflicts} onPreview={previewConflict} />
                 <FlashMarketplaceEvents days={eventDays} />
                 <FlashLiveFeed items={feed} now={data.now} />
-              </div>
-            </CollapsibleModule>
-
-            <CollapsibleModule eyebrow="Forecast" title="Forecast, scheduling & simulator" sectionId="flash-forecast" defaultOpen={false}>
-              <div className="space-y-3">
-                <FlashForecast rows={forecast} />
-                <FlashScheduleAssistant
-                  suggestion={schedule}
-                  onUse={() => setWizard({ open: true, deal: null })}
-                />
-                <FlashRevenueSimulator
-                  entries={data.entries}
-                  baselineCtr={ai.averages.avgCtr}
-                  baselineConversion={ai.averages.avgConversion}
-                />
               </div>
             </CollapsibleModule>
 

@@ -8,12 +8,12 @@
 import { memo } from "react";
 import {
   Flame, CalendarClock, TimerReset, Wallet, MousePointerClick,
-  ShoppingBag, HeartPulse, Sparkles,
+  ShoppingBag, HeartPulse, Eye,
 } from "lucide-react";
 
 export type StatusKey =
   | "live" | "scheduled" | "ending" | "revenue"
-  | "ctr" | "conversion" | "health" | "confidence";
+  | "ctr" | "conversion" | "health" | "impressions";
 
 export type StatusTone = "green" | "blue" | "amber" | "red" | "neutral";
 
@@ -32,7 +32,7 @@ function compact(n: number) {
 }
 
 export const FlashStatusStrip = memo(function FlashStatusStrip({
-  live, scheduled, endingSoon, revenueToday, ctr, conversion, health, confidence, onSelect,
+  live, scheduled, endingSoon, revenueToday, ctr, conversion, health, impressions, onSelect,
 }: {
   live: number;
   scheduled: number;
@@ -41,19 +41,19 @@ export const FlashStatusStrip = memo(function FlashStatusStrip({
   ctr: number;
   conversion: number;
   health: number;
-  /** 0–100 assistant confidence in its current recommendations. */
-  confidence: number;
+  /** Tracked impressions today (flash_deal_events). */
+  impressions: number;
   onSelect: (key: StatusKey) => void;
 }) {
   const cells: { key: StatusKey; label: string; value: string; icon: typeof Flame; tone: StatusTone }[] = [
     { key: "live", label: "Live", value: String(live), icon: Flame, tone: live > 0 ? "green" : "amber" },
     { key: "scheduled", label: "Scheduled", value: String(scheduled), icon: CalendarClock, tone: "blue" },
     { key: "ending", label: "Ending < 2h", value: String(endingSoon), icon: TimerReset, tone: endingSoon > 0 ? "amber" : "neutral" },
-    { key: "revenue", label: "Revenue today", value: compact(revenueToday), icon: Wallet, tone: "neutral" },
-    { key: "ctr", label: "CTR", value: `${ctr.toFixed(1)}%`, icon: MousePointerClick, tone: "neutral" },
-    { key: "conversion", label: "Conversion", value: `${conversion.toFixed(1)}%`, icon: ShoppingBag, tone: "neutral" },
+    { key: "revenue", label: "Revenue today", value: revenueToday > 0 ? compact(revenueToday) : "—", icon: Wallet, tone: "neutral" },
+    { key: "ctr", label: "CTR", value: ctr > 0 ? `${ctr.toFixed(1)}%` : "—", icon: MousePointerClick, tone: "neutral" },
+    { key: "conversion", label: "Conversion", value: conversion > 0 ? `${conversion.toFixed(1)}%` : "—", icon: ShoppingBag, tone: "neutral" },
     { key: "health", label: "Health", value: String(health), icon: HeartPulse, tone: health >= 75 ? "green" : health >= 50 ? "amber" : "red" },
-    { key: "confidence", label: "AI confidence", value: `${confidence}%`, icon: Sparkles, tone: confidence >= 70 ? "green" : confidence >= 40 ? "amber" : "neutral" },
+    { key: "impressions", label: "Impressions", value: impressions > 0 ? compact(impressions) : "—", icon: Eye, tone: "neutral" },
   ];
 
   return (

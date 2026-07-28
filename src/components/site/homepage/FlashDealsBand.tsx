@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BadgeCheck, Star, Truck, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock, Star, Truck, ShieldCheck } from "lucide-react";
 import { useFlashDeals, type FlashItem } from "@/lib/use-flash-deals";
+import { useDealCountdown } from "@/lib/homepage/use-deal-countdown";
 import { useRegion } from "@/lib/region";
 import { Price } from "@/components/site/Price";
 import { LazyMount } from "@/components/site/LazyMount";
@@ -111,7 +112,37 @@ function DealFrame({
 
 
 
+/**
+ * Live "Ends in" line — driven strictly by the deal's real `end_at`.
+ * Renders nothing when there is no scheduled end or the window has passed.
+ */
+function DealCountdown({ endAt }: { endAt: string | null | undefined }) {
+  const cd = useDealCountdown(endAt);
+  if (!cd || cd.urgency === "expired") return null;
+
+  const tone =
+    cd.urgency === "normal"
+      ? "text-accent/80"
+      : cd.urgency === "last-hour"
+        ? "text-accent"
+        : "text-accent fd-countdown-final";
+
+  return (
+    <p
+      className={`mt-1.5 flex items-center gap-1.5 text-[10.5px] font-medium leading-none ${tone}`}
+      style={{ textShadow: "0 0 12px color-mix(in oklab, var(--accent) 45%, transparent)" }}
+    >
+      <Clock className="size-3 shrink-0" strokeWidth={2} aria-hidden />
+      <span className="text-muted-foreground/60">Ends in</span>
+      <span className="font-mono font-semibold tabular-nums tracking-tight transition-opacity duration-200">
+        {cd.label}
+      </span>
+    </p>
+  );
+}
+
 /** Tiny, monochrome inline trust row — icon + one word, no pills, never wraps. */
+
 function TrustRow() {
   return (
     <ul className="mt-2.5 flex flex-nowrap items-center gap-x-3 overflow-hidden text-[10px] font-medium leading-none text-muted-foreground/45">
@@ -178,6 +209,9 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
             </span>
           )}
         </div>
+
+        <DealCountdown endAt={item.endAt} />
+
 
         <h3 className="mt-1.5 line-clamp-2 min-h-[2.56em] font-display text-[15px] font-semibold leading-[1.28] tracking-tight text-foreground/90 sm:text-[16px] lg:text-[19px]">
           {p.name}
@@ -266,6 +300,7 @@ export function FlashDealsBand() {
   const { items } = useFlashDeals();
   const railRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const [cycle, setCycle] = useState(0);
   const campaign = useCampaignLabel();
 
   const visible = useMemo(() => items.slice(0, 8), [items]);
@@ -282,6 +317,59 @@ export function FlashDealsBand() {
   useEffect(() => {
     setActive(0);
   }, [heroes.length]);
+
+  // ── Autoplay: 6s desktop / 5s tablet+mobile, paused on interaction ────────
+  const [reduced, setReduced] = useState(false);
+  const [autoplayMs, setAutoplayMs] = useState(5000);
+  useEffect(() => {
+    const mm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      setReduced(mm.matches);
+      setAutoplayMs(wide.matches ? 6000 : 5000);
+    };
+    sync();
+    mm.addEventListener("change", sync);
+    wide.addEventListener("change", sync);
+    return () => {
+      mm.removeEventListener("change", sync);
+      wide.removeEventListener("change", sync);
+    };
+  }, []);
+
+  /** Timestamp until which autoplay stays paused after a user interaction. */
+  const pausedUntil = useRef(0);
+  const pauseAutoplay = useCallback(() => {
+    pausedUntil.current = Date.now() + 8000;
+    setCycle((c) => c + 1); // restart the progress animation on manual input
+  }, []);
+
+  const goTo = useCallback((i: number) => {
+    const el = railRef.current;
+    if (!el || el.children.length === 0) return;
+    const width = (el.children[0] as HTMLElement).offsetWidth + 16;
+    el.scrollTo({ left: i * width, behavior: "smooth" });
+  }, []);
+
+  const autoplayable = heroes.length > 1 && !reduced;
+
+  useEffect(() => {
+    if (!autoplayable) return;
+    const id = window.setInterval(() => {
+      if (Date.now() < pausedUntil.current) return;
+      const el = railRef.current;
+      // Only drive the rail while it actually scrolls (mobile/tablet layout).
+      if (!el || el.scrollWidth <= el.clientWidth + 8) return;
+      setActive((i) => {
+        const next = (i + 1) % heroes.length;
+        goTo(next);
+        return next;
+      });
+      setCycle((c) => c + 1);
+    }, autoplayMs);
+    return () => window.clearInterval(id);
+  }, [autoplayable, autoplayMs, heroes.length, goTo]);
+
 
   if (heroes.length === 0) return null;
 
@@ -316,6 +404,12 @@ export function FlashDealsBand() {
           <div
             ref={railRef}
             onScroll={onScroll}
+            onPointerDown={pauseAutoplay}
+            onTouchStart={pauseAutoplay}
+            onWheel={pauseAutoplay}
+            onMouseEnter={pauseAutoplay}
+            onMouseMove={pauseAutoplay}
+            onFocus={pauseAutoplay}
             role="group"
             aria-label="Featured flash deals"
             className="flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:px-6 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
@@ -332,19 +426,46 @@ export function FlashDealsBand() {
           </div>
         </div>
 
-        {/* Thin progress indicators */}
+        {/* Thin progress indicators — active bar fills over the autoplay window */}
         {heroes.length > 1 && (
-          <div className="mt-3.5 flex items-center justify-center gap-1.5 lg:hidden" aria-hidden>
-            {heroes.map((item, i) => (
-              <span
-                key={item.dealId ?? item.product.slug}
-                className={`h-[3px] rounded-full transition-[width,background-color,box-shadow] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                  i === active ? "w-10 bg-accent shadow-[0_0_12px_-2px_var(--accent)]" : "w-1.5 bg-white/[0.16]"
-                }`}
-              />
-            ))}
+          <div className="mt-3.5 flex items-center justify-center gap-1.5 lg:hidden" role="tablist" aria-label="Flash deal slides">
+            {heroes.map((item, i) => {
+              const isActive = i === active;
+              return (
+                <button
+                  key={item.dealId ?? item.product.slug}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={`Show flash deal ${i + 1}`}
+                  onClick={() => {
+                    pauseAutoplay();
+                    setActive(i);
+                    goTo(i);
+                  }}
+                  className="grid h-4 place-items-center"
+                >
+                  <span
+                    className={`block h-[3px] overflow-hidden rounded-full transition-[width,background-color] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                      isActive ? "w-10 bg-white/[0.18]" : "w-1.5 bg-white/[0.16]"
+                    }`}
+                  >
+                    {isActive && (
+                      <span
+                        key={`${i}-${cycle}`}
+                        className={`block h-full w-full rounded-full bg-accent shadow-[0_0_12px_-2px_var(--accent)] ${
+                          autoplayable ? "fd-progress-fill" : ""
+                        }`}
+                        style={autoplayable ? { animationDuration: `${autoplayMs}ms` } : undefined}
+                      />
+                    )}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
+
 
         {/* Secondary rail — soft-faded edges, snapping, peek next card */}
         <div className="relative mt-4">

@@ -215,6 +215,37 @@ function FlashManagePage() {
     return m;
   }, [data.entries, data.ops.maxDiscountPct, data.cap, ai.averages, ai.rotationStreaks, shares]);
 
+  /* ---------------------------------------------- v9 — autonomous layer */
+
+  const briefing = useMemo(
+    () => morningBriefing(data.entries, ai.conflicts, adviceByKey, data.now),
+    [data.entries, ai.conflicts, adviceByKey, data.now],
+  );
+
+  const queue = useMemo(
+    () => priorityQueue(data.entries, adviceByKey, ai.scores, dismissed),
+    [data.entries, adviceByKey, ai.scores, dismissed],
+  );
+
+  const heatRows = useMemo(() => {
+    const meta = new Map(data.products.map((p) => [p.slug, { name: p.name, image: p.image ?? null }]));
+    const windows = ai.windows.map((w) => ({
+      startsAt: w.startsAt,
+      slugs: [w.hero?.slug, ...w.mini.map((p) => p.slug), ...w.hidden.map((p) => p.slug)].filter(Boolean) as string[],
+    }));
+    return rotationHeatmap(windows, data.cap, meta, data.now);
+  }, [ai.windows, data.products, data.cap, data.now]);
+
+  const applyQueueItem = useCallback(
+    (item: QueueItem) => {
+      const entry = data.entries.find((e) => e.key === item.entryKey);
+      if (!entry) { toast.error("That deal is no longer available"); return; }
+      void applyAdvice(entry, item.advice.action);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [data.entries],
+  );
+
 
   /* ------------------------------------------------------------- mutations */
 

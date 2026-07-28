@@ -20,6 +20,7 @@ const CategoryAdminSheet = lazy(() =>
 );
 import { useHomepageSections, saveHomepageSection, toggleHomepageSection } from "@/lib/use-homepage-sections";
 import { productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
+import { evaluatePromoEligibility } from "@/lib/promo-eligibility";
 import { InlineActiveToggle } from "@/components/admin/InlineActiveToggle";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";

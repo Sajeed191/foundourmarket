@@ -819,15 +819,64 @@ function FlashManagePage() {
             </FlashSectionShell>
           </div>
 
-          {/* 6 — Live activity */}
-          <FlashSectionShell eyebrow="Realtime" title="Live activity">
-            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
+          {/* 6 — Campaign health */}
+          <FlashSectionShell eyebrow="Campaigns" title="Campaign health" count={campaigns.length}>
+            <FlashCampaignHealth rows={campaigns} />
           </FlashSectionShell>
 
-          {/* 7 — Rotation heatmap */}
+          {/* 7 — Revenue forecast */}
+          <FlashSectionShell eyebrow="Forecast" title="Expected revenue">
+            <FlashForecast rows={forecast} />
+          </FlashSectionShell>
+
+          {/* 8 — Smart scheduling assistant */}
+          <FlashSectionShell eyebrow="Planning" title="Smart scheduling assistant">
+            <FlashScheduleAssistant
+              suggestion={schedule}
+              onUse={() => setWizard({ open: true, deal: null })}
+            />
+          </FlashSectionShell>
+
+          {/* 9 — Homepage balance monitor */}
+          <div id="flash-balance">
+            <FlashSectionShell eyebrow="Balance" title="Homepage balance monitor">
+              <FlashBalanceMonitor
+                report={balance}
+                onReshuffle={() => {
+                  void triggerGlobalReshuffle().then((ok) => {
+                    toast[ok ? "success" : "error"](ok ? "Rotation reshuffled" : "Reshuffle blocked — admin access required");
+                    if (ok) { logMine("Reshuffled the homepage rotation"); data.refresh(); }
+                  });
+                }}
+              />
+            </FlashSectionShell>
+          </div>
+
+          {/* 10 — Deal lifecycle */}
+          <FlashSectionShell eyebrow="Lifecycle" title="Deal lifecycle">
+            <FlashLifecycle
+              entries={filtered}
+              avgCtr={ai.averages.avgCtr}
+              now={data.now}
+              onOpen={(e) => setJourneyKey(e.key)}
+            />
+          </FlashSectionShell>
+
+          {/* 11 — Live marketplace feed */}
+          <FlashSectionShell eyebrow="Realtime" title="Live marketplace feed">
+            <FlashLiveFeed items={feed} now={data.now} />
+          </FlashSectionShell>
+
+          {/* 12 — Executive reports */}
+          <FlashSectionShell eyebrow="Reporting" title="Executive report">
+            <FlashExecutiveReport report={report} range={reportRange} onRange={setReportRange} />
+          </FlashSectionShell>
+
+          {/* 13 — Rotation heatmap */}
           <FlashSectionShell eyebrow="Rotation" title="Visibility heatmap" count={heatRows.length}>
             <FlashRotationHeatmap rows={heatRows} />
           </FlashSectionShell>
+
 
           {/* 8 — Advanced tools, collapsed by default */}
           <div className="space-y-3">

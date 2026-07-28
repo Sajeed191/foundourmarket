@@ -36,7 +36,7 @@ function logAction(action: string, dealId: string | null, metadata: Record<strin
   void supabase.rpc("log_admin_activity", {
     _action: action,
     _entity_type: "flash_deal",
-    _entity_id: dealId,
+    _entity_id: dealId ?? undefined,
     _metadata: metadata as never,
   });
 }

@@ -590,6 +590,13 @@ function FlashManagePage() {
             <FlashAttentionList conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
           </FlashSectionShell>
 
+          {/* 2b — Live activity */}
+          <FlashSectionShell eyebrow="Realtime" title="Live activity">
+            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
+          </FlashSectionShell>
+
+
+
           {/* 3 — Scheduled */}
           <FlashSectionShell eyebrow="Upcoming" title="Scheduled deals" count={scheduledList.length}>
             {scheduledList.length === 0 ? (

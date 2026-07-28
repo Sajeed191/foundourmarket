@@ -112,28 +112,21 @@ export function useFlashDeals() {
 
 
   const result = useMemo(() => {
-    let totalFlagged = 0;
-    const active: FlashItem[] = [];
-    let excludedUnavailable = 0;
-
-    for (const p of products) {
-      if (!productInHomepageCollection(p.slug, badgeAssignments.get(p.slug), ["flash_deal", "hot_deal"], now)) continue;
-      totalFlagged++;
-      // Active = published, in stock, and flagged. Inactive products are hidden everywhere.
-      const available = p.status === "published" && p.inStock && p.stockQuantity > 0;
-      if (!available) {
-        excludedUnavailable++;
-        continue;
-      }
+    // Strict badge-driven eligibility: badge exists → live → single-promo
+    // resolver → published + in stock. Nothing else may enter Flash Deals.
+    const gate = evaluatePromoEligibility(products, badgeAssignments, "flash_deals", now);
+    const totalFlagged = gate.eligible.length + gate.counts.unpublished + gate.counts.out_of_stock;
+    const excludedUnavailable = gate.counts.unpublished + gate.counts.out_of_stock;
+    const active: FlashItem[] = gate.eligible.map((p) => {
       const live = p.id ? liveDealByProductId.get(p.id) ?? null : null;
-      active.push({
+      return {
         product: p,
         flashPrice: live ? live.flash_price : null,
         endAt: live ? live.end_at : null,
         dealId: live ? live.id : null,
         priority: live ? live.priority : 0,
-      });
-    }
+      };
+    });
 
     // Shuffle the full eligible pool for this 6h window, then pick the admin-
     // configured limit (Site Rules → flash_deals). Order stays cached until

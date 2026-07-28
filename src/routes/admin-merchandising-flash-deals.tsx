@@ -307,12 +307,14 @@ function FlashCommandCenter() {
                 </button>
               )}
 
+              <FlashHomepageHealth quality={ai.quality} />
+
               <section className="rounded-2xl border border-border bg-card p-4">
                 <p className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.3em] text-muted-foreground mb-3">
                   <Sparkles className="size-3.5 text-accent" /> Suggested products
                 </p>
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                  {recommendations.map((r) => (
+                  {ai.recommendations.slice(0, 6).map((r) => (
                     <div key={r.product.slug} className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-2.5">
                       <div className="size-10 shrink-0 rounded-lg overflow-hidden bg-black/40 ring-1 ring-white/10">
                         {r.product.image && <img loading="lazy" decoding="async" src={r.product.image} alt="" className="size-full object-cover" />}
@@ -321,19 +323,55 @@ function FlashCommandCenter() {
                         <p className="text-sm truncate">{r.product.name}</p>
                         <p className="text-[11px] text-muted-foreground">{r.reason}</p>
                       </div>
-                      <button onClick={() => setWizard({ open: true, deal: null })}
+                      <button onClick={() => setWizard({ open: true, deal: null, presetProduct: r.product })}
                         className="rounded-full border border-accent/40 text-accent px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest hover:bg-accent/10">
                         Feature
                       </button>
                     </div>
                   ))}
-                  {recommendations.length === 0 && (
+                  {ai.recommendations.length === 0 && (
                     <p className="text-xs text-muted-foreground">Every eligible product is already featured.</p>
                   )}
                 </div>
               </section>
             </div>
           )}
+
+          {tab === "Intelligence" && (
+            <div className="space-y-3">
+              <FlashHomepageHealth quality={ai.quality} />
+              <div className="grid lg:grid-cols-2 gap-3">
+                <FlashAssistant insights={ai.insights} onOpen={openIntel} />
+                <FlashHeroOptimizer hero={ai.hero} onReview={openIntel} />
+              </div>
+              <FlashConflictCenter conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
+            </div>
+          )}
+
+          {tab === "Recommend" && (
+            <FlashRecommendationCenter
+              recommendations={ai.recommendations}
+              onCreate={(product, template) =>
+                setWizard({ open: true, deal: null, presetProduct: product, presetTemplate: template })
+              }
+            />
+          )}
+
+          {tab === "Simulator" && (
+            <FlashSimulator windows={ai.windows} cap={data.cap} nonce={data.nonce} />
+          )}
+
+          {tab === "Coverage" && (
+            <FlashCoveragePanel
+              categories={ai.categories}
+              brands={ai.brands}
+              fairness={ai.fairness}
+              stock={ai.stock}
+              rotationStreaks={ai.rotationStreaks}
+              cap={data.cap}
+            />
+          )}
+
 
           {tab === "Deals" && (
             <div className="space-y-3">

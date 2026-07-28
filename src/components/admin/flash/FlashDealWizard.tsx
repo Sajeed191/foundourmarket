@@ -11,6 +11,7 @@ import type { BadgeType } from "@/lib/use-product-badges";
 import { assignBadge } from "@/lib/use-product-badges";
 import { FLASH_CAMPAIGNS, saveFlashOps, type FlashOps } from "@/lib/flash/flash-ops";
 import type { FlashDealRow } from "@/lib/flash/use-flash-admin";
+import type { CampaignTemplate } from "@/lib/flash/campaign-templates";
 
 type Step = 0 | 1 | 2 | 3;
 const STEP_LABELS = ["Product", "Discount", "Time", "Publish"];

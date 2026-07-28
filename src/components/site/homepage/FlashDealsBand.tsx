@@ -300,6 +300,7 @@ export function FlashDealsBand() {
   const { items } = useFlashDeals();
   const railRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const [cycle, setCycle] = useState(0);
   const campaign = useCampaignLabel();
 
   const visible = useMemo(() => items.slice(0, 8), [items]);
@@ -316,6 +317,59 @@ export function FlashDealsBand() {
   useEffect(() => {
     setActive(0);
   }, [heroes.length]);
+
+  // ── Autoplay: 6s desktop / 5s tablet+mobile, paused on interaction ────────
+  const [reduced, setReduced] = useState(false);
+  const [autoplayMs, setAutoplayMs] = useState(5000);
+  useEffect(() => {
+    const mm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      setReduced(mm.matches);
+      setAutoplayMs(wide.matches ? 6000 : 5000);
+    };
+    sync();
+    mm.addEventListener("change", sync);
+    wide.addEventListener("change", sync);
+    return () => {
+      mm.removeEventListener("change", sync);
+      wide.removeEventListener("change", sync);
+    };
+  }, []);
+
+  /** Timestamp until which autoplay stays paused after a user interaction. */
+  const pausedUntil = useRef(0);
+  const pauseAutoplay = useCallback(() => {
+    pausedUntil.current = Date.now() + 8000;
+    setCycle((c) => c + 1); // restart the progress animation on manual input
+  }, []);
+
+  const goTo = useCallback((i: number) => {
+    const el = railRef.current;
+    if (!el || el.children.length === 0) return;
+    const width = (el.children[0] as HTMLElement).offsetWidth + 16;
+    el.scrollTo({ left: i * width, behavior: "smooth" });
+  }, []);
+
+  const autoplayable = heroes.length > 1 && !reduced;
+
+  useEffect(() => {
+    if (!autoplayable) return;
+    const id = window.setInterval(() => {
+      if (Date.now() < pausedUntil.current) return;
+      const el = railRef.current;
+      // Only drive the rail while it actually scrolls (mobile/tablet layout).
+      if (!el || el.scrollWidth <= el.clientWidth + 8) return;
+      setActive((i) => {
+        const next = (i + 1) % heroes.length;
+        goTo(next);
+        return next;
+      });
+      setCycle((c) => c + 1);
+    }, autoplayMs);
+    return () => window.clearInterval(id);
+  }, [autoplayable, autoplayMs, heroes.length, goTo]);
+
 
   if (heroes.length === 0) return null;
 

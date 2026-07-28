@@ -11,6 +11,10 @@ import {
 } from "lucide-react";
 import type { WarningKey } from "@/lib/flash/flash-health";
 import type { DealEntry } from "@/lib/flash/use-flash-admin";
+import {
+  COUNTDOWN_CLASS, HEALTH_TONE_CLASS, countdownPhase, healthVerdict,
+} from "@/lib/flash/flash-advice";
+
 
 /** Visual status derived from existing status + remaining time. No new logic. */
 export type TileStatus = "active" | "ending_soon" | "scheduled" | "expired" | "paused" | "no_deal";

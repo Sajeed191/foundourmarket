@@ -9,7 +9,8 @@ import {
   useHomepageCollectionRules,
   type HomepageCollectionKey,
 } from "@/lib/site-rules";
-import { productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
+import { useBadgeCatalog } from "@/lib/use-product-badges";
+import { evaluatePromoEligibility } from "@/lib/promo-eligibility";
 import { ProductCard } from "@/components/site/ProductCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { BadgeKey } from "@/lib/badges";

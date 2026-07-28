@@ -568,7 +568,10 @@ function FlashManagePage() {
                       onDragStart={() => { dragKey.current = e.key; }}
                       onDragOver={(ev) => ev.preventDefault()}
                       onDrop={() => void reorder(e.key)}
+                      cap={data.cap}
+                      adviceCount={adviceByKey.get(e.key)?.length ?? 0}
                       actions={actions}
+
                     />
                   ))}
                 </div>

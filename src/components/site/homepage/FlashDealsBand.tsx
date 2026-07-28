@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BadgeCheck, Star, Truck, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock, Star, Truck, ShieldCheck } from "lucide-react";
 import { useFlashDeals, type FlashItem } from "@/lib/use-flash-deals";
+import { useDealCountdown } from "@/lib/homepage/use-deal-countdown";
 import { useRegion } from "@/lib/region";
 import { Price } from "@/components/site/Price";
 import { LazyMount } from "@/components/site/LazyMount";

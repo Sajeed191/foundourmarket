@@ -891,7 +891,7 @@ function FlashManagePage() {
                 diffFor={(item) => taskDiff(item, data.entries.find((e) => e.key === item.entryKey))}
                 onApprove={approveTask}
                 onReject={rejectTask}
-                onSnooze={snoozeTask}
+                onSnooze={snoozeTaskItem}
                 onPreview={(item) => setAdviceKey(item.entryKey)}
               />
             </div>

@@ -95,12 +95,13 @@ function DealFrame({
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           onLoad={(e) => measure(e.currentTarget)}
-          className="absolute left-1/2 top-1/2 size-[98%] -translate-x-1/2 -translate-y-1/2 object-cover object-center transition-[transform,opacity] duration-[320ms] ease-out will-change-transform"
+          className="absolute left-1/2 top-1/2 size-[98%] object-cover object-center transition-opacity duration-[320ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.02]"
           style={{
             opacity: loaded ? 1 : 0,
             borderRadius: Math.max(0, radius - 2),
-            transform: `translate(-50%, -50%) scale(${scale >= 1 ? 1 : 1})`,
+            transform: "translate(-50%, -50%)",
           }}
+
         />
       )}
     </div>

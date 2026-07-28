@@ -36,6 +36,23 @@ import { FlashRotationHeatmap } from "@/components/admin/flash/manage/FlashRotat
 import { FlashRevenueSimulator } from "@/components/admin/flash/manage/FlashRevenueSimulator";
 import { FlashSavedViews, useSavedViews, type SavedView } from "@/components/admin/flash/manage/FlashSavedViews";
 import { morningBriefing, priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
+import { FlashExecutiveSummary } from "@/components/admin/flash/manage/FlashExecutiveSummary";
+import { FlashAutoPilot } from "@/components/admin/flash/manage/FlashAutoPilot";
+import { FlashCampaignHealth } from "@/components/admin/flash/manage/FlashCampaignHealth";
+import { FlashForecast } from "@/components/admin/flash/manage/FlashForecast";
+import { FlashScheduleAssistant } from "@/components/admin/flash/manage/FlashScheduleAssistant";
+import { FlashBalanceMonitor } from "@/components/admin/flash/manage/FlashBalanceMonitor";
+import { FlashLifecycle } from "@/components/admin/flash/manage/FlashLifecycle";
+import { FlashProductJourney } from "@/components/admin/flash/manage/FlashProductJourney";
+import { FlashLiveFeed } from "@/components/admin/flash/manage/FlashLiveFeed";
+import { FlashExecutiveReport } from "@/components/admin/flash/manage/FlashExecutiveReport";
+import { FlashCommandBar } from "@/components/admin/flash/manage/FlashCommandBar";
+import {
+  executiveSummary, campaignHealth, revenueForecast, scheduleSuggestion, balanceReport,
+  explainQueueItem, marketplaceFeed, executiveReport, productJourney, type ReportRange,
+} from "@/lib/flash/flash-executive";
+import { triggerGlobalReshuffle } from "@/lib/use-rotation-nonce";
+
 
 
 import { FlashFilterChips, FLASH_FILTERS, type FlashFilter } from "@/components/admin/flash/manage/FlashFilterChips";

@@ -404,6 +404,12 @@ export function FlashDealsBand() {
           <div
             ref={railRef}
             onScroll={onScroll}
+            onPointerDown={pauseAutoplay}
+            onTouchStart={pauseAutoplay}
+            onWheel={pauseAutoplay}
+            onMouseEnter={pauseAutoplay}
+            onMouseMove={pauseAutoplay}
+            onFocus={pauseAutoplay}
             role="group"
             aria-label="Featured flash deals"
             className="flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:px-6 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
@@ -420,19 +426,46 @@ export function FlashDealsBand() {
           </div>
         </div>
 
-        {/* Thin progress indicators */}
+        {/* Thin progress indicators — active bar fills over the autoplay window */}
         {heroes.length > 1 && (
-          <div className="mt-3.5 flex items-center justify-center gap-1.5 lg:hidden" aria-hidden>
-            {heroes.map((item, i) => (
-              <span
-                key={item.dealId ?? item.product.slug}
-                className={`h-[3px] rounded-full transition-[width,background-color,box-shadow] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                  i === active ? "w-10 bg-accent shadow-[0_0_12px_-2px_var(--accent)]" : "w-1.5 bg-white/[0.16]"
-                }`}
-              />
-            ))}
+          <div className="mt-3.5 flex items-center justify-center gap-1.5 lg:hidden" role="tablist" aria-label="Flash deal slides">
+            {heroes.map((item, i) => {
+              const isActive = i === active;
+              return (
+                <button
+                  key={item.dealId ?? item.product.slug}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={`Show flash deal ${i + 1}`}
+                  onClick={() => {
+                    pauseAutoplay();
+                    setActive(i);
+                    goTo(i);
+                  }}
+                  className="grid h-4 place-items-center"
+                >
+                  <span
+                    className={`block h-[3px] overflow-hidden rounded-full transition-[width,background-color] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                      isActive ? "w-10 bg-white/[0.18]" : "w-1.5 bg-white/[0.16]"
+                    }`}
+                  >
+                    {isActive && (
+                      <span
+                        key={`${i}-${cycle}`}
+                        className={`block h-full w-full rounded-full bg-accent shadow-[0_0_12px_-2px_var(--accent)] ${
+                          autoplayable ? "fd-progress-fill" : ""
+                        }`}
+                        style={autoplayable ? { animationDuration: `${autoplayMs}ms` } : undefined}
+                      />
+                    )}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
+
 
         {/* Secondary rail — soft-faded edges, snapping, peek next card */}
         <div className="relative mt-4">

@@ -24,18 +24,13 @@ import { FlashSectionShell, FlashEmpty } from "@/components/admin/flash/manage/F
 import { FlashCriticalAlerts } from "@/components/admin/flash/manage/FlashCriticalAlerts";
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
-import { FlashQuickBar } from "@/components/admin/flash/manage/FlashQuickBar";
-import { FlashKpiV7 } from "@/components/admin/flash/manage/FlashKpiV7";
-import { FlashActivityFeed } from "@/components/admin/flash/manage/FlashActivityFeed";
 import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceSheet";
 import { dealAdvice, type AdviceAction, type DealAdvice } from "@/lib/flash/flash-advice";
-import { FlashBriefing } from "@/components/admin/flash/manage/FlashBriefing";
-import { FlashPriorityQueue } from "@/components/admin/flash/manage/FlashPriorityQueue";
 import { FlashCompareSheet } from "@/components/admin/flash/manage/FlashCompareSheet";
 import { FlashRotationHeatmap } from "@/components/admin/flash/manage/FlashRotationHeatmap";
 import { FlashRevenueSimulator } from "@/components/admin/flash/manage/FlashRevenueSimulator";
 import { FlashSavedViews, useSavedViews, type SavedView } from "@/components/admin/flash/manage/FlashSavedViews";
-import { morningBriefing, priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
+import { priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
 import { FlashExecutiveSummary } from "@/components/admin/flash/manage/FlashExecutiveSummary";
 import { FlashAutoPilot } from "@/components/admin/flash/manage/FlashAutoPilot";
 import { FlashCampaignHealth } from "@/components/admin/flash/manage/FlashCampaignHealth";
@@ -248,11 +243,6 @@ function FlashManagePage() {
   }, [data.entries, data.ops.maxDiscountPct, data.cap, ai.averages, ai.rotationStreaks, shares]);
 
   /* ---------------------------------------------- v9 — autonomous layer */
-
-  const briefing = useMemo(
-    () => morningBriefing(data.entries, ai.conflicts, adviceByKey, data.now),
-    [data.entries, ai.conflicts, adviceByKey, data.now],
-  );
 
   const queue = useMemo(
     () => priorityQueue(data.entries, adviceByKey, ai.scores, dismissed),

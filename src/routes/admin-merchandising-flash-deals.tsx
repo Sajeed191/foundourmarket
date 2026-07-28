@@ -978,17 +978,33 @@ function FlashManagePage() {
             </CollapsibleModule>
           </div>
 
-          {/* 7 — Floating quick bar */}
-          <FlashQuickBar
+          {/* 14 — Sticky command center */}
+          <FlashCommandBar
             selectedCount={selected.size}
+            pendingCount={queue.length}
             canUndo={undoCount > 0}
+            canRedo={redoCount > 0}
             onNew={() => setWizard({ open: true, deal: null })}
-            onBulkEdit={() => setBulkOpen(true)}
-            onBulkDelete={() => void bulkDelete()}
+            onSearch={() => {
+              const el = document.getElementById("flash-search");
+              el?.scrollIntoView({ behavior: "smooth", block: "center" });
+              (el as HTMLInputElement | null)?.focus();
+            }}
             onPreview={() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
             onUndo={() => void undo()}
-            onReshuffled={data.refresh}
+            onRedo={() => void redo()}
+            onBulkApprove={() => void bulkApprove()}
+            onBulkReject={() => {
+              setDismissed((p) => { const s = new Set(p); for (const q of queue) s.add(q.id); return s; });
+              logMine(`Rejected ${queue.length} recommendations`);
+              toast.success("All recommendations rejected");
+            }}
+            onBulkDelete={() => void bulkDelete()}
+            onGenerateCampaign={() => setWizard({ open: true, deal: null })}
+            onExport={exportCsv}
+            onReshuffled={() => { logMine("Reshuffled the homepage rotation"); data.refresh(); }}
           />
+
         </div>
       )}
 

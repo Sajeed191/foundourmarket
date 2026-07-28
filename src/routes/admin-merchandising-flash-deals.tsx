@@ -808,18 +808,20 @@ function FlashManagePage() {
       ) : (
         <div className="space-y-8 pb-4">
           {/* 0 — Executive dashboard */}
-          <FlashExecutiveSummary
-            summary={summary}
-            queueCount={queue.length}
-            onOptimize={() => document.getElementById("flash-priority-queue")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            onSelectMetric={(k) => {
-              if (k === "risk") setFilter("conflict");
-              else if (k === "inventory") setFilter("low_stock");
-              else if (k === "campaign") setFilter("scheduled");
-              else if (k === "deals" || k === "revenue" || k === "rotation" || k === "marketplace") setFilter("active");
-              else if (k === "balance") document.getElementById("flash-balance")?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-          />
+          {show("summary") && (
+            <FlashExecutiveSummary
+              summary={summary}
+              queueCount={inboxItems.length}
+              onOptimize={() => document.getElementById("flash-task-inbox")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              onSelectMetric={(k) => {
+                if (k === "risk") setFilter("conflict");
+                else if (k === "inventory") setFilter("low_stock");
+                else if (k === "campaign") setFilter("scheduled");
+                else if (k === "deals" || k === "revenue" || k === "rotation" || k === "marketplace") setFilter("active");
+                else if (k === "balance") document.getElementById("flash-balance")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            />
+          )}
 
           {/* v11 — workspace modes + focus */}
           <FlashModeBar mode={ws.mode} focus={ws.focus} onMode={ws.setMode} onToggleFocus={ws.toggleFocus} />

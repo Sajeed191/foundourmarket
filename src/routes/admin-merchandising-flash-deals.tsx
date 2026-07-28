@@ -422,20 +422,34 @@ function FlashCommandCenter() {
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {filtered.map((e) => (
-                    <FlashDealCard
-                      key={e.key}
-                      entry={e}
-                      selected={selected.has(e.key)}
-                      onSelect={toggleSelect}
-                      onEdit={(x) => setWizard({ open: true, deal: x.deal })}
-                      onToggle={(x) => updateDeal(x, { active: !x.deal!.active }, x.deal!.active ? "flash_deal_paused" : "flash_deal_resumed")}
-                      onDelete={deleteDeal}
-                      onPin={(x) => updateDeal(x, { priority: (x.deal!.priority ?? 0) > 0 ? 0 : 100 }, "flash_deal_priority_changed")}
-                      onCreate={() => setWizard({ open: true, deal: null })}
-                    />
-                  ))}
+                  {filtered.map((e) => {
+                    const intel = ai.scores.get(e.key);
+                    return (
+                      <div key={e.key} className="space-y-1">
+                        <FlashDealCard
+                          entry={e}
+                          selected={selected.has(e.key)}
+                          onSelect={toggleSelect}
+                          onEdit={(x) => setWizard({ open: true, deal: x.deal })}
+                          onToggle={(x) => updateDeal(x, { active: !x.deal!.active }, x.deal!.active ? "flash_deal_paused" : "flash_deal_resumed")}
+                          onDelete={deleteDeal}
+                          onPin={(x) => updateDeal(x, { priority: (x.deal!.priority ?? 0) > 0 ? 0 : 100 }, "flash_deal_priority_changed")}
+                          onCreate={() => setWizard({ open: true, deal: null, presetProduct: e.product })}
+                        />
+                        {intel && (
+                          <button onClick={() => openIntel(e.key)}
+                            className="w-full flex items-center justify-between gap-2 rounded-xl border border-white/10 px-3 min-h-11 text-left hover:bg-white/5 transition">
+                            <span className="text-[11px] text-muted-foreground truncate">{intel.recommendation}</span>
+                            <span className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-accent">
+                              Score {intel.score}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+
               )}
             </div>
           )}

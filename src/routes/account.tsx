@@ -953,38 +953,79 @@ function SupportHubCard({ title, subtitle, children, lowMotion }: { title: strin
       whileInView={lowMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="rounded-[22px] bg-white/[0.03] backdrop-blur-xl p-5 sm:p-6 ring-1 ring-white/[0.06]"
+      className="flex flex-col rounded-[20px] bg-white/[0.03] backdrop-blur-xl p-4 sm:p-[18px] ring-1 ring-white/[0.06]"
     >
-      <h3 className="text-[17px] font-display font-semibold leading-tight tracking-tight">{title}</h3>
-      <p className="mt-1 text-[12.5px] text-muted-foreground">{subtitle}</p>
-      <div className="mt-4 space-y-2">{children}</div>
+      <h3 className="text-[16px] font-display font-semibold leading-tight tracking-tight">{title}</h3>
+      <p className="mt-0.5 text-[12px] text-muted-foreground">{subtitle}</p>
+      <div className="mt-3 space-y-1.5">{children}</div>
     </motion.section>
   );
 }
 
-function HubAction({ icon: Icon, label, onClick, primary }: { icon: typeof Package; label: string; onClick: () => void; primary?: boolean }) {
+function HubAction({
+  icon: Icon,
+  label,
+  onClick,
+  primary,
+  badge,
+}: {
+  icon: typeof Package;
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+  badge?: string;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full min-h-[48px] flex items-center gap-3.5 rounded-2xl px-4 py-3 text-left text-[14px] font-medium transition-[background-color,transform] duration-150 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+      className={`w-full min-h-[44px] flex items-center gap-3 rounded-[14px] px-3.5 py-2.5 text-left text-[13.5px] font-medium transition-[background-color,transform,border-color] duration-[180ms] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
         primary
           ? "bg-accent text-accent-foreground font-semibold hover:brightness-110"
-          : "bg-white/[0.035] text-foreground/90 hover:bg-white/[0.07]"
+          : "border border-white/[0.07] bg-white/[0.02] text-foreground/90 hover:bg-white/[0.05] hover:border-white/[0.12]"
       }`}
     >
-      <Icon className={`size-[18px] shrink-0 ${primary ? "" : "text-muted-foreground"}`} strokeWidth={1.7} />
-      <span className="min-w-0 flex-1 truncate">{label}</span>
-      <ChevronRight className="size-4 shrink-0 opacity-50" />
+      <Icon className={`size-[17px] shrink-0 ${primary ? "" : "text-muted-foreground"}`} strokeWidth={1.7} />
+      <span className="min-w-0 flex-1">{label}</span>
+      {badge && (
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-medium ${primary ? "bg-black/15" : "bg-white/[0.06] text-muted-foreground"}`}>
+          {badge}
+        </span>
+      )}
+      <ChevronRight className="size-4 shrink-0 opacity-45" />
     </button>
   );
 }
 
 function HubStatusRow({ children }: { children: ReactNode }) {
   return (
-    <p className="pt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground">{children}</p>
+    <div className="mt-3 flex items-center gap-3 overflow-x-auto no-scrollbar whitespace-nowrap text-[11px] text-muted-foreground">
+      {children}
+    </div>
   );
 }
+
+function HubPill({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10.5px] font-medium text-emerald-400 ring-1 ring-emerald-500/15">
+      {children}
+    </span>
+  );
+}
+
+function QuickChip({ icon: Icon, label, onClick }: { icon: typeof Package; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex shrink-0 min-h-[44px] items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.02] px-4 text-[12.5px] font-medium text-foreground/85 transition-[background-color,transform,border-color] duration-[180ms] active:scale-[0.98] hover:bg-white/[0.05] hover:border-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+    >
+      <Icon className="size-[15px] text-muted-foreground" strokeWidth={1.7} />
+      {label}
+    </button>
+  );
+}
+
 
 
 function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder = false }: { user: any; avatarUrl: string; firstName: string; signOut: () => void | Promise<void>; hasActiveOrder?: boolean }) {

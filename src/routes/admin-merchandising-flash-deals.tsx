@@ -25,7 +25,11 @@ import { FlashAttentionList } from "@/components/admin/flash/manage/FlashAttenti
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
 import { FlashQuickBar } from "@/components/admin/flash/manage/FlashQuickBar";
-import { FlashKpiCompact } from "@/components/admin/flash/manage/FlashKpiCompact";
+import { FlashKpiV7 } from "@/components/admin/flash/manage/FlashKpiV7";
+import { FlashActivityFeed } from "@/components/admin/flash/manage/FlashActivityFeed";
+import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceSheet";
+import { dealAdvice, type AdviceAction, type DealAdvice } from "@/lib/flash/flash-advice";
+
 import { FlashFilterChips, FLASH_FILTERS, type FlashFilter } from "@/components/admin/flash/manage/FlashFilterChips";
 import { FlashScheduledGroups } from "@/components/admin/flash/manage/FlashScheduledGroups";
 import { FlashBulkSheet, type BulkPatch } from "@/components/admin/flash/manage/FlashBulkSheet";

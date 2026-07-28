@@ -54,7 +54,7 @@ import { FlashDecisionHistory } from "@/components/admin/flash/manage/FlashDecis
 import { FlashModeBar } from "@/components/admin/flash/manage/FlashModeBar";
 import { FlashTeamNotes } from "@/components/admin/flash/manage/FlashTeamNotes";
 import {
-  dailyBrief, healthAudit, nextBestAction, suggestedReminders, taskDiff,
+  healthAudit, nextBestAction, suggestedReminders, taskDiff,
   parseSearchIntent, applyIntent, sectionVisible, SEARCH_EXAMPLES,
   type SectionId, type AuditIssue, type NextBestAction as NextAction, type Reminder,
 } from "@/lib/flash/flash-assistant";

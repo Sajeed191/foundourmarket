@@ -1,7 +1,7 @@
 /**
  * Suggested products rail — reuses the existing recommendation intelligence.
  * Each card shows the product, why it was picked, the expected flash score and
- * the projected revenue at the current price, plus one-click add and preview.
+ * its live stock, plus one-click add and preview.
  */
 import { Sparkles, Plus, Eye, TrendingUp, Boxes } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -37,7 +37,6 @@ export function FlashSuggestedRail({
         const tone = stockTone(qty);
         const price = r.product.price ?? 0;
         // Presentation-only projection: price × a conservative slice of stock.
-        const expectedRevenue = Math.round(price * Math.min(qty, 10));
         return (
           <article key={r.product.slug}
             className="w-[248px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-card transition hover:border-white/20">
@@ -61,7 +60,6 @@ export function FlashSuggestedRail({
               <p className="line-clamp-2 text-[11px] text-muted-foreground">{r.reasons[0]}</p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
-                  <TrendingUp className="size-3" /> ~{expectedRevenue.toLocaleString()} rev
                 </span>
                 <span className={`inline-flex items-center gap-1 ${tone.cls}`}>
                   <Boxes className="size-3" /> {qty}

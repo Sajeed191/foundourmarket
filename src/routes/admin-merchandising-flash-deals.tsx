@@ -154,20 +154,31 @@ function FlashManagePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  /** v11 — smart search: natural phrases become filters, sorts and thresholds. */
+  const intent = useMemo(() => parseSearchIntent(query), [query]);
+
   /** Universal search: product, sku, campaign, status, category, brand, priority. */
   const matches = useCallback(
     (e: DealEntry) => {
-      const q = query.trim().toLowerCase();
+      const q = intent.text.toLowerCase();
       if (!q) return true;
       return [
         e.product.name, e.product.sku ?? "", e.product.brand ?? "", e.product.category,
         e.campaign ?? "", tileStatus(e), String(e.deal?.priority ?? ""),
       ].join(" ").toLowerCase().includes(q);
     },
-    [query],
+    [intent.text],
   );
 
-  const searched = useMemo(() => data.entries.filter(matches), [data.entries, matches]);
+  const searched = useMemo(
+    () => applyIntent(data.entries.filter(matches), intent, ai.scores, data.now),
+    [data.entries, matches, intent, ai.scores, data.now],
+  );
+
+  /** A recognised intent filter drives the chips so both stay in sync. */
+  useEffect(() => {
+    if (intent.filter) setFilter(intent.filter as FlashFilter);
+  }, [intent.filter]);
 
   const passesFilter = useCallback((e: DealEntry, f: FlashFilter) => {
     const s = tileStatus(e);

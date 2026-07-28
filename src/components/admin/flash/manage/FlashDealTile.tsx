@@ -199,12 +199,23 @@ export const FlashDealTile = memo(function FlashDealTile({
             {entry.regularPrice > entry.dealPrice && (
               <span className="ml-2 text-xs text-muted-foreground line-through">{entry.regularPrice.toLocaleString()}</span>
             )}
-            <span className="ml-3 text-xs text-muted-foreground">{p.stockQuantity} in stock</span>
+            <span className="ml-3 text-xs text-muted-foreground">{qty} in stock</span>
           </p>
 
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Clock className="size-3" /> {countdown}</span>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/5" aria-hidden>
+            <div className={`h-full rounded-full ${qty <= 5 ? "bg-destructive/70" : qty <= 20 ? "bg-amber-400/70" : "bg-emerald-400/60"}`}
+              style={{ width: `${stockPct}%` }} />
+          </div>
+
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
+            <span className={`inline-flex items-center gap-1 ${COUNTDOWN_CLASS[phase]}`}><Clock className="size-3" /> {countdown}</span>
             {deal && <span>priority {deal.priority}</span>}
+            {entry.rotationRank != null && <span>slot {entry.rotationRank + 1}</span>}
+            {cap != null && (
+              <span className={visible ? "text-emerald-300" : "text-muted-foreground/70"}>
+                {visible ? "on homepage" : "not visible"}
+              </span>
+            )}
             {entry.campaign && <span className="text-accent/80">{entry.campaign}</span>}
           </p>
 
@@ -228,9 +239,11 @@ export const FlashDealTile = memo(function FlashDealTile({
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-3 py-2">
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
           <span>{entry.stats.views} views</span>
-          <span>{entry.stats.clicks} clicks</span>
-          <span>{entry.stats.purchases} sales</span>
+          <span>{entry.stats.ctr.toFixed(1)}% ctr</span>
+          <span>{entry.stats.purchases} orders</span>
+          <span>{revenue.toLocaleString()} rev</span>
         </div>
+
         {deal && (
           <div className="flex items-center gap-1">
             <button onClick={() => actions.onEdit(entry)} aria-label="Edit deal" className={btn}><Pencil className="size-3.5" /></button>

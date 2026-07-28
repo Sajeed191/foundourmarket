@@ -496,7 +496,7 @@ function AccountPage() {
 
         {/* 5 — SUPPORT & ACCOUNT (premium hub) */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }} className="pt-1">
-          <AccountUtilities user={user} avatarUrl={avatarUrl} firstName={firstName} signOut={signOut} />
+          <AccountUtilities user={user} avatarUrl={avatarUrl} firstName={firstName} signOut={signOut} hasActiveOrder={stats.active > 0} />
         </motion.section>
 
       </div>
@@ -945,7 +945,55 @@ function SheetOption({ icon: Icon, label, desc, tone = "default", onClick }: { i
   );
 }
 
-function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; avatarUrl: string; firstName: string; signOut: () => void | Promise<void> }) {
+/* ---------- Simplified support hub primitives (UI only) ---------- */
+function QuickHelpChip({ icon: Icon, label, onClick }: { icon: typeof Package; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="snap-start shrink-0 min-h-[44px] inline-flex items-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl px-4 py-2.5 text-[12.5px] font-medium text-foreground/90 transition-colors hover:border-accent/30 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+    >
+      <Icon className="size-4 shrink-0 text-accent" strokeWidth={1.7} />
+      <span className="whitespace-nowrap">{label}</span>
+    </button>
+  );
+}
+
+function SupportHubCard({ title, subtitle, children, lowMotion }: { title: string; subtitle: string; children: ReactNode; lowMotion: boolean }) {
+  return (
+    <motion.div
+      initial={lowMotion ? false : { opacity: 0, y: 8 }}
+      whileInView={lowMotion ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="rounded-2xl bg-white/[0.03] backdrop-blur-xl p-5 sm:p-6 shadow-[0_0_40px_-24px_var(--color-accent)] ring-1 ring-white/[0.05]"
+    >
+      <p className="text-[17px] font-display font-semibold leading-tight tracking-tight">{title}</p>
+      <p className="mt-1 text-[12.5px] text-muted-foreground">{subtitle}</p>
+      <div className="mt-4 space-y-2">{children}</div>
+    </motion.div>
+  );
+}
+
+function HubAction({ icon: Icon, label, onClick, primary }: { icon: typeof Package; label: string; onClick: () => void; primary?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full min-h-[48px] flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[13.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+        primary
+          ? "bg-accent/[0.12] text-accent hover:bg-accent/[0.18]"
+          : "bg-white/[0.03] text-foreground/90 hover:bg-white/[0.06]"
+      }`}
+    >
+      <Icon className={`size-[18px] shrink-0 ${primary ? "text-accent" : "text-muted-foreground"}`} strokeWidth={1.7} />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <ChevronRight className="size-4 shrink-0 opacity-50" />
+    </button>
+  );
+}
+
+function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder = false }: { user: any; avatarUrl: string; firstName: string; signOut: () => void | Promise<void>; hasActiveOrder?: boolean }) {
   const nav = useNavigate();
   const lowMotion = useIsLowMotion();
   const { settings } = useSupportSettings();
@@ -979,82 +1027,57 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut }: { user: any; 
 
   return (
     <>
-      {/* Section header — title on the left, live status pill + avg reply on the right */}
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-[22px] sm:text-2xl font-display font-semibold leading-tight tracking-tight">Support &amp; Account</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">We're here to help you anytime, anywhere.</p>
-        </div>
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${online ? "border-emerald-400/25 bg-emerald-400/[0.06] text-emerald-300" : "border-amber-400/25 bg-amber-400/[0.06] text-amber-300"}`}>
-            <span className={`size-1.5 rounded-full ${online ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-            {online ? "We're Online" : "High Volume"}
-          </span>
-          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Clock className="size-3" strokeWidth={1.6} />
-            Avg reply · <span className="text-accent font-medium">&lt; {minutes} min</span>
-          </span>
+      {/* Quick help row — one tap, four essentials */}
+      <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2.5 overflow-x-auto scrollbar-hide snap-x">
+          <QuickHelpChip icon={MessageCircle} label={online ? "Live Chat" : "Message"} onClick={openLiveChat} />
+          <QuickHelpChip icon={Package} label="Track Order" onClick={() => nav({ to: "/account/orders" })} />
+          <QuickHelpChip icon={RotateCcw} label="Returns" onClick={() => nav({ to: "/account/returns" })} />
+          <QuickHelpChip icon={HelpCircle} label="FAQ" onClick={() => nav({ to: "/help", hash: "faqs" })} />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <PremiumSupportCard
-          tone="accent"
-          icon={Headset}
-          title="Help & Support"
-          desc="Chat live with our support team or submit a request."
-          rows={[
-            { icon: Users, label: "Live Chat", value: online ? "Online now" : "Away", valueClass: online ? "text-emerald-400" : "text-amber-400" },
-            { icon: Clock, label: "Response Time", value: `< ${minutes} min`, valueClass: "text-accent" },
-          ]}
-          cta="Start Live Chat"
-          lowMotion={lowMotion}
-          onClick={() => setSupportOpen(true)}
-        />
-        <PremiumSupportCard
-          tone="sky"
-          icon={BookOpen}
-          title="Help Articles"
-          desc="Browse guides, tutorials and FAQs."
-          rows={[
-            { icon: FileText, label: "Articles", value: "14" },
-            { icon: BookOpen, label: "Guides", value: "3" },
-          ]}
-          chips={["Orders", "Payments", "Returns", "Shipping"]}
-          cta="Browse Articles"
-          lowMotion={lowMotion}
-          onClick={() => nav({ to: "/help", hash: "faqs" })}
-        />
-        <PremiumSupportCard
-          tone="emerald"
-          icon={PhoneCall}
-          title="Contact Us"
-          desc="Choose your preferred way to reach us."
-          pills={[
-            { icon: Smartphone, label: "WhatsApp", tone: "emerald" },
-            { icon: Mail, label: "Email", tone: "accent" },
-            { icon: MessageCircle, label: "Live Chat", tone: "sky" },
-            { icon: Phone, label: "Callback", tone: "sky" },
-          ]}
-          cta="Choose Channel"
-          lowMotion={lowMotion}
-          onClick={() => setContactOpen(true)}
-        />
-        <PremiumSupportCard
-          tone="violet"
-          icon={ShieldCheck}
-          title="Profile & Security"
-          desc="Manage your account, privacy and security settings."
-          rows={[
-            { icon: Lock, label: "Account Security", value: "Secure", valueClass: "text-emerald-400" },
-            { icon: UserIcon, label: "Verification", value: "100%", valueClass: "text-emerald-400" },
-            { icon: Smartphone, label: "Devices", value: "Trusted", valueClass: "text-emerald-400" },
-          ]}
-          cta="Manage Account"
-          lowMotion={lowMotion}
-          onClick={() => setAccountOpen(true)}
-        />
+      {/* Section header — quiet, no chips */}
+      <div className="mb-4">
+        <h2 className="text-[22px] sm:text-2xl font-display font-semibold leading-tight tracking-tight">Support &amp; Account</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          {hasActiveOrder ? "Track your latest order or get help anytime." : "Need help choosing products? We're here."}
+        </p>
       </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        {/* Card 1 — Need Help? */}
+        <SupportHubCard title="Need Help?" subtitle="We're here whenever you need us." lowMotion={lowMotion}>
+          <HubAction
+            icon={MessageCircle}
+            label={online ? "Live Chat" : "Leave a Message"}
+            primary
+            onClick={openLiveChat}
+          />
+          <HubAction icon={PhoneCall} label="Contact Us" onClick={() => setContactOpen(true)} />
+          <HubAction icon={BookOpen} label="Help Center" onClick={() => nav({ to: "/help", hash: "faqs" })} />
+          <p className="pt-1 text-[11.5px] text-muted-foreground">
+            <span className={online ? "text-emerald-400" : "text-amber-400"}>
+              {online ? "Support Online" : "High volume"}
+            </span>
+            <span className="mx-1.5 opacity-40">·</span>
+            Average reply: {minutes} min
+          </p>
+        </SupportHubCard>
+
+        {/* Card 2 — Account & Security */}
+        <SupportHubCard title="Account" subtitle="Manage your account securely." lowMotion={lowMotion}>
+          <HubAction icon={UserIcon} label="Profile" onClick={() => nav({ to: "/account/profile" })} />
+          <HubAction icon={MapPin} label="Addresses" onClick={() => nav({ to: "/account/addresses" })} />
+          <HubAction icon={CreditCard} label="Payment Methods" onClick={() => nav({ to: "/account/payments" })} />
+          <HubAction icon={ShieldCheck} label="Security" onClick={() => setAccountOpen(true)} />
+          <p className="pt-1 flex items-center gap-3 text-[11.5px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Account Verified</span>
+            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Secure Login</span>
+          </p>
+        </SupportHubCard>
+      </div>
+
 
 
 

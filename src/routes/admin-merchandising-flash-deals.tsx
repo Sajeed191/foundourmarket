@@ -632,6 +632,12 @@ function FlashManagePage() {
             </FlashSectionShell>
           </div>
 
+          {/* 6 — Live activity */}
+          <FlashSectionShell eyebrow="Realtime" title="Live activity">
+            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
+          </FlashSectionShell>
+
+
           {/* 6 — Advanced tools, collapsed by default */}
           <div className="space-y-3">
             <CollapsibleModule eyebrow="Optional" title="Analytics" sectionId="flash-analytics" defaultOpen={false}>

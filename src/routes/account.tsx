@@ -5,7 +5,7 @@ import { motion, useMotionValue, useTransform, animate, useScroll, AnimatePresen
 import {
   LogOut, Package, Loader2, RotateCcw, MapPin, Heart, Clock, Sparkles,
   ShoppingBag, Wallet, ChevronRight, Shield, Settings, Eye, User as UserIcon,
-  HelpCircle, LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
+  LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
   Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
   CheckCircle2, Box, Home, X, Plus, Minus, CreditCard,
   Mail, Phone, PhoneCall, Smartphone, Copy, Check, ArrowLeftRight, ShieldCheck,

@@ -29,6 +29,14 @@ import { FlashKpiV7 } from "@/components/admin/flash/manage/FlashKpiV7";
 import { FlashActivityFeed } from "@/components/admin/flash/manage/FlashActivityFeed";
 import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceSheet";
 import { dealAdvice, type AdviceAction, type DealAdvice } from "@/lib/flash/flash-advice";
+import { FlashBriefing } from "@/components/admin/flash/manage/FlashBriefing";
+import { FlashPriorityQueue } from "@/components/admin/flash/manage/FlashPriorityQueue";
+import { FlashCompareSheet } from "@/components/admin/flash/manage/FlashCompareSheet";
+import { FlashRotationHeatmap } from "@/components/admin/flash/manage/FlashRotationHeatmap";
+import { FlashRevenueSimulator } from "@/components/admin/flash/manage/FlashRevenueSimulator";
+import { FlashSavedViews, useSavedViews, type SavedView } from "@/components/admin/flash/manage/FlashSavedViews";
+import { morningBriefing, priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
+
 
 import { FlashFilterChips, FLASH_FILTERS, type FlashFilter } from "@/components/admin/flash/manage/FlashFilterChips";
 import { FlashScheduledGroups } from "@/components/admin/flash/manage/FlashScheduledGroups";
@@ -83,6 +91,11 @@ function FlashManagePage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [intelKey, setIntelKey] = useState<string | null>(null);
   const [adviceKey, setAdviceKey] = useState<string | null>(null);
+  /** v9 — suggestion ids the admin ignored or snoozed for this session. */
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [compareOpen, setCompareOpen] = useState(false);
+  const savedViews = useSavedViews();
+
 
   const dragKey = useRef<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -206,6 +219,37 @@ function FlashManagePage() {
     }
     return m;
   }, [data.entries, data.ops.maxDiscountPct, data.cap, ai.averages, ai.rotationStreaks, shares]);
+
+  /* ---------------------------------------------- v9 — autonomous layer */
+
+  const briefing = useMemo(
+    () => morningBriefing(data.entries, ai.conflicts, adviceByKey, data.now),
+    [data.entries, ai.conflicts, adviceByKey, data.now],
+  );
+
+  const queue = useMemo(
+    () => priorityQueue(data.entries, adviceByKey, ai.scores, dismissed),
+    [data.entries, adviceByKey, ai.scores, dismissed],
+  );
+
+  const heatRows = useMemo(() => {
+    const meta = new Map(data.products.map((p) => [p.slug, { name: p.name, image: p.image ?? null }]));
+    const windows = ai.windows.map((w) => ({
+      startsAt: w.startsAt,
+      slugs: [w.hero?.slug, ...w.mini.map((p) => p.slug), ...w.hidden.map((p) => p.slug)].filter(Boolean) as string[],
+    }));
+    return rotationHeatmap(windows, data.cap, meta, data.now);
+  }, [ai.windows, data.products, data.cap, data.now]);
+
+  const applyQueueItem = useCallback(
+    (item: QueueItem) => {
+      const entry = data.entries.find((e) => e.key === item.entryKey);
+      if (!entry) { toast.error("That deal is no longer available"); return; }
+      void applyAdvice(entry, item.advice.action);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [data.entries],
+  );
 
 
   /* ------------------------------------------------------------- mutations */
@@ -523,7 +567,15 @@ function FlashManagePage() {
         <div className="grid place-items-center py-24"><Loader2 className="size-6 animate-spin text-accent" /></div>
       ) : (
         <div className="space-y-8 pb-4">
+          {/* 0 — Today's brief */}
+          <FlashBriefing
+            briefing={briefing}
+            queueCount={queue.length}
+            onOptimize={() => document.getElementById("flash-priority-queue")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          />
+
           {/* Search + compact KPIs + filter chips */}
+
           <div className="space-y-3">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <div className="relative min-w-0">
@@ -550,7 +602,62 @@ function FlashManagePage() {
 
 
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
+
+            <FlashSavedViews
+              views={savedViews.views}
+              activeFilter={filter}
+              onApply={(v: SavedView) => { setQuery(v.query); setFilter(v.filter as FlashFilter); }}
+              onSave={() => {
+                const name = window.prompt("Name this view");
+                if (!name?.trim()) return;
+                savedViews.save(name.trim(), query, filter);
+                toast.success("View saved");
+              }}
+              onRemove={savedViews.remove}
+            />
           </div>
+
+          {/* 1 — AI priority queue */}
+          <div id="flash-priority-queue">
+            <FlashSectionShell eyebrow="Assistant" title="AI priority queue" count={queue.length}>
+              <FlashPriorityQueue
+                items={queue}
+                onApply={applyQueueItem}
+                onPreview={(item) => setAdviceKey(item.entryKey)}
+                onIgnore={(item) => { setDismissed((p) => new Set(p).add(item.id)); toast.success("Suggestion ignored"); }}
+                onRemind={(item) => {
+                  setDismissed((p) => new Set(p).add(item.id));
+                  toast.success("We'll bring this back in 2 hours");
+                  window.setTimeout(() => setDismissed((p) => { const s = new Set(p); s.delete(item.id); return s; }), 2 * 3600_000);
+                }}
+              />
+            </FlashSectionShell>
+          </div>
+
+          {/* Comparison of the current selection */}
+          {selected.size >= 2 && (
+            <FlashSectionShell
+              eyebrow="Analysis"
+              title="Deal comparison"
+              count={selected.size}
+              action={
+                <button onClick={() => setCompareOpen((v) => !v)}
+                  className="min-h-11 rounded-full border border-white/10 px-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:bg-white/5">
+                  {compareOpen ? "Hide" : "Compare"}
+                </button>
+              }
+            >
+              {compareOpen && (
+                <FlashCompareSheet
+                  entries={selectedEntries}
+                  scores={ai.scores}
+                  onClose={() => setCompareOpen(false)}
+                  onReplace={(e) => setWizard({ open: true, deal: e.deal })}
+                />
+              )}
+            </FlashSectionShell>
+          )}
+
 
           {/* 1 — Critical alerts: what needs attention right now */}
           <FlashSectionShell eyebrow="Fix first" title="Critical alerts" count={ai.conflicts.length}>
@@ -637,9 +744,21 @@ function FlashManagePage() {
             <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
           </FlashSectionShell>
 
+          {/* 7 — Rotation heatmap */}
+          <FlashSectionShell eyebrow="Rotation" title="Visibility heatmap" count={heatRows.length}>
+            <FlashRotationHeatmap rows={heatRows} />
+          </FlashSectionShell>
 
-          {/* 6 — Advanced tools, collapsed by default */}
+          {/* 8 — Advanced tools, collapsed by default */}
           <div className="space-y-3">
+            <CollapsibleModule eyebrow="What-if" title="Revenue simulator" sectionId="flash-revenue-sim" defaultOpen={false}>
+              <FlashRevenueSimulator
+                entries={data.entries}
+                baselineCtr={ai.averages.avgCtr}
+                baselineConversion={ai.averages.avgConversion}
+              />
+            </CollapsibleModule>
+
             <CollapsibleModule eyebrow="Optional" title="Analytics" sectionId="flash-analytics" defaultOpen={false}>
               <div className="space-y-3">
                 <FlashKpiGrid totals={data.totals} />

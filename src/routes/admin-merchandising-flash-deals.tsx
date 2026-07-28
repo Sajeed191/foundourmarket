@@ -280,8 +280,47 @@ function FlashManagePage() {
     onEndNow: (e) => void updateDeal(e, { active: false, end_at: new Date().toISOString() }, "flash_deal_ended_early"),
     onDelete: (e) => void deleteDeal(e),
     onOpenIntel: (key) => setIntelKey(key),
+    onOpenAdvice: (key) => setAdviceKey(key),
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [data.entries]);
+
+  /** Applies one approved recommendation using the existing deal mutations. */
+  async function applyAdvice(entry: DealEntry, action: AdviceAction) {
+    if (action.kind === "edit" || !entry.deal) {
+      setAdviceKey(null);
+      setWizard({ open: true, deal: entry.deal });
+      return;
+    }
+    const deal = entry.deal;
+    if (action.kind === "discount") {
+      const nextPct = Math.max(0, Math.min(95, entry.discountPct + action.deltaPct));
+      const price = Math.max(1, Math.round(entry.regularPrice * (1 - nextPct / 100)));
+      await updateDeal(entry, { flash_price: price }, "flash_deal_price_changed");
+      toast.success(`Discount set to ${nextPct}%`);
+    } else if (action.kind === "priority") {
+      await updateDeal(entry, { priority: Math.max(0, deal.priority + action.delta) }, "flash_deal_priority_changed");
+      toast.success("Priority updated");
+    } else if (action.kind === "shift" || action.kind === "tomorrow") {
+      const hours = action.kind === "tomorrow" ? 24 : action.hours;
+      await updateDeal(entry, {
+        start_at: new Date(new Date(deal.start_at).getTime() + hours * 3600_000).toISOString(),
+        end_at: new Date(new Date(deal.end_at).getTime() + hours * 3600_000).toISOString(),
+      }, "flash_deal_window_moved");
+      toast.success(`Schedule moved by ${hours}h`);
+    } else if (action.kind === "evening") {
+      const duration = new Date(deal.end_at).getTime() - new Date(deal.start_at).getTime();
+      const start = new Date(deal.start_at);
+      start.setHours(19, 0, 0, 0);
+      if (start.getTime() < Date.now()) start.setDate(start.getDate() + 1);
+      await updateDeal(entry, {
+        start_at: start.toISOString(),
+        end_at: new Date(start.getTime() + duration).toISOString(),
+      }, "flash_deal_window_moved");
+      toast.success("Moved to the evening window");
+    }
+    setAdviceKey(null);
+  }
+
 
   const toggleSelect = useCallback((key: string, next: boolean) => {
     setSelected((prev) => {

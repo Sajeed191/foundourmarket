@@ -101,23 +101,6 @@ function FlashCommandCenter() {
     });
   }, [data.entries, query, category, campaignFilter, status]);
 
-  const recommendations = useMemo(() => {
-    const badged = new Set(data.entries.map((e) => e.product.slug));
-    return data.products
-      .filter((p) => p.status === "published" && p.inStock && p.stockQuantity > 0 && !badged.has(p.slug))
-      .map((p) => {
-        const margin = p.costPriceInr != null ? p.price - p.costPriceInr : 0;
-        const score = p.soldCount * 3 + p.viewsCount * 0.2 + Math.max(0, margin) * 0.05 + Math.min(p.stockQuantity, 100) * 0.2;
-        const reason =
-          p.soldCount > 5 ? "Selling fast" :
-          margin > p.price * 0.4 ? "High margin" :
-          p.stockQuantity > 50 ? "High stock" :
-          p.viewsCount > 100 ? "Recently viewed a lot" : "Never featured";
-        return { product: p, score, reason };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6);
-  }, [data.products, data.entries]);
 
   const toggleSelect = useCallback((key: string, next: boolean) => {
     setSelected((prev) => {

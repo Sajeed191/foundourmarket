@@ -652,17 +652,23 @@ function FlashManagePage() {
         <div className="grid place-items-center py-24"><Loader2 className="size-6 animate-spin text-accent" /></div>
       ) : (
         <div className="space-y-8 pb-4">
-          {/* 0 — Today's brief */}
-          <FlashBriefing
-            briefing={briefing}
+          {/* 0 — Executive dashboard */}
+          <FlashExecutiveSummary
+            summary={summary}
             queueCount={queue.length}
             onOptimize={() => document.getElementById("flash-priority-queue")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            onSelectMetric={(k) => {
+              if (k === "risk") setFilter("conflict");
+              else if (k === "inventory") setFilter("low_stock");
+              else if (k === "campaign") setFilter("scheduled");
+              else if (k === "deals" || k === "revenue" || k === "rotation" || k === "marketplace") setFilter("active");
+              else if (k === "balance") document.getElementById("flash-balance")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
           />
 
-          {/* Search + compact KPIs + filter chips */}
-
+          {/* Sticky search + filters */}
           <div className="space-y-3">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="sticky top-0 z-20 -mx-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-background/85 px-1 py-2 backdrop-blur-xl">
               <div className="relative min-w-0">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input id="flash-search" value={query} onChange={(e) => setQuery(e.target.value)}
@@ -673,18 +679,6 @@ function FlashManagePage() {
                 rotation {nextRotationLabel(data.now)}
               </p>
             </div>
-
-            <FlashKpiV7
-              live={data.totals.active}
-              scheduled={data.totals.scheduled}
-              endingSoon={endingTwoHours}
-              revenuePotential={revenuePotential}
-              attention={ai.conflicts.length}
-              onSelect={(k) =>
-                setFilter(k === "attention" ? "conflict" : k === "revenue" ? "active" : k)
-              }
-            />
-
 
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
 
@@ -702,22 +696,23 @@ function FlashManagePage() {
             />
           </div>
 
-          {/* 1 — AI priority queue */}
+          {/* 1 — AI Auto Pilot */}
           <div id="flash-priority-queue">
-            <FlashSectionShell eyebrow="Assistant" title="AI priority queue" count={queue.length}>
-              <FlashPriorityQueue
+            <FlashSectionShell eyebrow="Auto Pilot" title="AI recommendations" count={queue.length}>
+              <FlashAutoPilot
                 items={queue}
-                onApply={applyQueueItem}
+                explain={(item) => explainQueueItem(item, data.entries.find((e) => e.key === item.entryKey))}
+                onApprove={applyQueueItem}
                 onPreview={(item) => setAdviceKey(item.entryKey)}
-                onIgnore={(item) => { setDismissed((p) => new Set(p).add(item.id)); toast.success("Suggestion ignored"); }}
-                onRemind={(item) => {
+                onReject={(item) => {
                   setDismissed((p) => new Set(p).add(item.id));
-                  toast.success("We'll bring this back in 2 hours");
-                  window.setTimeout(() => setDismissed((p) => { const s = new Set(p); s.delete(item.id); return s; }), 2 * 3600_000);
+                  logMine(`Rejected: ${item.title} — ${item.productName}`);
+                  toast.success("Recommendation rejected");
                 }}
               />
             </FlashSectionShell>
           </div>
+
 
           {/* Comparison of the current selection */}
           {selected.size >= 2 && (

@@ -496,7 +496,7 @@ function AccountPage() {
 
         {/* 5 — SUPPORT & ACCOUNT (premium hub) */}
         <motion.section {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }} className="pt-1">
-          <AccountUtilities user={user} avatarUrl={avatarUrl} firstName={firstName} signOut={signOut} />
+          <AccountUtilities user={user} avatarUrl={avatarUrl} firstName={firstName} signOut={signOut} hasActiveOrder={stats.active > 0} />
         </motion.section>
 
       </div>
@@ -1047,7 +1047,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* Card 1 — Need Help? */}
-        <HubCard title="Need Help?" subtitle="We're here whenever you need us." lowMotion={lowMotion}>
+        <SupportHubCard title="Need Help?" subtitle="We're here whenever you need us." lowMotion={lowMotion}>
           <HubAction
             icon={MessageCircle}
             label={online ? "Live Chat" : "Leave a Message"}
@@ -1063,10 +1063,10 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder 
             <span className="mx-1.5 opacity-40">·</span>
             Average reply: {minutes} min
           </p>
-        </HubCard>
+        </SupportHubCard>
 
         {/* Card 2 — Account & Security */}
-        <HubCard title="Account" subtitle="Manage your account securely." lowMotion={lowMotion}>
+        <SupportHubCard title="Account" subtitle="Manage your account securely." lowMotion={lowMotion}>
           <HubAction icon={UserIcon} label="Profile" onClick={() => nav({ to: "/account/profile" })} />
           <HubAction icon={MapPin} label="Addresses" onClick={() => nav({ to: "/account/addresses" })} />
           <HubAction icon={CreditCard} label="Payment Methods" onClick={() => nav({ to: "/account/payments" })} />
@@ -1075,7 +1075,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder 
             <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Account Verified</span>
             <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Secure Login</span>
           </p>
-        </HubCard>
+        </SupportHubCard>
       </div>
 
 

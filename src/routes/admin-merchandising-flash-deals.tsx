@@ -158,7 +158,7 @@ function FlashManagePage() {
 
   useEffect(() => setVisible(PAGE_SIZE), [filter, query]);
 
-  const endingSoon = useMemo(() => data.entries.filter((e) => tileStatus(e) === "ending_soon").length, [data.entries]);
+  
 
   /** v7 — the five questions. "Ending soon" is strictly the next two hours. */
   const endingTwoHours = useMemo(

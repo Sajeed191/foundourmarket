@@ -122,9 +122,8 @@ export const FlashDealTile = memo(function FlashDealTile({
         : STATUS_LABEL[status]
     : "No schedule";
 
-  const warnings: WarningKey[] = [...entry.warnings];
-  if (!p.image) warnings.push("badge_missing");
   const showWarnings = entry.warnings;
+
 
   const btn = "size-11 grid place-items-center rounded-full border border-white/10 hover:bg-white/5 transition";
 

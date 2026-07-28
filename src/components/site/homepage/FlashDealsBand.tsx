@@ -59,21 +59,13 @@ function DealFrame({
   eager?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
-  const [scale, setScale] = useState(1);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Adaptive framing: portrait products get a touch more presence, landscape a
-  // touch less, so the *visible* product looks the same size on every card.
   const measure = useCallback((el: HTMLImageElement) => {
-    const w = el.naturalWidth;
-    const h = el.naturalHeight;
-    if (!w || !h) return;
-    const ratio = w / h;
-    if (ratio < 0.85) setScale(1.04);
-    else if (ratio > 1.25) setScale(0.98);
-    else setScale(1);
+    if (!el.naturalWidth || !el.naturalHeight) return;
     setLoaded(true);
   }, []);
+
 
   // Cached/instant images can fire `load` before React attaches the handler.
   useEffect(() => {
@@ -81,14 +73,11 @@ function DealFrame({
     if (el?.complete && el.naturalWidth > 0) measure(el);
   }, [src, measure]);
 
-  const pad = variant === "hero" ? "clamp(8px, 2vw, 14px)" : "clamp(6px, 1.6vw, 10px)";
-
   return (
     <div
       className="relative aspect-square w-full overflow-hidden border border-white/[0.07] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),inset_0_-18px_28px_-24px_rgba(0,0,0,0.9)]"
       style={{
         borderRadius: radius,
-        padding: pad,
         background:
           "radial-gradient(120% 90% at 50% 8%, rgba(255,255,255,0.045), transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.32))",
       }}
@@ -106,16 +95,20 @@ function DealFrame({
           loading={eager ? "eager" : "lazy"}
           decoding="async"
           onLoad={(e) => measure(e.currentTarget)}
-          className="relative size-full object-contain object-center transition-[transform,opacity] duration-[320ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.03]"
+          className="absolute left-1/2 top-1/2 size-[98%] object-cover object-center transition-opacity duration-[320ms] ease-out will-change-transform motion-safe:group-hover:scale-[1.02]"
           style={{
             opacity: loaded ? 1 : 0,
-            transform: `scale(${scale})`,
+            borderRadius: Math.max(0, radius - 2),
+            transform: "translate(-50%, -50%)",
           }}
+
         />
       )}
     </div>
   );
 }
+
+
 
 
 /** Tiny, monochrome inline trust row — icon + one word, no pills, never wraps. */

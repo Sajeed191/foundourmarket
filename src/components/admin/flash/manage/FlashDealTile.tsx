@@ -11,6 +11,10 @@ import {
 } from "lucide-react";
 import type { WarningKey } from "@/lib/flash/flash-health";
 import type { DealEntry } from "@/lib/flash/use-flash-admin";
+import {
+  COUNTDOWN_CLASS, HEALTH_TONE_CLASS, countdownPhase, healthVerdict,
+} from "@/lib/flash/flash-advice";
+
 
 /** Visual status derived from existing status + remaining time. No new logic. */
 export type TileStatus = "active" | "ending_soon" | "scheduled" | "expired" | "paused" | "no_deal";
@@ -92,10 +96,11 @@ export type TileActions = {
   onEndNow: (e: DealEntry) => void;
   onDelete: (e: DealEntry) => void;
   onOpenIntel?: (key: string) => void;
+  onOpenAdvice?: (key: string) => void;
 };
 
 export const FlashDealTile = memo(function FlashDealTile({
-  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions,
+  entry, intel, selected, onSelect, draggable = false, onDragStart, onDragOver, onDrop, actions, cap, adviceCount,
 }: {
   entry: DealEntry;
   intel?: { score: number; recommendation: string } | null;
@@ -106,6 +111,9 @@ export const FlashDealTile = memo(function FlashDealTile({
   onDragOver?: (ev: React.DragEvent) => void;
   onDrop?: () => void;
   actions: TileActions;
+  /** Visible homepage slots, used to show whether this deal is on screen. */
+  cap?: number;
+  adviceCount?: number;
 }) {
   const status = tileStatus(entry);
   useTick(status === "active" || status === "ending_soon" || status === "scheduled");
@@ -114,18 +122,30 @@ export const FlashDealTile = memo(function FlashDealTile({
   const p = entry.product;
   const deal = entry.deal;
   const now = Date.now();
+  const msLeft = deal ? new Date(deal.end_at).getTime() - now : null;
   const countdown = deal
     ? status === "scheduled"
       ? `Starts in ${remaining(new Date(deal.start_at).getTime() - now)}`
       : status === "active" || status === "ending_soon"
-        ? `Ends in ${remaining(new Date(deal.end_at).getTime() - now)}`
+        ? `Ends in ${remaining(msLeft ?? 0)}`
         : STATUS_LABEL[status]
     : "No schedule";
+  const phase = countdownPhase(
+    status === "active" || status === "ending_soon" ? msLeft : null,
+    status === "expired",
+  );
+
+  const verdict = healthVerdict(intel as never, entry);
+  const qty = p.stockQuantity ?? 0;
+  const stockPct = Math.max(0, Math.min(100, (qty / Math.max(qty, 100)) * 100));
+  const revenue = Math.round(entry.stats.purchases * entry.dealPrice);
+  const visible = cap != null && entry.rotationRank != null && entry.rotationRank < cap;
 
   const showWarnings = entry.warnings;
 
 
   const btn = "size-11 grid place-items-center rounded-full border border-white/10 hover:bg-white/5 transition";
+
 
   return (
     <motion.article
@@ -179,12 +199,23 @@ export const FlashDealTile = memo(function FlashDealTile({
             {entry.regularPrice > entry.dealPrice && (
               <span className="ml-2 text-xs text-muted-foreground line-through">{entry.regularPrice.toLocaleString()}</span>
             )}
-            <span className="ml-3 text-xs text-muted-foreground">{p.stockQuantity} in stock</span>
+            <span className="ml-3 text-xs text-muted-foreground">{qty} in stock</span>
           </p>
 
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Clock className="size-3" /> {countdown}</span>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/5" aria-hidden>
+            <div className={`h-full rounded-full ${qty <= 5 ? "bg-destructive/70" : qty <= 20 ? "bg-amber-400/70" : "bg-emerald-400/60"}`}
+              style={{ width: `${stockPct}%` }} />
+          </div>
+
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
+            <span className={`inline-flex items-center gap-1 ${COUNTDOWN_CLASS[phase]}`}><Clock className="size-3" /> {countdown}</span>
             {deal && <span>priority {deal.priority}</span>}
+            {entry.rotationRank != null && <span>slot {entry.rotationRank + 1}</span>}
+            {cap != null && (
+              <span className={visible ? "text-emerald-300" : "text-muted-foreground/70"}>
+                {visible ? "on homepage" : "not visible"}
+              </span>
+            )}
             {entry.campaign && <span className="text-accent/80">{entry.campaign}</span>}
           </p>
 
@@ -208,9 +239,11 @@ export const FlashDealTile = memo(function FlashDealTile({
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-3 py-2">
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
           <span>{entry.stats.views} views</span>
-          <span>{entry.stats.clicks} clicks</span>
-          <span>{entry.stats.purchases} sales</span>
+          <span>{entry.stats.ctr.toFixed(1)}% ctr</span>
+          <span>{entry.stats.purchases} orders</span>
+          <span>{revenue.toLocaleString()} rev</span>
         </div>
+
         {deal && (
           <div className="flex items-center gap-1">
             <button onClick={() => actions.onEdit(entry)} aria-label="Edit deal" className={btn}><Pencil className="size-3.5" /></button>
@@ -242,13 +275,26 @@ export const FlashDealTile = memo(function FlashDealTile({
         </div>
       )}
 
-      {intel && actions.onOpenIntel && (
-        <button onClick={() => actions.onOpenIntel!(entry.key)}
-          className="flex w-full items-center justify-between gap-2 border-t border-border/60 px-3 min-h-11 text-left transition hover:bg-white/5">
-          <span className="truncate text-[11px] text-muted-foreground">{intel.recommendation}</span>
-          <span className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-accent">Score {intel.score}</span>
-        </button>
+      {intel && (
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-t border-border/60 px-3 py-2">
+          <button onClick={() => actions.onOpenAdvice?.(entry.key) ?? actions.onOpenIntel?.(entry.key)}
+            aria-label={`Health ${verdict.label}, score ${verdict.score}`}
+            className={`shrink-0 rounded-full border px-2.5 min-h-9 text-[10px] font-mono uppercase tracking-widest transition hover:brightness-125 ${HEALTH_TONE_CLASS[verdict.tone]}`}>
+            {verdict.label} · {verdict.score}
+          </button>
+          <button onClick={() => actions.onOpenIntel?.(entry.key)}
+            className="min-w-0 truncate text-left text-[11px] text-muted-foreground transition hover:text-foreground">
+            {intel.recommendation}
+          </button>
+          {actions.onOpenAdvice && (
+            <button onClick={() => actions.onOpenAdvice!(entry.key)}
+              className="shrink-0 rounded-full border border-accent/40 px-3 min-h-9 text-[10px] font-mono uppercase tracking-widest text-accent transition hover:bg-accent/10">
+              {adviceCount ? `${adviceCount} tips` : "Improve"}
+            </button>
+          )}
+        </div>
       )}
+
     </motion.article>
   );
 });

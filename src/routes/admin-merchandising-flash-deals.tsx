@@ -25,7 +25,11 @@ import { FlashAttentionList } from "@/components/admin/flash/manage/FlashAttenti
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
 import { FlashQuickBar } from "@/components/admin/flash/manage/FlashQuickBar";
-import { FlashKpiCompact } from "@/components/admin/flash/manage/FlashKpiCompact";
+import { FlashKpiV7 } from "@/components/admin/flash/manage/FlashKpiV7";
+import { FlashActivityFeed } from "@/components/admin/flash/manage/FlashActivityFeed";
+import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceSheet";
+import { dealAdvice, type AdviceAction, type DealAdvice } from "@/lib/flash/flash-advice";
+
 import { FlashFilterChips, FLASH_FILTERS, type FlashFilter } from "@/components/admin/flash/manage/FlashFilterChips";
 import { FlashScheduledGroups } from "@/components/admin/flash/manage/FlashScheduledGroups";
 import { FlashBulkSheet, type BulkPatch } from "@/components/admin/flash/manage/FlashBulkSheet";
@@ -78,6 +82,8 @@ function FlashManagePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [intelKey, setIntelKey] = useState<string | null>(null);
+  const [adviceKey, setAdviceKey] = useState<string | null>(null);
+
   const dragKey = useRef<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const undoStack = useRef<{ label: string; run: () => Promise<void> }[]>([]);
@@ -154,7 +160,53 @@ function FlashManagePage() {
 
   useEffect(() => setVisible(PAGE_SIZE), [filter, query]);
 
-  const endingSoon = useMemo(() => data.entries.filter((e) => tileStatus(e) === "ending_soon").length, [data.entries]);
+  
+
+  /** v7 — the five questions. "Ending soon" is strictly the next two hours. */
+  const endingTwoHours = useMemo(
+    () => data.entries.filter((e) => e.msRemaining != null && e.msRemaining > 0 && e.msRemaining <= 2 * 3600_000).length,
+    [data.entries],
+  );
+  const revenuePotential = useMemo(
+    () =>
+      data.entries
+        .filter((e) => e.status === "active")
+        .reduce((a, e) => a + e.dealPrice * Math.max(0, e.product.stockQuantity ?? 0), 0),
+    [data.entries],
+  );
+
+  /** Share of visible homepage slots per category / brand, for advice context. */
+  const shares = useMemo(() => {
+    const cat = new Map<string, number>();
+    const brand = new Map<string, number>();
+    const total = Math.max(1, ai.visibleEntries.length);
+    for (const e of ai.visibleEntries) {
+      const c = e.product.category || "Unspecified";
+      const b = e.product.brand || "Unbranded";
+      cat.set(c, (cat.get(c) ?? 0) + 1 / total);
+      brand.set(b, (brand.get(b) ?? 0) + 1 / total);
+    }
+    return { cat, brand };
+  }, [ai.visibleEntries]);
+
+  const adviceByKey = useMemo(() => {
+    const m = new Map<string, DealAdvice[]>();
+    for (const e of data.entries) {
+      m.set(
+        e.key,
+        dealAdvice(e, {
+          avgCtr: ai.averages.avgCtr,
+          maxDiscountPct: data.ops.maxDiscountPct,
+          categoryShare: shares.cat.get(e.product.category || "Unspecified") ?? 0,
+          brandShare: shares.brand.get(e.product.brand || "Unbranded") ?? 0,
+          rotationStreak: ai.rotationStreaks.get(e.product.slug) ?? 0,
+          cap: data.cap,
+        }),
+      );
+    }
+    return m;
+  }, [data.entries, data.ops.maxDiscountPct, data.cap, ai.averages, ai.rotationStreaks, shares]);
+
 
   /* ------------------------------------------------------------- mutations */
 
@@ -230,8 +282,47 @@ function FlashManagePage() {
     onEndNow: (e) => void updateDeal(e, { active: false, end_at: new Date().toISOString() }, "flash_deal_ended_early"),
     onDelete: (e) => void deleteDeal(e),
     onOpenIntel: (key) => setIntelKey(key),
+    onOpenAdvice: (key) => setAdviceKey(key),
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [data.entries]);
+
+  /** Applies one approved recommendation using the existing deal mutations. */
+  async function applyAdvice(entry: DealEntry, action: AdviceAction) {
+    if (action.kind === "edit" || !entry.deal) {
+      setAdviceKey(null);
+      setWizard({ open: true, deal: entry.deal });
+      return;
+    }
+    const deal = entry.deal;
+    if (action.kind === "discount") {
+      const nextPct = Math.max(0, Math.min(95, entry.discountPct + action.deltaPct));
+      const price = Math.max(1, Math.round(entry.regularPrice * (1 - nextPct / 100)));
+      await updateDeal(entry, { flash_price: price }, "flash_deal_price_changed");
+      toast.success(`Discount set to ${nextPct}%`);
+    } else if (action.kind === "priority") {
+      await updateDeal(entry, { priority: Math.max(0, deal.priority + action.delta) }, "flash_deal_priority_changed");
+      toast.success("Priority updated");
+    } else if (action.kind === "shift" || action.kind === "tomorrow") {
+      const hours = action.kind === "tomorrow" ? 24 : action.hours;
+      await updateDeal(entry, {
+        start_at: new Date(new Date(deal.start_at).getTime() + hours * 3600_000).toISOString(),
+        end_at: new Date(new Date(deal.end_at).getTime() + hours * 3600_000).toISOString(),
+      }, "flash_deal_window_moved");
+      toast.success(`Schedule moved by ${hours}h`);
+    } else if (action.kind === "evening") {
+      const duration = new Date(deal.end_at).getTime() - new Date(deal.start_at).getTime();
+      const start = new Date(deal.start_at);
+      start.setHours(19, 0, 0, 0);
+      if (start.getTime() < Date.now()) start.setDate(start.getDate() + 1);
+      await updateDeal(entry, {
+        start_at: start.toISOString(),
+        end_at: new Date(start.getTime() + duration).toISOString(),
+      }, "flash_deal_window_moved");
+      toast.success("Moved to the evening window");
+    }
+    setAdviceKey(null);
+  }
+
 
   const toggleSelect = useCallback((key: string, next: boolean) => {
     setSelected((prev) => {
@@ -436,13 +527,17 @@ function FlashManagePage() {
               </p>
             </div>
 
-            <FlashKpiCompact
-              active={data.totals.active}
+            <FlashKpiV7
+              live={data.totals.active}
               scheduled={data.totals.scheduled}
-              endingSoon={endingSoon}
+              endingSoon={endingTwoHours}
+              revenuePotential={revenuePotential}
               attention={ai.conflicts.length}
-              onSelect={(f) => setFilter(f === "attention" ? "conflict" : f)}
+              onSelect={(k) =>
+                setFilter(k === "attention" ? "conflict" : k === "revenue" ? "active" : k)
+              }
             />
+
 
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
           </div>
@@ -473,7 +568,10 @@ function FlashManagePage() {
                       onDragStart={() => { dragKey.current = e.key; }}
                       onDragOver={(ev) => ev.preventDefault()}
                       onDrop={() => void reorder(e.key)}
+                      cap={data.cap}
+                      adviceCount={adviceByKey.get(e.key)?.length ?? 0}
                       actions={actions}
+
                     />
                   ))}
                 </div>
@@ -491,6 +589,13 @@ function FlashManagePage() {
           <FlashSectionShell eyebrow="Fix first" title="Needs attention" count={ai.conflicts.length}>
             <FlashAttentionList conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
           </FlashSectionShell>
+
+          {/* 2b — Live activity */}
+          <FlashSectionShell eyebrow="Realtime" title="Live activity">
+            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
+          </FlashSectionShell>
+
+
 
           {/* 3 — Scheduled */}
           <FlashSectionShell eyebrow="Upcoming" title="Scheduled deals" count={scheduledList.length}>
@@ -661,6 +766,22 @@ function FlashManagePage() {
           />
         );
       })()}
+
+      {adviceKey && (() => {
+        const entry = data.entries.find((e) => e.key === adviceKey);
+        if (!entry) return null;
+        return (
+          <FlashAdviceSheet
+            entry={entry}
+            intel={ai.scores.get(adviceKey) ?? null}
+            advice={adviceByKey.get(adviceKey) ?? []}
+            onApply={(e, action) => void applyAdvice(e, action)}
+            onClose={() => setAdviceKey(null)}
+          />
+        );
+      })()}
+
+
 
       {settingsOpen && (
         <FlashSettings ops={data.ops} onClose={() => setSettingsOpen(false)} onSaved={data.refresh} />

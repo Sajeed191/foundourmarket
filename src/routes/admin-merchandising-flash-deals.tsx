@@ -359,6 +359,102 @@ function FlashManagePage() {
     [data.entries, logMine],
   );
 
+  /* --------------------------------------- v11 — autonomous assistant layer */
+
+  const ws = useFlashWorkspace();
+
+  const show = useCallback(
+    (id: SectionId) => sectionVisible(ws.mode, ws.focus, id),
+    [ws.mode, ws.focus],
+  );
+
+  /** Recommendations minus anything ignored or still snoozed. */
+  const inboxItems = useMemo(
+    () => queue.filter((q) => !ws.hiddenTaskIds.has(q.id)),
+    // hiddenTaskIds is rebuilt each render from persisted state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queue, ws.ignored, ws.snoozed],
+  );
+
+  const brief = useMemo(
+    () => dailyBrief({ entries: data.entries, conflicts: ai.conflicts, queue: inboxItems, now: data.now }),
+    [data.entries, ai.conflicts, inboxItems, data.now],
+  );
+
+  const audit = useMemo(
+    () => healthAudit({ entries: data.entries, conflicts: ai.conflicts, balance, now: data.now }),
+    [data.entries, ai.conflicts, balance, data.now],
+  );
+
+  const reminders = useMemo(
+    () => suggestedReminders({ entries: data.entries, balance, now: data.now }),
+    [data.entries, balance, data.now],
+  );
+
+  const nextAction = useMemo(
+    () => nextBestAction({ queue: inboxItems, audit, entries: data.entries, balance }),
+    [inboxItems, audit, data.entries, balance],
+  );
+
+  const jumpToIssue = useCallback((issue: AuditIssue) => {
+    if (issue.jump === "expired") setFilter("expired");
+    else if (issue.jump === "scheduled") setFilter("scheduled");
+    else if (issue.jump === "low_stock") setFilter("low_stock");
+    else if (issue.jump === "conflict") setFilter("conflict");
+    else setFilter("active");
+    document.getElementById("flash-search")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+
+  const approveTask = useCallback(
+    (item: QueueItem) => {
+      const entry = data.entries.find((e) => e.key === item.entryKey);
+      if (!entry) { toast.error("That deal is no longer available"); return; }
+      const diff = taskDiff(item, entry);
+      ws.logDecision({ action: "approved", title: item.title, product: item.productName, expected: diff.expected });
+      logMine(`Approved: ${item.title} — ${item.productName}`);
+      void applyAdvice(entry, item.advice.action);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [data.entries, logMine, ws.logDecision],
+  );
+
+  const rejectTask = useCallback(
+    (item: QueueItem) => {
+      ws.ignoreTask(item.id);
+      setDismissed((p) => new Set(p).add(item.id));
+      ws.logDecision({ action: "rejected", title: item.title, product: item.productName, expected: null });
+      logMine(`Rejected: ${item.title} — ${item.productName}`);
+      toast.success("Recommendation dismissed");
+    },
+    [logMine, ws.ignoreTask, ws.logDecision],
+  );
+
+  const snoozeTaskItem = useCallback(
+    (item: QueueItem) => {
+      ws.snoozeTask(item.id, 4);
+      ws.logDecision({ action: "snoozed", title: item.title, product: item.productName, expected: null });
+      toast.success("Reminder set for later today");
+    },
+    [ws.snoozeTask, ws.logDecision],
+  );
+
+  const runNextAction = useCallback(
+    (a: NextAction) => {
+      if (a.kind === "task" && a.item) { approveTask(a.item); return; }
+      if (a.kind === "fix" && a.issue) { jumpToIssue(a.issue); return; }
+      if (a.kind === "reshuffle") {
+        void triggerGlobalReshuffle().then((ok) => {
+          toast[ok ? "success" : "error"](ok ? "Rotation reshuffled" : "Reshuffle blocked — admin access required");
+          if (ok) { logMine("Reshuffled the homepage rotation"); data.refresh(); }
+        });
+        return;
+      }
+      setWizard({ open: true, deal: null });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [approveTask, jumpToIssue, logMine],
+  );
+
 
 
 

@@ -156,6 +156,52 @@ function FlashManagePage() {
 
   const endingSoon = useMemo(() => data.entries.filter((e) => tileStatus(e) === "ending_soon").length, [data.entries]);
 
+  /** v7 — the five questions. "Ending soon" is strictly the next two hours. */
+  const endingTwoHours = useMemo(
+    () => data.entries.filter((e) => e.msRemaining != null && e.msRemaining > 0 && e.msRemaining <= 2 * 3600_000).length,
+    [data.entries],
+  );
+  const revenuePotential = useMemo(
+    () =>
+      data.entries
+        .filter((e) => e.status === "active")
+        .reduce((a, e) => a + e.dealPrice * Math.max(0, e.product.stockQuantity ?? 0), 0),
+    [data.entries],
+  );
+
+  /** Share of visible homepage slots per category / brand, for advice context. */
+  const shares = useMemo(() => {
+    const cat = new Map<string, number>();
+    const brand = new Map<string, number>();
+    const total = Math.max(1, ai.visibleEntries.length);
+    for (const e of ai.visibleEntries) {
+      const c = e.product.category || "Unspecified";
+      const b = e.product.brand || "Unbranded";
+      cat.set(c, (cat.get(c) ?? 0) + 1 / total);
+      brand.set(b, (brand.get(b) ?? 0) + 1 / total);
+    }
+    return { cat, brand };
+  }, [ai.visibleEntries]);
+
+  const adviceByKey = useMemo(() => {
+    const m = new Map<string, DealAdvice[]>();
+    for (const e of data.entries) {
+      m.set(
+        e.key,
+        dealAdvice(e, {
+          avgCtr: ai.averages.avgCtr,
+          maxDiscountPct: data.ops.maxDiscountPct,
+          categoryShare: shares.cat.get(e.product.category || "Unspecified") ?? 0,
+          brandShare: shares.brand.get(e.product.brand || "Unbranded") ?? 0,
+          rotationStreak: ai.rotationStreaks.get(e.product.slug) ?? 0,
+          cap: data.cap,
+        }),
+      );
+    }
+    return m;
+  }, [data.entries, data.ops.maxDiscountPct, data.cap, ai.averages, ai.rotationStreaks, shares]);
+
+
   /* ------------------------------------------------------------- mutations */
 
   async function updateDeal(entry: DealEntry, patch: Partial<FlashDealRow>, action: string, undoable = true) {

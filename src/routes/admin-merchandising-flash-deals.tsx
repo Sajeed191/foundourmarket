@@ -602,7 +602,62 @@ function FlashManagePage() {
 
 
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
+
+            <FlashSavedViews
+              views={savedViews.views}
+              activeFilter={filter}
+              onApply={(v: SavedView) => { setQuery(v.query); setFilter(v.filter as FlashFilter); }}
+              onSave={() => {
+                const name = window.prompt("Name this view");
+                if (!name?.trim()) return;
+                savedViews.save(name.trim(), query, filter);
+                toast.success("View saved");
+              }}
+              onRemove={savedViews.remove}
+            />
           </div>
+
+          {/* 1 — AI priority queue */}
+          <div id="flash-priority-queue">
+            <FlashSectionShell eyebrow="Assistant" title="AI priority queue" count={queue.length}>
+              <FlashPriorityQueue
+                items={queue}
+                onApply={applyQueueItem}
+                onPreview={(item) => setAdviceKey(item.entryKey)}
+                onIgnore={(item) => { setDismissed((p) => new Set(p).add(item.id)); toast.success("Suggestion ignored"); }}
+                onRemind={(item) => {
+                  setDismissed((p) => new Set(p).add(item.id));
+                  toast.success("We'll bring this back in 2 hours");
+                  window.setTimeout(() => setDismissed((p) => { const s = new Set(p); s.delete(item.id); return s; }), 2 * 3600_000);
+                }}
+              />
+            </FlashSectionShell>
+          </div>
+
+          {/* Comparison of the current selection */}
+          {selected.size >= 2 && (
+            <FlashSectionShell
+              eyebrow="Analysis"
+              title="Deal comparison"
+              count={selected.size}
+              action={
+                <button onClick={() => setCompareOpen((v) => !v)}
+                  className="min-h-11 rounded-full border border-white/10 px-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:bg-white/5">
+                  {compareOpen ? "Hide" : "Compare"}
+                </button>
+              }
+            >
+              {compareOpen && (
+                <FlashCompareSheet
+                  entries={selectedEntries}
+                  scores={ai.scores}
+                  onClose={() => setCompareOpen(false)}
+                  onReplace={(e) => setWizard({ open: true, deal: e.deal })}
+                />
+              )}
+            </FlashSectionShell>
+          )}
+
 
           {/* 1 — Critical alerts: what needs attention right now */}
           <FlashSectionShell eyebrow="Fix first" title="Critical alerts" count={ai.conflicts.length}>

@@ -84,6 +84,7 @@ import { Route as AdminOrdersAnalyticsRouteImport } from './routes/admin-orders-
 import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminNewsletterRouteImport } from './routes/admin-newsletter'
+import { Route as AdminMerchandisingFlashDealsRouteImport } from './routes/admin-merchandising-flash-deals'
 import { Route as AdminMerchandisingRouteImport } from './routes/admin-merchandising'
 import { Route as AdminMediaRouteImport } from './routes/admin-media'
 import { Route as AdminMarketplaceQualityRouteImport } from './routes/admin-marketplace-quality'
@@ -567,6 +568,12 @@ const AdminNewsletterRoute = AdminNewsletterRouteImport.update({
   path: '/admin-newsletter',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMerchandisingFlashDealsRoute =
+  AdminMerchandisingFlashDealsRouteImport.update({
+    id: '/admin-merchandising-flash-deals',
+    path: '/admin-merchandising-flash-deals',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminMerchandisingRoute = AdminMerchandisingRouteImport.update({
   id: '/admin-merchandising',
   path: '/admin-merchandising',
@@ -1152,6 +1159,7 @@ export interface FileRoutesByFullPath {
   '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
+  '/admin-merchandising-flash-deals': typeof AdminMerchandisingFlashDealsRoute
   '/admin-newsletter': typeof AdminNewsletterRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
@@ -1332,6 +1340,7 @@ export interface FileRoutesByTo {
   '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
+  '/admin-merchandising-flash-deals': typeof AdminMerchandisingFlashDealsRoute
   '/admin-newsletter': typeof AdminNewsletterRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
@@ -1512,6 +1521,7 @@ export interface FileRoutesById {
   '/admin-marketplace-quality': typeof AdminMarketplaceQualityRoute
   '/admin-media': typeof AdminMediaRoute
   '/admin-merchandising': typeof AdminMerchandisingRoute
+  '/admin-merchandising-flash-deals': typeof AdminMerchandisingFlashDealsRoute
   '/admin-newsletter': typeof AdminNewsletterRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
@@ -1694,6 +1704,7 @@ export interface FileRouteTypes {
     | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
+    | '/admin-merchandising-flash-deals'
     | '/admin-newsletter'
     | '/admin-notifications'
     | '/admin-orders'
@@ -1874,6 +1885,7 @@ export interface FileRouteTypes {
     | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
+    | '/admin-merchandising-flash-deals'
     | '/admin-newsletter'
     | '/admin-notifications'
     | '/admin-orders'
@@ -2053,6 +2065,7 @@ export interface FileRouteTypes {
     | '/admin-marketplace-quality'
     | '/admin-media'
     | '/admin-merchandising'
+    | '/admin-merchandising-flash-deals'
     | '/admin-newsletter'
     | '/admin-notifications'
     | '/admin-orders'
@@ -2234,6 +2247,7 @@ export interface RootRouteChildren {
   AdminMarketplaceQualityRoute: typeof AdminMarketplaceQualityRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminMerchandisingRoute: typeof AdminMerchandisingRoute
+  AdminMerchandisingFlashDealsRoute: typeof AdminMerchandisingFlashDealsRoute
   AdminNewsletterRoute: typeof AdminNewsletterRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
@@ -2879,6 +2893,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-newsletter'
       fullPath: '/admin-newsletter'
       preLoaderRoute: typeof AdminNewsletterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-merchandising-flash-deals': {
+      id: '/admin-merchandising-flash-deals'
+      path: '/admin-merchandising-flash-deals'
+      fullPath: '/admin-merchandising-flash-deals'
+      preLoaderRoute: typeof AdminMerchandisingFlashDealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-merchandising': {
@@ -3724,6 +3745,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMarketplaceQualityRoute: AdminMarketplaceQualityRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminMerchandisingRoute: AdminMerchandisingRoute,
+  AdminMerchandisingFlashDealsRoute: AdminMerchandisingFlashDealsRoute,
   AdminNewsletterRoute: AdminNewsletterRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
@@ -3846,13 +3868,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

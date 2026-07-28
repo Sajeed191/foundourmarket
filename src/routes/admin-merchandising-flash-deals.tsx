@@ -422,7 +422,7 @@ function FlashManagePage() {
 
   /** Approves every safe Auto Pilot recommendation in one pass. */
   async function bulkApprove() {
-    const safe = queue.filter((q) => q.advice.confidence >= 0.6);
+    const safe = queue.filter((q) => q.advice.confidence !== "low");
     if (!safe.length) { toast.info("No high-confidence recommendations to approve"); return; }
     for (const item of safe) {
       const entry = data.entries.find((e) => e.key === item.entryKey);

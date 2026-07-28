@@ -179,6 +179,9 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
           )}
         </div>
 
+        <DealCountdown endAt={item.endAt} />
+
+
         <h3 className="mt-1.5 line-clamp-2 min-h-[2.56em] font-display text-[15px] font-semibold leading-[1.28] tracking-tight text-foreground/90 sm:text-[16px] lg:text-[19px]">
           {p.name}
         </h3>

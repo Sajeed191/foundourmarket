@@ -259,24 +259,92 @@ function FlashManagePage() {
     [data.entries, adviceByKey, ai.scores, dismissed],
   );
 
+  const rotationWindows = useMemo(
+    () =>
+      ai.windows.map((w) => ({
+        startsAt: w.startsAt,
+        slugs: [w.hero?.slug, ...w.mini.map((p) => p.slug), ...w.hidden.map((p) => p.slug)].filter(Boolean) as string[],
+      })),
+    [ai.windows],
+  );
+
   const heatRows = useMemo(() => {
     const meta = new Map(data.products.map((p) => [p.slug, { name: p.name, image: p.image ?? null }]));
-    const windows = ai.windows.map((w) => ({
-      startsAt: w.startsAt,
-      slugs: [w.hero?.slug, ...w.mini.map((p) => p.slug), ...w.hidden.map((p) => p.slug)].filter(Boolean) as string[],
-    }));
-    return rotationHeatmap(windows, data.cap, meta, data.now);
-  }, [ai.windows, data.products, data.cap, data.now]);
+    return rotationHeatmap(rotationWindows, data.cap, meta, data.now);
+  }, [rotationWindows, data.products, data.cap, data.now]);
+
+  /* ------------------------------------- v10 — executive & autonomous ops */
+
+  const balance = useMemo(
+    () => balanceReport(ai.visibleEntries, ai.rotationStreaks),
+    [ai.visibleEntries, ai.rotationStreaks],
+  );
+
+  const summary = useMemo(
+    () =>
+      executiveSummary({
+        entries: data.entries,
+        conflicts: ai.conflicts,
+        scores: ai.scores,
+        queue,
+        balance,
+        cap: data.cap,
+        visibleCount: ai.visibleEntries.length,
+        now: data.now,
+      }),
+    [data.entries, ai.conflicts, ai.scores, ai.visibleEntries.length, queue, balance, data.cap, data.now],
+  );
+
+  const campaigns = useMemo(
+    () => campaignHealth(data.entries, ai.averages.avgCtr),
+    [data.entries, ai.averages.avgCtr],
+  );
+
+  const forecast = useMemo(() => revenueForecast(data.entries, data.now), [data.entries, data.now]);
+
+  const schedule = useMemo(
+    () => scheduleSuggestion(data.entries, data.events),
+    [data.entries, data.events],
+  );
+
+  const feed = useMemo(
+    () => marketplaceFeed({ entries: data.entries, events: data.events, now: data.now, myActions }),
+    [data.entries, data.events, data.now, myActions],
+  );
+
+  const report = useMemo(
+    () =>
+      executiveReport({
+        range: reportRange, entries: data.entries, events: data.events,
+        campaigns, balance, queue, now: data.now,
+      }),
+    [reportRange, data.entries, data.events, campaigns, balance, queue, data.now],
+  );
+
+  const journey = useMemo(() => {
+    const entry = data.entries.find((e) => e.key === journeyKey);
+    if (!entry) return null;
+    return productJourney({
+      entry,
+      siblings: data.entries,
+      streak: ai.rotationStreaks.get(entry.product.slug) ?? 0,
+      cap: data.cap,
+      windows: rotationWindows,
+    });
+  }, [journeyKey, data.entries, ai.rotationStreaks, data.cap, rotationWindows]);
 
   const applyQueueItem = useCallback(
     (item: QueueItem) => {
       const entry = data.entries.find((e) => e.key === item.entryKey);
       if (!entry) { toast.error("That deal is no longer available"); return; }
+      logMine(`Approved: ${item.title} — ${item.productName}`);
       void applyAdvice(entry, item.advice.action);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [data.entries],
+    [data.entries, logMine],
   );
+
+
 
 
   /* ------------------------------------------------------------- mutations */

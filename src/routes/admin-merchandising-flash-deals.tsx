@@ -21,7 +21,7 @@ import { FlashCoveragePanel } from "@/components/admin/flash/FlashCoveragePanel"
 import { FlashDealIntelligenceSheet } from "@/components/admin/flash/FlashDealIntelligenceSheet";
 import { FlashDealTile, tileStatus, type TileActions } from "@/components/admin/flash/manage/FlashDealTile";
 import { FlashSectionShell, FlashEmpty } from "@/components/admin/flash/manage/FlashSectionShell";
-import { FlashAttentionList } from "@/components/admin/flash/manage/FlashAttentionList";
+import { FlashCriticalAlerts } from "@/components/admin/flash/manage/FlashCriticalAlerts";
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
 import { FlashQuickBar } from "@/components/admin/flash/manage/FlashQuickBar";
@@ -322,6 +322,16 @@ function FlashManagePage() {
     }
     setAdviceKey(null);
   }
+
+  /** Inline quick edit — reuses the existing deal update mutation. */
+  const quickSave = useCallback(
+    async (entry: DealEntry, patch: Partial<FlashDealRow>) => {
+      await updateDeal(entry, patch, "flash_deal_quick_edited");
+      toast.success("Deal updated");
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.entries],
+  );
 
 
   const toggleSelect = useCallback((key: string, next: boolean) => {

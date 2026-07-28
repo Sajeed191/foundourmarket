@@ -5,7 +5,7 @@ import { motion, useMotionValue, useTransform, animate, useScroll, AnimatePresen
 import {
   LogOut, Package, Loader2, RotateCcw, MapPin, Heart, Clock, Sparkles,
   ShoppingBag, Wallet, ChevronRight, Shield, Settings, Eye, User as UserIcon,
-  HelpCircle, LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
+  LifeBuoy, MessageCircle, TrendingUp, ArrowRight, Star,
   Search, Zap, Gift, Tag, Flame, Truck, Lock, Globe, Crown,
   CheckCircle2, Box, Home, X, Plus, Minus, CreditCard,
   Mail, Phone, PhoneCall, Smartphone, Copy, Check, ArrowLeftRight, ShieldCheck,
@@ -945,33 +945,20 @@ function SheetOption({ icon: Icon, label, desc, tone = "default", onClick }: { i
   );
 }
 
-/* ---------- Simplified support hub primitives (UI only) ---------- */
-function QuickHelpChip({ icon: Icon, label, onClick }: { icon: typeof Package; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="snap-start shrink-0 min-h-[44px] inline-flex items-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl px-4 py-2.5 text-[12.5px] font-medium text-foreground/90 transition-colors hover:border-accent/30 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-    >
-      <Icon className="size-4 shrink-0 text-accent" strokeWidth={1.7} />
-      <span className="whitespace-nowrap">{label}</span>
-    </button>
-  );
-}
-
+/* ---------- Support & Account v2.0 primitives (UI only) ---------- */
 function SupportHubCard({ title, subtitle, children, lowMotion }: { title: string; subtitle: string; children: ReactNode; lowMotion: boolean }) {
   return (
-    <motion.div
-      initial={lowMotion ? false : { opacity: 0, y: 8 }}
+    <motion.section
+      initial={lowMotion ? false : { opacity: 0, y: 6 }}
       whileInView={lowMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="rounded-2xl bg-white/[0.03] backdrop-blur-xl p-5 sm:p-6 shadow-[0_0_40px_-24px_var(--color-accent)] ring-1 ring-white/[0.05]"
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      className="rounded-[22px] bg-white/[0.03] backdrop-blur-xl p-5 sm:p-6 ring-1 ring-white/[0.06]"
     >
-      <p className="text-[17px] font-display font-semibold leading-tight tracking-tight">{title}</p>
+      <h3 className="text-[17px] font-display font-semibold leading-tight tracking-tight">{title}</h3>
       <p className="mt-1 text-[12.5px] text-muted-foreground">{subtitle}</p>
       <div className="mt-4 space-y-2">{children}</div>
-    </motion.div>
+    </motion.section>
   );
 }
 
@@ -980,18 +967,25 @@ function HubAction({ icon: Icon, label, onClick, primary }: { icon: typeof Packa
     <button
       type="button"
       onClick={onClick}
-      className={`w-full min-h-[48px] flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[13.5px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
+      className={`w-full min-h-[48px] flex items-center gap-3.5 rounded-2xl px-4 py-3 text-left text-[14px] font-medium transition-[background-color,transform] duration-150 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
         primary
-          ? "bg-accent/[0.12] text-accent hover:bg-accent/[0.18]"
-          : "bg-white/[0.03] text-foreground/90 hover:bg-white/[0.06]"
+          ? "bg-accent text-accent-foreground font-semibold hover:brightness-110"
+          : "bg-white/[0.035] text-foreground/90 hover:bg-white/[0.07]"
       }`}
     >
-      <Icon className={`size-[18px] shrink-0 ${primary ? "text-accent" : "text-muted-foreground"}`} strokeWidth={1.7} />
+      <Icon className={`size-[18px] shrink-0 ${primary ? "" : "text-muted-foreground"}`} strokeWidth={1.7} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       <ChevronRight className="size-4 shrink-0 opacity-50" />
     </button>
   );
 }
+
+function HubStatusRow({ children }: { children: ReactNode }) {
+  return (
+    <p className="pt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground">{children}</p>
+  );
+}
+
 
 function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder = false }: { user: any; avatarUrl: string; firstName: string; signOut: () => void | Promise<void>; hasActiveOrder?: boolean }) {
   const nav = useNavigate();
@@ -1027,17 +1021,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder 
 
   return (
     <>
-      {/* Quick help row — one tap, four essentials */}
-      <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-2.5 overflow-x-auto scrollbar-hide snap-x">
-          <QuickHelpChip icon={MessageCircle} label={online ? "Live Chat" : "Message"} onClick={openLiveChat} />
-          <QuickHelpChip icon={Package} label="Track Order" onClick={() => nav({ to: "/account/orders" })} />
-          <QuickHelpChip icon={RotateCcw} label="Returns" onClick={() => nav({ to: "/account/returns" })} />
-          <QuickHelpChip icon={HelpCircle} label="FAQ" onClick={() => nav({ to: "/help", hash: "faqs" })} />
-        </div>
-      </div>
-
-      {/* Section header — quiet, no chips */}
+      {/* Section header */}
       <div className="mb-4">
         <h2 className="text-[22px] sm:text-2xl font-display font-semibold leading-tight tracking-tight">Support &amp; Account</h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
@@ -1045,7 +1029,7 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder 
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Card 1 — Need Help? */}
         <SupportHubCard title="Need Help?" subtitle="We're here whenever you need us." lowMotion={lowMotion}>
           <HubAction
@@ -1056,27 +1040,29 @@ function AccountUtilities({ user, avatarUrl, firstName, signOut, hasActiveOrder 
           />
           <HubAction icon={PhoneCall} label="Contact Us" onClick={() => setContactOpen(true)} />
           <HubAction icon={BookOpen} label="Help Center" onClick={() => nav({ to: "/help", hash: "faqs" })} />
-          <p className="pt-1 text-[11.5px] text-muted-foreground">
-            <span className={online ? "text-emerald-400" : "text-amber-400"}>
-              {online ? "Support Online" : "High volume"}
+          <HubStatusRow>
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`size-1.5 rounded-full ${online ? "bg-emerald-400" : "bg-amber-400"}`} aria-hidden />
+              <span className={online ? "text-emerald-400" : "text-amber-400"}>{online ? "Online" : "Busy"}</span>
             </span>
-            <span className="mx-1.5 opacity-40">·</span>
-            Average reply: {minutes} min
-          </p>
+            <span>Average reply: {minutes} min</span>
+            <span>24×7 Support</span>
+          </HubStatusRow>
         </SupportHubCard>
 
-        {/* Card 2 — Account & Security */}
+        {/* Card 2 — Account */}
         <SupportHubCard title="Account" subtitle="Manage your account securely." lowMotion={lowMotion}>
           <HubAction icon={UserIcon} label="Profile" onClick={() => nav({ to: "/account/profile" })} />
           <HubAction icon={MapPin} label="Addresses" onClick={() => nav({ to: "/account/addresses" })} />
           <HubAction icon={CreditCard} label="Payment Methods" onClick={() => nav({ to: "/account/payments" })} />
           <HubAction icon={ShieldCheck} label="Security" onClick={() => setAccountOpen(true)} />
-          <p className="pt-1 flex items-center gap-3 text-[11.5px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Account Verified</span>
-            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" /> Secure Login</span>
-          </p>
+          <HubStatusRow>
+            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" aria-hidden /> Account Verified</span>
+            <span className="inline-flex items-center gap-1"><Check className="size-3 text-emerald-400" aria-hidden /> Secure Login</span>
+          </HubStatusRow>
         </SupportHubCard>
       </div>
+
 
 
 

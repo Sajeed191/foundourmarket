@@ -38,7 +38,9 @@ export const Route = createFileRoute("/admin-merchandising-flash-deals")({
   component: FlashCommandCenter,
 });
 
-const TABS = ["Overview", "Deals", "Timeline", "Rotation", "Preview", "Audit"] as const;
+const TABS = [
+  "Overview", "Intelligence", "Recommend", "Deals", "Timeline", "Simulator", "Coverage", "Rotation", "Preview", "Audit",
+] as const;
 type Tab = (typeof TABS)[number];
 
 type StatusFilter = "all" | "active" | "scheduled" | "expired" | "paused" | "no_deal" | "warning";

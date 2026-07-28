@@ -56,14 +56,19 @@ function logAction(action: string, dealId: string | null, metadata: Record<strin
 
 function FlashCommandCenter() {
   const data = useFlashAdminData();
+  const ai = useFlashIntelligence(data);
   const [tab, setTab] = useState<Tab>("Overview");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [category, setCategory] = useState("all");
   const [campaignFilter, setCampaignFilter] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [wizard, setWizard] = useState<{ open: boolean; deal: FlashDealRow | null; product?: string } | null>(null);
+  const [wizard, setWizard] = useState<{
+    open: boolean; deal: FlashDealRow | null;
+    presetProduct?: Product | null; presetTemplate?: CampaignTemplate | null;
+  } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [intelKey, setIntelKey] = useState<string | null>(null);
 
   // Keyboard shortcuts: "/" search, "n" new deal, "r" reshuffle tab.
   useEffect(() => {

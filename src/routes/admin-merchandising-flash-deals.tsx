@@ -24,18 +24,30 @@ import { FlashSectionShell, FlashEmpty } from "@/components/admin/flash/manage/F
 import { FlashCriticalAlerts } from "@/components/admin/flash/manage/FlashCriticalAlerts";
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
-import { FlashQuickBar } from "@/components/admin/flash/manage/FlashQuickBar";
-import { FlashKpiV7 } from "@/components/admin/flash/manage/FlashKpiV7";
-import { FlashActivityFeed } from "@/components/admin/flash/manage/FlashActivityFeed";
 import { FlashAdviceSheet } from "@/components/admin/flash/manage/FlashAdviceSheet";
 import { dealAdvice, type AdviceAction, type DealAdvice } from "@/lib/flash/flash-advice";
-import { FlashBriefing } from "@/components/admin/flash/manage/FlashBriefing";
-import { FlashPriorityQueue } from "@/components/admin/flash/manage/FlashPriorityQueue";
 import { FlashCompareSheet } from "@/components/admin/flash/manage/FlashCompareSheet";
 import { FlashRotationHeatmap } from "@/components/admin/flash/manage/FlashRotationHeatmap";
 import { FlashRevenueSimulator } from "@/components/admin/flash/manage/FlashRevenueSimulator";
 import { FlashSavedViews, useSavedViews, type SavedView } from "@/components/admin/flash/manage/FlashSavedViews";
-import { morningBriefing, priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
+import { priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
+import { FlashExecutiveSummary } from "@/components/admin/flash/manage/FlashExecutiveSummary";
+import { FlashAutoPilot } from "@/components/admin/flash/manage/FlashAutoPilot";
+import { FlashCampaignHealth } from "@/components/admin/flash/manage/FlashCampaignHealth";
+import { FlashForecast } from "@/components/admin/flash/manage/FlashForecast";
+import { FlashScheduleAssistant } from "@/components/admin/flash/manage/FlashScheduleAssistant";
+import { FlashBalanceMonitor } from "@/components/admin/flash/manage/FlashBalanceMonitor";
+import { FlashLifecycle } from "@/components/admin/flash/manage/FlashLifecycle";
+import { FlashProductJourney } from "@/components/admin/flash/manage/FlashProductJourney";
+import { FlashLiveFeed } from "@/components/admin/flash/manage/FlashLiveFeed";
+import { FlashExecutiveReport } from "@/components/admin/flash/manage/FlashExecutiveReport";
+import { FlashCommandBar } from "@/components/admin/flash/manage/FlashCommandBar";
+import {
+  executiveSummary, campaignHealth, revenueForecast, scheduleSuggestion, balanceReport,
+  explainQueueItem, marketplaceFeed, executiveReport, productJourney, type ReportRange,
+} from "@/lib/flash/flash-executive";
+import { triggerGlobalReshuffle } from "@/lib/use-rotation-nonce";
+
 
 
 import { FlashFilterChips, FLASH_FILTERS, type FlashFilter } from "@/components/admin/flash/manage/FlashFilterChips";
@@ -95,17 +107,27 @@ function FlashManagePage() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
   const savedViews = useSavedViews();
-
+  /** v10 — executive layer state. */
+  const [reportRange, setReportRange] = useState<ReportRange>("today");
+  const [journeyKey, setJourneyKey] = useState<string | null>(null);
+  const [myActions, setMyActions] = useState<{ id: string; at: number; text: string }[]>([]);
 
   const dragKey = useRef<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const undoStack = useRef<{ label: string; run: () => Promise<void> }[]>([]);
+  const undoStack = useRef<{ label: string; run: () => Promise<void>; redo?: () => Promise<void> }[]>([]);
+  const redoStack = useRef<{ label: string; run: () => Promise<void> }[]>([]);
   const [undoCount, setUndoCount] = useState(0);
+  const [redoCount, setRedoCount] = useState(0);
 
-  const pushUndo = useCallback((label: string, run: () => Promise<void>) => {
-    undoStack.current = [...undoStack.current.slice(-9), { label, run }];
+  const logMine = useCallback((text: string) => {
+    setMyActions((prev) => [{ id: `me:${Date.now()}:${Math.random().toString(36).slice(2, 7)}`, at: Date.now(), text }, ...prev].slice(0, 30));
+  }, []);
+
+  const pushUndo = useCallback((label: string, run: () => Promise<void>, redo?: () => Promise<void>) => {
+    undoStack.current = [...undoStack.current.slice(-9), { label, run, redo }];
     setUndoCount(undoStack.current.length);
   }, []);
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -222,34 +244,97 @@ function FlashManagePage() {
 
   /* ---------------------------------------------- v9 — autonomous layer */
 
-  const briefing = useMemo(
-    () => morningBriefing(data.entries, ai.conflicts, adviceByKey, data.now),
-    [data.entries, ai.conflicts, adviceByKey, data.now],
-  );
-
   const queue = useMemo(
     () => priorityQueue(data.entries, adviceByKey, ai.scores, dismissed),
     [data.entries, adviceByKey, ai.scores, dismissed],
   );
 
+  const rotationWindows = useMemo(
+    () =>
+      ai.windows.map((w) => ({
+        startsAt: w.startsAt,
+        slugs: [w.hero?.slug, ...w.mini.map((p) => p.slug), ...w.hidden.map((p) => p.slug)].filter(Boolean) as string[],
+      })),
+    [ai.windows],
+  );
+
   const heatRows = useMemo(() => {
     const meta = new Map(data.products.map((p) => [p.slug, { name: p.name, image: p.image ?? null }]));
-    const windows = ai.windows.map((w) => ({
-      startsAt: w.startsAt,
-      slugs: [w.hero?.slug, ...w.mini.map((p) => p.slug), ...w.hidden.map((p) => p.slug)].filter(Boolean) as string[],
-    }));
-    return rotationHeatmap(windows, data.cap, meta, data.now);
-  }, [ai.windows, data.products, data.cap, data.now]);
+    return rotationHeatmap(rotationWindows, data.cap, meta, data.now);
+  }, [rotationWindows, data.products, data.cap, data.now]);
+
+  /* ------------------------------------- v10 — executive & autonomous ops */
+
+  const balance = useMemo(
+    () => balanceReport(ai.visibleEntries, ai.rotationStreaks),
+    [ai.visibleEntries, ai.rotationStreaks],
+  );
+
+  const summary = useMemo(
+    () =>
+      executiveSummary({
+        entries: data.entries,
+        conflicts: ai.conflicts,
+        scores: ai.scores,
+        queue,
+        balance,
+        cap: data.cap,
+        visibleCount: ai.visibleEntries.length,
+        now: data.now,
+      }),
+    [data.entries, ai.conflicts, ai.scores, ai.visibleEntries.length, queue, balance, data.cap, data.now],
+  );
+
+  const campaigns = useMemo(
+    () => campaignHealth(data.entries, ai.averages.avgCtr),
+    [data.entries, ai.averages.avgCtr],
+  );
+
+  const forecast = useMemo(() => revenueForecast(data.entries, data.now), [data.entries, data.now]);
+
+  const schedule = useMemo(
+    () => scheduleSuggestion(data.entries, data.events),
+    [data.entries, data.events],
+  );
+
+  const feed = useMemo(
+    () => marketplaceFeed({ entries: data.entries, events: data.events, now: data.now, myActions }),
+    [data.entries, data.events, data.now, myActions],
+  );
+
+  const report = useMemo(
+    () =>
+      executiveReport({
+        range: reportRange, entries: data.entries, events: data.events,
+        campaigns, balance, queue, now: data.now,
+      }),
+    [reportRange, data.entries, data.events, campaigns, balance, queue, data.now],
+  );
+
+  const journey = useMemo(() => {
+    const entry = data.entries.find((e) => e.key === journeyKey);
+    if (!entry) return null;
+    return productJourney({
+      entry,
+      siblings: data.entries,
+      streak: ai.rotationStreaks.get(entry.product.slug) ?? 0,
+      cap: data.cap,
+      windows: rotationWindows,
+    });
+  }, [journeyKey, data.entries, ai.rotationStreaks, data.cap, rotationWindows]);
 
   const applyQueueItem = useCallback(
     (item: QueueItem) => {
       const entry = data.entries.find((e) => e.key === item.entryKey);
       if (!entry) { toast.error("That deal is no longer available"); return; }
+      logMine(`Approved: ${item.title} — ${item.productName}`);
       void applyAdvice(entry, item.advice.action);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [data.entries],
+    [data.entries, logMine],
   );
+
+
 
 
   /* ------------------------------------------------------------- mutations */
@@ -261,15 +346,20 @@ function FlashManagePage() {
     if (error) { toast.error(error.message); return; }
     logAction(action, before.id, { before, after: patch });
     if (undoable) {
-      pushUndo(action, async () => {
-        await supabase.from("flash_deals").update({
-          flash_price: before.flash_price, start_at: before.start_at,
-          end_at: before.end_at, priority: before.priority, active: before.active,
-        }).eq("id", before.id);
-      });
+      pushUndo(
+        action,
+        async () => {
+          await supabase.from("flash_deals").update({
+            flash_price: before.flash_price, start_at: before.start_at,
+            end_at: before.end_at, priority: before.priority, active: before.active,
+          }).eq("id", before.id);
+        },
+        async () => { await supabase.from("flash_deals").update(patch).eq("id", before.id); },
+      );
     }
     data.refresh();
   }
+
 
   async function deleteDeal(entry: DealEntry) {
     if (!entry.deal) return;
@@ -311,9 +401,38 @@ function FlashManagePage() {
     setUndoCount(undoStack.current.length);
     if (!last) return;
     await last.run();
+    if (last.redo) {
+      redoStack.current = [...redoStack.current.slice(-9), { label: last.label, run: last.redo }];
+      setRedoCount(redoStack.current.length);
+    }
+    logMine(`Undid: ${last.label.replace(/_/g, " ")}`);
     toast.success("Last change undone");
     data.refresh();
   }
+
+  async function redo() {
+    const next = redoStack.current.pop();
+    setRedoCount(redoStack.current.length);
+    if (!next) return;
+    await next.run();
+    logMine(`Redid: ${next.label.replace(/_/g, " ")}`);
+    toast.success("Change reapplied");
+    data.refresh();
+  }
+
+  /** Approves every safe Auto Pilot recommendation in one pass. */
+  async function bulkApprove() {
+    const safe = queue.filter((q) => q.advice.confidence !== "low");
+    if (!safe.length) { toast.info("No high-confidence recommendations to approve"); return; }
+    for (const item of safe) {
+      const entry = data.entries.find((e) => e.key === item.entryKey);
+      if (entry) await applyAdvice(entry, item.advice.action);
+    }
+    logMine(`Approved ${safe.length} recommendations`);
+    toast.success(`${safe.length} recommendation${safe.length === 1 ? "" : "s"} applied`);
+  }
+
+
 
   const actions: TileActions = useMemo(() => ({
     onEdit: (e) => setWizard({ open: true, deal: e.deal }),
@@ -567,17 +686,23 @@ function FlashManagePage() {
         <div className="grid place-items-center py-24"><Loader2 className="size-6 animate-spin text-accent" /></div>
       ) : (
         <div className="space-y-8 pb-4">
-          {/* 0 — Today's brief */}
-          <FlashBriefing
-            briefing={briefing}
+          {/* 0 — Executive dashboard */}
+          <FlashExecutiveSummary
+            summary={summary}
             queueCount={queue.length}
             onOptimize={() => document.getElementById("flash-priority-queue")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            onSelectMetric={(k) => {
+              if (k === "risk") setFilter("conflict");
+              else if (k === "inventory") setFilter("low_stock");
+              else if (k === "campaign") setFilter("scheduled");
+              else if (k === "deals" || k === "revenue" || k === "rotation" || k === "marketplace") setFilter("active");
+              else if (k === "balance") document.getElementById("flash-balance")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
           />
 
-          {/* Search + compact KPIs + filter chips */}
-
+          {/* Sticky search + filters */}
           <div className="space-y-3">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="sticky top-0 z-20 -mx-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-background/85 px-1 py-2 backdrop-blur-xl">
               <div className="relative min-w-0">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input id="flash-search" value={query} onChange={(e) => setQuery(e.target.value)}
@@ -588,18 +713,6 @@ function FlashManagePage() {
                 rotation {nextRotationLabel(data.now)}
               </p>
             </div>
-
-            <FlashKpiV7
-              live={data.totals.active}
-              scheduled={data.totals.scheduled}
-              endingSoon={endingTwoHours}
-              revenuePotential={revenuePotential}
-              attention={ai.conflicts.length}
-              onSelect={(k) =>
-                setFilter(k === "attention" ? "conflict" : k === "revenue" ? "active" : k)
-              }
-            />
-
 
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
 
@@ -617,22 +730,23 @@ function FlashManagePage() {
             />
           </div>
 
-          {/* 1 — AI priority queue */}
+          {/* 1 — AI Auto Pilot */}
           <div id="flash-priority-queue">
-            <FlashSectionShell eyebrow="Assistant" title="AI priority queue" count={queue.length}>
-              <FlashPriorityQueue
+            <FlashSectionShell eyebrow="Auto Pilot" title="AI recommendations" count={queue.length}>
+              <FlashAutoPilot
                 items={queue}
-                onApply={applyQueueItem}
+                explain={(item) => explainQueueItem(item, data.entries.find((e) => e.key === item.entryKey))}
+                onApprove={applyQueueItem}
                 onPreview={(item) => setAdviceKey(item.entryKey)}
-                onIgnore={(item) => { setDismissed((p) => new Set(p).add(item.id)); toast.success("Suggestion ignored"); }}
-                onRemind={(item) => {
+                onReject={(item) => {
                   setDismissed((p) => new Set(p).add(item.id));
-                  toast.success("We'll bring this back in 2 hours");
-                  window.setTimeout(() => setDismissed((p) => { const s = new Set(p); s.delete(item.id); return s; }), 2 * 3600_000);
+                  logMine(`Rejected: ${item.title} — ${item.productName}`);
+                  toast.success("Recommendation rejected");
                 }}
               />
             </FlashSectionShell>
           </div>
+
 
           {/* Comparison of the current selection */}
           {selected.size >= 2 && (
@@ -739,15 +853,64 @@ function FlashManagePage() {
             </FlashSectionShell>
           </div>
 
-          {/* 6 — Live activity */}
-          <FlashSectionShell eyebrow="Realtime" title="Live activity">
-            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
+          {/* 6 — Campaign health */}
+          <FlashSectionShell eyebrow="Campaigns" title="Campaign health" count={campaigns.length}>
+            <FlashCampaignHealth rows={campaigns} />
           </FlashSectionShell>
 
-          {/* 7 — Rotation heatmap */}
+          {/* 7 — Revenue forecast */}
+          <FlashSectionShell eyebrow="Forecast" title="Expected revenue">
+            <FlashForecast rows={forecast} />
+          </FlashSectionShell>
+
+          {/* 8 — Smart scheduling assistant */}
+          <FlashSectionShell eyebrow="Planning" title="Smart scheduling assistant">
+            <FlashScheduleAssistant
+              suggestion={schedule}
+              onUse={() => setWizard({ open: true, deal: null })}
+            />
+          </FlashSectionShell>
+
+          {/* 9 — Homepage balance monitor */}
+          <div id="flash-balance">
+            <FlashSectionShell eyebrow="Balance" title="Homepage balance monitor">
+              <FlashBalanceMonitor
+                report={balance}
+                onReshuffle={() => {
+                  void triggerGlobalReshuffle().then((ok) => {
+                    toast[ok ? "success" : "error"](ok ? "Rotation reshuffled" : "Reshuffle blocked — admin access required");
+                    if (ok) { logMine("Reshuffled the homepage rotation"); data.refresh(); }
+                  });
+                }}
+              />
+            </FlashSectionShell>
+          </div>
+
+          {/* 10 — Deal lifecycle */}
+          <FlashSectionShell eyebrow="Lifecycle" title="Deal lifecycle">
+            <FlashLifecycle
+              entries={filtered}
+              avgCtr={ai.averages.avgCtr}
+              now={data.now}
+              onOpen={(e) => setJourneyKey(e.key)}
+            />
+          </FlashSectionShell>
+
+          {/* 11 — Live marketplace feed */}
+          <FlashSectionShell eyebrow="Realtime" title="Live marketplace feed">
+            <FlashLiveFeed items={feed} now={data.now} />
+          </FlashSectionShell>
+
+          {/* 12 — Executive reports */}
+          <FlashSectionShell eyebrow="Reporting" title="Executive report">
+            <FlashExecutiveReport report={report} range={reportRange} onRange={setReportRange} />
+          </FlashSectionShell>
+
+          {/* 13 — Rotation heatmap */}
           <FlashSectionShell eyebrow="Rotation" title="Visibility heatmap" count={heatRows.length}>
             <FlashRotationHeatmap rows={heatRows} />
           </FlashSectionShell>
+
 
           {/* 8 — Advanced tools, collapsed by default */}
           <div className="space-y-3">
@@ -849,17 +1012,33 @@ function FlashManagePage() {
             </CollapsibleModule>
           </div>
 
-          {/* 7 — Floating quick bar */}
-          <FlashQuickBar
+          {/* 14 — Sticky command center */}
+          <FlashCommandBar
             selectedCount={selected.size}
+            pendingCount={queue.length}
             canUndo={undoCount > 0}
+            canRedo={redoCount > 0}
             onNew={() => setWizard({ open: true, deal: null })}
-            onBulkEdit={() => setBulkOpen(true)}
-            onBulkDelete={() => void bulkDelete()}
+            onSearch={() => {
+              const el = document.getElementById("flash-search");
+              el?.scrollIntoView({ behavior: "smooth", block: "center" });
+              (el as HTMLInputElement | null)?.focus();
+            }}
             onPreview={() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
             onUndo={() => void undo()}
-            onReshuffled={data.refresh}
+            onRedo={() => void redo()}
+            onBulkApprove={() => void bulkApprove()}
+            onBulkReject={() => {
+              setDismissed((p) => { const s = new Set(p); for (const q of queue) s.add(q.id); return s; });
+              logMine(`Rejected ${queue.length} recommendations`);
+              toast.success("All recommendations rejected");
+            }}
+            onBulkDelete={() => void bulkDelete()}
+            onGenerateCampaign={() => setWizard({ open: true, deal: null })}
+            onExport={exportCsv}
+            onReshuffled={() => { logMine("Reshuffled the homepage rotation"); data.refresh(); }}
           />
+
         </div>
       )}
 
@@ -912,6 +1091,7 @@ function FlashManagePage() {
         );
       })()}
 
+      {journey && <FlashProductJourney journey={journey} onClose={() => setJourneyKey(null)} />}
 
 
       {settingsOpen && (

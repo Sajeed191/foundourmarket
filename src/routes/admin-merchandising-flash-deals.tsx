@@ -32,7 +32,6 @@ import { FlashRevenueSimulator } from "@/components/admin/flash/manage/FlashReve
 import { FlashSavedViews, useSavedViews, type SavedView } from "@/components/admin/flash/manage/FlashSavedViews";
 import { priorityQueue, rotationHeatmap, type QueueItem } from "@/lib/flash/flash-autonomy";
 import { FlashExecutiveSummary } from "@/components/admin/flash/manage/FlashExecutiveSummary";
-import { FlashAutoPilot } from "@/components/admin/flash/manage/FlashAutoPilot";
 import { FlashCampaignHealth } from "@/components/admin/flash/manage/FlashCampaignHealth";
 import { FlashForecast } from "@/components/admin/flash/manage/FlashForecast";
 import { FlashScheduleAssistant } from "@/components/admin/flash/manage/FlashScheduleAssistant";
@@ -44,7 +43,7 @@ import { FlashExecutiveReport } from "@/components/admin/flash/manage/FlashExecu
 import { FlashCommandBar } from "@/components/admin/flash/manage/FlashCommandBar";
 import {
   executiveSummary, campaignHealth, revenueForecast, scheduleSuggestion, balanceReport,
-  explainQueueItem, marketplaceFeed, executiveReport, productJourney, type ReportRange,
+  marketplaceFeed, executiveReport, productJourney, type ReportRange,
 } from "@/lib/flash/flash-executive";
 import { triggerGlobalReshuffle } from "@/lib/use-rotation-nonce";
 import { FlashDailyBrief } from "@/components/admin/flash/manage/FlashDailyBrief";
@@ -348,17 +347,6 @@ function FlashManagePage() {
     });
   }, [journeyKey, data.entries, ai.rotationStreaks, data.cap, rotationWindows]);
 
-  const applyQueueItem = useCallback(
-    (item: QueueItem) => {
-      const entry = data.entries.find((e) => e.key === item.entryKey);
-      if (!entry) { toast.error("That deal is no longer available"); return; }
-      logMine(`Approved: ${item.title} — ${item.productName}`);
-      void applyAdvice(entry, item.advice.action);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    },
-    [data.entries, logMine],
-  );
-
   /* --------------------------------------- v11 — autonomous assistant layer */
 
   const ws = useFlashWorkspace();
@@ -543,11 +531,12 @@ function FlashManagePage() {
 
   /** Approves every safe Auto Pilot recommendation in one pass. */
   async function bulkApprove() {
-    const safe = queue.filter((q) => q.advice.confidence !== "low");
+    const safe = inboxItems.filter((q) => q.advice.confidence !== "low");
     if (!safe.length) { toast.info("No high-confidence recommendations to approve"); return; }
     for (const item of safe) {
       const entry = data.entries.find((e) => e.key === item.entryKey);
       if (entry) await applyAdvice(entry, item.advice.action);
+      ws.logDecision({ action: "approved", title: item.title, product: item.productName, expected: item.impact });
     }
     logMine(`Approved ${safe.length} recommendations`);
     toast.success(`${safe.length} recommendation${safe.length === 1 ? "" : "s"} applied`);

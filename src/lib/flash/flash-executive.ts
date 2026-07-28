@@ -97,7 +97,6 @@ export function executiveSummary(args: {
   const metrics: ExecutiveMetric[] = [
     { key: "marketplace", label: "Marketplace health", score: marketplace, tone: toneForScore(marketplace), value: `${visibleCount}/${cap} slots filled` },
     { key: "deals", label: "Flash deal health", score: dealHealth, tone: toneForScore(dealHealth), value: `${live.length} live` },
-    { key: "revenue", label: "Live deal inventory value", score: rotationPlaceholderScore, tone: "neutral", value: `${money(revenueOpportunity)} in stock` },
     { key: "risk", label: "Risk level", score: risk, tone: toneForScore(risk), value: critical ? `${critical} critical` : risky ? `${risky} warnings` : "No issues" },
     { key: "rotation", label: "Rotation status", score: rotation, tone: toneForScore(rotation), value: `${reaching} on the homepage` },
     { key: "inventory", label: "Inventory health", score: inventory, tone: toneForScore(inventory), value: `${safe}/${Math.max(1, verdicts.length)} safe` },

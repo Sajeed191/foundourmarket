@@ -486,13 +486,17 @@ function FlashManagePage() {
               </p>
             </div>
 
-            <FlashKpiCompact
-              active={data.totals.active}
+            <FlashKpiV7
+              live={data.totals.active}
               scheduled={data.totals.scheduled}
-              endingSoon={endingSoon}
+              endingSoon={endingTwoHours}
+              revenuePotential={revenuePotential}
               attention={ai.conflicts.length}
-              onSelect={(f) => setFilter(f === "attention" ? "conflict" : f)}
+              onSelect={(k) =>
+                setFilter(k === "attention" ? "conflict" : k === "revenue" ? "active" : k)
+              }
             />
+
 
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
           </div>

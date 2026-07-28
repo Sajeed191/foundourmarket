@@ -176,7 +176,7 @@ export function taskDiff(item: QueueItem, entry: DealEntry | undefined): TaskDif
     return {
       current: `${entry.discountPct}% off · ${money(entry.dealPrice)}`,
       suggested: `${next}% off · ${money(price)}`,
-      expected: `≈ +${money(item.revenueDelta)} revenue, +${item.ctrDelta}% CTR`,
+      expected: `Shoppers pay ${money(price)} instead of ${money(entry.dealPrice)}`,
     };
   }
   if (a.kind === "priority") {

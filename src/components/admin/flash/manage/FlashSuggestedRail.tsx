@@ -36,7 +36,6 @@ export function FlashSuggestedRail({
         const qty = r.product.stockQuantity ?? 0;
         const tone = stockTone(qty);
         const price = r.product.price ?? 0;
-        // Presentation-only projection: price × a conservative slice of stock.
         return (
           <article key={r.product.slug}
             className="w-[248px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-card transition hover:border-white/20">
@@ -59,8 +58,6 @@ export function FlashSuggestedRail({
               </p>
               <p className="line-clamp-2 text-[11px] text-muted-foreground">{r.reasons[0]}</p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
-                <span className="inline-flex items-center gap-1">
-                </span>
                 <span className={`inline-flex items-center gap-1 ${tone.cls}`}>
                   <Boxes className="size-3" /> {qty}
                 </span>

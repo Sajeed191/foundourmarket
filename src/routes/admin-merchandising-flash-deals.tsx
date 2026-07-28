@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Flame, Plus, Loader2, Search, Settings2, Upload } from "lucide-react";
+import { Flame, Plus, Loader2, Search, Settings2, Upload, Download, RefreshCw, SquarePen } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import { CollapsibleModule } from "@/components/admin/CollapsibleModule";
 import { FlashKpiGrid } from "@/components/admin/flash/FlashKpiGrid";
-import { FlashDealCard } from "@/components/admin/flash/FlashDealCard";
 import { FlashDealWizard } from "@/components/admin/flash/FlashDealWizard";
 import { FlashTimeline } from "@/components/admin/flash/FlashTimeline";
 import { FlashRotationPanel } from "@/components/admin/flash/FlashRotationPanel";
@@ -14,17 +13,22 @@ import { FlashAuditTimeline } from "@/components/admin/flash/FlashAuditTimeline"
 import { useFlashAdminData, type DealEntry, type FlashDealRow } from "@/lib/flash/use-flash-admin";
 import { useFlashIntelligence } from "@/lib/flash/use-flash-intelligence";
 import {
-  FlashHomepageHealth, FlashAssistant, FlashHeroOptimizer,
+  FlashHomepageHealth, FlashAssistant, FlashHeroOptimizer, FlashConflictCenter,
 } from "@/components/admin/flash/FlashIntelligencePanels";
+import { FlashRecommendationCenter } from "@/components/admin/flash/FlashRecommendationCenter";
 import { FlashSimulator } from "@/components/admin/flash/FlashSimulator";
 import { FlashCoveragePanel } from "@/components/admin/flash/FlashCoveragePanel";
 import { FlashDealIntelligenceSheet } from "@/components/admin/flash/FlashDealIntelligenceSheet";
-import { FlashDealTile, type TileActions } from "@/components/admin/flash/manage/FlashDealTile";
+import { FlashDealTile, tileStatus, type TileActions } from "@/components/admin/flash/manage/FlashDealTile";
 import { FlashSectionShell, FlashEmpty } from "@/components/admin/flash/manage/FlashSectionShell";
 import { FlashAttentionList } from "@/components/admin/flash/manage/FlashAttentionList";
 import { FlashSuggestedRail } from "@/components/admin/flash/manage/FlashSuggestedRail";
 import { FlashPreviewCompact } from "@/components/admin/flash/manage/FlashPreviewCompact";
 import { FlashQuickBar } from "@/components/admin/flash/manage/FlashQuickBar";
+import { FlashKpiCompact } from "@/components/admin/flash/manage/FlashKpiCompact";
+import { FlashFilterChips, FLASH_FILTERS, type FlashFilter } from "@/components/admin/flash/manage/FlashFilterChips";
+import { FlashScheduledGroups } from "@/components/admin/flash/manage/FlashScheduledGroups";
+import { FlashBulkSheet, type BulkPatch } from "@/components/admin/flash/manage/FlashBulkSheet";
 import type { Conflict } from "@/lib/flash/flash-intelligence";
 import type { CampaignTemplate } from "@/lib/flash/campaign-templates";
 import type { Product } from "@/lib/products";
@@ -41,6 +45,9 @@ export const Route = createFileRoute("/admin-merchandising-flash-deals")({
   component: FlashManagePage,
 });
 
+/** How many tiles render before the "show more" cursor grows (keeps long lists cheap). */
+const PAGE_SIZE = 20;
+
 function logAction(action: string, dealId: string | null, metadata: Record<string, unknown>) {
   void supabase.rpc("log_admin_activity", {
     _action: action,
@@ -52,24 +59,34 @@ function logAction(action: string, dealId: string | null, metadata: Record<strin
 
 function nextRotationLabel(now: number) {
   const six = 6 * 3600_000;
-  const next = Math.ceil(now / six) * six;
-  const mins = Math.max(0, Math.round((next - now) / 60_000));
+  const mins = Math.max(0, Math.round((Math.ceil(now / six) * six - now) / 60_000));
   const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  return h > 0 ? `${h}h ${mins % 60}m` : `${mins}m`;
 }
 
 function FlashManagePage() {
   const data = useFlashAdminData();
   const ai = useFlashIntelligence(data);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<FlashFilter>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [visible, setVisible] = useState(PAGE_SIZE);
   const [wizard, setWizard] = useState<{
     open: boolean; deal: FlashDealRow | null;
     presetProduct?: Product | null; presetTemplate?: CampaignTemplate | null;
   } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [intelKey, setIntelKey] = useState<string | null>(null);
   const dragKey = useRef<string | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const undoStack = useRef<{ label: string; run: () => Promise<void> }[]>([]);
+  const [undoCount, setUndoCount] = useState(0);
+
+  const pushUndo = useCallback((label: string, run: () => Promise<void>) => {
+    undoStack.current = [...undoStack.current.slice(-9), { label, run }];
+    setUndoCount(undoStack.current.length);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -82,70 +99,168 @@ function FlashManagePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  /** Universal search: product, sku, campaign, status, category, brand, priority. */
   const matches = useCallback(
     (e: DealEntry) => {
       const q = query.trim().toLowerCase();
       if (!q) return true;
-      return [e.product.name, e.product.sku ?? "", e.product.brand ?? "", e.product.category]
-        .join(" ").toLowerCase().includes(q);
+      return [
+        e.product.name, e.product.sku ?? "", e.product.brand ?? "", e.product.category,
+        e.campaign ?? "", tileStatus(e), String(e.deal?.priority ?? ""),
+      ].join(" ").toLowerCase().includes(q);
     },
     [query],
   );
 
-  const active = useMemo(
-    () => data.entries.filter((e) => matches(e) && (e.status === "active" || e.status === "paused"))
-      .sort((a, b) => (b.deal?.priority ?? 0) - (a.deal?.priority ?? 0)),
-    [data.entries, matches],
+  const searched = useMemo(() => data.entries.filter(matches), [data.entries, matches]);
+
+  const passesFilter = useCallback((e: DealEntry, f: FlashFilter) => {
+    const s = tileStatus(e);
+    switch (f) {
+      case "all": return true;
+      case "active": return s === "active" || s === "ending_soon";
+      case "scheduled": return s === "scheduled";
+      case "ending_soon": return s === "ending_soon";
+      case "expired": return s === "expired";
+      case "paused": return s === "paused";
+      case "low_stock": return (e.product.stockQuantity ?? 0) <= 5;
+      case "conflict": return e.warnings.length > 0;
+    }
+  }, []);
+
+  const counts = useMemo(() => {
+    const out = {} as Record<FlashFilter, number>;
+    for (const f of FLASH_FILTERS) out[f] = searched.filter((e) => passesFilter(e, f)).length;
+    return out;
+  }, [searched, passesFilter]);
+
+  const filtered = useMemo(() => searched.filter((e) => passesFilter(e, filter)), [searched, filter, passesFilter]);
+
+  const liveList = useMemo(
+    () =>
+      filtered
+        .filter((e) => ["active", "ending_soon", "paused"].includes(tileStatus(e)))
+        .sort((a, b) => (b.deal?.priority ?? 0) - (a.deal?.priority ?? 0)),
+    [filtered],
   );
-  const scheduled = useMemo(
-    () => data.entries.filter((e) => matches(e) && e.status === "scheduled")
-      .sort((a, b) => new Date(a.deal!.start_at).getTime() - new Date(b.deal!.start_at).getTime()),
-    [data.entries, matches],
+  const scheduledList = useMemo(
+    () => filtered.filter((e) => tileStatus(e) === "scheduled"),
+    [filtered],
+  );
+  const otherList = useMemo(
+    () => filtered.filter((e) => ["expired", "no_deal"].includes(tileStatus(e))),
+    [filtered],
   );
 
-  async function updateDeal(entry: DealEntry, patch: Partial<FlashDealRow>, action: string) {
+  useEffect(() => setVisible(PAGE_SIZE), [filter, query]);
+
+  const endingSoon = useMemo(() => data.entries.filter((e) => tileStatus(e) === "ending_soon").length, [data.entries]);
+
+  /* ------------------------------------------------------------- mutations */
+
+  async function updateDeal(entry: DealEntry, patch: Partial<FlashDealRow>, action: string, undoable = true) {
     if (!entry.deal) return;
-    const { error } = await supabase.from("flash_deals").update(patch).eq("id", entry.deal.id);
+    const before = entry.deal;
+    const { error } = await supabase.from("flash_deals").update(patch).eq("id", before.id);
     if (error) { toast.error(error.message); return; }
-    logAction(action, entry.deal.id, { before: entry.deal, after: patch });
+    logAction(action, before.id, { before, after: patch });
+    if (undoable) {
+      pushUndo(action, async () => {
+        await supabase.from("flash_deals").update({
+          flash_price: before.flash_price, start_at: before.start_at,
+          end_at: before.end_at, priority: before.priority, active: before.active,
+        }).eq("id", before.id);
+      });
+    }
     data.refresh();
   }
 
   async function deleteDeal(entry: DealEntry) {
     if (!entry.deal) return;
-    const { error } = await supabase.from("flash_deals").delete().eq("id", entry.deal.id);
+    const row = entry.deal;
+    const { error } = await supabase.from("flash_deals").delete().eq("id", row.id);
     if (error) { toast.error(error.message); return; }
-    logAction("flash_deal_deleted", entry.deal.id, { before: entry.deal });
+    logAction("flash_deal_deleted", row.id, { before: row });
+    pushUndo("delete", async () => {
+      await supabase.from("flash_deals").insert({
+        product_id: row.product_id, flash_price: row.flash_price, start_at: row.start_at,
+        end_at: row.end_at, priority: row.priority, active: row.active,
+      });
+    });
     toast.success("Flash deal removed");
     data.refresh();
   }
 
-  const actions: TileActions = {
+  async function duplicateDeal(entry: DealEntry) {
+    if (!entry.deal) return;
+    const d = entry.deal;
+    const duration = new Date(d.end_at).getTime() - new Date(d.start_at).getTime();
+    const start = new Date(Math.max(Date.now(), new Date(d.end_at).getTime()));
+    const { data: inserted, error } = await supabase.from("flash_deals").insert({
+      product_id: d.product_id, flash_price: d.flash_price,
+      start_at: start.toISOString(), end_at: new Date(start.getTime() + duration).toISOString(),
+      priority: d.priority, active: false,
+    }).select("id").single();
+    if (error) { toast.error(error.message); return; }
+    logAction("flash_deal_duplicated", d.id, { source: d.id });
+    if (inserted?.id) {
+      pushUndo("duplicate", async () => { await supabase.from("flash_deals").delete().eq("id", inserted.id); });
+    }
+    toast.success("Duplicated as a paused deal — review the schedule");
+    data.refresh();
+  }
+
+  async function undo() {
+    const last = undoStack.current.pop();
+    setUndoCount(undoStack.current.length);
+    if (!last) return;
+    await last.run();
+    toast.success("Last change undone");
+    data.refresh();
+  }
+
+  const actions: TileActions = useMemo(() => ({
     onEdit: (e) => setWizard({ open: true, deal: e.deal }),
     onPause: (e) => void updateDeal(e, { active: !e.deal!.active }, e.deal!.active ? "flash_deal_paused" : "flash_deal_resumed"),
+    onDuplicate: (e) => void duplicateDeal(e),
+    onShift: (e, h) => void updateDeal(e, {
+      start_at: new Date(new Date(e.deal!.start_at).getTime() + h * 3600_000).toISOString(),
+      end_at: new Date(new Date(e.deal!.end_at).getTime() + h * 3600_000).toISOString(),
+    }, "flash_deal_window_moved"),
     onEndNow: (e) => void updateDeal(e, { active: false, end_at: new Date().toISOString() }, "flash_deal_ended_early"),
     onDelete: (e) => void deleteDeal(e),
-    onPin: (e) => void updateDeal(e, { priority: (e.deal!.priority ?? 0) > 0 ? 0 : 100 }, "flash_deal_priority_changed"),
     onOpenIntel: (key) => setIntelKey(key),
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [data.entries]);
 
-  /** Drag reorder writes descending priorities on the visible active list. */
+  const toggleSelect = useCallback((key: string, next: boolean) => {
+    setSelected((prev) => {
+      const s = new Set(prev);
+      if (next) s.add(key); else s.delete(key);
+      return s;
+    });
+  }, []);
+
+  /** Drag reorder writes descending priorities using the existing priority field. */
   async function reorder(targetKey: string) {
     const from = dragKey.current;
     dragKey.current = null;
     if (!from || from === targetKey) return;
-    const order = active.map((e) => e.key);
+    const order = liveList.map((e) => e.key);
     const fromIdx = order.indexOf(from);
     const toIdx = order.indexOf(targetKey);
     if (fromIdx < 0 || toIdx < 0) return;
     order.splice(toIdx, 0, order.splice(fromIdx, 1)[0]);
-    const top = order.length;
+    const before = liveList.map((e) => ({ id: e.deal?.id, priority: e.deal?.priority ?? 0 }));
     for (let i = 0; i < order.length; i++) {
-      const entry = active.find((e) => e.key === order[i]);
+      const entry = liveList.find((e) => e.key === order[i]);
       if (!entry?.deal) continue;
-      await supabase.from("flash_deals").update({ priority: top - i }).eq("id", entry.deal.id);
+      await supabase.from("flash_deals").update({ priority: order.length - i }).eq("id", entry.deal.id);
     }
     logAction("flash_deal_priority_reordered", null, { order });
+    pushUndo("reorder", async () => {
+      for (const b of before) if (b.id) await supabase.from("flash_deals").update({ priority: b.priority }).eq("id", b.id);
+    });
     toast.success("Display order updated");
     data.refresh();
   }
@@ -188,12 +303,56 @@ function FlashManagePage() {
     }
   }
 
-  async function pauseAll() {
-    const live = data.entries.filter((e) => e.status === "active" && e.deal);
-    if (live.length === 0) { toast.error("There are no active deals to pause"); return; }
-    for (const e of live) await supabase.from("flash_deals").update({ active: false }).eq("id", e.deal!.id);
-    logAction("flash_deal_bulk_deactivate", null, { count: live.length });
-    toast.success(`${live.length} deal${live.length === 1 ? "" : "s"} paused`);
+  const selectedEntries = useMemo(
+    () => data.entries.filter((e) => selected.has(e.key)),
+    [data.entries, selected],
+  );
+
+  async function applyBulk(patch: BulkPatch) {
+    const flashBadge = data.badgeTypes.find((b) => b.badgeKey === "flash_deal" && b.enabled && !b.archived);
+    const before = selectedEntries.filter((e) => e.deal).map((e) => ({ ...e.deal! }));
+    let ok = 0;
+    for (const e of selectedEntries) {
+      if (patch.assignBadge && flashBadge && !e.hasBadge) {
+        try { await assignBadge(e.product.slug, flashBadge.id); } catch { /* keep going */ }
+      }
+      if (!e.deal) continue;
+      const update: Partial<FlashDealRow> = {};
+      if (patch.activate != null) update.active = patch.activate;
+      if (patch.extendHours) update.end_at = new Date(new Date(e.deal.end_at).getTime() + patch.extendHours * 3600_000).toISOString();
+      if (patch.priority != null && !Number.isNaN(patch.priority)) update.priority = patch.priority;
+      if (Object.keys(update).length === 0) continue;
+      const { error } = await supabase.from("flash_deals").update(update).eq("id", e.deal.id);
+      if (!error) ok++;
+    }
+    logAction("flash_deal_bulk_edit", null, { count: ok, patch });
+    pushUndo("bulk edit", async () => {
+      for (const b of before) {
+        await supabase.from("flash_deals").update({
+          active: b.active, end_at: b.end_at, priority: b.priority,
+        }).eq("id", b.id);
+      }
+    });
+    toast.success(`${ok} deal${ok === 1 ? "" : "s"} updated`);
+    setSelected(new Set());
+    data.refresh();
+  }
+
+  async function bulkDelete() {
+    const rows = selectedEntries.filter((e) => e.deal).map((e) => ({ ...e.deal! }));
+    if (rows.length === 0) { toast.error("Select at least one deal"); return; }
+    for (const r of rows) await supabase.from("flash_deals").delete().eq("id", r.id);
+    logAction("flash_deal_bulk_delete", null, { count: rows.length });
+    pushUndo("bulk delete", async () => {
+      for (const r of rows) {
+        await supabase.from("flash_deals").insert({
+          product_id: r.product_id, flash_price: r.flash_price, start_at: r.start_at,
+          end_at: r.end_at, priority: r.priority, active: r.active,
+        });
+      }
+    });
+    toast.success(`${rows.length} deal${rows.length === 1 ? "" : "s"} deleted`);
+    setSelected(new Set());
     data.refresh();
   }
 
@@ -237,23 +396,23 @@ function FlashManagePage() {
     data.refresh();
   }
 
-  const endingSoon = data.entries.filter(
-    (e) => e.msRemaining != null && e.msRemaining < 6 * 3600_000,
-  ).length;
+  const headerBtn = "size-11 grid place-items-center rounded-full border border-white/10 hover:bg-white/5 transition";
 
   return (
     <AdminShell
       title="Flash Deals"
-      subtitle="Manage what shoppers see right now"
+      subtitle="Manage every active and scheduled flash deal from one place."
       allow={["admin", "super_admin", "manager"]}
       actions={
         <div className="flex items-center gap-2">
-          <button onClick={() => setSettingsOpen(true)} aria-label="Flash deal settings"
-            className="size-11 grid place-items-center rounded-full border border-white/10 hover:bg-white/5">
+          <button onClick={() => setBulkOpen(true)} disabled={selected.size === 0} aria-label="Bulk actions"
+            className={`${headerBtn} disabled:opacity-40`}><SquarePen className="size-4" /></button>
+          <button onClick={data.refresh} aria-label="Refresh" className={headerBtn}><RefreshCw className="size-4" /></button>
+          <button onClick={() => setSettingsOpen(true)} aria-label="Flash deal settings" className={headerBtn}>
             <Settings2 className="size-4" />
           </button>
           <button onClick={() => setWizard({ open: true, deal: null })}
-            className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-4 min-h-11 text-xs font-mono uppercase tracking-widest hover:opacity-90 transition">
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-4 min-h-11 text-xs font-mono uppercase tracking-widest text-accent-foreground transition hover:opacity-90">
             <Plus className="size-3.5" /> New deal
           </button>
         </div>
@@ -263,72 +422,92 @@ function FlashManagePage() {
         <div className="grid place-items-center py-24"><Loader2 className="size-6 animate-spin text-accent" /></div>
       ) : (
         <div className="space-y-8 pb-4">
-          {/* Header strip: live status in one line + search */}
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
-            <p className="min-w-0 truncate text-sm text-muted-foreground">
-              <span className="text-foreground font-medium tabular-nums">{data.totals.active}</span> live ·{" "}
-              <span className="tabular-nums">{data.totals.scheduled}</span> scheduled ·{" "}
-              <span className="tabular-nums">{endingSoon}</span> ending soon · rotation in{" "}
-              <span className="tabular-nums">{nextRotationLabel(data.now)}</span>
-            </p>
-            <div className="relative w-full sm:w-72">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input id="flash-search" value={query} onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search deals (press /)" aria-label="Search deals"
-                className="w-full rounded-full border border-border bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:border-accent" />
+          {/* Search + compact KPIs + filter chips */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <div className="relative min-w-0">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input id="flash-search" value={query} onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search product, SKU, campaign, brand…" aria-label="Search deals"
+                  className="w-full rounded-full border border-border bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:border-accent" />
+              </div>
+              <p className="shrink-0 text-[10px] font-mono uppercase tracking-widest tabular-nums text-muted-foreground">
+                rotation {nextRotationLabel(data.now)}
+              </p>
             </div>
+
+            <FlashKpiCompact
+              active={data.totals.active}
+              scheduled={data.totals.scheduled}
+              endingSoon={endingSoon}
+              attention={ai.conflicts.length}
+              onSelect={(f) => setFilter(f === "attention" ? "conflict" : f)}
+            />
+
+            <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
           </div>
 
-          {/* 1 — Current active deals */}
-          <FlashSectionShell eyebrow="Live now" title="Current deals" count={active.length}>
-            {active.length === 0 ? (
+          {/* 1 — Active flash deals */}
+          <FlashSectionShell eyebrow="Live now" title="Active flash deals" count={liveList.length}>
+            {liveList.length === 0 ? (
               <FlashEmpty
-                text="No live flash deals right now."
+                text="No live flash deals match this view."
                 action={
                   <button onClick={() => setWizard({ open: true, deal: null })}
                     className="inline-flex items-center gap-2 rounded-full bg-accent px-4 min-h-11 text-[10px] font-mono uppercase tracking-widest text-accent-foreground">
-                    <Plus className="size-3.5" /> Create the first deal
+                    <Plus className="size-3.5" /> Create a deal
                   </button>
                 }
               />
             ) : (
-              <div className="grid gap-2 xl:grid-cols-2">
-                {active.map((e) => (
-                  <FlashDealTile
-                    key={e.key}
-                    entry={e}
-                    intel={ai.scores.get(e.key) ?? null}
-                    draggable
-                    onDragStart={() => { dragKey.current = e.key; }}
-                    onDragOver={(ev) => ev.preventDefault()}
-                    onDrop={() => void reorder(e.key)}
-                    actions={actions}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid gap-2 xl:grid-cols-2">
+                  {liveList.slice(0, visible).map((e) => (
+                    <FlashDealTile
+                      key={e.key}
+                      entry={e}
+                      intel={ai.scores.get(e.key) ?? null}
+                      selected={selected.has(e.key)}
+                      onSelect={toggleSelect}
+                      draggable
+                      onDragStart={() => { dragKey.current = e.key; }}
+                      onDragOver={(ev) => ev.preventDefault()}
+                      onDrop={() => void reorder(e.key)}
+                      actions={actions}
+                    />
+                  ))}
+                </div>
+                {liveList.length > visible && (
+                  <button onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                    className="w-full rounded-full border border-white/10 min-h-11 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:bg-white/5">
+                    Show more ({liveList.length - visible})
+                  </button>
+                )}
+              </>
             )}
           </FlashSectionShell>
 
-          {/* 2 — Scheduled */}
-          <FlashSectionShell eyebrow="Upcoming" title="Scheduled" count={scheduled.length}>
-            {scheduled.length === 0 ? (
-              <FlashEmpty text="Nothing scheduled yet — plan your next campaign." />
-            ) : (
-              <div className="grid gap-2 xl:grid-cols-2">
-                {scheduled.map((e) => (
-                  <FlashDealTile key={e.key} entry={e} intel={ai.scores.get(e.key) ?? null} actions={actions} />
-                ))}
-              </div>
-            )}
-          </FlashSectionShell>
-
-          {/* 3 — Needs attention */}
+          {/* 2 — Needs attention */}
           <FlashSectionShell eyebrow="Fix first" title="Needs attention" count={ai.conflicts.length}>
             <FlashAttentionList conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
           </FlashSectionShell>
 
-          {/* 4 — Suggested */}
-          <FlashSectionShell eyebrow="Assistant" title="Suggested deals">
+          {/* 3 — Scheduled */}
+          <FlashSectionShell eyebrow="Upcoming" title="Scheduled deals" count={scheduledList.length}>
+            {scheduledList.length === 0 ? (
+              <FlashEmpty text="Nothing scheduled yet — plan your next campaign." />
+            ) : (
+              <FlashScheduledGroups
+                entries={scheduledList}
+                onEdit={(e) => setWizard({ open: true, deal: e.deal })}
+                onDuplicate={(e) => void duplicateDeal(e)}
+                onCancel={(e) => void deleteDeal(e)}
+              />
+            )}
+          </FlashSectionShell>
+
+          {/* 4 — Suggested products */}
+          <FlashSectionShell eyebrow="Assistant" title="Suggested products">
             <FlashSuggestedRail
               recommendations={ai.recommendations}
               onFeature={(product) => setWizard({ open: true, deal: null, presetProduct: product })}
@@ -336,13 +515,15 @@ function FlashManagePage() {
           </FlashSectionShell>
 
           {/* 5 — Homepage preview */}
-          <FlashSectionShell eyebrow="Storefront" title="Homepage preview">
-            <FlashPreviewCompact />
-          </FlashSectionShell>
+          <div ref={previewRef}>
+            <FlashSectionShell eyebrow="Storefront" title="Homepage preview">
+              <FlashPreviewCompact />
+            </FlashSectionShell>
+          </div>
 
-          {/* 6 — Analytics & advanced tools, collapsed by default */}
+          {/* 6 — Advanced tools, collapsed by default */}
           <div className="space-y-3">
-            <CollapsibleModule eyebrow="Optional" title="Performance & analytics" sectionId="flash-analytics" defaultOpen={false}>
+            <CollapsibleModule eyebrow="Optional" title="Analytics" sectionId="flash-analytics" defaultOpen={false}>
               <div className="space-y-3">
                 <FlashKpiGrid totals={data.totals} />
                 <FlashHomepageHealth quality={ai.quality} />
@@ -353,7 +534,20 @@ function FlashManagePage() {
               </div>
             </CollapsibleModule>
 
-            <CollapsibleModule eyebrow="Optional" title="Rotation & simulator" sectionId="flash-rotation" defaultOpen={false}>
+            <CollapsibleModule eyebrow="Optional" title="Conflict resolver" sectionId="flash-conflicts" defaultOpen={false}>
+              <FlashConflictCenter conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
+            </CollapsibleModule>
+
+            <CollapsibleModule eyebrow="Optional" title="Recommendations & campaign templates" sectionId="flash-recommend" defaultOpen={false}>
+              <FlashRecommendationCenter
+                recommendations={ai.recommendations}
+                onCreate={(product, template) =>
+                  setWizard({ open: true, deal: null, presetProduct: product, presetTemplate: template })
+                }
+              />
+            </CollapsibleModule>
+
+            <CollapsibleModule eyebrow="Optional" title="Rotation, simulator & coverage" sectionId="flash-rotation" defaultOpen={false}>
               <div className="space-y-3">
                 <FlashRotationPanel
                   rotation={data.rotation}
@@ -377,7 +571,7 @@ function FlashManagePage() {
               </div>
             </CollapsibleModule>
 
-            <CollapsibleModule eyebrow="Optional" title="Timeline, full list & audit" sectionId="flash-advanced" defaultOpen={false}>
+            <CollapsibleModule eyebrow="Optional" title="Timeline, ended deals & audit" sectionId="flash-advanced" defaultOpen={false}>
               <div className="space-y-3">
                 <FlashTimeline
                   entries={data.entries}
@@ -395,43 +589,50 @@ function FlashManagePage() {
                     updateDeal(e, { end_at: new Date(next).toISOString() }, "flash_deal_duration_changed");
                   }}
                 />
+                <div className="grid gap-2 xl:grid-cols-2">
+                  {otherList.slice(0, 30).map((e) => (
+                    <FlashDealTile key={e.key} entry={e} selected={selected.has(e.key)} onSelect={toggleSelect} actions={actions} />
+                  ))}
+                </div>
+                <FlashAuditTimeline audit={data.audit} />
+              </div>
+            </CollapsibleModule>
 
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
+            <CollapsibleModule eyebrow="Optional" title="Import / export" sectionId="flash-io" defaultOpen={false}>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={exportCsv}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3.5 min-h-11 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
+                  <Download className="size-3.5" /> Export CSV
+                </button>
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 px-3.5 min-h-11 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
                   <Upload className="size-3.5" /> Import CSV
                   <input type="file" accept=".csv" className="sr-only"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) void importCsv(f); e.target.value = ""; }} />
                 </label>
-
-                <div className="space-y-2">
-                  {data.entries.filter(matches).map((e) => (
-                    <FlashDealCard
-                      key={e.key}
-                      entry={e}
-                      selected={false}
-                      onSelect={() => {}}
-                      onEdit={(x) => setWizard({ open: true, deal: x.deal })}
-                      onToggle={(x) => updateDeal(x, { active: !x.deal!.active }, x.deal!.active ? "flash_deal_paused" : "flash_deal_resumed")}
-                      onDelete={deleteDeal}
-                      onPin={(x) => updateDeal(x, { priority: (x.deal!.priority ?? 0) > 0 ? 0 : 100 }, "flash_deal_priority_changed")}
-                      onCreate={() => setWizard({ open: true, deal: null, presetProduct: e.product })}
-                    />
-                  ))}
-                </div>
-
-                <FlashAuditTimeline audit={data.audit} />
               </div>
             </CollapsibleModule>
           </div>
 
-          {/* 7 — Quick actions */}
+          {/* 7 — Floating quick bar */}
           <FlashQuickBar
+            selectedCount={selected.size}
+            canUndo={undoCount > 0}
             onNew={() => setWizard({ open: true, deal: null })}
-            onSettings={() => setSettingsOpen(true)}
-            onExport={exportCsv}
-            onPauseAll={() => void pauseAll()}
+            onBulkEdit={() => setBulkOpen(true)}
+            onBulkDelete={() => void bulkDelete()}
+            onPreview={() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            onUndo={() => void undo()}
             onReshuffled={data.refresh}
           />
         </div>
+      )}
+
+      {bulkOpen && (
+        <FlashBulkSheet
+          count={selected.size}
+          onApply={applyBulk}
+          onClose={() => setBulkOpen(false)}
+        />
       )}
 
       {wizard?.open && (
@@ -498,10 +699,10 @@ function FlashSettings({ ops, onClose, onSaved }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/60 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
-      <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-border bg-card p-5 space-y-4"
+    <div className="fixed inset-0 z-50 grid place-items-end bg-black/60 p-0 backdrop-blur-sm sm:place-items-center sm:p-4" onClick={onClose}>
+      <div className="w-full space-y-4 rounded-t-3xl border border-border bg-card p-5 sm:max-w-md sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Flash deal settings">
-        <h3 className="font-display font-semibold flex items-center gap-2"><Flame className="size-4 text-accent" /> Flash Deal settings</h3>
+        <h3 className="flex items-center gap-2 font-display font-semibold"><Flame className="size-4 text-accent" /> Flash Deal settings</h3>
 
         <label className="block space-y-1">
           <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Storefront campaign label</span>
@@ -518,14 +719,14 @@ function FlashSettings({ ops, onClose, onSaved }: {
             className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent" />
         </label>
 
-        <label className="flex items-center gap-2 text-sm min-h-11">
+        <label className="flex min-h-11 items-center gap-2 text-sm">
           <input type="checkbox" checked={keepBadge} onChange={(e) => setKeepBadge(e.target.checked)}
             className="size-4 accent-[var(--color-accent)]" />
           Keep the flash badge after a deal expires
         </label>
 
         <button onClick={save} disabled={saving}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-accent text-accent-foreground px-4 py-3 text-sm font-medium disabled:opacity-60">
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground disabled:opacity-60">
           {saving && <Loader2 className="size-4 animate-spin" />} Save settings
         </button>
       </div>

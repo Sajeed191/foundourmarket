@@ -1,8 +1,9 @@
 /**
- * Suggested deals — a horizontal rail of AI-picked products with a single
- * "Feature now" action and a plain-language reason. Admin decides.
+ * Suggested products rail — reuses the existing recommendation intelligence.
+ * Each card: reason, expected flash score, Add deal, Preview.
  */
-import { Sparkles, Plus } from "lucide-react";
+import { Sparkles, Plus, Eye } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import type { ProductRecommendation } from "@/lib/flash/flash-intelligence";
 import type { Product } from "@/lib/products";
 
@@ -35,11 +36,18 @@ export function FlashSuggestedRail({
           </div>
           <div className="space-y-2 p-3">
             <p className="line-clamp-2 text-sm font-medium leading-snug">{r.product.name}</p>
-            <p className="text-[11px] text-muted-foreground line-clamp-2">{r.reasons[0]}</p>
-            <button onClick={() => onFeature(r.product)}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-accent/40 px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest text-accent hover:bg-accent/10 transition">
-              <Plus className="size-3" /> Feature now
-            </button>
+            <p className="line-clamp-2 text-[11px] text-muted-foreground">{r.reasons[0]}</p>
+            <div className="flex gap-1.5">
+              <button onClick={() => onFeature(r.product)}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-accent/40 px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest text-accent transition hover:bg-accent/10">
+                <Plus className="size-3" /> Add deal
+              </button>
+              <Link to="/products/$slug" params={{ slug: r.product.slug }} target="_blank"
+                aria-label={`Preview ${r.product.name}`}
+                className="grid size-11 place-items-center rounded-full border border-white/10 transition hover:bg-white/5">
+                <Eye className="size-3.5" />
+              </Link>
+            </div>
           </div>
         </article>
       ))}

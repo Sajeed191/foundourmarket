@@ -542,7 +542,12 @@ function FlashManagePage() {
             <FlashFilterChips value={filter} counts={counts} onChange={setFilter} />
           </div>
 
-          {/* 1 — Active flash deals */}
+          {/* 1 — Critical alerts: what needs attention right now */}
+          <FlashSectionShell eyebrow="Fix first" title="Critical alerts" count={ai.conflicts.length}>
+            <FlashCriticalAlerts conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
+          </FlashSectionShell>
+
+          {/* 2 — Active flash deals */}
           <FlashSectionShell eyebrow="Live now" title="Active flash deals" count={liveList.length}>
             {liveList.length === 0 ? (
               <FlashEmpty
@@ -571,7 +576,7 @@ function FlashManagePage() {
                       cap={data.cap}
                       adviceCount={adviceByKey.get(e.key)?.length ?? 0}
                       actions={actions}
-
+                      onQuickSave={quickSave}
                     />
                   ))}
                 </div>
@@ -585,15 +590,6 @@ function FlashManagePage() {
             )}
           </FlashSectionShell>
 
-          {/* 2 — Needs attention */}
-          <FlashSectionShell eyebrow="Fix first" title="Needs attention" count={ai.conflicts.length}>
-            <FlashAttentionList conflicts={ai.conflicts} onFix={(c) => void applyFix(c)} />
-          </FlashSectionShell>
-
-          {/* 2b — Live activity */}
-          <FlashSectionShell eyebrow="Realtime" title="Live activity">
-            <FlashActivityFeed entries={data.entries} events={data.events} audit={data.audit} now={data.now} />
-          </FlashSectionShell>
 
 
 

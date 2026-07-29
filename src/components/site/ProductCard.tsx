@@ -25,7 +25,8 @@ type ProductCardProps = {
   product: Product;
   compact?: boolean;
   context?: BadgeContext;
-  forceBadge?: BadgeKey | null;
+  /** Narrow the card to one collection badge, or a set of allowed keys. */
+  forceBadge?: BadgeKey | BadgeKey[] | null;
   priority?: boolean;
   /** When set, occurrences of this term in the title are highlighted. */
   highlight?: string;

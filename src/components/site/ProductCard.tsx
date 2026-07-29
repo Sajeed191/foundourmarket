@@ -25,7 +25,8 @@ type ProductCardProps = {
   product: Product;
   compact?: boolean;
   context?: BadgeContext;
-  forceBadge?: BadgeKey | null;
+  /** Narrow the card to one collection badge, or a set of allowed keys. */
+  forceBadge?: BadgeKey | BadgeKey[] | null;
   priority?: boolean;
   /** When set, occurrences of this term in the title are highlighted. */
   highlight?: string;
@@ -399,14 +400,17 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
     // `forceBadge` narrows to the collection's badge — never manufactures one.
     if (forceBadge) {
-      const key = forceBadge.toLowerCase();
-      const match = gated.find(
-        (b) =>
-          (b.badgeKey || "").toLowerCase() === key ||
-          normalizeBadgeLabel(b.label) === key.toUpperCase().replace(/_/g, " "),
+      const keys = (Array.isArray(forceBadge) ? forceBadge : [forceBadge]).map((k) => k.toLowerCase());
+      const match = gated.find((b) =>
+        keys.some(
+          (key) =>
+            (b.badgeKey || "").toLowerCase() === key ||
+            normalizeBadgeLabel(b.label) === key.toUpperCase().replace(/_/g, " "),
+        ),
       );
       return match ? toAssignedBadge(match) : null;
     }
+
 
     const candidates = gated.map(toAssignedBadge);
     return pickWinningBadge(candidates) ?? candidates[0] ?? null;

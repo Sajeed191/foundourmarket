@@ -6,6 +6,7 @@ import { BrowseCard } from "@/components/site/BrowseCard";
 import type { Product } from "@/lib/products";
 import { buildBrowsePresentation } from "@/lib/browse";
 import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
+import type { BadgeKey } from "@/lib/badges";
 
 export const Route = createFileRoute("/deals")({
   head: () => ({
@@ -68,6 +69,9 @@ const QUICK_SORT: Partial<Record<QuickKey, DealSort>> = {
 };
 
 const BATCH_SIZE = 20;
+
+/** Flash Deals surface shows only its own promo badges — never Best Value etc. */
+const DEALS_BADGE_KEYS: BadgeKey[] = ["flash_deal", "hot_deal"];
 
 function DealsPage() {
   // Explore page shows every eligible live Flash Deal (up to the hard safety
@@ -186,11 +190,13 @@ function DealsPage() {
         product={p}
         presentation={presentation.get(p.id ?? p.slug)}
         priority={i < 4}
+        forceBadge={DEALS_BADGE_KEYS}
         fallbackBadgeLabel="Flash Deal"
       />
     ),
     [presentation],
   );
+
 
   if (loading) {
     return <DealsSkeleton />;

@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 
 import {
-  Search, ArrowRight, Star, Sparkles, Award, Package, Flame,
-  BadgeCheck, Pencil, LayoutGrid,
+  Search, ArrowRight, Sparkles, Award, Package, Flame,
+  Pencil, LayoutGrid,
   Sofa, UtensilsCrossed, Gamepad2, Cpu, ToyBrick, PawPrint, Car, Shirt, Dumbbell,
   Watch, Headphones, Gem, Baby, Wrench, BookOpen,
 } from "lucide-react";

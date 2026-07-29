@@ -393,9 +393,6 @@ export function PDPDetailsTabs({
 
   const hero = (
     <header className="relative mb-5">
-      <span aria-hidden className="pdp-watermark">
-        Details
-      </span>
       <h2 className="text-[28px] font-semibold uppercase leading-[1.05] tracking-[0.06em] text-foreground">
         Product Details
       </h2>
@@ -486,9 +483,6 @@ export function PDPDetailsTabs({
       >
         {current === "specs" && (
           <>
-            <span aria-hidden className="pdp-panel-watermark">
-              Specs
-            </span>
             <p className="-mt-1 mb-[10px] text-[11.5px] leading-none text-muted-foreground/60">
               {specCount} {specCount === 1 ? "specification" : "specifications"}
               <span className="mx-1.5 text-muted-foreground/35">•</span>

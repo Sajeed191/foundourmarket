@@ -3843,33 +3843,6 @@ body[data-immersive-ui] [data-scroll-top] {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Oversized DETAILS watermark — pushed right and cropped, blurred, slow float. */
-.pdp-watermark {
-  position: absolute;
-  top: -0.2em;
-  left: calc(82% + 28px);
-  z-index: -1;
-  pointer-events: none;
-  user-select: none;
-  white-space: nowrap;
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 0.78;
-  font-size: clamp(120px, 26vw, 240px);
-  color: color-mix(in oklab, var(--foreground) 100%, transparent);
-  opacity: 0.02;
-  filter: blur(1px);
-
-  will-change: transform;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .pdp-watermark { animation: pdp-watermark-drift 22s ease-in-out infinite alternate; }
-}
-@keyframes pdp-watermark-drift {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-14px, 8px, 0); }
-}
-
 /* Gradient + glow indicator that slides behind the active tab pill. */
 .pdp-tab-glow {
   position: absolute;
@@ -4056,25 +4029,7 @@ body[data-immersive-ui] [data-scroll-top] {
   .pdp-reveal { opacity: 1; transform: none; animation: none !important; }
   .pdp-card, .pdp-tab-glow { transition: none; }
   .pdp-skel::after { animation: none; }
-  .pdp-details-stage::before, .pdp-watermark { animation: none !important; }
-}
-
-
-/* Watermark sitting behind the specification card stack. */
-.pdp-panel-watermark {
-  position: absolute;
-  top: -0.18em;
-  left: -0.04em;
-  z-index: -1;
-  pointer-events: none;
-  user-select: none;
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 0.8;
-  font-size: clamp(120px, 34vw, 220px);
-  color: var(--foreground);
-  opacity: 0.02;
-  filter: blur(1px);
+  .pdp-details-stage::before { animation: none !important; }
 }
 
 /* ---- Product Editor 5.0 — Auto Field Focus glow ---- */

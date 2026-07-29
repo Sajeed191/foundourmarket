@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Layers, Loader2, Plus, Trash2, Save, Wand2, AlertTriangle, Check } from "lucide-react";
 import { toast } from "sonner";
+import { useEditorDeepLink } from "@/lib/use-editor-deeplink";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   EditorNavBar,
@@ -49,6 +50,7 @@ const isNew = (id: string) => id.startsWith("new-");
 
 function VariantsPage() {
   const { slug } = Route.useParams();
+  const deepLink = useEditorDeepLink(true);
   const [header, setHeader] = useState<ProductHeaderInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
@@ -198,6 +200,7 @@ function VariantsPage() {
       } else {
         toast.success("Variants saved");
       }
+      if (deepLink.active) deepLink.returnToQueue("Variant warning resolved");
     } catch (e: any) {
       toast.error("Save failed", { description: e?.message });
     } finally {
@@ -214,8 +217,19 @@ function VariantsPage() {
           <EditorNavBar slug={slug} sectionKey="variants" />
           <ProductHeaderStrip h={header} active="variants" />
 
+          {deepLink.active && (
+            <div className="flex items-start gap-2.5 rounded-2xl border border-accent/30 bg-accent/[0.07] px-4 py-3">
+              <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full border border-accent/40 bg-accent/15 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-accent">
+                AI Recommendation
+              </span>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Complete this section to resolve the warning. You&apos;ll return to the Smart Work Queue after saving.
+              </p>
+            </div>
+          )}
+
           {/* Enable toggle */}
-          <div className="card-premium rounded-2xl p-4 sm:p-5">
+          <div data-editor-field="variants" className="card-premium rounded-2xl p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-3">
               <Layers className="size-4 text-accent" />
               <h2 className="text-sm font-medium">Product Variants</h2>

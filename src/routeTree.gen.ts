@@ -111,6 +111,7 @@ import { Route as AdminEmailDeliveryRouteImport } from './routes/admin-email-del
 import { Route as AdminDuplicateIntelligenceRouteImport } from './routes/admin-duplicate-intelligence'
 import { Route as AdminCustomersRouteImport } from './routes/admin-customers'
 import { Route as AdminCustomerIntelligenceRouteImport } from './routes/admin-customer-intelligence'
+import { Route as AdminCopilotRouteImport } from './routes/admin-copilot'
 import { Route as AdminCmsRouteImport } from './routes/admin-cms'
 import { Route as AdminCheckoutFunnelRouteImport } from './routes/admin-checkout-funnel'
 import { Route as AdminCheckoutAnalyticsRouteImport } from './routes/admin-checkout-analytics'
@@ -708,6 +709,11 @@ const AdminCustomerIntelligenceRoute =
     path: '/admin-customer-intelligence',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminCopilotRoute = AdminCopilotRouteImport.update({
+  id: '/admin-copilot',
+  path: '/admin-copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCmsRoute = AdminCmsRouteImport.update({
   id: '/admin-cms',
   path: '/admin-cms',
@@ -1133,6 +1139,7 @@ export interface FileRoutesByFullPath {
   '/admin-checkout-analytics': typeof AdminCheckoutAnalyticsRoute
   '/admin-checkout-funnel': typeof AdminCheckoutFunnelRoute
   '/admin-cms': typeof AdminCmsRoute
+  '/admin-copilot': typeof AdminCopilotRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-duplicate-intelligence': typeof AdminDuplicateIntelligenceRoute
@@ -1314,6 +1321,7 @@ export interface FileRoutesByTo {
   '/admin-checkout-analytics': typeof AdminCheckoutAnalyticsRoute
   '/admin-checkout-funnel': typeof AdminCheckoutFunnelRoute
   '/admin-cms': typeof AdminCmsRoute
+  '/admin-copilot': typeof AdminCopilotRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-duplicate-intelligence': typeof AdminDuplicateIntelligenceRoute
@@ -1495,6 +1503,7 @@ export interface FileRoutesById {
   '/admin-checkout-analytics': typeof AdminCheckoutAnalyticsRoute
   '/admin-checkout-funnel': typeof AdminCheckoutFunnelRoute
   '/admin-cms': typeof AdminCmsRoute
+  '/admin-copilot': typeof AdminCopilotRoute
   '/admin-customer-intelligence': typeof AdminCustomerIntelligenceRoute
   '/admin-customers': typeof AdminCustomersRouteWithChildren
   '/admin-duplicate-intelligence': typeof AdminDuplicateIntelligenceRoute
@@ -1678,6 +1687,7 @@ export interface FileRouteTypes {
     | '/admin-checkout-analytics'
     | '/admin-checkout-funnel'
     | '/admin-cms'
+    | '/admin-copilot'
     | '/admin-customer-intelligence'
     | '/admin-customers'
     | '/admin-duplicate-intelligence'
@@ -1859,6 +1869,7 @@ export interface FileRouteTypes {
     | '/admin-checkout-analytics'
     | '/admin-checkout-funnel'
     | '/admin-cms'
+    | '/admin-copilot'
     | '/admin-customer-intelligence'
     | '/admin-customers'
     | '/admin-duplicate-intelligence'
@@ -2039,6 +2050,7 @@ export interface FileRouteTypes {
     | '/admin-checkout-analytics'
     | '/admin-checkout-funnel'
     | '/admin-cms'
+    | '/admin-copilot'
     | '/admin-customer-intelligence'
     | '/admin-customers'
     | '/admin-duplicate-intelligence'
@@ -2221,6 +2233,7 @@ export interface RootRouteChildren {
   AdminCheckoutAnalyticsRoute: typeof AdminCheckoutAnalyticsRoute
   AdminCheckoutFunnelRoute: typeof AdminCheckoutFunnelRoute
   AdminCmsRoute: typeof AdminCmsRoute
+  AdminCopilotRoute: typeof AdminCopilotRoute
   AdminCustomerIntelligenceRoute: typeof AdminCustomerIntelligenceRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminDuplicateIntelligenceRoute: typeof AdminDuplicateIntelligenceRoute
@@ -3084,6 +3097,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomerIntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-copilot': {
+      id: '/admin-copilot'
+      path: '/admin-copilot'
+      fullPath: '/admin-copilot'
+      preLoaderRoute: typeof AdminCopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-cms': {
       id: '/admin-cms'
       path: '/admin-cms'
@@ -3719,6 +3739,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCheckoutAnalyticsRoute: AdminCheckoutAnalyticsRoute,
   AdminCheckoutFunnelRoute: AdminCheckoutFunnelRoute,
   AdminCmsRoute: AdminCmsRoute,
+  AdminCopilotRoute: AdminCopilotRoute,
   AdminCustomerIntelligenceRoute: AdminCustomerIntelligenceRoute,
   AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminDuplicateIntelligenceRoute: AdminDuplicateIntelligenceRoute,

@@ -657,7 +657,7 @@ function Home() {
   }, [products, badgeAssignments, rules.limits.featured, rules.rotationHours, rotationNonce, rotationNow]);
 
 
-  const { items: testimonials } = useTestimonials();
+
 
   const categoryLimit = useCategoryLimit();
   const homeCategories = isProductAdmin

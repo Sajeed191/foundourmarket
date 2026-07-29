@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, RefreshCw, Sparkles, Zap,
@@ -9,6 +10,9 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
 import { useSmartQueues } from "@/lib/use-smart-queues";
 import { EFFORT_LABEL, estimateMinutesForItems, type QueueId, type QueueItem } from "@/lib/marketplace-operations";
+import { consumeQueueRestore, rememberQueueReturn, resolveEditorTarget } from "@/lib/editor-deeplink";
+
+const SCROLL_KEY = "fom.workqueue.scroll";
 
 const VALID_QUEUES: QueueId[] = ["high_impact", "seo", "variants", "images", "pricing", "ready_to_publish"];
 
@@ -51,6 +55,18 @@ function WorkQueuePage() {
   const nav = useNavigate({ from: "/admin-work-queue" });
   const activeQueueId: QueueId = search.queue ?? "high_impact";
   const [showAll, setShowAll] = useState(false);
+
+  // Return experience — restore scroll + surface the resolution toast.
+  useEffect(() => {
+    const restore = consumeQueueRestore();
+    if (!restore) return;
+    if (restore.message) toast.success(`✅ ${restore.message}`, { duration: 2400 });
+    const raw = sessionStorage.getItem(SCROLL_KEY);
+    const y = raw ? Number(raw) : 0;
+    if (y > 0) {
+      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "auto" }));
+    }
+  }, [loading]);
 
   const activeQueue = useMemo(
     () => queues?.queues.find((q) => q.id === activeQueueId) ?? null,
@@ -181,13 +197,7 @@ function WorkQueuePage() {
                           conf {item.confidence}
                         </span>
                       </div>
-                      <Link
-                        to="/products/$slug"
-                        params={{ slug: item.productSlug }}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition"
-                      >
-                        {item.action} <ArrowRight className="size-3.5" />
-                      </Link>
+                      <QueueActionLink item={item} queueId={activeQueueId} />
                     </div>
                   </motion.div>
                 ))}
@@ -217,5 +227,38 @@ function WorkQueuePage() {
       <ArrowUpRight className="hidden" />
       <Zap className="hidden" />
     </AdminShell>
+  );
+}
+
+/**
+ * One-click deep link: opens the exact editor tab + section for a
+ * recommendation and remembers where to come back to. Navigation only.
+ */
+function QueueActionLink({ item, queueId }: { item: QueueItem; queueId: QueueId }) {
+  const target = resolveEditorTarget({
+    module: item.recommendation?.module ?? null,
+    action: item.action,
+    recommendation: item.recommendation?.recommendation ?? null,
+  });
+
+  return (
+    <Link
+      to={target.to as "/admin-product/$slug/details"}
+      params={{ slug: item.productSlug }}
+      search={{ focus: target.focus, dl: target.label, from: "work-queue" } as never}
+      onClick={() => {
+        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+        rememberQueueReturn({
+          path: "/admin-work-queue",
+          queue: queueId,
+          scrollY: window.scrollY,
+          productId: item.productId,
+        });
+      }}
+      title={`Open ${target.label} — ${item.productName}`}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition"
+    >
+      {item.action} <ArrowRight className="size-3.5" />
+    </Link>
   );
 }

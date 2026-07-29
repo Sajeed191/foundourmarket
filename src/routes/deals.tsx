@@ -186,11 +186,13 @@ function DealsPage() {
         product={p}
         presentation={presentation.get(p.id ?? p.slug)}
         priority={i < 4}
+        forceBadge={DEALS_BADGE_KEYS}
         fallbackBadgeLabel="Flash Deal"
       />
     ),
     [presentation],
   );
+
 
   if (loading) {
     return <DealsSkeleton />;

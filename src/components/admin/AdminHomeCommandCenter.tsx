@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DailyDigestCard } from "./DailyDigestCard";
+import { CopilotBrief } from "./copilot/CopilotBrief";
 import { useMarketplaceHealth } from "@/lib/use-marketplace-health";
 import {
   HEALTH_STATUS_LABEL,

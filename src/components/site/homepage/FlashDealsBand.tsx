@@ -322,9 +322,10 @@ export function FlashDealsBand() {
   const [cycle, setCycle] = useState(0);
   const campaign = useCampaignLabel();
 
-  const visible = useMemo(() => items.slice(0, 8), [items]);
-  const heroes = useMemo(() => visible.slice(0, 4), [visible]);
-  const minis = useMemo(() => visible.slice(4), [visible]);
+  // Hero = 4 featured live deals. Grid = first 20 live deals below the hero.
+  const heroes = useMemo(() => items.slice(0, 4), [items]);
+  const gridDeals = useMemo(() => items.slice(0, 20), [items]);
+
 
   const onScroll = useCallback(() => {
     const el = railRef.current;

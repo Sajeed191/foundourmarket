@@ -305,6 +305,8 @@ export function Footer() {
       {/* Desktop keeps the full premium footer (kept in the DOM for crawlers). */}
       <div className="hidden lg:block">
       <BackToTop />
+      <footer className="relative bg-background text-white border-t border-white/[0.06]">
+
 
         <div className="mx-auto max-w-6xl px-6 pt-12 pb-6 sm:px-8 md:pt-14">
 

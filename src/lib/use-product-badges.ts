@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { allowAction } from "@/lib/security/rate-limit";
+import { logSecurityEvent } from "@/lib/security/audit";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AutoRule = {
@@ -857,8 +859,35 @@ export async function updateBadgeType(id: string, patch: Partial<BadgeTypeRow>) 
 }
 
 // ---- Click analytics ----
+// Analytics stays open to anonymous visitors by design; these guards only
+// protect data integrity (valid references) and prevent flooding.
+function isValidRef(badgeTypeId: string, slug: string): boolean {
+  const okBadge = typeof badgeTypeId === "string" && UUID_RE.test(badgeTypeId);
+  const okSlug = typeof slug === "string" && slug.length > 0 && slug.length <= 200;
+  if (!okBadge || !okSlug) {
+    logSecurityEvent("invalid_badge_event", { reason: okBadge ? "slug" : "badge_type_id" });
+    return false;
+  }
+  return true;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function badgeEventAllowed(kind: "click" | "impression", slug: string): boolean {
+  // per-session sliding window: generous enough for real browsing, tight
+  // enough to stop scripted flooding.
+  const perEvent = allowAction(`badge:${kind}:${slug}`, kind === "click" ? 10 : 20, 60_000);
+  const global = allowAction(`badge:${kind}`, kind === "click" ? 60 : 240, 60_000);
+  if (!perEvent || !global) {
+    logSecurityEvent("rate_limit_exceeded", { scope: `badge_${kind}` });
+    return false;
+  }
+  return true;
+}
+
 export function trackBadgeClick(badgeTypeId: string, slug: string) {
   if (typeof window === "undefined") return;
+  if (!isValidRef(badgeTypeId, slug) || !badgeEventAllowed("click", slug)) return;
   void supabase
     .from("badge_events")
     .insert({ badge_type_id: badgeTypeId, product_slug: slug, event_type: "click" } as never);
@@ -866,6 +895,7 @@ export function trackBadgeClick(badgeTypeId: string, slug: string) {
 
 export function trackBadgeImpression(badgeTypeId: string, slug: string) {
   if (typeof window === "undefined") return;
+  if (!isValidRef(badgeTypeId, slug) || !badgeEventAllowed("impression", slug)) return;
   void supabase
     .from("badge_events")
     .insert({ badge_type_id: badgeTypeId, product_slug: slug, event_type: "impression" } as never);

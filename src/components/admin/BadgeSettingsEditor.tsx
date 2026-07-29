@@ -156,7 +156,7 @@ export function BadgeSettingsEditor() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <h3 className="text-sm font-medium flex items-center gap-2">
-                    <span>{row.emoji}</span> {row.title}
+                    {row.title}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">{row.desc}</p>
                 </div>

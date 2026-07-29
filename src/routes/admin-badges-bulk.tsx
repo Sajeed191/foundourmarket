@@ -163,7 +163,7 @@ function BulkInner() {
             <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{action === "replace" ? "Replace badge" : "Badge"}</label>
             <select value={badgeId} onChange={(e) => setBadgeId(e.target.value)} className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm">
               <option value="">Select badge…</option>
-              {usableBadges.map((b) => <option key={b.id} value={b.id}>{b.emoji} {b.label}</option>)}
+              {usableBadges.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
             </select>
           </div>
           {action === "replace" && (
@@ -171,7 +171,7 @@ function BulkInner() {
               <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">With badge</label>
               <select value={replaceWith} onChange={(e) => setReplaceWith(e.target.value)} className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm">
                 <option value="">Select replacement…</option>
-                {usableBadges.filter((b) => b.id !== badgeId).map((b) => <option key={b.id} value={b.id}>{b.emoji} {b.label}</option>)}
+                {usableBadges.filter((b) => b.id !== badgeId).map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
               </select>
             </div>
           )}
@@ -224,7 +224,7 @@ function BulkInner() {
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${b.enabled ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300" : "border-border bg-white/5 text-muted-foreground"}`}
             >
               <span className={`size-1.5 rounded-full ${b.enabled ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/60"}`} />
-              {b.emoji} {b.label}
+              {b.label}
             </button>
           ))}
         </div>
@@ -279,7 +279,7 @@ function ProductRow({ p, selected, onToggle, badges }: { p: Product; selected: b
       <img src={resolveImage(p.image)} alt="" className="size-9 rounded-lg object-cover shrink-0" loading="lazy" />
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium truncate">{p.name}</p>
-        <p className="text-[10px] text-muted-foreground truncate">{badges.length ? badges.map((b) => b.emoji || b.label).join(" ") : p.category}</p>
+        <p className="text-[10px] text-muted-foreground truncate">{badges.length ? badges.map((b) => b.label).join(" · ") : p.category}</p>
       </div>
     </button>
   );

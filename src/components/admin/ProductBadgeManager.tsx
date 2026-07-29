@@ -263,7 +263,7 @@ export function ProductBadgeManager({
                 active ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" : "border-white/10 bg-card text-muted-foreground hover:text-foreground hover:border-accent/40",
               )}
             >
-              {busy === t.id ? <Loader2 className="size-3 animate-spin" /> : active ? <Check className="size-3" /> : t.emoji ? <span aria-hidden>{t.emoji}</span> : <Tag className="size-3" />}
+              {busy === t.id ? <Loader2 className="size-3 animate-spin" /> : active ? <Check className="size-3" /> : <Tag className="size-3" />}
               {t.label}
             </button>
           );

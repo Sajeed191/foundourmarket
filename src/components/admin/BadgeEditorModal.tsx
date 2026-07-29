@@ -208,7 +208,6 @@ export function BadgeEditorModal({
               }}
             >
               <span className="inline-flex items-center gap-1">
-                {form.emoji && <span style={form.iconColor ? { color: form.iconColor } : undefined}>{form.emoji}</span>}
                 {form.label || "Badge name"}
               </span>
               {form.subtitle && <span className="opacity-80" style={{ fontSize: `${Math.max(7, form.fontSize - 3)}px`, fontWeight: 500 }}>{form.subtitle}</span>}

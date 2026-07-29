@@ -222,7 +222,7 @@ function BadgeAnalyticsInner() {
                           border: s.badge.borderColor ? `1px solid ${s.badge.borderColor}` : undefined,
                         }}
                       >
-                        {s.badge.emoji} {s.badge.label}
+                        {s.badge.label}
                       </span>
                     </div>
                     <span className="text-right w-14 tabular-nums text-sm">{s.impressions.toLocaleString()}</span>

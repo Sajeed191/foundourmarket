@@ -4,7 +4,7 @@ import { Loader2, Zap, Flame, Search, X, ArrowDownWideNarrow, Star, ArrowRight }
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import type { Product } from "@/lib/products";
-import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
+import { buildBrowsePresentation } from "@/lib/browse";
 import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
 
 export const Route = createFileRoute("/deals")({
@@ -26,9 +26,10 @@ export const Route = createFileRoute("/deals")({
   component: DealsPage,
 });
 
-type DealSort = "savings" | "ending" | "newest" | "rating" | "price-low" | "popular";
+type DealSort = "recommended" | "savings" | "ending" | "newest" | "rating" | "price-low" | "popular";
 
 const SORT_OPTIONS: { value: DealSort; label: string }[] = [
+  { value: "recommended", label: "Recommended" },
   { value: "savings", label: "Highest discount" },
   { value: "ending", label: "Ending soon" },
   { value: "price-low", label: "Lowest price" },
@@ -69,15 +70,16 @@ const QUICK_SORT: Partial<Record<QuickKey, DealSort>> = {
 const BATCH_SIZE = 20;
 
 function DealsPage() {
-  // Shared, badge-gated, Site-Rules-capped source used by homepage + /deals.
-  // Only LIVE deals reach `items` — expired / paused / scheduled / unpublished
-  // and out-of-stock products are already excluded upstream.
-  const { items, loading } = useFlashDeals();
+  // Explore page shows every eligible live Flash Deal (up to the hard safety
+  // cap) while the homepage stays capped by Site Rules. Only LIVE deals reach
+  // `items` — expired / paused / scheduled / unpublished and out-of-stock
+  // products are already excluded upstream.
+  const { items, loading } = useFlashDeals({ limit: "all" });
   const { map: badgeMap } = useBadgeCatalog();
 
   const [quick, setQuick] = useState<QuickKey>("all");
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<DealSort>("savings");
+  const [sort, setSort] = useState<DealSort>("recommended");
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
 
   const dealProducts = useMemo(() => items.map((i) => i.product), [items]);
@@ -121,9 +123,12 @@ function DealsPage() {
   const effectiveSort = QUICK_SORT[quick] ?? sort;
 
   const sortedProducts = useMemo(() => {
-    const base = sortProductsForBrowse(filteredProducts, presentation, "recommended");
-    const arr = [...base];
+    // Preserve the backend rotation order for the default "Recommended" sort.
+    // Other sorts are client-side presentation overrides only.
+    const arr = [...filteredProducts];
     switch (effectiveSort) {
+      case "recommended":
+        return arr;
       case "savings":
         return arr.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
       case "price-low":

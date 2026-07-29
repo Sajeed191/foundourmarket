@@ -19,7 +19,7 @@ type BrowseCardProps = {
   presentation?: BrowsePresentation;
   priority?: boolean;
   highlight?: string;
-  forceBadge?: BadgeKey | null;
+  forceBadge?: BadgeKey | BadgeKey[] | null;
   /** Promotional surfaces only: guarantees a non-empty badge slot. */
   fallbackBadgeLabel?: string;
 };

@@ -12,6 +12,13 @@ import { useSmartQueues } from "@/lib/use-smart-queues";
 import { EFFORT_LABEL, estimateMinutesForItems, type QueueId, type QueueItem } from "@/lib/marketplace-operations";
 import { consumeQueueRestore } from "@/lib/editor-deeplink";
 import { SmartFixLink } from "@/components/admin/SmartFixLink";
+import { useProducts } from "@/lib/use-products";
+import { planAutoFixes, type AutoFixProposal } from "@/lib/auto-fix/planners";
+import { classifyIssue } from "@/lib/auto-fix/classify";
+import { AutoFixBatchBar, type AutoFixCandidate } from "@/components/admin/AutoFixBatchBar";
+import { AutoFixActivityLog } from "@/components/admin/AutoFixActivityLog";
+import { CategoryChip, ConfidenceLine, IssueActions } from "@/components/admin/AutoFixIssueActions";
+
 
 const SCROLL_KEY = "fom.workqueue.scroll";
 

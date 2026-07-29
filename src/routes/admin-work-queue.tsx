@@ -12,6 +12,13 @@ import { useSmartQueues } from "@/lib/use-smart-queues";
 import { EFFORT_LABEL, estimateMinutesForItems, type QueueId, type QueueItem } from "@/lib/marketplace-operations";
 import { consumeQueueRestore } from "@/lib/editor-deeplink";
 import { SmartFixLink } from "@/components/admin/SmartFixLink";
+import { useProducts } from "@/lib/use-products";
+import { planAutoFixes, type AutoFixProposal } from "@/lib/auto-fix/planners";
+import { classifyIssue } from "@/lib/auto-fix/classify";
+import { AutoFixBatchBar, type AutoFixCandidate } from "@/components/admin/AutoFixBatchBar";
+import { AutoFixActivityLog } from "@/components/admin/AutoFixActivityLog";
+import { CategoryChip, ConfidenceLine, IssueActions } from "@/components/admin/AutoFixIssueActions";
+
 
 const SCROLL_KEY = "fom.workqueue.scroll";
 
@@ -76,6 +83,33 @@ function WorkQueuePage() {
 
   const items = activeQueue ? (showAll ? activeQueue.items : activeQueue.items.slice(0, 25)) : [];
   const minutes = activeQueue ? estimateMinutesForItems(activeQueue.items) : 0;
+
+  // ---- Universal AI Auto-Fix (v1.0): safe proposals for the visible items ----
+  const { products } = useProducts();
+  const [rejected, setRejected] = useState<Set<string>>(() => new Set());
+
+  const productBySlug = useMemo(() => new Map(products.map((p) => [p.slug, p])), [products]);
+
+  const proposalsBySlug = useMemo(() => {
+    const map = new Map<string, AutoFixProposal[]>();
+    for (const item of items) {
+      const product = productBySlug.get(item.productSlug);
+      if (!product) continue;
+      const plans = planAutoFixes(product);
+      if (plans.length) map.set(item.productSlug, plans);
+    }
+    return map;
+  }, [items, productBySlug]);
+
+  const candidates = useMemo<AutoFixCandidate[]>(() => {
+    const out: AutoFixCandidate[] = [];
+    for (const [slug, proposals] of proposalsBySlug) {
+      const product = productBySlug.get(slug);
+      if (product) out.push({ product, proposals });
+    }
+    return out;
+  }, [proposalsBySlug, productBySlug]);
+
 
   return (
     <AdminShell
@@ -156,8 +190,21 @@ function WorkQueuePage() {
             </div>
           ) : (
             <div className="space-y-2">
+              <AutoFixBatchBar candidates={candidates} />
+
               <AnimatePresence initial={false}>
-                {items.map((item, idx) => (
+                {items.map((item, idx) => {
+                  if (rejected.has(item.productId)) return null;
+                  const product = productBySlug.get(item.productSlug) ?? null;
+                  const proposals = product ? proposalsBySlug.get(item.productSlug) ?? [] : [];
+                  const classified = classifyIssue({
+                    module: item.recommendation?.module ?? null,
+                    action: item.action,
+                    text: item.recommendation?.recommendation ?? null,
+                    confidence: item.confidence,
+                    hasSafeProposal: proposals.length > 0,
+                  });
+                  return (
                   <motion.div
                     key={item.productId}
                     initial={{ opacity: 0, y: 8 }}
@@ -186,8 +233,14 @@ function WorkQueuePage() {
                             {item.recommendation.recommendation}
                           </div>
                         )}
+                        <ConfidenceLine
+                          classified={classified}
+                          confidence={item.confidence}
+                          impact={`${item.impact} impact on marketplace readiness`}
+                        />
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
+                        <CategoryChip classified={classified} />
                         <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium", IMPACT_TONE[item.impact])}>
                           {item.impact}
                         </span>
@@ -198,11 +251,19 @@ function WorkQueuePage() {
                           conf {item.confidence}
                         </span>
                       </div>
-                      <QueueActionLink item={item} queueId={activeQueueId} siblings={items} index={idx} />
+                      <IssueActions
+                        classified={classified}
+                        product={product}
+                        proposals={proposals}
+                        onReject={() => setRejected((prev) => new Set(prev).add(item.productId))}
+                        deepLink={<QueueActionLink item={item} queueId={activeQueueId} siblings={items} index={idx} />}
+                      />
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </AnimatePresence>
+
 
               {activeQueue && activeQueue.items.length > items.length && (
                 <button
@@ -214,6 +275,10 @@ function WorkQueuePage() {
               )}
             </div>
           )}
+
+          <AutoFixActivityLog />
+
+
 
           <div className="rounded-2xl border border-border/30 bg-card/20 p-4 text-[11px] text-muted-foreground leading-relaxed">
             <div className="flex items-center gap-2 text-foreground/80 text-xs font-medium">

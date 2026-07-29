@@ -756,58 +756,6 @@ function Home() {
       {/* Why FoundOurMarket — premium benefit cards */}
       <WhyFoundOurMarket />
 
-      <CinematicDivider />
-
-      {/* 7 · Social Proof — verified customer reviews */}
-      <section className="px-4 sm:px-6 pt-10 pb-9 sm:pt-12 sm:pb-10 max-w-7xl mx-auto">
-        <PremiumSectionHeading
-          eyebrow="Social Proof"
-          title="What our customers say"
-          subtitle="Verified reviews from shoppers around the world."
-        />
-
-
-        {testimonials.length > 0 && (
-          <LazyMount minHeight={240}>
-            <>
-              {/* Mobile: compact swipeable carousel with dots + autorotate */}
-              {ffCarousels && (
-                <Suspense fallback={null}><TestimonialsCarousel items={testimonials} /></Suspense>
-              )}
-
-              {/* Desktop: compact grid */}
-              <div className="hidden md:grid grid-cols-3 gap-5">
-                {testimonials.map((t, i) => (
-                  <Reveal key={t.name} delay={i}>
-                    <figure className="group relative glass rounded-2xl p-5 h-full flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-200">
-                      <div className="flex gap-0.5 text-accent mb-2.5">
-                        {Array.from({ length: 5 }).map((_, s) => <Star key={s} className="size-3.5 fill-current" />)}
-                      </div>
-                      <blockquote className="text-sm leading-relaxed text-pretty flex-1">"{t.quote}"</blockquote>
-                      <figcaption className="mt-4 pt-3.5 border-t border-border flex items-center gap-3">
-                        <span className="size-9 shrink-0 grid place-items-center rounded-full bg-accent/15 text-accent ring-1 ring-accent/30 text-xs font-semibold">
-                          {t.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium truncate flex items-center gap-1.5">
-                            {t.name}
-                            <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wide text-accent">
-                              <BadgeCheck className="size-3" /> Verified
-                            </span>
-                          </div>
-                          <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-0.5 flex items-center gap-1">
-                            <span aria-hidden>{t.flag}</span> {t.country}
-                          </div>
-                        </div>
-                      </figcaption>
-                    </figure>
-                  </Reveal>
-                ))}
-              </div>
-            </>
-          </LazyMount>
-        )}
-      </section>
 
     </>
   );

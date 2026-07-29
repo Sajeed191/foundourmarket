@@ -1,7 +1,9 @@
 // Server-only product-lookup tools for the AI Shopping Assistant.
-// Uses the service-role client to read public product data (RLS bypass is
-// safe here — every field returned is already public storefront data).
+// Uses the service-role client, which bypasses RLS — so EVERY catalog read here
+// must go through getPublicCatalogQuery() (src/lib/security/catalog-access.ts),
+// the single enforcement point for published-only, non-deleted visibility.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getPublicCatalogQuery } from "@/lib/security/catalog-access";
 
 export type AiProductSummary = {
   slug: string;
@@ -52,13 +54,7 @@ export async function searchProducts(args: {
   limit?: number;
 }): Promise<AiProductSummary[]> {
   const limit = Math.min(Math.max(args.limit ?? 8, 1), 12);
-  let q = supabaseAdmin
-    .from("products")
-    .select(SELECT)
-    .is("deleted_at", null)
-    .eq("hide_from_recommendations", false)
-    .eq("hide_from_search", false)
-    .limit(limit);
+  let q = getPublicCatalogQuery(supabaseAdmin, SELECT, "discovery").limit(limit);
 
   if (args.query && args.query.trim()) {
     const term = args.query.trim().replace(/[%_]/g, "");
@@ -80,11 +76,8 @@ export async function searchProducts(args: {
 }
 
 export async function getProduct(slug: string): Promise<AiProductSummary | null> {
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .select(SELECT)
+  const { data, error } = await getPublicCatalogQuery(supabaseAdmin, SELECT, "direct")
     .eq("slug", slug)
-    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw new Error(`get_product: ${error.message}`);
   return data ? normalize(data) : null;
@@ -93,11 +86,8 @@ export async function getProduct(slug: string): Promise<AiProductSummary | null>
 export async function compareProducts(slugs: string[]): Promise<AiProductSummary[]> {
   const clean = slugs.map((s) => String(s).trim()).filter(Boolean).slice(0, 4);
   if (clean.length === 0) return [];
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .select(SELECT)
-    .in("slug", clean)
-    .is("deleted_at", null);
+  const { data, error } = await getPublicCatalogQuery(supabaseAdmin, SELECT, "direct")
+    .in("slug", clean);
   if (error) throw new Error(`compare_products: ${error.message}`);
   return (data ?? []).map(normalize);
 }
@@ -110,13 +100,8 @@ export async function compareProducts(slugs: string[]): Promise<AiProductSummary
 export async function getProductsBySlugs(slugs: string[]): Promise<AiProductSummary[]> {
   const clean = Array.from(new Set(slugs.map((s) => String(s).trim()).filter(Boolean))).slice(0, 12);
   if (clean.length === 0) return [];
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .select(SELECT)
-    .in("slug", clean)
-    .is("deleted_at", null)
-    .eq("hide_from_recommendations", false)
-    .eq("hide_from_search", false);
+  const { data, error } = await getPublicCatalogQuery(supabaseAdmin, SELECT, "discovery")
+    .in("slug", clean);
   if (error) throw new Error(`get_products_by_slugs: ${error.message}`);
   return (data ?? []).map(normalize);
 }

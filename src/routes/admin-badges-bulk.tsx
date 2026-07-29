@@ -110,6 +110,7 @@ function BulkInner() {
         toast.success(`Assignments archived on ${slugs.length} products`);
       }
       logActivity(`bulk_badge_${action}`, "product_badges", `${slugs.length} products`);
+      setSelected(new Set());
     } catch (e) {
       toast.error("Bulk action failed", { description: e instanceof Error ? e.message : "Try again." });
     } finally {

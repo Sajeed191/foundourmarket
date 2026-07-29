@@ -3,14 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, ArrowRight, ArrowUpRight, RefreshCw, Sparkles, Zap,
+  ArrowLeft, ArrowUpRight, RefreshCw, Sparkles, Zap,
   ExternalLink, Package, CheckCircle2,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
 import { useSmartQueues } from "@/lib/use-smart-queues";
 import { EFFORT_LABEL, estimateMinutesForItems, type QueueId, type QueueItem } from "@/lib/marketplace-operations";
-import { consumeQueueRestore, rememberQueueReturn, resolveEditorTarget } from "@/lib/editor-deeplink";
+import { consumeQueueRestore } from "@/lib/editor-deeplink";
+import { SmartFixLink } from "@/components/admin/SmartFixLink";
 
 const SCROLL_KEY = "fom.workqueue.scroll";
 
@@ -61,7 +62,7 @@ function WorkQueuePage() {
     const restore = consumeQueueRestore();
     if (!restore) return;
     if (restore.message) toast.success(`✅ ${restore.message}`, { duration: 2400 });
-    const raw = sessionStorage.getItem(SCROLL_KEY);
+    const raw = sessionStorage.getItem(SCROLL_KEY) ?? sessionStorage.getItem("fom.smartnav.scroll");
     const y = raw ? Number(raw) : 0;
     if (y > 0) {
       requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "auto" }));
@@ -197,7 +198,7 @@ function WorkQueuePage() {
                           conf {item.confidence}
                         </span>
                       </div>
-                      <QueueActionLink item={item} queueId={activeQueueId} />
+                      <QueueActionLink item={item} queueId={activeQueueId} siblings={items} index={idx} />
                     </div>
                   </motion.div>
                 ))}

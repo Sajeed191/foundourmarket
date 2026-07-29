@@ -49,6 +49,13 @@ type ProductCardProps = {
    * so the badge stays presentation-only.
    */
   badgeReason?: string;
+  /**
+   * Promotional surfaces (Flash Deals) guarantee every card carries exactly one
+   * badge. If the resolver returns nothing (badge lookup failed / rotation
+   * gating), this label renders through the same ProductBadge component so the
+   * top-left area is never blank. Never used to invent badges on other surfaces.
+   */
+  fallbackBadgeLabel?: string;
 };
 
 

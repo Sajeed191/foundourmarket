@@ -592,15 +592,9 @@ export function SectionEditor<T extends Record<string, any>>({
           )}
 
           {deepLink.active && (
-            <div className="flex items-start gap-2.5 rounded-2xl border border-accent/30 bg-accent/[0.07] px-4 py-3">
-              <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full border border-accent/40 bg-accent/15 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-accent">
-                AI Recommendation
-              </span>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Complete this section to resolve the warning. You&apos;ll return to the Smart Work Queue after saving.
-              </p>
-            </div>
+            <DeepLinkBanner label={deepLink.label} origin={deepLink.origin} />
           )}
+
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             data-editor-field={sectionKey}

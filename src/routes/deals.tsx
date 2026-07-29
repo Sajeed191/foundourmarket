@@ -4,7 +4,7 @@ import { Loader2, Zap, Flame, Search, X, ArrowDownWideNarrow, Star, ArrowRight }
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import type { Product } from "@/lib/products";
-import { buildBrowsePresentation, sortProductsForBrowse } from "@/lib/browse";
+import { buildBrowsePresentation } from "@/lib/browse";
 import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
 
 export const Route = createFileRoute("/deals")({

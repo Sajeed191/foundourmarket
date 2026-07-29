@@ -36,7 +36,9 @@ export function useEditorDeepLink(ready: boolean): EditorDeepLink {
   const [params] = useState(readParams);
   const done = useRef(false);
 
-  const active = Boolean(params.focus && params.from === "work-queue");
+  // Universal Smart Navigation: any origin screen can deep-link here.
+  const active = Boolean(params.focus && params.from);
+
 
   // Arrive: scroll, glow, focus the first empty input in the section.
   useEffect(() => {

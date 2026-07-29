@@ -156,8 +156,21 @@ function WorkQueuePage() {
             </div>
           ) : (
             <div className="space-y-2">
+              <AutoFixBatchBar candidates={candidates} />
+
               <AnimatePresence initial={false}>
-                {items.map((item, idx) => (
+                {items.map((item, idx) => {
+                  if (rejected.has(item.productId)) return null;
+                  const product = productBySlug.get(item.productSlug) ?? null;
+                  const proposals = product ? proposalsBySlug.get(item.productSlug) ?? [] : [];
+                  const classified = classifyIssue({
+                    module: item.recommendation?.module ?? null,
+                    action: item.action,
+                    text: item.recommendation?.recommendation ?? null,
+                    confidence: item.confidence,
+                    hasSafeProposal: proposals.length > 0,
+                  });
+                  return (
                   <motion.div
                     key={item.productId}
                     initial={{ opacity: 0, y: 8 }}
@@ -186,8 +199,14 @@ function WorkQueuePage() {
                             {item.recommendation.recommendation}
                           </div>
                         )}
+                        <ConfidenceLine
+                          classified={classified}
+                          confidence={item.confidence}
+                          impact={`${item.impact} impact on marketplace readiness`}
+                        />
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
+                        <CategoryChip classified={classified} />
                         <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium", IMPACT_TONE[item.impact])}>
                           {item.impact}
                         </span>
@@ -198,11 +217,19 @@ function WorkQueuePage() {
                           conf {item.confidence}
                         </span>
                       </div>
-                      <QueueActionLink item={item} queueId={activeQueueId} siblings={items} index={idx} />
+                      <IssueActions
+                        classified={classified}
+                        product={product}
+                        proposals={proposals}
+                        onReject={() => setRejected((prev) => new Set(prev).add(item.productId))}
+                        deepLink={<QueueActionLink item={item} queueId={activeQueueId} siblings={items} index={idx} />}
+                      />
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </AnimatePresence>
+
 
               {activeQueue && activeQueue.items.length > items.length && (
                 <button

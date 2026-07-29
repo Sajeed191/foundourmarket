@@ -20,9 +20,11 @@ type BrowseCardProps = {
   priority?: boolean;
   highlight?: string;
   forceBadge?: BadgeKey | null;
+  /** Promotional surfaces only: guarantees a non-empty badge slot. */
+  fallbackBadgeLabel?: string;
 };
 
-function BrowseCardImpl({ product, presentation, priority, highlight, forceBadge }: BrowseCardProps) {
+function BrowseCardImpl({ product, presentation, priority, highlight, forceBadge, fallbackBadgeLabel }: BrowseCardProps) {
   return (
     <ProductCard
       product={product}
@@ -31,6 +33,7 @@ function BrowseCardImpl({ product, presentation, priority, highlight, forceBadge
       browseBadges={presentation?.badges}
       badgeReason={presentation?.reason}
       forceBadge={forceBadge}
+      fallbackBadgeLabel={fallbackBadgeLabel}
     />
   );
 }

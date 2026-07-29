@@ -17,8 +17,6 @@
  * mandatory rather than advisory: without them an anonymous visitor talking to
  * the AI assistant could surface unreleased catalogue data.
  */
-import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
-
 /** Visibility contexts a public catalog read can run in. */
 export type CatalogAudience =
   /** Discovery: search, recommendations, AI browse. Honours hide_* flags. */
@@ -45,7 +43,7 @@ export function getPublicCatalogQuery(
   select: string,
   audience: CatalogAudience = "discovery",
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): PostgrestFilterBuilder<any, any, any[], "products", unknown> {
+): any {
   let q = client
     .from("products")
     .select(select)

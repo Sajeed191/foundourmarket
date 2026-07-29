@@ -205,6 +205,64 @@ function Divider() {
   return <div aria-hidden className="my-8 h-px bg-white/[0.04]" />;
 }
 
+/* ---------- App-first minimal footer (mobile + tablet) ---------- */
+
+const MOBILE_LEGAL = [
+  { label: "Privacy", to: "/privacy" },
+  { label: "Terms", to: "/terms" },
+  { label: "Refunds", to: "/returns" },
+  { label: "Contact", to: "/contact" },
+];
+
+/* Tablet gets a couple of extra shortcuts, still one compact row. */
+const TABLET_EXTRA = [
+  { label: "Help", to: "/help" },
+  { label: "Shipping", to: "/pages/shipping" },
+];
+
+function AppFooter() {
+  const scroll = () => {
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  return (
+    <footer className="lg:hidden relative border-t border-white/[0.05] bg-background mobile-page-clearance">
+      <div className="mx-auto flex max-w-3xl flex-col items-center gap-2 px-5 pb-3 pt-4">
+        <button
+          type="button"
+          onClick={scroll}
+          aria-label="Back to top"
+          className={`group inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-medium text-white/70 transition-all ${EASE} active:scale-[0.98] active:text-white`}
+        >
+          <ArrowUp className={`size-3.5 text-accent transition-transform ${EASE} group-active:-translate-y-0.5`} strokeWidth={2.5} />
+          Back to Top
+        </button>
+
+        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11.5px] text-white/45">
+          {MOBILE_LEGAL.map((l) => (
+            <Link key={l.label} to={l.to as never} className={`transition-colors ${EASE} hover:text-white active:text-accent`}>
+              {l.label}
+            </Link>
+          ))}
+          {TABLET_EXTRA.map((l) => (
+            <Link
+              key={l.label}
+              to={l.to as never}
+              className={`hidden md:inline transition-colors ${EASE} hover:text-white active:text-accent`}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
+        <p className="text-[11px] text-white/35">
+          © 2026 <BrandName /> <span className="text-white/20">·</span> v{BUILD_ID}
+        </p>
+      </div>
+    </footer>
+  );
+}
+
+
 /* ---------- Footer ---------- */
 
 export function Footer() {

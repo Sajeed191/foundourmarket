@@ -18,11 +18,24 @@ export function focusEditorField(key: string, opts: { select?: boolean } = {}) {
   // Wait a frame so freshly-applied state has rendered.
   requestAnimationFrame(() => {
 
-    const host = document.querySelector<HTMLElement>(`[data-editor-field="${CSS.escape(key)}"]`);
+    const sel = CSS.escape(key);
+    const host =
+      document.querySelector<HTMLElement>(`[data-editor-field="${sel}"]`) ??
+      document.querySelector<HTMLElement>(`[data-smart-target="${sel}"]`);
     if (!host) return;
+
+    // Auto-expand: never make the admin click "Expand" to reach the target.
+    let node: HTMLElement | null = host;
+    while (node) {
+      if (node instanceof HTMLDetailsElement) node.open = true;
+      const trigger = node.querySelector<HTMLElement>('[aria-expanded="false"][data-smart-expand]');
+      trigger?.click();
+      node = node.parentElement;
+    }
 
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     host.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+
 
     host.classList.remove(GLOW_CLASS);
     // force reflow so the animation restarts on repeat applies

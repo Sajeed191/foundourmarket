@@ -3,14 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, ArrowRight, ArrowUpRight, RefreshCw, Sparkles, Zap,
+  ArrowLeft, ArrowUpRight, RefreshCw, Sparkles, Zap,
   ExternalLink, Package, CheckCircle2,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { cn } from "@/lib/utils";
 import { useSmartQueues } from "@/lib/use-smart-queues";
 import { EFFORT_LABEL, estimateMinutesForItems, type QueueId, type QueueItem } from "@/lib/marketplace-operations";
-import { consumeQueueRestore, rememberQueueReturn, resolveEditorTarget } from "@/lib/editor-deeplink";
+import { consumeQueueRestore } from "@/lib/editor-deeplink";
+import { SmartFixLink } from "@/components/admin/SmartFixLink";
 
 const SCROLL_KEY = "fom.workqueue.scroll";
 
@@ -61,7 +62,7 @@ function WorkQueuePage() {
     const restore = consumeQueueRestore();
     if (!restore) return;
     if (restore.message) toast.success(`✅ ${restore.message}`, { duration: 2400 });
-    const raw = sessionStorage.getItem(SCROLL_KEY);
+    const raw = sessionStorage.getItem(SCROLL_KEY) ?? sessionStorage.getItem("fom.smartnav.scroll");
     const y = raw ? Number(raw) : 0;
     if (y > 0) {
       requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "auto" }));
@@ -197,7 +198,7 @@ function WorkQueuePage() {
                           conf {item.confidence}
                         </span>
                       </div>
-                      <QueueActionLink item={item} queueId={activeQueueId} />
+                      <QueueActionLink item={item} queueId={activeQueueId} siblings={items} index={idx} />
                     </div>
                   </motion.div>
                 ))}
@@ -234,31 +235,35 @@ function WorkQueuePage() {
  * One-click deep link: opens the exact editor tab + section for a
  * recommendation and remembers where to come back to. Navigation only.
  */
-function QueueActionLink({ item, queueId }: { item: QueueItem; queueId: QueueId }) {
-  const target = resolveEditorTarget({
-    module: item.recommendation?.module ?? null,
-    action: item.action,
-    recommendation: item.recommendation?.recommendation ?? null,
+function QueueActionLink({
+  item,
+  queueId,
+  siblings,
+  index,
+}: {
+  item: QueueItem;
+  queueId: QueueId;
+  siblings: QueueItem[];
+  index: number;
+}) {
+  const toIssue = (i: QueueItem) => ({
+    entity: "product" as const,
+    entityId: i.productSlug,
+    module: i.recommendation?.module ?? null,
+    action: i.action,
+    text: i.recommendation?.recommendation ?? null,
   });
 
   return (
-    <Link
-      to={target.to as "/admin-product/$slug/details"}
-      params={{ slug: item.productSlug }}
-      search={{ focus: target.focus, dl: target.label, from: "work-queue" } as never}
-      onClick={() => {
-        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
-        rememberQueueReturn({
-          path: "/admin-work-queue",
-          queue: queueId,
-          scrollY: window.scrollY,
-          productId: item.productId,
-        });
-      }}
-      title={`Open ${target.label} — ${item.productName}`}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition"
+    <SmartFixLink
+      issue={toIssue(item)}
+      origin="work-queue"
+      siblings={siblings.map(toIssue)}
+      index={index}
+      originState={{ queue: queueId, productId: item.productId }}
     >
-      {item.action} <ArrowRight className="size-3.5" />
-    </Link>
+      {item.action}
+    </SmartFixLink>
   );
 }
+

@@ -5,6 +5,8 @@ import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye
 
 import { toast } from "sonner";
 import { useEditorDeepLink } from "@/lib/use-editor-deeplink";
+import { useIssueNav } from "@/lib/use-issue-nav";
+import { SmartRecommendationBanner } from "@/components/admin/SmartFixLink";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { resolveImage } from "@/lib/products";
@@ -592,15 +594,9 @@ export function SectionEditor<T extends Record<string, any>>({
           )}
 
           {deepLink.active && (
-            <div className="flex items-start gap-2.5 rounded-2xl border border-accent/30 bg-accent/[0.07] px-4 py-3">
-              <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full border border-accent/40 bg-accent/15 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-accent">
-                AI Recommendation
-              </span>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Complete this section to resolve the warning. You&apos;ll return to the Smart Work Queue after saving.
-              </p>
-            </div>
+            <DeepLinkBanner label={deepLink.label} origin={deepLink.origin} />
           )}
+
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             data-editor-field={sectionKey}
@@ -859,3 +855,13 @@ export function BackToOverview({ slug }: { slug: string }) {
 }
 
 export { useNavigate };
+
+/**
+ * Universal Smart Navigation banner — shown when the admin arrived from a
+ * recommendation anywhere in the admin. Presentation only.
+ */
+function DeepLinkBanner({ label, origin }: { label: string | null; origin: string | null }) {
+  const nav = useIssueNav();
+  const originLabel = origin === "work-queue" ? "the Smart Work Queue" : "where you came from";
+  return <SmartRecommendationBanner label={label} originLabel={originLabel} nav={nav} />;
+}

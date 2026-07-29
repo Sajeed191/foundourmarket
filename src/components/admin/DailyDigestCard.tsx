@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { Sun, Sparkles, ArrowRight, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSmartQueues } from "@/lib/use-smart-queues";
+import { SmartFixLink } from "@/components/admin/SmartFixLink";
 import { useRecommendationAnalytics } from "@/lib/use-recommendation-analytics";
 import { estimateMinutesForItems, EFFORT_LABEL, type QueueId } from "@/lib/marketplace-operations";
 
@@ -119,14 +120,36 @@ export function DailyDigestCard() {
           </span>
         </div>
 
-        <div className="mt-5 flex items-center gap-2">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <SmartFixLink
+            issue={{
+              entity: "product",
+              entityId: top.productSlug,
+              module: top.recommendation?.module ?? null,
+              action: top.action,
+              text: top.recommendation?.recommendation ?? null,
+            }}
+            origin="daily-brief"
+            siblings={focusQueue.items.map((i) => ({
+              entity: "product" as const,
+              entityId: i.productSlug,
+              module: i.recommendation?.module ?? null,
+              action: i.action,
+              text: i.recommendation?.recommendation ?? null,
+            }))}
+            index={0}
+            className="rounded-xl border-0 bg-accent px-4 py-2 text-xs font-semibold text-accent-foreground hover:bg-accent/90 shadow-[0_4px_24px_-8px_hsl(var(--accent))]"
+          >
+            Fix now
+          </SmartFixLink>
           <Link
             to="/admin-work-queue"
             search={{ queue: focusQueue.id }}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-accent-foreground hover:bg-accent/90 transition shadow-[0_4px_24px_-8px_hsl(var(--accent))]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/40 bg-card/40 px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/70 transition"
           >
             Start Queue <ArrowRight className="size-3.5" />
           </Link>
+
           <Link
             to="/admin-work-queue"
             className="inline-flex items-center gap-1.5 rounded-xl border border-border/40 bg-card/40 px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border/70 transition"

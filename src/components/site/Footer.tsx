@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { BrandName } from "@/components/site/BrandName";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
+import { BUILD_ID } from "@/lib/build-version";
+
 
 /* ---------- Data ---------- */
 

@@ -266,6 +266,8 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
 function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
   const { deal, off } = useDealPricing(item);
   const p = item.product;
+  const badge = BADGES[index % BADGES.length];
+  const stock = stockChip(p.stockQuantity);
 
   return (
     <Link
@@ -277,7 +279,21 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
     >
       <DealFrame src={p.image} alt={p.name} variant="mini" radius={18} />
       <div className="flex flex-1 flex-col px-0.5 pb-0.5 pt-2">
+        {/* Badge row — same editorial + honest stock chips as the hero card */}
+        <div className="mb-1.5 flex min-h-[20px] flex-wrap items-center gap-1">
+          <span className="inline-flex h-[18px] items-center whitespace-nowrap rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-1.5 text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-[hsl(35_45%_78%)]">
+            {badge}
+          </span>
+          {stock && (
+            <span
+              className={`inline-flex h-[18px] items-center whitespace-nowrap rounded-full border px-1.5 text-[8px] font-semibold leading-none tracking-wide ${stock.tone}`}
+            >
+              {stock.label}
+            </span>
+          )}
+        </div>
         <p className="line-clamp-2 min-h-[30px] text-[11px] leading-[1.35] text-muted-foreground/85">{p.name}</p>
+
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div className="flex min-w-0 flex-col gap-0.5">
             <Price

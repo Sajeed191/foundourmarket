@@ -15,6 +15,7 @@ import { getExecutiveAnalyticsFn, type ExecutiveAnalytics } from "@/lib/executiv
 import { useProducts } from "@/lib/use-products";
 import { useTrafficSummary } from "@/lib/use-traffic-summary";
 import { useMarketplaceHealth } from "@/lib/use-marketplace-health";
+import { useRegion } from "@/lib/region";
 import { detectRevenueOpportunities } from "./opportunities";
 import { evaluateFlashDeals, flashRevenueForecast } from "./flash-intel";
 import { rankProducts, unitPrice, velocityPerDay } from "./scoring";
@@ -42,6 +43,7 @@ export function useRevenueIntelligence(): RevenueIntelligenceState {
   const { products, loading: productsLoading } = useProducts();
   const traffic = useTrafficSummary(30);
   const { health, listings } = useMarketplaceHealth();
+  const { currency } = useRegion();
 
   useEffect(() => {
     let alive = true;
@@ -128,7 +130,7 @@ export function useRevenueIntelligence(): RevenueIntelligenceState {
           .slice(0, 6)
           .map((r) => ({ slug: r.slug, name: r.name, revenue: r.revenue, units: r.units })),
         lostRevenue,
-        currency: "INR",
+        currency,
       },
       opportunities,
       flash,
@@ -144,7 +146,7 @@ export function useRevenueIntelligence(): RevenueIntelligenceState {
       generatedAt: new Date().toISOString(),
       advisoryOnly: true,
     };
-  }, [analytics, products, productsLoading, readiness, traffic, health, learningTick]);
+  }, [analytics, products, productsLoading, readiness, traffic, health, currency, learningTick]);
 
   return {
     snapshot,

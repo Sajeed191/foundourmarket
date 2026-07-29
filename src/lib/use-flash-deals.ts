@@ -57,12 +57,22 @@ function useNow(intervalMs = 60_000, enabled = true) {
 
 
 
+type UseFlashDealsOptions = {
+  /**
+   * Override how many live deals are returned. "all" returns every eligible live
+   * deal up to the hard safety cap (FLASH_VISIBLE_HARD_CAP). A number is
+   * clamped between 1 and the hard cap. Defaults to the Site Rules configured
+   * limit, which is 20 for the homepage.
+   */
+  limit?: number | "all";
+};
+
 /**
  * Single shared source of truth for Flash Deal products. Used by the homepage
  * Flash Deals section, the Deals & Promotions / Offers page, and any "Shop
  * Deals" destination so all surfaces return the exact same products.
  */
-export function useFlashDeals() {
+export function useFlashDeals(options?: UseFlashDealsOptions) {
   const { products, loading } = useProducts();
   const { map: badgeAssignments, loading: badgesLoading } = useBadgeCatalog();
   const rules = useHomepageCollectionRules();

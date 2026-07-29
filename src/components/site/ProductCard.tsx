@@ -400,14 +400,17 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
     // `forceBadge` narrows to the collection's badge — never manufactures one.
     if (forceBadge) {
-      const key = forceBadge.toLowerCase();
-      const match = gated.find(
-        (b) =>
-          (b.badgeKey || "").toLowerCase() === key ||
-          normalizeBadgeLabel(b.label) === key.toUpperCase().replace(/_/g, " "),
+      const keys = (Array.isArray(forceBadge) ? forceBadge : [forceBadge]).map((k) => k.toLowerCase());
+      const match = gated.find((b) =>
+        keys.some(
+          (key) =>
+            (b.badgeKey || "").toLowerCase() === key ||
+            normalizeBadgeLabel(b.label) === key.toUpperCase().replace(/_/g, " "),
+        ),
       );
       return match ? toAssignedBadge(match) : null;
     }
+
 
     const candidates = gated.map(toAssignedBadge);
     return pickWinningBadge(candidates) ?? candidates[0] ?? null;

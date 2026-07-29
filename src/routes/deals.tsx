@@ -123,9 +123,12 @@ function DealsPage() {
   const effectiveSort = QUICK_SORT[quick] ?? sort;
 
   const sortedProducts = useMemo(() => {
-    const base = sortProductsForBrowse(filteredProducts, presentation, "recommended");
-    const arr = [...base];
+    // Preserve the backend rotation order for the default "Recommended" sort.
+    // Other sorts are client-side presentation overrides only.
+    const arr = [...filteredProducts];
     switch (effectiveSort) {
+      case "recommended":
+        return arr;
       case "savings":
         return arr.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
       case "price-low":

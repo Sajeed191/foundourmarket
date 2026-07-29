@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { Sun, Sparkles, ArrowRight, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSmartQueues } from "@/lib/use-smart-queues";
+import { SmartFixLink } from "@/components/admin/SmartFixLink";
 import { useRecommendationAnalytics } from "@/lib/use-recommendation-analytics";
 import { estimateMinutesForItems, EFFORT_LABEL, type QueueId } from "@/lib/marketplace-operations";
 

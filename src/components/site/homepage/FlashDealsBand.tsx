@@ -323,9 +323,10 @@ export function FlashDealsBand() {
   const [cycle, setCycle] = useState(0);
   const campaign = useCampaignLabel();
 
-  // Hero = 4 featured live deals. Grid = first 2 live deals below the hero.
+  // Hero = 4 featured live deals. Grid = 2 different live deals, never overlapping the hero.
   const heroes = useMemo(() => items.slice(0, 4), [items]);
-  const gridDeals = useMemo(() => items.slice(0, 2), [items]);
+  const heroIds = useMemo(() => new Set(heroes.map((h) => h.product.id)), [heroes]);
+  const gridDeals = useMemo(() => items.filter((i) => !heroIds.has(i.product.id)).slice(0, 2), [items, heroIds]);
 
 
   const onScroll = useCallback(() => {

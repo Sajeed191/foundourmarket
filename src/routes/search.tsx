@@ -949,8 +949,9 @@ function SearchPage() {
       priceOf,
       flashEndAt,
     );
-    if (sort === "flash_deals") return sorted.slice(0, 10);
-    if (sort === "newest") return sorted.slice(0, 30);
+    // No artificial caps: browse always shows the full eligible set for the
+    // active collection sort; pagination handles the rest.
+
     const noActive = countActive(currentFilters) === 0;
     const isDefaultBrowse = (sort === "relevance" || !sort) && !(search.q ?? "").trim() && noActive;
     return isDefaultBrowse ? seededShuffle(sorted, rotBucket) : sorted;

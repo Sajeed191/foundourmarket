@@ -263,7 +263,7 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
 }
 
 /** Mini deal — square media top, 2-line title, price pinned bottom-left, arrow bottom-right. */
-function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
+function MiniDeal({ item, index, fluid = false }: { item: FlashItem; index: number; fluid?: boolean }) {
   const { deal, off } = useDealPricing(item);
   const p = item.product;
   const badge = BADGES[index % BADGES.length];
@@ -274,9 +274,10 @@ function MiniDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={p.name}
-      style={{ animationDelay: `${index * 80}ms` }}
-      className="group relative flex w-[162px] shrink-0 snap-start flex-col overflow-visible rounded-[20px] border border-white/[0.07] bg-card/45 p-2 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_12px_26px_-24px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.05)] sm:w-[168px] lg:w-full"
+      style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
+      className={`group relative flex shrink-0 snap-start flex-col overflow-visible rounded-[20px] border border-white/[0.07] bg-card/45 p-2 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_12px_26px_-24px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.05)] ${fluid ? "w-full" : "w-[162px] sm:w-[168px] lg:w-full"}`}
     >
+
       <DealFrame src={p.image} alt={p.name} variant="mini" radius={18} />
       <div className="flex flex-1 flex-col px-0.5 pb-0.5 pt-2">
         {/* Badge row — same editorial + honest stock chips as the hero card */}
@@ -322,9 +323,10 @@ export function FlashDealsBand() {
   const [cycle, setCycle] = useState(0);
   const campaign = useCampaignLabel();
 
-  const visible = useMemo(() => items.slice(0, 8), [items]);
-  const heroes = useMemo(() => visible.slice(0, 4), [visible]);
-  const minis = useMemo(() => visible.slice(4), [visible]);
+  // Hero = 4 featured live deals. Grid = first 20 live deals below the hero.
+  const heroes = useMemo(() => items.slice(0, 4), [items]);
+  const gridDeals = useMemo(() => items.slice(0, 20), [items]);
+
 
   const onScroll = useCallback(() => {
     const el = railRef.current;
@@ -486,29 +488,15 @@ export function FlashDealsBand() {
         )}
 
 
-        {/* Secondary rail — soft-faded edges, snapping, peek next card */}
-        <div className="relative mt-4">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-background to-transparent lg:hidden"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-background to-transparent lg:hidden"
-          />
-          {/* Mobile/tablet: minis only (heroes already live in the carousel above) */}
-          <div className="flex snap-x snap-mandatory scroll-px-4 items-stretch gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
-            {minis.map((item, i) => (
-              <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
-            ))}
-          </div>
-          {/* Desktop: remaining heroes + minis as a rail below the wide banner */}
-          <div className="hidden lg:grid lg:grid-cols-4 lg:items-stretch lg:gap-5">
-            {[...heroes.slice(1), ...minis].slice(0, 4).map((item, i) => (
-              <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
+        {/* Live deals grid — first 20 live flash deals, 2 columns on mobile */}
+        <div className="mt-6 px-4 sm:px-6">
+          <div className="grid grid-cols-2 items-stretch gap-3.5 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+            {gridDeals.map((item, i) => (
+              <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} fluid />
             ))}
           </div>
         </div>
+
 
         <div className="mt-7 flex justify-center px-4 sm:px-6">
           <Link

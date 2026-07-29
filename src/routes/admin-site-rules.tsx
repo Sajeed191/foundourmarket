@@ -41,6 +41,7 @@ function cloneRules(r: HomepageCollectionRules): HomepageCollectionRules {
   return {
     limits: { ...r.limits },
     rotationHours: r.rotationHours,
+    flashSelectionHours: r.flashSelectionHours,
     reshuffleTimesIst: [...r.reshuffleTimesIst],
     reshuffleEnabled: r.reshuffleEnabled,
     featuredMode: r.featuredMode,

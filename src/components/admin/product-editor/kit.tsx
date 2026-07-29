@@ -5,6 +5,8 @@ import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye
 
 import { toast } from "sonner";
 import { useEditorDeepLink } from "@/lib/use-editor-deeplink";
+import { useIssueNav } from "@/lib/use-issue-nav";
+import { SmartRecommendationBanner } from "@/components/admin/SmartFixLink";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { resolveImage } from "@/lib/products";
@@ -853,3 +855,13 @@ export function BackToOverview({ slug }: { slug: string }) {
 }
 
 export { useNavigate };
+
+/**
+ * Universal Smart Navigation banner — shown when the admin arrived from a
+ * recommendation anywhere in the admin. Presentation only.
+ */
+function DeepLinkBanner({ label, origin }: { label: string | null; origin: string | null }) {
+  const nav = useIssueNav();
+  const originLabel = origin === "work-queue" ? "the Smart Work Queue" : "where you came from";
+  return <SmartRecommendationBanner label={label} originLabel={originLabel} nav={nav} />;
+}

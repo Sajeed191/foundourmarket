@@ -139,11 +139,23 @@ export function useFlashDeals(options?: UseFlashDealsOptions) {
       };
     });
 
-    // Shuffle the full eligible pool for this 6h window, then pick the admin-
-    // configured limit (Site Rules → flash_deals). Order stays cached until
-    // the next scheduled refresh. Excluded eligible products keep their
-    // Flash/Hot flags in the database but are hidden publicly until selected.
-    const cap = Math.max(1, Math.min(FLASH_VISIBLE_HARD_CAP, Math.floor(rules.limits.flash_deals)));
+    // Shuffle the full eligible pool for this 6h window, then pick the
+    // requested limit. "all" expands to the hard safety cap so the Explore
+    // page can display every live deal without overriding Site Rules. A numeric
+    // override is clamped between 1 and FLASH_VISIBLE_HARD_CAP. Order stays
+    // cached until the next scheduled refresh.
+    const requestedLimit = options?.limit;
+    const configuredCap =
+      requestedLimit === "all"
+        ? FLASH_VISIBLE_HARD_CAP
+        : Math.max(
+            1,
+            Math.min(
+              FLASH_VISIBLE_HARD_CAP,
+              Math.floor(requestedLimit ?? rules.limits.flash_deals),
+            ),
+          );
+    const cap = Math.min(configuredCap, active.length);
     const shuffled = seededShuffle(active, flashSeed);
     const ordered = shuffled.slice(0, cap);
 

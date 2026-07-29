@@ -43,7 +43,7 @@ export type HomepageCollectionRules = {
 
 export const DEFAULT_HOMEPAGE_RULES: HomepageCollectionRules = {
   limits: {
-    flash_deals: 10,
+    flash_deals: 20,
     trending: 50,
     best_sellers: 50,
     new_arrivals: 50,

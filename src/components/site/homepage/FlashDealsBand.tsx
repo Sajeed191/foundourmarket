@@ -326,7 +326,9 @@ export function FlashDealsBand() {
   // Hero = 4 featured live deals. Grid = 2 different live deals, never overlapping the hero.
   const heroes = useMemo(() => items.slice(0, 4), [items]);
   const heroIds = useMemo(() => new Set(heroes.map((h) => h.product.id)), [heroes]);
-  const gridDeals = useMemo(() => items.filter((i) => !heroIds.has(i.product.id)).slice(0, 2), [items, heroIds]);
+  // Everything live this window that is not currently in the hero carousel.
+  // `items` is already capped by the admin Flash Deals limit (default 20).
+  const gridDeals = useMemo(() => items.filter((i) => !heroIds.has(i.product.id)), [items, heroIds]);
 
 
   const onScroll = useCallback(() => {
@@ -489,7 +491,7 @@ export function FlashDealsBand() {
         )}
 
 
-        {/* Live deals grid — first 20 live flash deals, 2 columns on mobile */}
+        {/* Live deals grid — remaining live flash deals, 2 columns on mobile */}
         <div className="mt-6 px-4 sm:px-6">
           <div className="grid grid-cols-2 items-stretch gap-3.5 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
             {gridDeals.map((item, i) => (

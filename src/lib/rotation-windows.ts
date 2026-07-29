@@ -64,3 +64,15 @@ export function hashString(str: string): number {
   }
   return h >>> 0;
 }
+
+/**
+ * Generic IST-aligned window seed for an arbitrary window size in hours.
+ * Used by the Flash Deals engine so admins can configure both the selection
+ * window (which products are live) and the order window (how they're sorted).
+ */
+export function windowSeed(nowMs: number, hours: number): number {
+  const h = Math.max(1, Math.min(24, Math.floor(hours) || 1));
+  const ist = new Date(nowMs + IST_OFFSET_MS);
+  const slot = Math.floor(ist.getUTCHours() / h) * h;
+  return Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate(), slot, 0, 0, 0);
+}

@@ -33,6 +33,11 @@ export type HomepageCollectionRules = {
   limits: Record<HomepageCollectionKey, number>;
   /** How often the fair-rotation window advances (hours). */
   rotationHours: number;
+  /**
+   * How often the *set* of live Flash Deal products is re-picked (hours).
+   * Defaults to 6h IST. The order inside that set rotates on `rotationHours`.
+   */
+  flashSelectionHours: number;
   /** IST wall-clock times when the daily reshuffle nonce is bumped. */
   reshuffleTimesIst: string[];
   /** Master switch for automatic reshuffles. */
@@ -50,12 +55,14 @@ export const DEFAULT_HOMEPAGE_RULES: HomepageCollectionRules = {
     featured: 50,
   },
   rotationHours: 2,
+  flashSelectionHours: 6,
   reshuffleTimesIst: ["06:00", "12:00", "18:00", "00:00"],
   reshuffleEnabled: true,
   featuredMode: "editorial_overlay",
 };
 
 export const ROTATION_HOUR_OPTIONS = [1, 2, 4, 6, 12, 24] as const;
+
 
 function coerce(raw: unknown): HomepageCollectionRules {
   const src = (raw ?? {}) as Partial<HomepageCollectionRules> & {
@@ -78,9 +85,13 @@ function coerce(raw: unknown): HomepageCollectionRules {
     : DEFAULT_HOMEPAGE_RULES.reshuffleTimesIst;
   const featuredMode: FeaturedMode =
     src.featuredMode === "multi_section" ? "multi_section" : "editorial_overlay";
+  const selHours = Number(src.flashSelectionHours);
+  const flashSelectionHours =
+    ROTATION_HOUR_OPTIONS.find((h) => h === selHours) ?? DEFAULT_HOMEPAGE_RULES.flashSelectionHours;
   return {
     limits,
     rotationHours,
+    flashSelectionHours,
     reshuffleTimesIst: times.length > 0 ? times : DEFAULT_HOMEPAGE_RULES.reshuffleTimesIst,
     reshuffleEnabled: src.reshuffleEnabled !== false,
     featuredMode,

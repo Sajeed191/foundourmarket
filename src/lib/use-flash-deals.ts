@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
-import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
+import { seededShuffle, windowSeed } from "@/lib/rotation-windows";
 import { hasAssignedCollectionBadge, productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
 import { evaluatePromoEligibility } from "@/lib/promo-eligibility";
 import { useHomepageCollectionRules } from "@/lib/site-rules";
@@ -114,11 +114,12 @@ export function useFlashDeals(options?: UseFlashDealsOptions) {
     return map;
   }, [deals, now]);
 
-  // The eligible set is freshly shuffled and the first 10 picked at each 6-hour
-  // window (12AM / 6AM / 12PM / 6PM IST). The selection and its order then stay
-  // cached/stable until the next scheduled refresh — no per-load recalculation.
-  // The manual reshuffle nonce lets admins re-randomize instantly.
-  const flashSeed = flashWindowSeed(now) + rotationNonce;
+  // Two-stage rotation (both configurable in Admin → Site Rules):
+  //  1. Selection window (default 6h IST): which eligible products go live.
+  //  2. Order window (default 2h IST): how those live products are ordered.
+  // The manual reshuffle nonce lets admins re-randomize both instantly.
+  const selectionSeed = windowSeed(now, rules.flashSelectionHours) + rotationNonce;
+  const orderSeed = windowSeed(now, rules.rotationHours) + rotationNonce;
 
 
 
@@ -139,11 +140,9 @@ export function useFlashDeals(options?: UseFlashDealsOptions) {
       };
     });
 
-    // Shuffle the full eligible pool for this 6h window, then pick the
-    // requested limit. "all" expands to the hard safety cap so the Explore
-    // page can display every live deal without overriding Site Rules. A numeric
-    // override is clamped between 1 and FLASH_VISIBLE_HARD_CAP. Order stays
-    // cached until the next scheduled refresh.
+    // "all" expands to the hard safety cap so the Explore page can display
+    // every live deal without overriding Site Rules. A numeric override is
+    // clamped between 1 and FLASH_VISIBLE_HARD_CAP.
     const requestedLimit = options?.limit;
     const configuredCap =
       requestedLimit === "all"
@@ -156,12 +155,14 @@ export function useFlashDeals(options?: UseFlashDealsOptions) {
             ),
           );
     const cap = Math.min(configuredCap, active.length);
-    const shuffled = seededShuffle(active, flashSeed);
-    const ordered = shuffled.slice(0, cap);
+    // Stage 1 — pick the live set for this selection window.
+    const selected = seededShuffle(active, selectionSeed).slice(0, cap);
+    // Stage 2 — reorder the same set on the faster order window.
+    const ordered = seededShuffle(selected, orderSeed);
 
     if (typeof window !== "undefined" && import.meta.env.DEV) {
       // eslint-disable-next-line no-console
-      console.info(`[FlashDeals] eligible: ${active.length} | visible this window: ${ordered.length} | excluded unavailable: ${excludedUnavailable} | flagged: ${totalFlagged} | cap: ${cap}`);
+      console.info(`[FlashDeals] eligible: ${active.length} | live this window: ${ordered.length} | excluded unavailable: ${excludedUnavailable} | flagged: ${totalFlagged} | cap: ${cap} | selection: ${rules.flashSelectionHours}h | order: ${rules.rotationHours}h`);
       // eslint-disable-next-line no-console
       console.info("[FlashDeals] current display order:", ordered.map((i) => i.product.slug));
     }
@@ -169,11 +170,12 @@ export function useFlashDeals(options?: UseFlashDealsOptions) {
     return {
       items: ordered,
       eligibleCount: active.length,
-      windowCount: shuffled.length,
-      hiddenByLimit: Math.max(0, shuffled.length - ordered.length),
+      windowCount: selected.length,
+      hiddenByLimit: Math.max(0, active.length - selected.length),
       cap,
     };
-  }, [products, badgeAssignments, liveDealByProductId, flashSeed, now, rules.limits.flash_deals]);
+  }, [products, badgeAssignments, liveDealByProductId, selectionSeed, orderSeed, now, rules.limits.flash_deals, rules.flashSelectionHours, rules.rotationHours]);
+
 
 
   return {

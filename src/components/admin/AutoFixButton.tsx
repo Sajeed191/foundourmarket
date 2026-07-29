@@ -39,7 +39,7 @@ export function ChangeDiff({ proposals }: { proposals: AutoFixProposal[] }) {
               <div key={`${p.kind}-${c.field}`} className="rounded-lg bg-muted/20 p-2 text-[11px]">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{c.label}</div>
                 <div className="mt-1 flex items-start gap-2">
-                  <span className="min-w-0 flex-1 break-words text-muted-foreground line-through/0 opacity-70">{c.before}</span>
+                  <span className="min-w-0 flex-1 break-words text-muted-foreground opacity-70">{c.before}</span>
                   <ArrowRight className="mt-0.5 size-3 shrink-0 text-accent" />
                   <span className="min-w-0 flex-1 break-words text-foreground">{c.after}</span>
                 </div>

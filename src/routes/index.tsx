@@ -36,10 +36,6 @@ import { SearchOverlay } from "@/components/site/SearchOverlay";
 import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
-// Below-the-fold: lazy so the code stays out of the initial homepage chunk.
-const TestimonialsCarousel = lazy(() =>
-  import("@/components/site/TestimonialsCarousel").then((m) => ({ default: m.TestimonialsCarousel })),
-);
 
 import { useTestimonials } from "@/lib/use-testimonials";
 import { SectionTracker } from "@/components/site/SectionTracker";

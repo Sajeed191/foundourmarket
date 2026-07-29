@@ -74,6 +74,7 @@ export function useEditorDeepLink(ready: boolean): EditorDeepLink {
       if (!active) return;
       const back = readQueueReturn();
       clearQueueReturn();
+      clearIssueQueue();
       armQueueRestore(resolvedMessage ?? `${params.label ?? "Recommendation"} resolved`);
       toast.success(`✅ ${resolvedMessage ?? `${params.label ?? "Recommendation"} resolved`}`, { duration: 2200 });
       navigate({
@@ -84,5 +85,6 @@ export function useEditorDeepLink(ready: boolean): EditorDeepLink {
     [active, navigate, params.label],
   );
 
-  return { active, focus: params.focus, label: params.label, returnToQueue };
+  return { active, focus: params.focus, label: params.label, origin: params.from, returnToQueue };
+
 }

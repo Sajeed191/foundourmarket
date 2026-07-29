@@ -537,6 +537,8 @@ export function Footer() {
           </section>
         </div>
       </footer>
+      </div>
     </>
+
   );
 }

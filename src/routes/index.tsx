@@ -37,7 +37,7 @@ import { LazyMount } from "@/components/site/LazyMount";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 
 
-import { useTestimonials } from "@/lib/use-testimonials";
+
 import { SectionTracker } from "@/components/site/SectionTracker";
 import { useRenderDiagnostics } from "@/lib/startup-diagnostics";
 

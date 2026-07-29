@@ -536,10 +536,16 @@ function IncrementalGrid<T>({
   const visibleRef = useRef(visible);
   visibleRef.current = visible;
 
-  // Reset the window when the dataset changes (filter/sort/navigation).
+  // Reset the window only when the dataset itself changes (filter/sort/
+  // navigation), NOT when the parent appends more items via its own
+  // pagination. Keying on the array identity reset the window on every parent
+  // page-grow, permanently capping browse at the first batch.
+  const datasetKey = items.length > 0 ? getKey(items[0]) : "";
   useEffect(() => {
     setVisible(Math.min(items.length, batchSize));
-  }, [items, batchSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [datasetKey, batchSize]);
+
 
   useEffect(() => {
     const el = sentinelRef.current;

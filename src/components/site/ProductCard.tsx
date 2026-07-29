@@ -357,7 +357,7 @@ function BuyNowButtonImpl({ product }: { product: Product }) {
 const BuyNowButton = memo(BuyNowButtonImpl, (a, b) => a.product.slug === b.product.slug && a.product.inStock === b.product.inStock && a.product.name === b.product.name);
 
 
-function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false, browseBadges, badgeReason }: ProductCardProps) {
+function ProductCardImpl({ product, context = "default", forceBadge, priority = false, highlight, hideBadges = false, browseBadges, badgeReason, fallbackBadgeLabel }: ProductCardProps) {
   const { priceOf, compareOf, shippingFeeOf } = useRegion();
   const [quickOpen, setQuickOpen] = useState(false);
   const [preview, setPreview] = useState<SwatchPreview | null>(null);
@@ -456,7 +456,15 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
           alt={`${product.name} — ${product.tagline || product.category}`}
           priority={priority}
         >
-          <ProductBadges badge={winningBadge} reason={forceBadge ? undefined : badgeReason} />
+          <ProductBadges
+            badge={
+              winningBadge ??
+              (!hideBadges && fallbackBadgeLabel
+                ? { id: `fallback:${product.slug}`, label: fallbackBadgeLabel, className: "", style: badgeStyle(fallbackBadgeLabel) }
+                : null)
+            }
+            reason={forceBadge ? undefined : badgeReason}
+          />
           <WishlistButton slug={product.slug} name={product.name} />
           
           {/* Variant colour preview — fades a colour's cover image over the
@@ -591,6 +599,7 @@ export const ProductCard = memo(ProductCardImpl, (a, b) => {
     a.highlight === b.highlight &&
     a.hideBadges === b.hideBadges &&
     a.badgeReason === b.badgeReason &&
+    a.fallbackBadgeLabel === b.fallbackBadgeLabel &&
 
     // Shallow compare browseBadges array (small, stable ordering upstream).
     (a.browseBadges === b.browseBadges ||

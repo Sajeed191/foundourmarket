@@ -84,6 +84,33 @@ function WorkQueuePage() {
   const items = activeQueue ? (showAll ? activeQueue.items : activeQueue.items.slice(0, 25)) : [];
   const minutes = activeQueue ? estimateMinutesForItems(activeQueue.items) : 0;
 
+  // ---- Universal AI Auto-Fix (v1.0): safe proposals for the visible items ----
+  const { products } = useProducts();
+  const [rejected, setRejected] = useState<Set<string>>(() => new Set());
+
+  const productBySlug = useMemo(() => new Map(products.map((p) => [p.slug, p])), [products]);
+
+  const proposalsBySlug = useMemo(() => {
+    const map = new Map<string, AutoFixProposal[]>();
+    for (const item of items) {
+      const product = productBySlug.get(item.productSlug);
+      if (!product) continue;
+      const plans = planAutoFixes(product);
+      if (plans.length) map.set(item.productSlug, plans);
+    }
+    return map;
+  }, [items, productBySlug]);
+
+  const candidates = useMemo<AutoFixCandidate[]>(() => {
+    const out: AutoFixCandidate[] = [];
+    for (const [slug, proposals] of proposalsBySlug) {
+      const product = productBySlug.get(slug);
+      if (product) out.push({ product, proposals });
+    }
+    return out;
+  }, [proposalsBySlug, productBySlug]);
+
+
   return (
     <AdminShell
       title="Smart Work Queue"

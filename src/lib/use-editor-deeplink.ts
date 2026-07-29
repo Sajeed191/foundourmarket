@@ -11,6 +11,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { focusEditorField } from "@/lib/editor-focus";
 import { armQueueRestore, clearQueueReturn, readQueueReturn } from "@/lib/editor-deeplink";
+import { clearIssueQueue } from "@/lib/smart-navigation";
 
 const GLOW = "editor-deeplink-target";
 
@@ -21,6 +22,8 @@ export type EditorDeepLink = {
   focus: string | null;
   /** Friendly label of the target section. */
   label: string | null;
+  /** Identifier of the originating screen. */
+  origin: string | null;
   /** Call once the section has saved — returns to the queue. */
   returnToQueue: (resolvedMessage?: string) => void;
 };

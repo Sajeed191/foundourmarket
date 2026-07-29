@@ -85,9 +85,13 @@ function coerce(raw: unknown): HomepageCollectionRules {
     : DEFAULT_HOMEPAGE_RULES.reshuffleTimesIst;
   const featuredMode: FeaturedMode =
     src.featuredMode === "multi_section" ? "multi_section" : "editorial_overlay";
+  const selHours = Number(src.flashSelectionHours);
+  const flashSelectionHours =
+    ROTATION_HOUR_OPTIONS.find((h) => h === selHours) ?? DEFAULT_HOMEPAGE_RULES.flashSelectionHours;
   return {
     limits,
     rotationHours,
+    flashSelectionHours,
     reshuffleTimesIst: times.length > 0 ? times : DEFAULT_HOMEPAGE_RULES.reshuffleTimesIst,
     reshuffleEnabled: src.reshuffleEnabled !== false,
     featuredMode,

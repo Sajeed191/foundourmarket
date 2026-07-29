@@ -6,6 +6,7 @@ import { BrowseCard } from "@/components/site/BrowseCard";
 import type { Product } from "@/lib/products";
 import { buildBrowsePresentation } from "@/lib/browse";
 import { hasAssignedCollectionBadge, useBadgeCatalog } from "@/lib/use-product-badges";
+import type { BadgeKey } from "@/lib/badges";
 
 export const Route = createFileRoute("/deals")({
   head: () => ({

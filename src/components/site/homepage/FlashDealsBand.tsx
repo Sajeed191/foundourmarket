@@ -487,29 +487,15 @@ export function FlashDealsBand() {
         )}
 
 
-        {/* Secondary rail — soft-faded edges, snapping, peek next card */}
-        <div className="relative mt-4">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-background to-transparent lg:hidden"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-background to-transparent lg:hidden"
-          />
-          {/* Mobile/tablet: minis only (heroes already live in the carousel above) */}
-          <div className="flex snap-x snap-mandatory scroll-px-4 items-stretch gap-3.5 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] sm:px-6 lg:hidden [&::-webkit-scrollbar]:hidden">
-            {minis.map((item, i) => (
-              <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
-            ))}
-          </div>
-          {/* Desktop: remaining heroes + minis as a rail below the wide banner */}
-          <div className="hidden lg:grid lg:grid-cols-4 lg:items-stretch lg:gap-5">
-            {[...heroes.slice(1), ...minis].slice(0, 4).map((item, i) => (
-              <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} />
+        {/* Live deals grid — first 20 live flash deals, 2 columns on mobile */}
+        <div className="mt-6 px-4 sm:px-6">
+          <div className="grid grid-cols-2 items-stretch gap-3.5 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+            {gridDeals.map((item, i) => (
+              <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} fluid />
             ))}
           </div>
         </div>
+
 
         <div className="mt-7 flex justify-center px-4 sm:px-6">
           <Link

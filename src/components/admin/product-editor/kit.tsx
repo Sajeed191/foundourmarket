@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Save, Package, Check, AlertTriangle, RotateCcw, Eye, MoreVertical, Copy, Archive, FileText, X, Undo2, Redo2, Send } from "lucide-react";
 
 import { toast } from "sonner";
+import { useEditorDeepLink } from "@/lib/use-editor-deeplink";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell, logActivity } from "@/components/admin/AdminShell";
 import { resolveImage } from "@/lib/products";
@@ -316,6 +317,11 @@ export function SectionEditor<T extends Record<string, any>>({
   const [confirmOpen, setConfirmOpen] = useState(false);
   formRef.current = form;
 
+  // Smart Work Queue deep link — scroll/highlight on arrival, return on save.
+  const deepLink = useEditorDeepLink(!!form);
+  const deepLinkRef = useRef(deepLink);
+  deepLinkRef.current = deepLink;
+
   // Diagnostics only: time from editor mount to the first interactive form.
   const mountedAt = useRef<number>(typeof performance !== "undefined" ? performance.now() : 0);
   const startupLogged = useRef(false);
@@ -439,6 +445,10 @@ export function SectionEditor<T extends Record<string, any>>({
       if (!silent) {
         // Quiet confirmation — self-dismisses, never blocks the workspace.
         toast.success("Draft saved", { duration: 2000 });
+        // Deep-link return: came from the Smart Work Queue → go back to it.
+        if (deepLinkRef.current?.active) {
+          deepLinkRef.current.returnToQueue(`${deepLinkRef.current.label ?? title} warning resolved`);
+        }
       }
 
     },
@@ -581,7 +591,19 @@ export function SectionEditor<T extends Record<string, any>>({
             </div>
           )}
 
+          {deepLink.active && (
+            <div className="flex items-start gap-2.5 rounded-2xl border border-accent/30 bg-accent/[0.07] px-4 py-3">
+              <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full border border-accent/40 bg-accent/15 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-accent">
+                AI Recommendation
+              </span>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Complete this section to resolve the warning. You&apos;ll return to the Smart Work Queue after saving.
+              </p>
+            </div>
+          )}
+
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            data-editor-field={sectionKey}
             className="card-premium rounded-2xl p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3 mb-4">
               <h2 className="text-sm font-medium flex items-center gap-2"><span className="text-accent">{icon}</span> {title}</h2>

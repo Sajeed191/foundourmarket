@@ -4046,6 +4046,20 @@ body[data-immersive-ui] [data-scroll-top] {
   .editor-field-flash { animation-duration: 1ms; }
 }
 
+/* Smart Work Queue deep link — sustained target glow until the admin edits. */
+.editor-deeplink-target {
+  border-radius: 1rem;
+  box-shadow:
+    0 0 0 1.5px color-mix(in oklab, var(--accent) 55%, transparent),
+    0 0 24px color-mix(in oklab, var(--accent) 18%, transparent);
+  transition: box-shadow 260ms ease;
+}
+input.editor-deeplink-target,
+textarea.editor-deeplink-target {
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--accent) 60%, transparent);
+}
+
 /* ============================================================
    Product Editor 8.0 — unified motion + surface consistency
    Presentation only. Every panel in the admin product editor

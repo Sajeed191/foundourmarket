@@ -211,7 +211,7 @@ function DealsPage() {
         product={p}
         presentation={presentation.get(p.id ?? p.slug)}
         priority={i < 4}
-        forceBadge={p.flashDeal ? "flash_deal" : "hot_deal"}
+        fallbackBadgeLabel="Flash Deal"
       />
     ),
     [presentation],

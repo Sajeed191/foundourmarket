@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DailyDigestCard } from "./DailyDigestCard";
+import { CopilotBrief } from "./copilot/CopilotBrief";
 import { useMarketplaceHealth } from "@/lib/use-marketplace-health";
 import {
   HEALTH_STATUS_LABEL,
@@ -193,7 +194,10 @@ export function AdminHomeCommandCenter() {
       transition={{ duration: 0.35 }}
       className="space-y-4"
     >
-      {/* 0. Daily Digest — Marketplace Operations 1.0 */}
+      {/* 0. Operations Copilot brief — Marketplace Operations Copilot v1.0 */}
+      <CopilotBrief />
+
+      {/* 0b. Daily Digest — Marketplace Operations 1.0 */}
       <DailyDigestCard />
 
       {/* 1. Hero — Marketplace Health */}

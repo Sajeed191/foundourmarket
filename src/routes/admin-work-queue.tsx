@@ -234,31 +234,35 @@ function WorkQueuePage() {
  * One-click deep link: opens the exact editor tab + section for a
  * recommendation and remembers where to come back to. Navigation only.
  */
-function QueueActionLink({ item, queueId }: { item: QueueItem; queueId: QueueId }) {
-  const target = resolveEditorTarget({
-    module: item.recommendation?.module ?? null,
-    action: item.action,
-    recommendation: item.recommendation?.recommendation ?? null,
+function QueueActionLink({
+  item,
+  queueId,
+  siblings,
+  index,
+}: {
+  item: QueueItem;
+  queueId: QueueId;
+  siblings: QueueItem[];
+  index: number;
+}) {
+  const toIssue = (i: QueueItem) => ({
+    entity: "product" as const,
+    entityId: i.productSlug,
+    module: i.recommendation?.module ?? null,
+    action: i.action,
+    text: i.recommendation?.recommendation ?? null,
   });
 
   return (
-    <Link
-      to={target.to as "/admin-product/$slug/details"}
-      params={{ slug: item.productSlug }}
-      search={{ focus: target.focus, dl: target.label, from: "work-queue" } as never}
-      onClick={() => {
-        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
-        rememberQueueReturn({
-          path: "/admin-work-queue",
-          queue: queueId,
-          scrollY: window.scrollY,
-          productId: item.productId,
-        });
-      }}
-      title={`Open ${target.label} — ${item.productName}`}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition"
+    <SmartFixLink
+      issue={toIssue(item)}
+      origin="work-queue"
+      siblings={siblings.map(toIssue)}
+      index={index}
+      originState={{ queue: queueId, productId: item.productId }}
     >
-      {item.action} <ArrowRight className="size-3.5" />
-    </Link>
+      {item.action}
+    </SmartFixLink>
   );
 }
+

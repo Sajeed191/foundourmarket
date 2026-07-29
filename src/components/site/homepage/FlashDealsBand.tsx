@@ -141,26 +141,29 @@ function DealCountdown({ endAt }: { endAt: string | null | undefined }) {
   );
 }
 
-/** Tiny, monochrome inline trust row — icon + one word, no pills, never wraps. */
+/** Inline trust row — wraps gracefully, never clipped, min 32px touch rhythm. */
 
 function TrustRow() {
+  const items = [
+    { Icon: BadgeCheck, label: "Verified" },
+    { Icon: Truck, label: "Fast Delivery" },
+    { Icon: ShieldCheck, label: "Returns" },
+  ];
   return (
-    <ul className="mt-2.5 flex flex-nowrap items-center gap-x-3 overflow-hidden text-[10px] font-medium leading-none text-muted-foreground/45">
-      <li className="flex shrink-0 items-center gap-1 whitespace-nowrap">
-        <BadgeCheck className="size-3.5 shrink-0 text-foreground/25" strokeWidth={1.75} aria-hidden />
-        Verified
-      </li>
-      <li className="flex shrink-0 items-center gap-1 whitespace-nowrap">
-        <Truck className="size-3.5 shrink-0 text-foreground/25" strokeWidth={1.75} aria-hidden />
-        Fast Delivery
-      </li>
-      <li className="flex shrink-0 items-center gap-1 whitespace-nowrap">
-        <ShieldCheck className="size-3.5 shrink-0 text-foreground/25" strokeWidth={1.75} aria-hidden />
-        Returns
-      </li>
+    <ul className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] font-medium leading-none text-muted-foreground/45 sm:gap-x-3">
+      {items.map(({ Icon, label }) => (
+        <li
+          key={label}
+          className="flex min-h-[24px] min-w-0 items-center gap-1 whitespace-nowrap py-1 sm:min-h-[32px]"
+        >
+          <Icon className="size-3.5 shrink-0 text-foreground/25" strokeWidth={1.75} aria-hidden />
+          {label}
+        </li>
+      ))}
     </ul>
   );
 }
+
 
 /**
  * Compact horizontal hero — 48% media / 52% content, vertically centered:

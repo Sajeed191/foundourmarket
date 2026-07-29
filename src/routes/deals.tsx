@@ -70,15 +70,16 @@ const QUICK_SORT: Partial<Record<QuickKey, DealSort>> = {
 const BATCH_SIZE = 20;
 
 function DealsPage() {
-  // Shared, badge-gated, Site-Rules-capped source used by homepage + /deals.
-  // Only LIVE deals reach `items` — expired / paused / scheduled / unpublished
-  // and out-of-stock products are already excluded upstream.
-  const { items, loading } = useFlashDeals();
+  // Explore page shows every eligible live Flash Deal (up to the hard safety
+  // cap) while the homepage stays capped by Site Rules. Only LIVE deals reach
+  // `items` — expired / paused / scheduled / unpublished and out-of-stock
+  // products are already excluded upstream.
+  const { items, loading } = useFlashDeals({ limit: "all" });
   const { map: badgeMap } = useBadgeCatalog();
 
   const [quick, setQuick] = useState<QuickKey>("all");
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<DealSort>("savings");
+  const [sort, setSort] = useState<DealSort>("recommended");
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
 
   const dealProducts = useMemo(() => items.map((i) => i.product), [items]);

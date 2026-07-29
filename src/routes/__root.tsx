@@ -411,11 +411,6 @@ const STARTUP_GUARD_SCRIPT = `(function(){
 // homepage/product/search first paint never pays for admin tooling, the live
 // chat widget, the compare tray, or the install prompt. These mount after
 // hydration via the <DeferredShell> gate below.
-const AdminFloatingToolbar = lazyWithRetry(() =>
-  import("@/components/admin/AdminFloatingToolbar").then((m) => ({
-    default: m.AdminFloatingToolbar,
-  })),
-);
 const AdminOverlayIndicator = lazyWithRetry(() =>
   import("@/components/admin/AdminOverlayIndicator").then((m) => ({
     default: m.AdminOverlayIndicator,

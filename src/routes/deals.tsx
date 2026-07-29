@@ -26,9 +26,10 @@ export const Route = createFileRoute("/deals")({
   component: DealsPage,
 });
 
-type DealSort = "savings" | "ending" | "newest" | "rating" | "price-low" | "popular";
+type DealSort = "recommended" | "savings" | "ending" | "newest" | "rating" | "price-low" | "popular";
 
 const SORT_OPTIONS: { value: DealSort; label: string }[] = [
+  { value: "recommended", label: "Recommended" },
   { value: "savings", label: "Highest discount" },
   { value: "ending", label: "Ending soon" },
   { value: "price-low", label: "Lowest price" },

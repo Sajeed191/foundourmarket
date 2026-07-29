@@ -161,6 +161,34 @@ function SiteRulesPage() {
           </div>
         </Card>
 
+        {/* Flash Deals selection window */}
+        <Card
+          icon={<Zap className="size-4" />}
+          title="Flash Deals selection window"
+          description={`How often the live Flash Deal line-up is re-picked from all eligible products. Currently up to ${draft.limits.flash_deals} products go live per window, and their order reshuffles every ${draft.rotationHours === 24 ? "24" : draft.rotationHours}h.`}
+        >
+          <div className="flex flex-wrap gap-2">
+            {ROTATION_HOUR_OPTIONS.map((h) => {
+              const active = draft.flashSelectionHours === h;
+              return (
+                <button
+                  key={h}
+                  onClick={() => setDraft({ ...draft, flashSelectionHours: h })}
+                  className={`px-4 h-9 rounded-full text-xs border transition-colors ${
+                    active
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-border/60 hover:bg-accent/5"
+                  }`}
+                >
+                  {h === 24 ? "Daily" : `${h}h`}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
+
+
         {/* Reshuffle schedule */}
         <Card
           icon={<RotateCcw className="size-4" />}

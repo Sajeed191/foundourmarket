@@ -277,7 +277,7 @@ export function detectRisks(ctx: Ctx): CopilotInsight[] {
 
   // 5. Missing required data (readiness critical).
   for (const l of ctx.listings) {
-    if (l.readiness.status !== "critical" && l.readiness.score >= 45) continue;
+    if (l.readiness.status !== "not_ready" && l.readiness.score >= 45) continue;
     out.push(
       make("missing_required_data", "risk", "high", {
         title: "Listing is missing required information",
@@ -323,7 +323,7 @@ export function detectRisks(ctx: Ctx): CopilotInsight[] {
     out.push(
       make("vendor_declining", "risk", v.tier === "at_risk" ? "high" : "medium", {
         title: v.tier === "at_risk" ? "Vendor quality is at risk" : "Vendor quality needs watching",
-        reason: `${v.vendorName} averages ${v.score}/100 across ${v.listingCount ?? 0} listings.`,
+        reason: `${v.vendorName} averages ${v.score}/100 across ${v.listingCount} listings.`,
         impact: "Weak vendor catalogues drag down category quality and customer trust.",
         confidence: 80,
         minutes: 8,

@@ -69,6 +69,9 @@ const QUICK_SORT: Partial<Record<QuickKey, DealSort>> = {
 
 const BATCH_SIZE = 20;
 
+/** Flash Deals surface shows only its own promo badges — never Best Value etc. */
+const DEALS_BADGE_KEYS: BadgeKey[] = ["flash_deal", "hot_deal"];
+
 function DealsPage() {
   // Explore page shows every eligible live Flash Deal (up to the hard safety
   // cap) while the homepage stays capped by Site Rules. Only LIVE deals reach

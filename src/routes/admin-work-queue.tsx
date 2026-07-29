@@ -276,6 +276,10 @@ function WorkQueuePage() {
             </div>
           )}
 
+          <AutoFixActivityLog />
+
+
+
           <div className="rounded-2xl border border-border/30 bg-card/20 p-4 text-[11px] text-muted-foreground leading-relaxed">
             <div className="flex items-center gap-2 text-foreground/80 text-xs font-medium">
               <Sparkles className="size-3.5 text-accent" /> How queues are built

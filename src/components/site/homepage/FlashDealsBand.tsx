@@ -497,9 +497,9 @@ export function FlashDealsBand() {
         <div className="mt-7 flex justify-center px-4 sm:px-6">
           <Link
             to="/deals"
-            className="group inline-flex h-10 items-center gap-2 rounded-full border border-accent/55 bg-transparent px-6 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent transition-[background-color,border-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-accent/80 hover:bg-accent/[0.08] hover:shadow-[0_12px_28px_-16px_rgba(255,138,0,0.85)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+            className="group inline-flex h-10 items-center gap-2 rounded-full border border-accent/55 bg-transparent px-7 sm:px-9 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent transition-[background-color,border-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-accent/80 hover:bg-accent/[0.08] hover:shadow-[0_12px_28px_-16px_rgba(255,138,0,0.85)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
           >
-            View All Flash Deals
+            Explore Flash Deals
             <ArrowRight
               className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1"
               aria-hidden

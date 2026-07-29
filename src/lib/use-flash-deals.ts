@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/use-products";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
-import { flashWindowSeed, seededShuffle } from "@/lib/rotation-windows";
+import { seededShuffle, windowSeed } from "@/lib/rotation-windows";
 import { hasAssignedCollectionBadge, productInHomepageCollection, useBadgeCatalog } from "@/lib/use-product-badges";
 import { evaluatePromoEligibility } from "@/lib/promo-eligibility";
 import { useHomepageCollectionRules } from "@/lib/site-rules";

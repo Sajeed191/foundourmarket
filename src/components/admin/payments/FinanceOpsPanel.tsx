@@ -66,7 +66,7 @@ export function FinanceOpsPanel({
     const headers = ["Priority", "Item", "Reason", "Orders", "Impact", "Recommended action", "Confidence"];
     if (fmt === "csv") downloadCsv("finance-action-queue", headers, rows);
     else downloadExcel("finance-action-queue", headers, rows);
-    audited("export", null ?? undefined, "action_queue", rows.length);
+    audited("export", undefined, "action_queue", rows.length);
   };
 
   if (!data.has_any_data) {
@@ -268,7 +268,7 @@ export function FinanceOpsPanel({
                   ["Country", "Revenue", "Orders", "AOV", "Refund %", "Failure %", "Growth %"],
                   data.countries.map((c) => [c.country, c.revenue, c.orders, c.aov.toFixed(2),
                     c.refund_rate?.toFixed(1) ?? "", c.failure_rate?.toFixed(1) ?? "", c.growth?.toFixed(1) ?? ""]));
-                audited("export", null ?? undefined, "country_performance", data.countries.length);
+                audited("export", undefined, "country_performance", data.countries.length);
               }}
               className="rounded-lg border border-white/10 px-2 py-1 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5"
             >

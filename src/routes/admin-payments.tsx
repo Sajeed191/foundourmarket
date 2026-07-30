@@ -421,6 +421,20 @@ function PaymentsInner() {
                 </div>
               )}
 
+              {tab === "cfo" && (
+                cfo
+                  ? <CFOPanel data={cfo} onDrill={onCfoDrill} windowDays={windowDays} onAuditExport={onCfoExport} />
+                  : cfoLoading ? <Fallback /> : (
+                    <Panel title="CFO dashboard">
+                      <EmptyState
+                        title="No data available"
+                        hint="Financial health, profitability, cash flow and forecasts populate automatically once the marketplace records its first payment."
+                      />
+                    </Panel>
+                  )
+              )}
+
+
               {tab === "ledger" && (
                 <PaymentsLedger
                   region={ledgerRegion}

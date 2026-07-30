@@ -927,7 +927,7 @@ function SellerAssistancePage() {
           <div className="px-5 py-3 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-[#070b16]">
             <p className="text-[11px] text-white/50 flex items-center gap-1.5 flex-1 min-w-0">
               <ShieldCheck className="size-3 text-emerald-300 shrink-0" />
-              <span className="truncate">Encrypted booking · Verified FoundOurMarket™ staff · Avg. reply &lt; 24h</span>
+              <span className="truncate">Encrypted booking · Verified FoundOurMarket™ staff</span>
             </p>
             <div className="flex items-center gap-2">
               <a

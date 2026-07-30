@@ -89,3 +89,21 @@ export const getPaymentsLedgerFn = createServerFn({ method: "POST" })
     });
     return result;
   });
+
+/** Read-only detail payload for one payment (drawer view). */
+export const getPaymentDetailFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ paymentId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as { userId: string };
+    const { primaryRole } = await requireStaff(userId, PAY_STAFF, "payments.v3.detail");
+    const result = await buildPaymentDetail(data.paymentId);
+    await logSecurity({
+      actorId: userId,
+      actorRole: primaryRole,
+      action: "payments.v3.detail",
+      success: true,
+      detail: { payment_id: data.paymentId },
+    });
+    return result;
+  });

@@ -164,6 +164,32 @@ function PaymentsInner() {
     return () => { alive = false; };
   }, [tab, windowDays, refreshKey, globalFn]);
 
+  // Regional Financial Breakdown (v6.5): India / International / Global computed
+  // independently. Lazy on first open of the Global tab, cached in state.
+  useEffect(() => {
+    if (tab !== "global") return;
+    let alive = true;
+    setBreakdownLoading(true);
+    breakdownFn({ data: { windowDays } })
+      .then((res) => { if (alive) setBreakdown(res); })
+      .catch(() => { if (alive) setBreakdown(null); })
+      .finally(() => { if (alive) setBreakdownLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, breakdownFn]);
+
+  // Deep drill-down: any breakdown metric opens the ledger already filtered.
+  const onBreakdownDrill = useCallback((d: BreakdownDrill) => {
+    setLedgerRegion(d.region ?? "all");
+    setPreset({
+      status: d.status,
+      country: d.country,
+      currency: d.currency,
+      gateway: d.gateway,
+    });
+    setTab("ledger");
+  }, []);
+
+
 
   // Finance Operations is fetched lazily on first open, then kept in state
   // and refreshed with the window / refresh key (no duplicate requests).

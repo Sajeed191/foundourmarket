@@ -1,11 +1,11 @@
 import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
   ArrowUpRight, CalendarRange, Coins, Landmark, Layers, PieChart, Receipt, ShieldAlert,
-  Sparkles, TrendingDown, TrendingUp, Users, XCircle, History, Download,
+  Sparkles, TrendingUp, Users, XCircle, Download,
 } from "lucide-react";
 import { useState } from "react";
 import type { FinancialIntelligence } from "@/lib/payments-intel-v4.functions";
-import { BarList, EmptyState, Panel, StatKpi, Trend, money, compact, when, downloadCsv, downloadExcel } from "./ui";
+import { BarList, EmptyState, Panel, StatKpi, money, compact, when, downloadCsv, downloadExcel } from "./ui";
 
 const axis = { stroke: "hsl(var(--muted-foreground))", fontSize: 10 } as const;
 const tooltipStyle = {
@@ -489,5 +489,3 @@ export function FinancialIntelligencePanel({
     </div>
   );
 }
-
-export { TrendingDown, History, Trend };

@@ -113,61 +113,55 @@ function Atmosphere() {
 }
 
 type ChannelStatus = {
-  online: boolean;
-  label: string;          // e.g. "Online", "Away", "Bookable"
-  eta: string;            // e.g. "~30s", "< 24h"
-  color: string;          // dot color
-  pulse: boolean;         // animated ping
+  label: string;              // "Online" | "Away" | "Offline" | "Available" | "Unavailable"
+  eta: string | null;         // real measured value, or null → honest empty state
+  color: string;              // dot color
+  pulse: boolean;             // animated ping (only for genuinely live presence)
 };
 
-// Deterministic SSR fallback — no Date/Math here so server & first client render match.
-const STATUS_FALLBACK: Record<string, ChannelStatus> = {
-  chat:     { online: true,  label: "Online",   eta: "~30s",  color: "#22c55e", pulse: true  },
-  email:    { online: true,  label: "Active",   eta: "< 24h", color: "#FF9F43", pulse: false },
-  call:     { online: true,  label: "Bookable", eta: "Today", color: "#a78bfa", pulse: false },
-  whatsapp: { online: true,  label: "Live",     eta: "~2m",   color: "#25D366", pulse: true  },
-};
+const GREY = "#94a3b8";
 
-function computeSupportStatus(now: Date): Record<string, ChannelStatus> {
-  // Use UTC + IST offset (support team based in India, UTC+5:30).
-  const istMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + 330) % (24 * 60);
-  const istHour = Math.floor(istMinutes / 60);
-  const day = (now.getUTCDay() + (istMinutes < now.getUTCMinutes() ? 1 : 0)) % 7; // 0 Sun .. 6 Sat
-  const isWeekend = day === 0 || day === 6;
-  const businessHours = istHour >= 9 && istHour < 21; // 9am–9pm IST
+/** Deterministic SSR/first-paint state — no fabricated numbers, no clock. */
+const STATUS_UNKNOWN: ChannelStatus = { label: "Checking…", eta: null, color: GREY, pulse: false };
 
-  // Chat: live during business hours, otherwise async ETA.
-  const chatLive = businessHours && !isWeekend;
-  const chatEtaSeconds = chatLive ? 20 + Math.floor(Math.random() * 50) : 0;
+/**
+ * Real support status. Presence comes from actual staff activity heartbeats and
+ * the reply time is the measured average first response across real tickets.
+ * When either has no evidence we return `null` and the UI says so — nothing is
+ * randomised, estimated or simulated.
+ */
+function channelStatuses(
+  facts: SupportFacts | null,
+  unavailable: boolean,
+): Record<string, ChannelStatus> {
+  if (!facts) {
+    const s: ChannelStatus = unavailable
+      ? { label: "Unavailable", eta: null, color: GREY, pulse: false }
+      : STATUS_UNKNOWN;
+    return { chat: s, email: s, call: s, whatsapp: s };
+  }
 
-  // WhatsApp: always reachable but ETA grows off-hours.
-  const waMinutes = businessHours ? 1 + Math.floor(Math.random() * 4) : 15 + Math.floor(Math.random() * 30);
+  const replyEta = fmtMinutes(facts.avgFirstResponseMinutes);
+  const live = facts.presence === "online";
+  const away = facts.presence === "away";
 
-  // Email: ETA tightens during business hours.
-  const emailEta = businessHours ? "< 4h" : "< 24h";
+  const chat: ChannelStatus = live
+    ? { label: "Online", eta: replyEta, color: "#22c55e", pulse: true }
+    : away
+      ? { label: "Away", eta: replyEta, color: "#FF9F43", pulse: false }
+      : { label: "Offline", eta: replyEta, color: GREY, pulse: false };
 
   return {
-    chat: chatLive
-      ? { online: true,  label: "Online",  eta: `~${chatEtaSeconds}s`, color: "#22c55e", pulse: true }
-      : { online: false, label: "Away",    eta: "Replies in < 12h",    color: "#94a3b8", pulse: false },
-    email:    { online: true,  label: "Active",   eta: emailEta, color: "#FF9F43", pulse: false },
-    call:     { online: businessHours, label: businessHours ? "Bookable" : "Next-day", eta: businessHours ? "Today" : "Tomorrow", color: "#a78bfa", pulse: false },
-    whatsapp: { online: true,  label: "Live",     eta: `~${waMinutes}m`, color: "#25D366", pulse: businessHours },
+    chat,
+    // Email is always reachable; the only number shown is the measured average.
+    email: { label: "Active", eta: replyEta, color: "#FF9F43", pulse: false },
+    // Booking link is configured, so it is genuinely available. No fake slots.
+    call: { label: "Bookable", eta: null, color: "#a78bfa", pulse: false },
+    // Shown only when numbers are actually configured (see visibleChannels).
+    whatsapp: { label: "Available", eta: null, color: "#25D366", pulse: false },
   };
 }
 
-function useSupportStatus(): Record<string, ChannelStatus> {
-  const [status, setStatus] = useState<Record<string, ChannelStatus>>(STATUS_FALLBACK);
-  useEffect(() => {
-    const tick = () => setStatus(computeSupportStatus(new Date()));
-    tick();
-    const id = setInterval(tick, 30_000);
-    const onVis = () => { if (document.visibilityState === "visible") tick(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
-  }, []);
-  return status;
-}
 
 function SellerAssistancePage() {
   const supportStatus = useSupportStatus();

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Loader2, Zap, Flame, Search, X, ArrowDownWideNarrow, Star, ArrowRight } from "lucide-react";
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { BrowseCard } from "@/components/site/BrowseCard";
@@ -68,23 +68,22 @@ const QUICK_SORT: Partial<Record<QuickKey, DealSort>> = {
   ending: "ending",
 };
 
-const BATCH_SIZE = 20;
+/** Presentation cap — the Explore page shows at most 20 rotating deals. */
+const MAX_VISIBLE = 20;
 
 /** Flash Deals surface shows only its own promo badges — never Best Value etc. */
 const DEALS_BADGE_KEYS: BadgeKey[] = ["flash_deal", "hot_deal"];
 
 function DealsPage() {
-  // Explore page shows every eligible live Flash Deal (up to the hard safety
-  // cap) while the homepage stays capped by Site Rules. Only LIVE deals reach
-  // `items` — expired / paused / scheduled / unpublished and out-of-stock
-  // products are already excluded upstream.
-  const { items, loading } = useFlashDeals({ limit: "all" });
+  // Explore page shows the full rotating set, capped at 20 for presentation.
+  // Only LIVE deals reach `items` — expired / paused / scheduled / unpublished
+  // and out-of-stock products are already excluded upstream.
+  const { items, loading } = useFlashDeals({ limit: MAX_VISIBLE });
   const { map: badgeMap } = useBadgeCatalog();
 
   const [quick, setQuick] = useState<QuickKey>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<DealSort>("recommended");
-  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
 
   const dealProducts = useMemo(() => items.map((i) => i.product), [items]);
   const endAtByProductId = useMemo(() => {
@@ -155,33 +154,8 @@ function DealsPage() {
     }
   }, [filteredProducts, presentation, effectiveSort, endAtByProductId]);
 
-  useEffect(() => {
-    setVisibleCount(BATCH_SIZE);
-  }, [quick, sort, query]);
-
-  const visible = useMemo(
-    () => sortedProducts.slice(0, visibleCount),
-    [sortedProducts, visibleCount],
-  );
-
-  // Infinite scroll sentinel — no pagination, no "load more" button.
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setVisibleCount((c) => Math.min(sortedProducts.length, c + BATCH_SIZE));
-          }
-        }
-      },
-      { rootMargin: "800px 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [sortedProducts.length]);
+  // No pagination, no infinite scroll — the rotation decides the 20 on show.
+  const visible = useMemo(() => sortedProducts.slice(0, MAX_VISIBLE), [sortedProducts]);
 
   const renderProduct = useCallback(
     (p: Product, i: number) => (
@@ -287,23 +261,9 @@ function DealsPage() {
       <div className="container-page py-4 sm:py-6">
         {visible.length > 0 ? (
           <section id="deals-grid" data-product-card-frame>
-            <div className="grid grid-cols-2 items-start gap-3 sm:gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 items-start gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
               {visible.map((p, i) => renderProduct(p, i))}
             </div>
-
-            {visibleCount < sortedProducts.length && (
-              <div ref={sentinelRef} className="mt-8 flex items-center justify-center py-6">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
-                  Loading more deals
-                </span>
-              </div>
-            )}
-            {visibleCount >= sortedProducts.length && sortedProducts.length > BATCH_SIZE && (
-              <p className="mt-8 text-center text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
-                You've reached the end · {sortedProducts.length} deals shown
-              </p>
-            )}
           </section>
         ) : (
           <EmptyDeals filtered={dealProducts.length > 0} onReset={() => { setQuick("all"); setQuery(""); }} />
@@ -320,7 +280,7 @@ function DealsSkeleton() {
     <div className="container-page py-6">
       <div className="h-8 w-40 animate-pulse rounded-full bg-white/[0.06]" />
       <div className="mt-3 h-11 w-full animate-pulse rounded-full bg-white/[0.04]" />
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="space-y-2">
             <div className="aspect-square w-full animate-pulse rounded-[20px] bg-white/[0.05]" />

@@ -429,9 +429,21 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
 
     if (region === "india" && order?.tax != null) block.gst_estimate = (block.gst_estimate ?? 0) + num(order.tax);
 
+    const gwKey = (order?.payment_provider
+      ?? (p.razorpay_payment_id ? "razorpay" : null)
+      ?? (p.method === "cod" ? "cod" : null)
+      ?? p.method
+      ?? "unknown").toLowerCase();
+    bump(a.gateways, gwKey, amt);
+
+    const hr = new Date(p.created_at).getHours();
+    const slot = a.hourly[hr];
+    if (slot) { slot.v += amt; slot.n += 1; }
+
     const d = dayKey(p.created_at);
     const dp = touchDay(a.daily, d); dp.revenue += amt; dp.orders += 1;
     const da = touchDay(dailyAll, d); da.revenue += amt; da.orders += 1;
+
   }
 
   for (const r of refunds) {

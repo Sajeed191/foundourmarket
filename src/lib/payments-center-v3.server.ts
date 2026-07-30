@@ -571,12 +571,184 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 30);
 
+  // ---- Payment health score (only metrics with a real source contribute)
+  const totalPaymentAttempts = attemptedN;
+  const refundRate = totalCollected > 0 ? (refundValue / totalCollected) * 100 : null;
+  const pendingBacklogRate = totalPaymentAttempts ? ((pendingN + processingN) / totalPaymentAttempts) * 100 : null;
+  const failureRate = totalPaymentAttempts ? (failedN / totalPaymentAttempts) * 100 : null;
+  const configurable = gateways.filter((g) => g.enabled != null);
+  const gatewayReady = configurable.length
+    ? (configurable.filter((g) => g.enabled && g.configured).length / configurable.length) * 100
+    : null;
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+  const factors: HealthFactor[] = [
+    {
+      key: "success_rate", label: "Success rate", weight: 0.35,
+      score: successRate == null ? null : clamp(successRate),
+      detail: successRate == null ? "No payment attempts recorded" : `${successRate.toFixed(1)}% of attempts captured`,
+    },
+    {
+      key: "failures", label: "Failed payments", weight: 0.2,
+      score: failureRate == null ? null : clamp(100 - failureRate * 2),
+      detail: failureRate == null ? "No payment attempts recorded" : `${failedN} failure(s) · ${failureRate.toFixed(1)}%`,
+    },
+    {
+      key: "pending", label: "Pending backlog", weight: 0.15,
+      score: pendingBacklogRate == null ? null : clamp(100 - pendingBacklogRate * 2),
+      detail: pendingBacklogRate == null ? "No payment attempts recorded" : `${pendingN + processingN} awaiting completion`,
+    },
+    {
+      key: "refunds", label: "Refund rate", weight: 0.15,
+      score: refundRate == null ? null : clamp(100 - refundRate * 4),
+      detail: refundRate == null ? "No collected revenue to compare" : `${refundRate.toFixed(1)}% of collected revenue`,
+    },
+    {
+      key: "gateways", label: "Gateway readiness", weight: 0.15,
+      score: gatewayReady,
+      detail: gatewayReady == null ? "No gateway configuration found" : `${configurable.filter((g) => g.enabled && g.configured).length}/${configurable.length} gateways live`,
+    },
+    {
+      key: "latency", label: "Processing latency", weight: 0,
+      score: null,
+      detail: "No latency telemetry source connected",
+    },
+  ];
+  const usable = factors.filter((f) => f.score != null && f.weight > 0);
+  const weightSum = usable.reduce((s, f) => s + f.weight, 0);
+  const healthScore = weightSum
+    ? Math.round(usable.reduce((s, f) => s + (f.score as number) * f.weight, 0) / weightSum)
+    : null;
+  const health: HealthBlock = {
+    score: healthScore,
+    grade:
+      healthScore == null ? null
+        : healthScore >= 90 ? "Excellent"
+        : healthScore >= 75 ? "Good"
+        : healthScore >= 55 ? "Fair"
+        : "At risk",
+    factors,
+    excluded: factors.filter((f) => f.score == null).map((f) => f.label),
+  };
+
+  // ---- Smart insights (derived from real aggregates only)
+  const insights: Insight[] = [];
+  if (kpis.deltas.success_rate != null && Math.abs(kpis.deltas.success_rate) >= 1) {
+    const up = kpis.deltas.success_rate > 0;
+    insights.push({
+      id: "sr",
+      tone: up ? "good" : "warn",
+      title: `Payment success rate ${up ? "increased" : "decreased"} ${Math.abs(kpis.deltas.success_rate).toFixed(1)}%`,
+      detail: `Compared with the previous ${Math.round(half)} days.`,
+    });
+  }
+  if (refundRate != null) {
+    insights.push({
+      id: "refund-rate",
+      tone: refundRate <= 3 ? "good" : refundRate <= 8 ? "info" : "warn",
+      title: `Refund rate is ${refundRate.toFixed(1)}% of collected revenue`,
+      detail: `${refunds.length} refund(s) totalling ${refundValue.toFixed(0)} across the window.`,
+    });
+  }
+  const intlRev = regions.international.revenue;
+  const inRev = regions.india.revenue;
+  if (intlRev > 0 && inRev + intlRev > 0) {
+    insights.push({
+      id: "intl-share",
+      tone: "info",
+      title: `International orders are ${((intlRev / (inRev + intlRev)) * 100).toFixed(1)}% of revenue`,
+      detail: `${regions.international.orders} cross-border payment(s) captured.`,
+    });
+  }
+  const allMethods = new Map<string, Bucket>();
+  for (const region of ["india", "international"] as Region[]) {
+    for (const m of regions[region].methods) bump(allMethods, m.k, m.v);
+  }
+  const topMethod = [...allMethods.values()].sort((a, b) => b.n - a.n)[0];
+  if (topMethod) {
+    insights.push({
+      id: "top-method",
+      tone: "info",
+      title: `${topMethod.k.toUpperCase()} is the most-used payment method`,
+      detail: `${topMethod.n} successful payment(s) via ${topMethod.k}.`,
+    });
+  }
+  const worstGw = gateways
+    .filter((g) => g.transactions >= 5 && g.failed > 0)
+    .sort((a, b) => (b.failure_rate ?? 0) - (a.failure_rate ?? 0))[0];
+  if (worstGw && (worstGw.failure_rate ?? 0) >= 10) {
+    insights.push({
+      id: "gw-failures",
+      tone: "bad",
+      title: `Most failures are occurring on ${worstGw.display_name}`,
+      detail: `${worstGw.failed} of ${worstGw.transactions} transactions failed (${(worstGw.failure_rate ?? 0).toFixed(1)}%).`,
+    });
+  }
+  if (pendingN > 0) {
+    insights.push({
+      id: "pending",
+      tone: pendingN > 10 ? "warn" : "info",
+      title: `${pendingN} payment(s) are still pending`,
+      detail: `Worth ${pendingAmt.toFixed(0)} in uncollected value.`,
+    });
+  }
+
+  const quick: QuickCounts = {
+    today: payments.filter((p) => dayKey(p.created_at) === todayKey).length,
+    pending: pendingN + processingN,
+    refund_queue: refundBlock.queue.length,
+    failed: failedN,
+    settlements: null,
+  };
+
+  // ---- Vendor payouts (only when the marketplace actually has vendor rows)
+  let vendorPayouts: VendorPayoutBlock = { enabled: false, rows: [] };
+  const [vendorRes, payoutRes, commissionRes] = await Promise.all([
+    supabaseAdmin.from("vendors").select("id,business_name,commission_rate").limit(500),
+    supabaseAdmin.from("vendor_payouts").select("vendor_id,amount,currency,status,period_end,processed_at").limit(5000),
+    supabaseAdmin.from("vendor_commissions").select("vendor_id,amount,rate,currency,status").limit(5000),
+  ]);
+  const vendorRows = (vendorRes.data ?? []) as unknown as { id: string; business_name: string | null; commission_rate: number | null }[];
+  if (vendorRows.length) {
+    const payoutRows = (payoutRes.data ?? []) as unknown as { vendor_id: string; amount: number | null; currency: string | null; status: string | null; period_end: string | null; processed_at: string | null }[];
+    const commRows = (commissionRes.data ?? []) as unknown as { vendor_id: string; amount: number | null; currency: string | null; status: string | null }[];
+    vendorPayouts = {
+      enabled: true,
+      rows: vendorRows.map((v) => {
+        const mine = payoutRows.filter((p) => p.vendor_id === v.id);
+        const comm = commRows.filter((c) => c.vendor_id === v.id);
+        const pending = mine.filter((p) => ["pending", "processing"].includes(classify(p.status))).reduce((s, p) => s + num(p.amount), 0);
+        const completed = mine.filter((p) => classify(p.status) === "succeeded").reduce((s, p) => s + num(p.amount), 0);
+        const commission = comm.length ? comm.reduce((s, c) => s + num(c.amount), 0) : null;
+        const upcoming = mine
+          .filter((p) => classify(p.status) !== "succeeded" && p.period_end)
+          .map((p) => p.period_end as string)
+          .sort()[0] ?? null;
+        return {
+          vendor_id: v.id,
+          vendor: v.business_name ?? "Vendor",
+          pending,
+          completed,
+          next_settlement: upcoming,
+          total_sales: null,
+          commission,
+          net_earnings: commission == null ? null : pending + completed,
+          currency: (mine[0]?.currency ?? comm[0]?.currency ?? "INR").toUpperCase(),
+        };
+      }).sort((a, b) => b.pending - a.pending || b.completed - a.completed),
+    };
+  }
+
   return {
     kpis,
+    health,
+    insights,
+    quick,
     regions,
     daily: [...dailyAll.values()].sort((a, b) => a.date.localeCompare(b.date)),
     gateways,
     refunds: refundBlock,
+    vendor_payouts: vendorPayouts,
     settlements: null,
     activity,
     window_days: windowDays,
@@ -584,6 +756,7 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     has_any_data: payments.length > 0 || orders.length > 0 || refunds.length > 0,
   };
 }
+
 
 export type LedgerFilters = {
   search?: string;

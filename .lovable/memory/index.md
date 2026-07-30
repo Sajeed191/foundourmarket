@@ -13,6 +13,7 @@ Customer Experience rule (permanent): every browse recommendation is optional an
 PDP recommendations rule (permanent): additive, never interruptive. They never block/replace the purchase flow, never shift Buy Now / Add to Cart, and only render below the main purchase area.
 
 ## Memories
+- [Real Data Only policy](mem://constraints/real-data-only) — Never fabricate metrics/ETAs/agent counts; null + honest unavailable states everywhere
 - [AI UX principles](mem://design/ai-ux-principles) — Permanent rules for every AI surface: one message, simple language, traffic lights, explain decisions, one-click fix, unified Marketplace AI Assistant
 - [Brand & design direction](mem://design/brand-direction) — Full visual style, UX goals, motion system
 - [Homepage & components spec](mem://features/homepage-spec) — Section structure, product cards, nav, footer rules

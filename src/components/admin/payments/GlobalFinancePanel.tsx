@@ -3,9 +3,8 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
   Tooltip, XAxis, YAxis, CartesianGrid, Legend,
 } from "recharts";
-import {
-  Globe2, Search, ArrowUpDown, Banknote, Coins, Landmark, ShieldCheck, Store, Sparkles,
-} from "lucide-react";
+import { Search, Banknote, Coins, ShieldCheck, Store } from "lucide-react";
+
 import type {
   GlobalFinance, ScopeKpis, CountryRow, GatewayRow, Scope,
 } from "@/lib/payments-global-v6.functions";

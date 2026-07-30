@@ -111,6 +111,12 @@ function PaymentsInner() {
   const [breakdown, setBreakdown] = useState<RegionalBreakdown | null>(null);
   const [breakdownLoading, setBreakdownLoading] = useState(false);
   const [ledgerRegion, setLedgerRegion] = useState<"all" | "india" | "international">("all");
+  // CFO Dashboard (v7): lazy on first open, cached in state, one request per window.
+  const cfoFn = useServerFn(getCFODashboardFn);
+  const auditExportFn = useServerFn(auditCFOExportFn);
+  const [cfo, setCfo] = useState<CFODashboard | null>(null);
+  const [cfoLoading, setCfoLoading] = useState(false);
+
 
   const [tab, setTab] = useState<Tab>("overview");
 

@@ -627,6 +627,8 @@ const codSchema = z.object({
   addressId: z.string().uuid(),
   promoCode: z.string().trim().max(64).optional().nullable(),
   attribution: attributionSchema,
+  clientHints: clientHintsSchema,
+
 });
 
 /**

@@ -37,12 +37,27 @@ const attributionSchema = z
   .optional()
   .nullable();
 
+/**
+ * Advisory browser hints used ONLY when no trusted server-side region signal
+ * exists. They can never override the shipping country, profile region or
+ * geo-IP, so they cannot be used to force a cheaper currency.
+ */
+const clientHintsSchema = z
+  .object({
+    locale: z.string().trim().max(35).optional().nullable(),
+    timezone: z.string().trim().max(60).optional().nullable(),
+  })
+  .optional()
+  .nullable();
+
 const createSchema = z.object({
   items: z.array(lineItemSchema).min(1).max(100),
   addressId: z.string().uuid(),
   promoCode: z.string().trim().max(64).optional().nullable(),
   attribution: attributionSchema,
+  clientHints: clientHintsSchema,
 });
+
 
 const verifySchema = z.object({
   orderId: z.string().uuid(),

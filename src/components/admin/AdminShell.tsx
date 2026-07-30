@@ -125,6 +125,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-activity", label: "Activity log", icon: Activity, roles: ["admin", "super_admin"] },
       { to: "/admin-seed", label: "Seed data", icon: Database, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-rating-recovery", label: "Rating recovery", icon: Star, roles: ["admin", "super_admin"] },
+      { to: "/admin-reset", label: "Production reset", icon: AlertTriangle, roles: ["super_admin"] },
 
 
     ],

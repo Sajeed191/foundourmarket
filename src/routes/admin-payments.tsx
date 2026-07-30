@@ -88,6 +88,11 @@ const ReconciliationPanel = lazy(() =>
   import("@/components/admin/payments/ReconciliationPanel").then((m) => ({ default: m.ReconciliationPanel })),
 );
 
+const WorkspacePanel = lazy(() =>
+  import("@/components/admin/payments/WorkspacePanel").then((m) => ({ default: m.WorkspacePanel })),
+);
+
+
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
 );

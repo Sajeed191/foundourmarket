@@ -308,6 +308,19 @@ function PaymentsInner() {
               )}
               {tab === "india" && <RegionPanel block={data.regions.india} />}
               {tab === "international" && <RegionPanel block={data.regions.international} />}
+              {tab === "global" && (
+                globalData
+                  ? <GlobalFinancePanel data={globalData} />
+                  : globalLoading ? <Fallback /> : (
+                    <Panel title="Global financial intelligence">
+                      <EmptyState
+                        title="No financial data available yet."
+                        hint="India, international and global analytics populate automatically once the marketplace records its first payment."
+                      />
+                    </Panel>
+                  )
+              )}
+
               {tab === "ledger" && (
                 <PaymentsLedger
                   region="all"

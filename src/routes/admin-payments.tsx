@@ -39,6 +39,16 @@ import {
   type ReconDashboard,
 } from "@/lib/payments-recon-v8.functions";
 import type { ReconDrill } from "@/components/admin/payments/ReconciliationPanel";
+import {
+  getFinanceWorkspaceFn,
+  workspaceSearchFn,
+  addFinanceNoteFn,
+  recordReviewDecisionFn,
+  type FinanceWorkspace,
+  type WorkspaceAction,
+} from "@/lib/payments-workspace-v9.functions";
+import type { WorkspaceDecision } from "@/components/admin/payments/WorkspacePanel";
+
 
 
 

@@ -206,6 +206,33 @@ function PaymentsInner() {
     setTab("ledger");
   }, []);
 
+  // CFO Dashboard (v7): lazy on first open of its tab, cached, refreshed with
+  // the window / refresh key only — no duplicate database reads.
+  useEffect(() => {
+    if (tab !== "cfo") return;
+    let alive = true;
+    setCfoLoading(true);
+    cfoFn({ data: { windowDays } })
+      .then((res) => { if (alive) setCfo(res); })
+      .catch(() => { if (alive) setCfo(null); })
+      .finally(() => { if (alive) setCfoLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, cfoFn]);
+
+  // CFO drill-down: alerts and recommendations open the filtered ledger.
+  const onCfoDrill = useCallback((d: CFODrill) => {
+    setLedgerRegion("all");
+    setPreset({ status: d.status });
+    setTab("ledger");
+  }, []);
+
+  // Every executive export is audited through the existing security trail.
+  const onCfoExport = useCallback((report: string) => {
+    void auditExportFn({ data: { report } }).catch(() => {});
+  }, [auditExportFn]);
+
+
+
 
 
   // Finance Operations is fetched lazily on first open, then kept in state

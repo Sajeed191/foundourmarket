@@ -41,8 +41,14 @@ export type RegionSignalKey =
   | "platform_fallback";
 
 export type RegionSignals = {
-  /** Region the customer explicitly picked in the UI (advisory, client-sent). */
+  /** Region the customer explicitly picked (highest priority). */
   selectedRegion?: MarketRegion | string | null;
+  /**
+   * True when `selectedRegion` was read server-side (e.g. the write-once locked
+   * profile region) rather than sent by the client. Client-sent selections stay
+   * advisory so a tampered payload can never pick the cheaper currency.
+   */
+  selectedRegionTrusted?: boolean;
   /** Country on the shipping address already entered (trusted, server-read). */
   shippingCountry?: string | null;
   /** Region locked on the customer's profile (trusted, server-read). */
@@ -149,7 +155,7 @@ export function resolveMarketRegion(signals: RegionSignals): RegionDecision {
       label: "Customer-selected region",
       value: signals.selectedRegion ? String(signals.selectedRegion) : null,
       indicates: regionFromValue(signals.selectedRegion as string | null),
-      trusted: false,
+      trusted: signals.selectedRegionTrusted === true,
       available: !!signals.selectedRegion,
     },
     {

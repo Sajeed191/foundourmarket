@@ -147,6 +147,8 @@ function Intelligence({ data }: { data: TrafficIntelligence }) {
       <TabsContent value="advisor"><Advisor data={data} /></TabsContent>
       <TabsContent value="exec"><Executive data={data} /></TabsContent>
       <TabsContent value="v10"><EnterpriseV10 /></TabsContent>
+      <TabsContent value="v11"><ConversionV11 /></TabsContent>
+
     </Tabs>
   );
 }

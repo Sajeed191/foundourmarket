@@ -615,8 +615,14 @@ function SellerAssistancePage() {
                       Reference: <span className="font-mono text-emerald-300">FOM-{Date.now().toString(36).toUpperCase()}</span>
                     </p>
                     <p className="text-xs text-white/55 mt-2">
-                      A seller specialist will respond {user?.email ? <>to <span className="text-white">{user.email}</span></> : "shortly"} within 24 hours.
+                      A seller specialist will respond
+                      {user?.email ? <> to <span className="text-white">{user.email}</span></> : " shortly"}
+                      {fmtMinutes(supportFacts?.avgFirstResponseMinutes ?? null)
+                        ? <> · average first reply {fmtMinutes(supportFacts!.avgFirstResponseMinutes)}</>
+                        : null}
+                      .
                     </p>
+
                     <div className="mt-4 flex gap-2">
                       <Button
                         variant="outline"

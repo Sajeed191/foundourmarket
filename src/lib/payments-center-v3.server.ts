@@ -463,9 +463,13 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     b.currencies = sortBuckets(a.currencies);
     b.geo = sortBuckets(a.geo, 10);
     b.cities = sortBuckets(a.cities, 10);
+    b.gateways = sortBuckets(a.gateways, 8);
     b.customers = [...a.customers.values()].sort((x, y) => y.v - x.v).slice(0, 8);
     b.daily = [...a.daily.values()].sort((x, y) => x.date.localeCompare(y.date));
+    b.hourly = a.hourly;
+    b.aov = b.orders ? b.revenue / b.orders : 0;
   }
+
 
   // ---- Gateways
   const gwAcc = new Map<string, GatewayBlock>();

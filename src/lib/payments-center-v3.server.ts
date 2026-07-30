@@ -480,8 +480,10 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     const created: GatewayBlock = {
       provider: key, display_name: key.charAt(0).toUpperCase() + key.slice(1),
       enabled: null, mode: null, configured: null,
-      transactions: 0, succeeded: 0, failed: 0, revenue: 0, success_rate: null, last_sync: null,
+      transactions: 0, succeeded: 0, failed: 0, revenue: 0,
+      success_rate: null, failure_rate: null, latency_ms: null, last_sync: null,
     };
+
     gwAcc.set(key, created);
     return created;
   };

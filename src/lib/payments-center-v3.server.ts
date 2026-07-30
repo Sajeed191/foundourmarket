@@ -510,8 +510,14 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     if (!g.last_sync || p.created_at > g.last_sync) g.last_sync = p.created_at;
   }
   const gateways = [...gwAcc.values()]
-    .map((g) => ({ ...g, success_rate: g.transactions ? (g.succeeded / g.transactions) * 100 : null }))
+    .map((g) => ({
+      ...g,
+      success_rate: g.transactions ? (g.succeeded / g.transactions) * 100 : null,
+      failure_rate: g.transactions ? (g.failed / g.transactions) * 100 : null,
+      latency_ms: null,
+    }))
     .sort((a, b) => b.revenue - a.revenue || a.provider.localeCompare(b.provider));
+
 
   // ---- Refunds block
   const reasons = new Map<string, Bucket>();

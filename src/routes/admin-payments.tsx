@@ -27,6 +27,13 @@ import {
   type RegionalBreakdown,
 } from "@/lib/payments-global-v65.functions";
 import type { BreakdownDrill } from "@/components/admin/payments/RegionalBreakdownPanel";
+import {
+  getCFODashboardFn,
+  auditCFOExportFn,
+  type CFODashboard,
+} from "@/lib/payments-cfo-v7.functions";
+import type { CFODrill } from "@/components/admin/payments/CFOPanel";
+
 
 
 import { EmptyState, Panel } from "@/components/admin/payments/ui";

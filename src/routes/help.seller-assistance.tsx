@@ -23,6 +23,9 @@ import {
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { loadCrisp, openCrispChat, closeCrispChat, setCrispUser } from "@/lib/crisp";
+import { useSupportFacts, fmtMinutes, fmtHours, type SupportFacts } from "@/lib/support-facts";
+import { fmtLastActive } from "@/lib/support-presence";
+
 
 const WHATSAPP_NUMBERS = [
   { number: "919745844213", display: "+91 97458 44213", department: "General Marketplace Support" },
@@ -69,7 +72,7 @@ const PROTECTION = [
 ];
 
 const CHANNELS = [
-  { id: "chat", icon: MessageCircle, title: "Live Chat", meta: "Support Online · Typically replies instantly", status: "Online", color: "#22c55e", loading: "Connecting to Live Marketplace Support…", badge: "Verified" },
+  { id: "chat", icon: MessageCircle, title: "Live Chat", meta: "Message the marketplace support team", status: "Online", color: "#22c55e", loading: "Connecting to Live Marketplace Support…", badge: "Verified" },
   { id: "email", icon: Mail, title: "Priority Email", meta: SUPPORT_EMAIL, status: "< 24h", color: "#FF9F43", loading: "Opening Priority Assistance…", badge: "Encrypted" },
   { id: "call", icon: CalendarClock, title: "Schedule a Call", meta: "Free 1:1 with seller team", status: "Bookable", color: "#a78bfa", loading: "Scheduling Assistance Session…", badge: "Enterprise" },
   { id: "whatsapp", icon: Phone, title: "WhatsApp Support", meta: "Direct mobile assistance", status: "Live", color: "#25D366", loading: "Connecting to Marketplace Support…", badge: "Encrypted" },
@@ -113,64 +116,131 @@ function Atmosphere() {
 }
 
 type ChannelStatus = {
-  online: boolean;
-  label: string;          // e.g. "Online", "Away", "Bookable"
-  eta: string;            // e.g. "~30s", "< 24h"
-  color: string;          // dot color
-  pulse: boolean;         // animated ping
+  label: string;              // "Online" | "Away" | "Offline" | "Available" | "Unavailable"
+  eta: string | null;         // real measured value, or null → honest empty state
+  color: string;              // dot color
+  pulse: boolean;             // animated ping (only for genuinely live presence)
 };
 
-// Deterministic SSR fallback — no Date/Math here so server & first client render match.
-const STATUS_FALLBACK: Record<string, ChannelStatus> = {
-  chat:     { online: true,  label: "Online",   eta: "~30s",  color: "#22c55e", pulse: true  },
-  email:    { online: true,  label: "Active",   eta: "< 24h", color: "#FF9F43", pulse: false },
-  call:     { online: true,  label: "Bookable", eta: "Today", color: "#a78bfa", pulse: false },
-  whatsapp: { online: true,  label: "Live",     eta: "~2m",   color: "#25D366", pulse: true  },
-};
+const GREY = "#94a3b8";
 
-function computeSupportStatus(now: Date): Record<string, ChannelStatus> {
-  // Use UTC + IST offset (support team based in India, UTC+5:30).
-  const istMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + 330) % (24 * 60);
-  const istHour = Math.floor(istMinutes / 60);
-  const day = (now.getUTCDay() + (istMinutes < now.getUTCMinutes() ? 1 : 0)) % 7; // 0 Sun .. 6 Sat
-  const isWeekend = day === 0 || day === 6;
-  const businessHours = istHour >= 9 && istHour < 21; // 9am–9pm IST
+/** Deterministic SSR/first-paint state — no fabricated numbers, no clock. */
+const STATUS_UNKNOWN: ChannelStatus = { label: "Checking…", eta: null, color: GREY, pulse: false };
 
-  // Chat: live during business hours, otherwise async ETA.
-  const chatLive = businessHours && !isWeekend;
-  const chatEtaSeconds = chatLive ? 20 + Math.floor(Math.random() * 50) : 0;
+/**
+ * Real support status. Presence comes from actual staff activity heartbeats and
+ * the reply time is the measured average first response across real tickets.
+ * When either has no evidence we return `null` and the UI says so — nothing is
+ * randomised, estimated or simulated.
+ */
+function channelStatuses(
+  facts: SupportFacts | null,
+  unavailable: boolean,
+): Record<string, ChannelStatus> {
+  if (!facts) {
+    const s: ChannelStatus = unavailable
+      ? { label: "Unavailable", eta: null, color: GREY, pulse: false }
+      : STATUS_UNKNOWN;
+    return { chat: s, email: s, call: s, whatsapp: s };
+  }
 
-  // WhatsApp: always reachable but ETA grows off-hours.
-  const waMinutes = businessHours ? 1 + Math.floor(Math.random() * 4) : 15 + Math.floor(Math.random() * 30);
+  const replyEta = fmtMinutes(facts.avgFirstResponseMinutes);
+  const live = facts.presence === "online";
+  const away = facts.presence === "away";
 
-  // Email: ETA tightens during business hours.
-  const emailEta = businessHours ? "< 4h" : "< 24h";
+  const chat: ChannelStatus = live
+    ? { label: "Online", eta: replyEta, color: "#22c55e", pulse: true }
+    : away
+      ? { label: "Away", eta: replyEta, color: "#FF9F43", pulse: false }
+      : { label: "Offline", eta: replyEta, color: GREY, pulse: false };
 
   return {
-    chat: chatLive
-      ? { online: true,  label: "Online",  eta: `~${chatEtaSeconds}s`, color: "#22c55e", pulse: true }
-      : { online: false, label: "Away",    eta: "Replies in < 12h",    color: "#94a3b8", pulse: false },
-    email:    { online: true,  label: "Active",   eta: emailEta, color: "#FF9F43", pulse: false },
-    call:     { online: businessHours, label: businessHours ? "Bookable" : "Next-day", eta: businessHours ? "Today" : "Tomorrow", color: "#a78bfa", pulse: false },
-    whatsapp: { online: true,  label: "Live",     eta: `~${waMinutes}m`, color: "#25D366", pulse: businessHours },
+    chat,
+    // Email is always reachable; the only number shown is the measured average.
+    email: { label: "Active", eta: replyEta, color: "#FF9F43", pulse: false },
+    // Booking link is configured, so it is genuinely available. No fake slots.
+    call: { label: "Bookable", eta: null, color: "#a78bfa", pulse: false },
+    // Shown only when numbers are actually configured (see visibleChannels).
+    whatsapp: { label: "Available", eta: null, color: "#25D366", pulse: false },
   };
 }
 
-function useSupportStatus(): Record<string, ChannelStatus> {
-  const [status, setStatus] = useState<Record<string, ChannelStatus>>(STATUS_FALLBACK);
-  useEffect(() => {
-    const tick = () => setStatus(computeSupportStatus(new Date()));
-    tick();
-    const id = setInterval(tick, 30_000);
-    const onVis = () => { if (document.visibilityState === "visible") tick(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
-  }, []);
-  return status;
+/**
+ * Real support presence & service levels. Every tile either shows a measured
+ * value or an explicit unavailable message — never a placeholder number.
+ */
+function SupportFactsStrip({
+  facts,
+  unavailable,
+}: {
+  facts: SupportFacts | null;
+  unavailable: boolean;
+}) {
+  const presenceLabel = !facts
+    ? null
+    : facts.presence === "online"
+      ? "Online"
+      : facts.presence === "away"
+        ? "Busy"
+        : "Offline";
+
+  const tiles: { label: string; value: string | null; empty: string; sub?: string | null }[] = [
+    {
+      label: "Support status",
+      value: presenceLabel,
+      empty: "Support status cannot be determined at this time.",
+      sub: facts?.lastActiveAt ? `Last active ${fmtLastActive(facts.lastActiveAt)}` : null,
+    },
+    {
+      label: "Average first reply",
+      value: facts ? fmtMinutes(facts.avgFirstResponseMinutes) : null,
+      empty: "Average response time will appear once sufficient support history is available.",
+      sub: facts && facts.firstResponseSample > 0 ? `From ${facts.firstResponseSample} requests · last 90 days` : null,
+    },
+    {
+      label: "Average resolution",
+      value: facts ? fmtHours(facts.avgResolutionHours) : null,
+      empty: "Resolution time will appear once sufficient support history is available.",
+      sub: facts && facts.resolutionSample > 0 ? `From ${facts.resolutionSample} resolved requests` : null,
+    },
+    {
+      label: "Requests in queue",
+      value: facts && facts.openTickets != null ? String(facts.openTickets) : null,
+      empty: "Current queue information is unavailable.",
+    },
+  ];
+
+  return (
+    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {tiles.map((t) => (
+        <div
+          key={t.label}
+          className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-xl"
+        >
+          <p className="text-[9px] font-mono uppercase tracking-widest text-white/45">{t.label}</p>
+          {t.value ? (
+            <>
+              <p className="mt-1 text-lg font-semibold tabular-nums">{t.value}</p>
+              {t.sub && <p className="mt-0.5 text-[10px] text-white/45">{t.sub}</p>}
+            </>
+          ) : (
+            <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
+              {unavailable ? "Currently unavailable." : t.empty}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
+
+
+
 function SellerAssistancePage() {
-  const supportStatus = useSupportStatus();
+  const { data: supportFacts, unavailable: factsUnavailable } = useSupportFacts();
+  const supportStatus = channelStatuses(supportFacts, factsUnavailable);
+
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -538,7 +608,7 @@ function SellerAssistancePage() {
                   </div>
                   <div className="relative flex flex-col items-end gap-1 shrink-0">
                     {(() => {
-                      const s = supportStatus[c.id] ?? STATUS_FALLBACK[c.id];
+                      const s = supportStatus[c.id] ?? STATUS_UNKNOWN;
                       return (
                         <>
                           <span
@@ -564,10 +634,13 @@ function SellerAssistancePage() {
                             </span>
                             {isChatOpen ? "Open" : s.label}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-white/55">
-                            <Lock className="size-2.5" />
-                            {isChatOpen ? "Active" : s.eta}
-                          </span>
+                          {(isChatOpen || s.eta) && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-white/55">
+                              <Lock className="size-2.5" />
+                              {isChatOpen ? "Active" : s.eta}
+                            </span>
+                          )}
+
                         </>
                       );
                     })()}
@@ -576,7 +649,9 @@ function SellerAssistancePage() {
               );
             })}
           </div>
+          <SupportFactsStrip facts={supportFacts} unavailable={factsUnavailable} />
         </Section>
+
 
         {/* FORM */}
         <Section eyebrow="Submit a request" title="Tell us what's going on" id="seller-form">
@@ -613,8 +688,14 @@ function SellerAssistancePage() {
                       Reference: <span className="font-mono text-emerald-300">FOM-{Date.now().toString(36).toUpperCase()}</span>
                     </p>
                     <p className="text-xs text-white/55 mt-2">
-                      A seller specialist will respond {user?.email ? <>to <span className="text-white">{user.email}</span></> : "shortly"} within 24 hours.
+                      A seller specialist will respond
+                      {user?.email ? <> to <span className="text-white">{user.email}</span></> : " shortly"}
+                      {fmtMinutes(supportFacts?.avgFirstResponseMinutes ?? null)
+                        ? <> · average first reply {fmtMinutes(supportFacts!.avgFirstResponseMinutes)}</>
+                        : null}
+                      .
                     </p>
+
                     <div className="mt-4 flex gap-2">
                       <Button
                         variant="outline"
@@ -925,7 +1006,7 @@ function SellerAssistancePage() {
           <div className="px-5 py-3 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-[#070b16]">
             <p className="text-[11px] text-white/50 flex items-center gap-1.5 flex-1 min-w-0">
               <ShieldCheck className="size-3 text-emerald-300 shrink-0" />
-              <span className="truncate">Encrypted booking · Verified FoundOurMarket™ staff · Avg. reply &lt; 24h</span>
+              <span className="truncate">Encrypted booking · Verified FoundOurMarket™ staff</span>
             </p>
             <div className="flex items-center gap-2">
               <a

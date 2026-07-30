@@ -7682,6 +7682,7 @@ export type Database = {
       suggest_search_term: { Args: { q: string }; Returns: string }
       support_admin_unread_count: { Args: never; Returns: number }
       support_availability: { Args: never; Returns: Json }
+      support_service_facts: { Args: never; Returns: Json }
       support_unread_count: { Args: never; Returns: number }
       svc_acquisition_metrics: {
         Args: { p_since: string; p_window_days: number }

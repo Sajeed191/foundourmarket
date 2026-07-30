@@ -20,6 +20,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
+import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RuntimeIsolationRouteImport } from './routes/runtime-isolation'
 import { Route as RuntimeFreezeRafRouteImport } from './routes/runtime-freeze-raf'
@@ -246,6 +247,11 @@ const SigninRoute = SigninRouteImport.update({
 const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
   id: '/shipping-policy',
   path: '/shipping-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -1252,6 +1258,7 @@ export interface FileRoutesByFullPath {
   '/runtime-freeze-raf': typeof RuntimeFreezeRafRoute
   '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
+  '/setup': typeof SetupRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
@@ -1437,6 +1444,7 @@ export interface FileRoutesByTo {
   '/runtime-freeze-raf': typeof RuntimeFreezeRafRoute
   '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
+  '/setup': typeof SetupRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
@@ -1622,6 +1630,7 @@ export interface FileRoutesById {
   '/runtime-freeze-raf': typeof RuntimeFreezeRafRoute
   '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
+  '/setup': typeof SetupRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
@@ -1809,6 +1818,7 @@ export interface FileRouteTypes {
     | '/runtime-freeze-raf'
     | '/runtime-isolation'
     | '/search'
+    | '/setup'
     | '/shipping-policy'
     | '/signin'
     | '/signup'
@@ -1994,6 +2004,7 @@ export interface FileRouteTypes {
     | '/runtime-freeze-raf'
     | '/runtime-isolation'
     | '/search'
+    | '/setup'
     | '/shipping-policy'
     | '/signin'
     | '/signup'
@@ -2178,6 +2189,7 @@ export interface FileRouteTypes {
     | '/runtime-freeze-raf'
     | '/runtime-isolation'
     | '/search'
+    | '/setup'
     | '/shipping-policy'
     | '/signin'
     | '/signup'
@@ -2364,6 +2376,7 @@ export interface RootRouteChildren {
   RuntimeFreezeRafRoute: typeof RuntimeFreezeRafRoute
   RuntimeIsolationRoute: typeof RuntimeIsolationRoute
   SearchRoute: typeof SearchRoute
+  SetupRoute: typeof SetupRoute
   ShippingPolicyRoute: typeof ShippingPolicyRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
@@ -2497,6 +2510,13 @@ declare module '@tanstack/react-router' {
       path: '/shipping-policy'
       fullPath: '/shipping-policy'
       preLoaderRoute: typeof ShippingPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -3894,6 +3914,7 @@ const rootRouteChildren: RootRouteChildren = {
   RuntimeFreezeRafRoute: RuntimeFreezeRafRoute,
   RuntimeIsolationRoute: RuntimeIsolationRoute,
   SearchRoute: SearchRoute,
+  SetupRoute: SetupRoute,
   ShippingPolicyRoute: ShippingPolicyRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,

@@ -203,6 +203,15 @@ export async function executeFactoryReset(
       .eq("id", p.id as string);
   }
 
+  // --- Audit trail purge (final reset record is written last) ----------
+  {
+    const { error } = await supabaseAdmin
+      .from("security_audit_log")
+      .delete()
+      .not("id", "is", null);
+    if (error) failures.push({ table: "security_audit_log", error: error.message });
+  }
+
   // --- Validation --------------------------------------------------------
   const { data: remaining } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
   const validation: Record<string, number | boolean> = {

@@ -70,6 +70,7 @@ import { Route as AdminReturnsRouteImport } from './routes/admin-returns'
 import { Route as AdminResetRouteImport } from './routes/admin-reset'
 import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminReliabilityLabRouteImport } from './routes/admin-reliability-lab'
+import { Route as AdminRegionDiagnosticsRouteImport } from './routes/admin-region-diagnostics'
 import { Route as AdminRegionRouteImport } from './routes/admin-region'
 import { Route as AdminRecommendationValidationRouteImport } from './routes/admin-recommendation-validation'
 import { Route as AdminRecommendationRulesRouteImport } from './routes/admin-recommendation-rules'
@@ -497,6 +498,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
 const AdminReliabilityLabRoute = AdminReliabilityLabRouteImport.update({
   id: '/admin-reliability-lab',
   path: '/admin-reliability-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRegionDiagnosticsRoute = AdminRegionDiagnosticsRouteImport.update({
+  id: '/admin-region-diagnostics',
+  path: '/admin-region-diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRegionRoute = AdminRegionRouteImport.update({
@@ -1209,6 +1215,7 @@ export interface FileRoutesByFullPath {
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-recommendation-validation': typeof AdminRecommendationValidationRoute
   '/admin-region': typeof AdminRegionRoute
+  '/admin-region-diagnostics': typeof AdminRegionDiagnosticsRoute
   '/admin-reliability-lab': typeof AdminReliabilityLabRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-reset': typeof AdminResetRoute
@@ -1395,6 +1402,7 @@ export interface FileRoutesByTo {
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-recommendation-validation': typeof AdminRecommendationValidationRoute
   '/admin-region': typeof AdminRegionRoute
+  '/admin-region-diagnostics': typeof AdminRegionDiagnosticsRoute
   '/admin-reliability-lab': typeof AdminReliabilityLabRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-reset': typeof AdminResetRoute
@@ -1581,6 +1589,7 @@ export interface FileRoutesById {
   '/admin-recommendation-rules': typeof AdminRecommendationRulesRoute
   '/admin-recommendation-validation': typeof AdminRecommendationValidationRoute
   '/admin-region': typeof AdminRegionRoute
+  '/admin-region-diagnostics': typeof AdminRegionDiagnosticsRoute
   '/admin-reliability-lab': typeof AdminReliabilityLabRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-reset': typeof AdminResetRoute
@@ -1769,6 +1778,7 @@ export interface FileRouteTypes {
     | '/admin-recommendation-rules'
     | '/admin-recommendation-validation'
     | '/admin-region'
+    | '/admin-region-diagnostics'
     | '/admin-reliability-lab'
     | '/admin-reports'
     | '/admin-reset'
@@ -1955,6 +1965,7 @@ export interface FileRouteTypes {
     | '/admin-recommendation-rules'
     | '/admin-recommendation-validation'
     | '/admin-region'
+    | '/admin-region-diagnostics'
     | '/admin-reliability-lab'
     | '/admin-reports'
     | '/admin-reset'
@@ -2140,6 +2151,7 @@ export interface FileRouteTypes {
     | '/admin-recommendation-rules'
     | '/admin-recommendation-validation'
     | '/admin-region'
+    | '/admin-region-diagnostics'
     | '/admin-reliability-lab'
     | '/admin-reports'
     | '/admin-reset'
@@ -2327,6 +2339,7 @@ export interface RootRouteChildren {
   AdminRecommendationRulesRoute: typeof AdminRecommendationRulesRoute
   AdminRecommendationValidationRoute: typeof AdminRecommendationValidationRoute
   AdminRegionRoute: typeof AdminRegionRoute
+  AdminRegionDiagnosticsRoute: typeof AdminRegionDiagnosticsRoute
   AdminReliabilityLabRoute: typeof AdminReliabilityLabRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminResetRoute: typeof AdminResetRoute
@@ -2860,6 +2873,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-reliability-lab'
       fullPath: '/admin-reliability-lab'
       preLoaderRoute: typeof AdminReliabilityLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-region-diagnostics': {
+      id: '/admin-region-diagnostics'
+      path: '/admin-region-diagnostics'
+      fullPath: '/admin-region-diagnostics'
+      preLoaderRoute: typeof AdminRegionDiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-region': {
@@ -3865,6 +3885,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRecommendationRulesRoute: AdminRecommendationRulesRoute,
   AdminRecommendationValidationRoute: AdminRecommendationValidationRoute,
   AdminRegionRoute: AdminRegionRoute,
+  AdminRegionDiagnosticsRoute: AdminRegionDiagnosticsRoute,
   AdminReliabilityLabRoute: AdminReliabilityLabRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminResetRoute: AdminResetRoute,

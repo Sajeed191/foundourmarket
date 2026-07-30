@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
-import { Loader2, Zap, Flame, Search, X, ArrowDownWideNarrow, Star, ArrowRight } from "lucide-react";
+import { Zap, Flame, Search, X, ArrowDownWideNarrow, Star, ArrowRight } from "lucide-react";
 import { useFlashDeals } from "@/lib/use-flash-deals";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import type { Product } from "@/lib/products";

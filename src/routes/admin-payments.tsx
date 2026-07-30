@@ -66,7 +66,7 @@ export const Route = createFileRoute("/admin-payments")({
   component: PaymentsPage,
 });
 
-type Tab = "overview" | "ops" | "finance" | "india" | "international" | "ledger";
+type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "ledger";
 
 const WINDOWS = [30, 90, 180, 365];
 

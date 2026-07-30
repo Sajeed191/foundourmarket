@@ -136,6 +136,19 @@ function PaymentsInner() {
       .finally(() => { if (alive) setIntelLoading(false); });
     return () => { alive = false; };
   }, [tab, windowDays, refreshKey, intelFn]);
+  // Global Financial Intelligence (v6): lazy on first open, cached in state,
+  // refreshed only with the window / refresh key — no duplicate requests.
+  useEffect(() => {
+    if (tab !== "global") return;
+    let alive = true;
+    setGlobalLoading(true);
+    globalFn({ data: { windowDays } })
+      .then((res) => { if (alive) setGlobalData(res); })
+      .catch(() => { if (alive) setGlobalData(null); })
+      .finally(() => { if (alive) setGlobalLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, globalFn]);
+
 
   // Finance Operations is fetched lazily on first open, then kept in state
   // and refreshed with the window / refresh key (no duplicate requests).

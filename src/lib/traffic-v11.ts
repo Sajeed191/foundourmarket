@@ -431,9 +431,6 @@ export async function fetchTrafficV11(days = 14, filters: V11Filters = {}): Prom
       engagement,
       engagementParts: parts,
       steps,
-      ...( { } ),
-      // dwell map is only used for heat ranking below
-      ...(dwellByPath.size ? {} : {}),
     });
   }
 

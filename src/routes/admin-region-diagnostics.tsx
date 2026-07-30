@@ -90,12 +90,15 @@ function RegionDiagnosticsPage() {
   const d = result?.decision;
 
   return (
-    <AdminShell>
+    <AdminShell
+      title="Region & Currency Diagnostics"
+      subtitle="Staff-only region resolution trace"
+      allow={["admin", "super_admin", "manager"]}
+    >
       <div className="space-y-5">
         <header className="flex items-start gap-3">
           <Globe2 className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
           <div>
-            <h1 className="text-lg font-semibold">Region &amp; Currency Diagnostics</h1>
             <p className="text-xs text-muted-foreground">
               Staff-only. Shows which signal decides a customer's market region, the resulting order
               currency, and whether Razorpay will expose UPI. Read-only — nothing is charged or saved.

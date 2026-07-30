@@ -157,6 +157,14 @@ function PaymentsInner() {
   const auditReconExport = useServerFn(auditReconExportFn);
   const [recon, setRecon] = useState<ReconDashboard | null>(null);
   const [reconLoading, setReconLoading] = useState(false);
+  // Finance Workspace (v9): operations-first surface — lazy, cached per window.
+  const workspaceFn = useServerFn(getFinanceWorkspaceFn);
+  const wsSearchFn = useServerFn(workspaceSearchFn);
+  const wsNoteFn = useServerFn(addFinanceNoteFn);
+  const wsDecisionFn = useServerFn(recordReviewDecisionFn);
+  const [workspace, setWorkspace] = useState<FinanceWorkspace | null>(null);
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
+
 
 
   const [tab, setTab] = useState<Tab>("overview");

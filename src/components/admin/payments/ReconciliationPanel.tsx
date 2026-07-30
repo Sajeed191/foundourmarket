@@ -123,7 +123,7 @@ function GatewayCard({ g }: { g: GatewayTimeline }) {
               <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} stroke="rgba(255,255,255,0.3)" width={28} />
               <Tooltip
                 contentStyle={{ background: "rgba(10,10,14,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11 }}
-                formatter={(v: number | null) => (v == null ? "No data" : `${v}%`)}
+                formatter={(v: unknown) => (v == null ? "No data" : `${v}%`)}
               />
               <Area type="monotone" dataKey="rate" stroke="hsl(var(--accent))" fill="hsl(var(--accent) / 0.18)" strokeWidth={2} connectNulls />
             </AreaChart>

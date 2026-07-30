@@ -352,21 +352,31 @@ function PaymentsInner() {
               {tab === "india" && <RegionPanel block={data.regions.india} />}
               {tab === "international" && <RegionPanel block={data.regions.international} />}
               {tab === "global" && (
-                globalData
-                  ? <GlobalFinancePanel data={globalData} />
-                  : globalLoading ? <Fallback /> : (
-                    <Panel title="Global financial intelligence">
-                      <EmptyState
-                        title="No financial data available yet."
-                        hint="India, international and global analytics populate automatically once the marketplace records its first payment."
-                      />
-                    </Panel>
-                  )
+                <div className="space-y-4">
+                  {globalData
+                    ? <GlobalFinancePanel data={globalData} />
+                    : globalLoading ? <Fallback /> : (
+                      <Panel title="Global financial intelligence">
+                        <EmptyState
+                          title="No financial data available yet."
+                          hint="India, international and global analytics populate automatically once the marketplace records its first payment."
+                        />
+                      </Panel>
+                    )}
+                  {breakdown
+                    ? <RegionalBreakdownPanel data={breakdown} onDrill={onBreakdownDrill} />
+                    : breakdownLoading ? <Fallback /> : (
+                      <Panel title="Regional financial breakdown">
+                        <EmptyState title="No data available" />
+                      </Panel>
+                    )}
+                </div>
               )}
 
               {tab === "ledger" && (
                 <PaymentsLedger
-                  region="all"
+                  region={ledgerRegion}
+
                   facets={facets}
                   refreshKey={refreshKey}
                   preset={preset}

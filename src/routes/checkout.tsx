@@ -32,6 +32,7 @@ import { loadRazorpay, openRazorpay, type RazorpayResponse } from "@/lib/razorpa
 import { validatePincode, type ServiceabilityResult } from "@/lib/serviceability.functions";
 import { usePaymentGateways } from "@/lib/use-payment-gateways";
 import { GlobalCheckoutBeta } from "@/components/site/GlobalCheckoutBeta";
+import { CheckoutSuccess } from "@/components/site/CheckoutSuccess";
 import { logCheckout, friendlyCheckoutError, classifyCheckoutFailure } from "@/lib/checkout-logger";
 
 export const Route = createFileRoute("/checkout")({
@@ -728,7 +729,12 @@ function CheckoutPage() {
 
   /* ---------- terminal states ---------- */
   if (stage === "success") {
-    return <SuccessScreen orderId={placedOrderId} totalINR={totalINR} market={market} method={payMethod} eta={eta} nav={nav} />;
+    return (
+      <>
+        <Atmosphere />
+        <CheckoutSuccess orderId={placedOrderId} method={payMethod} eta={eta} />
+      </>
+    );
   }
 
   return (
@@ -1271,67 +1277,6 @@ function InternationalSoon({ live, loading }: { live: boolean; loading: boolean 
           <Sparkles className="size-3.5" /> Continue browsing
         </Link>
       </div>
-    </div>
-  );
-}
-
-function SuccessScreen({ orderId, totalINR, market, method, eta, nav }: {
-  orderId: string | null; totalINR: number; market: "india" | "international";
-  method: "razorpay" | "cod" | "demo"; eta: string;
-  nav: ReturnType<typeof useNavigate>;
-}) {
-  const inrFmt = (n: number) => formatMoney(market, n);
-  const [downloading, setDownloading] = useState(false);
-  return (
-    <div className="relative min-h-[70vh] grid place-items-center px-6">
-      <Atmosphere />
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="glass-strong border border-white/10 rounded-3xl p-8 sm:p-10 max-w-md w-full text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.1 }}
-          className="size-16 mx-auto mb-6 grid place-items-center rounded-full bg-emerald-500/10 border border-emerald-500/30">
-          <CheckCircle2 className="size-7 text-emerald-400" />
-        </motion.div>
-        <h1 className="text-2xl font-display font-semibold mb-1.5">
-          {method === "demo" ? "Demo order received" : method === "cod" ? "Order confirmed" : "Payment successful"}
-        </h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          {method === "demo"
-            ? "Your demo order has been recorded. We'll notify you when global payments launch."
-            : method === "cod" ? "Pay in cash when your order arrives." : "Your payment has been verified and your order is being prepared."}
-        </p>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-left space-y-2 mb-6">
-          <Row label="Order" value={orderId ? `#${orderId.slice(0, 8)}` : "—"} />
-          <Row label="Amount" value={inrFmt(totalINR)} />
-          <Row label="Method" value={method === "demo" ? "Global Beta (Demo)" : method === "cod" ? "Cash on Delivery" : "Razorpay"} />
-          <Row label="Est. delivery" value={eta} />
-        </div>
-        <div className="flex flex-col gap-2">
-          {orderId && (
-            <button onClick={() => nav({ to: "/orders/$id", params: { id: orderId } })}
-              className="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-bold py-3 rounded-full text-xs uppercase tracking-widest hover:brightness-110">
-              <Truck className="size-3.5" /> Track your order
-            </button>
-          )}
-          {orderId && (
-            <button
-              onClick={async () => {
-                setDownloading(true);
-                const ok = await (await import("@/lib/invoice")).downloadInvoice(orderId);
-                if (!ok) toast.error("Couldn't generate invoice. Please try from your order page.");
-                setDownloading(false);
-              }}
-              disabled={downloading}
-              className="w-full inline-flex items-center justify-center gap-2 glass border border-white/10 text-foreground font-bold py-3 rounded-full text-xs uppercase tracking-widest hover:border-accent/40 disabled:opacity-60">
-              {downloading ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
-              {downloading ? "Preparing…" : "Download invoice"}
-            </button>
-          )}
-          <button onClick={() => nav({ to: "/" })}
-            className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground py-2">
-            Continue shopping
-          </button>
-        </div>
-      </motion.div>
     </div>
   );
 }

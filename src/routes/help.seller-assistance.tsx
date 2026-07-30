@@ -537,7 +537,7 @@ function SellerAssistancePage() {
                   </div>
                   <div className="relative flex flex-col items-end gap-1 shrink-0">
                     {(() => {
-                      const s = supportStatus[c.id] ?? STATUS_FALLBACK[c.id];
+                      const s = supportStatus[c.id] ?? STATUS_UNKNOWN;
                       return (
                         <>
                           <span

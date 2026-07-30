@@ -16,11 +16,19 @@ import { useTrafficIntelligence } from "@/lib/use-traffic-intelligence";
 import { exportRows, exportJson, type ExportFormat } from "@/lib/traffic-export";
 import type { TrafficIntelligence } from "@/lib/traffic-intelligence";
 import { useTrafficV10 } from "@/lib/use-traffic-v10";
+import { useTrafficV11 } from "@/lib/use-traffic-v11";
+import type { V11Filters } from "@/lib/traffic-v11";
 
 // Traffic Intelligence v10 — additive enterprise layer, lazily loaded.
 const TrafficV10Panel = lazy(() =>
   import("@/components/admin/traffic/TrafficV10Panel").then((m) => ({ default: m.TrafficV10Panel })),
 );
+
+// Traffic Intelligence v11 — conversion intelligence layer, lazily loaded.
+const TrafficV11Panel = lazy(() =>
+  import("@/components/admin/traffic/TrafficV11Panel").then((m) => ({ default: m.TrafficV11Panel })),
+);
+
 
 export const Route = createFileRoute("/admin-traffic")({
   head: () => ({ meta: [{ title: "Traffic Intelligence — Admin" }] }),

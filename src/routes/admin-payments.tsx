@@ -18,6 +18,11 @@ import {
   getFinancialIntelligenceFn,
   type FinancialIntelligence,
 } from "@/lib/payments-intel-v4.functions";
+import {
+  getGlobalFinanceFn,
+  type GlobalFinance,
+} from "@/lib/payments-global-v6.functions";
+
 import { EmptyState, Panel } from "@/components/admin/payments/ui";
 import { LiveActivityFeed } from "@/components/admin/payments/LiveActivityFeed";
 import type { LedgerFacets, LedgerPreset } from "@/components/admin/payments/PaymentsLedger";

@@ -94,7 +94,11 @@ function PaymentsInner() {
   const [opsLoading, setOpsLoading] = useState(false);
   const [intel, setIntel] = useState<FinancialIntelligence | null>(null);
   const [intelLoading, setIntelLoading] = useState(false);
+  const globalFn = useServerFn(getGlobalFinanceFn);
+  const [globalData, setGlobalData] = useState<GlobalFinance | null>(null);
+  const [globalLoading, setGlobalLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
+
   const [windowDays, setWindowDays] = useState(90);
   const [data, setData] = useState<PaymentsOverview | null>(null);
   const [loading, setLoading] = useState(true);

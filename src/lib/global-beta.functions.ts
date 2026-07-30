@@ -152,15 +152,30 @@ export const joinGlobalWaitlist = createServerFn({ method: "POST" })
       throw new Error("Email must match your account email.");
     }
 
+    // Reject orphan references: a supplied slug must resolve to a real,
+    // publicly visible product (Security Hardening v1.1 — data integrity).
+    const slug = data.productSlug?.trim() || null;
+    if (slug) {
+      const { data: product } = await getPublicCatalogQuery(supabaseAdmin, "slug", "direct")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (!product) throw new Error("That product is no longer available.");
+    }
+
     const { error } = await supabaseAdmin.from("international_waitlist").insert({
       user_id: userId,
       name: data.name,
       email: data.email.toLowerCase(),
       country: data.country ?? null,
-      product_slug: data.productSlug ?? null,
+      product_slug: slug,
     });
-    if (error) throw new Error("Could not save your details. Please try again.");
+    // 23505 = already on the waitlist for this product. Idempotent success:
+    // the user's intent is already recorded, so the UX must not change.
+    if (error && (error as { code?: string }).code !== "23505") {
+      throw new Error("Could not save your details. Please try again.");
+    }
     return { ok: true };
+
   });
 
 export type GlobalExpansionStats = {

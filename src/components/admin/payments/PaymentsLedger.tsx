@@ -21,9 +21,18 @@ const ORDER_STATUSES = ["all", "pending", "paid", "processing", "shipped", "deli
 const field =
   "bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-[11px] focus:outline-none focus:border-accent/40 w-full";
 
+export type LedgerPreset = { status?: string; from?: string; to?: string };
+
 export function PaymentsLedger({
-  region, facets, refreshKey,
-}: { region: "all" | "india" | "international"; facets: LedgerFacets; refreshKey: number }) {
+  region, facets, refreshKey, preset, onSelect,
+}: {
+  region: "all" | "india" | "international";
+  facets: LedgerFacets;
+  refreshKey: number;
+  /** Applied from the quick-action bar; re-applied whenever the object identity changes. */
+  preset?: LedgerPreset | null;
+  onSelect?: (paymentId: string) => void;
+}) {
   const ledgerFn = useServerFn(getPaymentsLedgerFn);
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
@@ -49,6 +58,13 @@ export function PaymentsLedger({
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { const t = setTimeout(() => setSearch(query), 300); return () => clearTimeout(t); }, [query]);
+  useEffect(() => {
+    if (!preset) return;
+    setStatus(preset.status ?? "all");
+    setFrom(preset.from ?? "");
+    setTo(preset.to ?? "");
+    setPage(0);
+  }, [preset]);
   useEffect(() => { setPage(0); }, [search, status, orderStatus, currency, gateway, method, country, from, to, minAmount, maxAmount, sort, region, pageSize]);
 
   const load = useCallback(async () => {
@@ -148,7 +164,13 @@ export function PaymentsLedger({
       </div>
 
       {showFilters && (
-        <div className="glass border border-white/10 rounded-2xl p-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+        <>
+          <button
+            aria-label="Close filters"
+            onClick={() => setShowFilters(false)}
+            className="md:hidden fixed inset-0 z-40 bg-background/70 backdrop-blur-sm"
+          />
+          <div className="max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-50 max-md:max-h-[80vh] max-md:overflow-y-auto max-md:rounded-t-3xl glass border border-white/10 rounded-2xl p-3 grid grid-cols-2 md:grid-cols-4 gap-2">
           <label className="space-y-1"><span className="text-[9px] uppercase tracking-widest text-muted-foreground">From</span>
             <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={field} /></label>
           <label className="space-y-1"><span className="text-[9px] uppercase tracking-widest text-muted-foreground">To</span>
@@ -188,7 +210,14 @@ export function PaymentsLedger({
           <button onClick={reset} className="self-end inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[11px] hover:bg-white/5">
             <X className="size-3.5" /> Clear filters
           </button>
-        </div>
+          <button
+            onClick={() => setShowFilters(false)}
+            className="md:hidden col-span-2 rounded-xl border border-accent/40 bg-accent/10 text-accent px-3 py-2 text-[11px]"
+          >
+            Show results
+          </button>
+          </div>
+        </>
       )}
 
       <div ref={printRef} className="glass border border-white/10 rounded-2xl overflow-hidden">
@@ -210,7 +239,11 @@ export function PaymentsLedger({
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-b border-white/5 hover:bg-white/[0.03]">
+                <tr
+                  key={r.id}
+                  onClick={() => onSelect?.(r.id)}
+                  className="border-b border-white/5 hover:bg-white/[0.03] cursor-pointer"
+                >
                   <td className="px-3 py-2.5 font-mono">{r.order_id?.slice(0, 8) ?? "—"}</td>
                   <td className="px-3 py-2.5">
                     <div className="truncate max-w-[160px]">{r.customer}</div>
@@ -232,7 +265,7 @@ export function PaymentsLedger({
 
         <div className="md:hidden divide-y divide-white/5">
           {rows.map((r) => (
-            <div key={r.id} className="p-3">
+            <button key={r.id} type="button" onClick={() => onSelect?.(r.id)} className="w-full text-left p-3 active:bg-white/[0.04]">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-semibold truncate">{r.customer}</span>
                 <span className="font-mono text-sm shrink-0">{money(r.amount, r.currency)}</span>
@@ -244,7 +277,7 @@ export function PaymentsLedger({
                 <StatusBadge status={r.status} />
               </div>
               <p className="mt-1 text-[10px] text-muted-foreground">{maskId(r.transaction_id)} · {when(r.created_at)}</p>
-            </div>
+            </button>
           ))}
         </div>
 

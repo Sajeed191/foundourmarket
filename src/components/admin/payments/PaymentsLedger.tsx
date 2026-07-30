@@ -21,7 +21,16 @@ const ORDER_STATUSES = ["all", "pending", "paid", "processing", "shipped", "deli
 const field =
   "bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-[11px] focus:outline-none focus:border-accent/40 w-full";
 
-export type LedgerPreset = { status?: string; from?: string; to?: string };
+export type LedgerPreset = {
+  status?: string;
+  from?: string;
+  to?: string;
+  country?: string;
+  currency?: string;
+  gateway?: string;
+  method?: string;
+};
+
 
 export function PaymentsLedger({
   region, facets, refreshKey, preset, onSelect,
@@ -63,8 +72,13 @@ export function PaymentsLedger({
     setStatus(preset.status ?? "all");
     setFrom(preset.from ?? "");
     setTo(preset.to ?? "");
+    setCountry(preset.country ?? "all");
+    setCurrency(preset.currency ?? "all");
+    setGateway(preset.gateway ?? "all");
+    setMethod(preset.method ?? "all");
     setPage(0);
   }, [preset]);
+
   useEffect(() => { setPage(0); }, [search, status, orderStatus, currency, gateway, method, country, from, to, minAmount, maxAmount, sort, region, pageSize]);
 
   const load = useCallback(async () => {

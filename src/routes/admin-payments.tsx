@@ -22,6 +22,12 @@ import {
   getGlobalFinanceFn,
   type GlobalFinance,
 } from "@/lib/payments-global-v6.functions";
+import {
+  getRegionalBreakdownFn,
+  type RegionalBreakdown,
+} from "@/lib/payments-global-v65.functions";
+import type { BreakdownDrill } from "@/components/admin/payments/RegionalBreakdownPanel";
+
 
 import { EmptyState, Panel } from "@/components/admin/payments/ui";
 import { LiveActivityFeed } from "@/components/admin/payments/LiveActivityFeed";
@@ -47,6 +53,10 @@ const FinancialIntelligencePanel = lazy(() =>
 const GlobalFinancePanel = lazy(() =>
   import("@/components/admin/payments/GlobalFinancePanel").then((m) => ({ default: m.GlobalFinancePanel })),
 );
+const RegionalBreakdownPanel = lazy(() =>
+  import("@/components/admin/payments/RegionalBreakdownPanel").then((m) => ({ default: m.RegionalBreakdownPanel })),
+);
+
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
 );
@@ -97,6 +107,11 @@ function PaymentsInner() {
   const globalFn = useServerFn(getGlobalFinanceFn);
   const [globalData, setGlobalData] = useState<GlobalFinance | null>(null);
   const [globalLoading, setGlobalLoading] = useState(false);
+  const breakdownFn = useServerFn(getRegionalBreakdownFn);
+  const [breakdown, setBreakdown] = useState<RegionalBreakdown | null>(null);
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
+  const [ledgerRegion, setLedgerRegion] = useState<"all" | "india" | "international">("all");
+
   const [tab, setTab] = useState<Tab>("overview");
 
   const [windowDays, setWindowDays] = useState(90);
@@ -149,6 +164,32 @@ function PaymentsInner() {
     return () => { alive = false; };
   }, [tab, windowDays, refreshKey, globalFn]);
 
+  // Regional Financial Breakdown (v6.5): India / International / Global computed
+  // independently. Lazy on first open of the Global tab, cached in state.
+  useEffect(() => {
+    if (tab !== "global") return;
+    let alive = true;
+    setBreakdownLoading(true);
+    breakdownFn({ data: { windowDays } })
+      .then((res) => { if (alive) setBreakdown(res); })
+      .catch(() => { if (alive) setBreakdown(null); })
+      .finally(() => { if (alive) setBreakdownLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, breakdownFn]);
+
+  // Deep drill-down: any breakdown metric opens the ledger already filtered.
+  const onBreakdownDrill = useCallback((d: BreakdownDrill) => {
+    setLedgerRegion(d.region ?? "all");
+    setPreset({
+      status: d.status,
+      country: d.country,
+      currency: d.currency,
+      gateway: d.gateway,
+    });
+    setTab("ledger");
+  }, []);
+
+
 
   // Finance Operations is fetched lazily on first open, then kept in state
   // and refreshed with the window / refresh key (no duplicate requests).
@@ -183,7 +224,9 @@ function PaymentsInner() {
 
   const onQuick = useCallback((k: QuickKey) => {
     setQuick(k);
+    setLedgerRegion("all");
     const today = new Date().toISOString().slice(0, 10);
+
     if (k === "today") { setPreset({ from: today, to: today }); setTab("ledger"); return; }
     if (k === "pending") { setPreset({ status: "pending" }); setTab("ledger"); return; }
     if (k === "failed") { setPreset({ status: "failed" }); setTab("ledger"); return; }
@@ -311,21 +354,31 @@ function PaymentsInner() {
               {tab === "india" && <RegionPanel block={data.regions.india} />}
               {tab === "international" && <RegionPanel block={data.regions.international} />}
               {tab === "global" && (
-                globalData
-                  ? <GlobalFinancePanel data={globalData} />
-                  : globalLoading ? <Fallback /> : (
-                    <Panel title="Global financial intelligence">
-                      <EmptyState
-                        title="No financial data available yet."
-                        hint="India, international and global analytics populate automatically once the marketplace records its first payment."
-                      />
-                    </Panel>
-                  )
+                <div className="space-y-4">
+                  {globalData
+                    ? <GlobalFinancePanel data={globalData} />
+                    : globalLoading ? <Fallback /> : (
+                      <Panel title="Global financial intelligence">
+                        <EmptyState
+                          title="No financial data available yet."
+                          hint="India, international and global analytics populate automatically once the marketplace records its first payment."
+                        />
+                      </Panel>
+                    )}
+                  {breakdown
+                    ? <RegionalBreakdownPanel data={breakdown} onDrill={onBreakdownDrill} />
+                    : breakdownLoading ? <Fallback /> : (
+                      <Panel title="Regional financial breakdown">
+                        <EmptyState title="No data available" />
+                      </Panel>
+                    )}
+                </div>
               )}
 
               {tab === "ledger" && (
                 <PaymentsLedger
-                  region="all"
+                  region={ledgerRegion}
+
                   facets={facets}
                   refreshKey={refreshKey}
                   preset={preset}

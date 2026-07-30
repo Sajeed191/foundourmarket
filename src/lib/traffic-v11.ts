@@ -556,7 +556,7 @@ export async function fetchTrafficV11(days = 14, filters: V11Filters = {}): Prom
       cartToBuy: ratio(p.purchases, p.cart),
       viewToBuy,
       revenue: p.purchases > 0 ? p.revenue : null,
-      flag: p.views >= 20 && p.purchases === 0 ? "high-views-low-sales" : null,
+      flag: (p.views >= 20 && p.purchases === 0 ? "high-views-low-sales" : null) as ProductFunnelRow["flag"],
     };
   }).sort((a, b) => b.views - a.views);
 

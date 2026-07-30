@@ -317,7 +317,7 @@ function MiniDeal({ item, index, fluid = false }: { item: FlashItem; index: numb
  * Presentation only: pricing, eligibility and rotation stay in useFlashDeals.
  */
 export function FlashDealsBand() {
-  const { items } = useFlashDeals();
+  const { items, loading } = useFlashDeals();
   const railRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [cycle, setCycle] = useState(0);

@@ -372,19 +372,20 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
 
   // ---- Region blocks
   const mkRegion = (region: Region): RegionBlock => ({
-    region, revenue: 0, orders: 0, refund_value: 0, refund_count: 0,
-    methods: [], currencies: [], daily: [], geo: [], cities: [], customers: [],
+    region, revenue: 0, orders: 0, aov: 0, refund_value: 0, refund_count: 0,
+    methods: [], currencies: [], daily: [], hourly: [], geo: [], cities: [], customers: [], gateways: [],
     gst_estimate: region === "india" ? 0 : null, cod_value: 0, prepaid_value: 0,
   });
   const regions: Record<Region, RegionBlock> = { india: mkRegion("india"), international: mkRegion("international") };
   const acc: Record<Region, {
     methods: Map<string, Bucket>; currencies: Map<string, Bucket>; geo: Map<string, Bucket>;
     cities: Map<string, Bucket>; customers: Map<string, { id: string; label: string; v: number; n: number }>;
-    daily: Map<string, DayPoint>;
+    daily: Map<string, DayPoint>; gateways: Map<string, Bucket>; hourly: HourPoint[];
   }> = {
-    india: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map() },
-    international: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map() },
+    india: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map(), gateways: new Map(), hourly: Array.from({ length: 24 }, (_, h) => ({ h, v: 0, n: 0 })) },
+    international: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map(), gateways: new Map(), hourly: Array.from({ length: 24 }, (_, h) => ({ h, v: 0, n: 0 })) },
   };
+
   const dailyAll = new Map<string, DayPoint>();
 
   const touchDay = (m: Map<string, DayPoint>, date: string) => {

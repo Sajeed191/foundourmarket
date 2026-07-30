@@ -103,6 +103,7 @@ import { Route as AdminInboxPlacementRouteImport } from './routes/admin-inbox-pl
 import { Route as AdminImageIntelligenceRouteImport } from './routes/admin-image-intelligence'
 import { Route as AdminFlashDealsRouteImport } from './routes/admin-flash-deals'
 import { Route as AdminFinancialRouteImport } from './routes/admin-financial'
+import { Route as AdminFactoryResetRouteImport } from './routes/admin-factory-reset'
 import { Route as AdminExecutiveRouteImport } from './routes/admin-executive'
 import { Route as AdminEmailsRouteImport } from './routes/admin-emails'
 import { Route as AdminEmailQueueRouteImport } from './routes/admin-email-queue'
@@ -669,6 +670,11 @@ const AdminFinancialRoute = AdminFinancialRouteImport.update({
   path: '/admin-financial',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminFactoryResetRoute = AdminFactoryResetRouteImport.update({
+  id: '/admin-factory-reset',
+  path: '/admin-factory-reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminExecutiveRoute = AdminExecutiveRouteImport.update({
   id: '/admin-executive',
   path: '/admin-executive',
@@ -1162,6 +1168,7 @@ export interface FileRoutesByFullPath {
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
+  '/admin-factory-reset': typeof AdminFactoryResetRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-image-intelligence': typeof AdminImageIntelligenceRoute
@@ -1346,6 +1353,7 @@ export interface FileRoutesByTo {
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
+  '/admin-factory-reset': typeof AdminFactoryResetRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-image-intelligence': typeof AdminImageIntelligenceRoute
@@ -1530,6 +1538,7 @@ export interface FileRoutesById {
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
+  '/admin-factory-reset': typeof AdminFactoryResetRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-image-intelligence': typeof AdminImageIntelligenceRoute
@@ -1716,6 +1725,7 @@ export interface FileRouteTypes {
     | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-executive'
+    | '/admin-factory-reset'
     | '/admin-financial'
     | '/admin-flash-deals'
     | '/admin-image-intelligence'
@@ -1900,6 +1910,7 @@ export interface FileRouteTypes {
     | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-executive'
+    | '/admin-factory-reset'
     | '/admin-financial'
     | '/admin-flash-deals'
     | '/admin-image-intelligence'
@@ -2083,6 +2094,7 @@ export interface FileRouteTypes {
     | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-executive'
+    | '/admin-factory-reset'
     | '/admin-financial'
     | '/admin-flash-deals'
     | '/admin-image-intelligence'
@@ -2268,6 +2280,7 @@ export interface RootRouteChildren {
   AdminEmailQueueRoute: typeof AdminEmailQueueRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminExecutiveRoute: typeof AdminExecutiveRoute
+  AdminFactoryResetRoute: typeof AdminFactoryResetRoute
   AdminFinancialRoute: typeof AdminFinancialRoute
   AdminFlashDealsRoute: typeof AdminFlashDealsRoute
   AdminImageIntelligenceRoute: typeof AdminImageIntelligenceRoute
@@ -3067,6 +3080,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinancialRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-factory-reset': {
+      id: '/admin-factory-reset'
+      path: '/admin-factory-reset'
+      fullPath: '/admin-factory-reset'
+      preLoaderRoute: typeof AdminFactoryResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-executive': {
       id: '/admin-executive'
       path: '/admin-executive'
@@ -3790,6 +3810,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminEmailQueueRoute: AdminEmailQueueRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminExecutiveRoute: AdminExecutiveRoute,
+  AdminFactoryResetRoute: AdminFactoryResetRoute,
   AdminFinancialRoute: AdminFinancialRoute,
   AdminFlashDealsRoute: AdminFlashDealsRoute,
   AdminImageIntelligenceRoute: AdminImageIntelligenceRoute,

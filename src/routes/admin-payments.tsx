@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge, Globe2, HeartPulse, Scale } from "lucide-react";
+import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge, Globe2, HeartPulse, Scale, ClipboardList } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,16 @@ import {
   type ReconDashboard,
 } from "@/lib/payments-recon-v8.functions";
 import type { ReconDrill } from "@/components/admin/payments/ReconciliationPanel";
+import {
+  getFinanceWorkspaceFn,
+  workspaceSearchFn,
+  addFinanceNoteFn,
+  recordReviewDecisionFn,
+  type FinanceWorkspace,
+  type WorkspaceAction,
+} from "@/lib/payments-workspace-v9.functions";
+import type { WorkspaceDecision } from "@/components/admin/payments/WorkspacePanel";
+
 
 
 
@@ -78,6 +88,11 @@ const ReconciliationPanel = lazy(() =>
   import("@/components/admin/payments/ReconciliationPanel").then((m) => ({ default: m.ReconciliationPanel })),
 );
 
+const WorkspacePanel = lazy(() =>
+  import("@/components/admin/payments/WorkspacePanel").then((m) => ({ default: m.WorkspacePanel })),
+);
+
+
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
 );
@@ -97,7 +112,7 @@ export const Route = createFileRoute("/admin-payments")({
   component: PaymentsPage,
 });
 
-type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "cfo" | "recon" | "ledger";
+type Tab = "overview" | "workspace" | "ops" | "finance" | "india" | "international" | "global" | "cfo" | "recon" | "ledger";
 
 const WINDOWS = [30, 90, 180, 365];
 
@@ -142,6 +157,14 @@ function PaymentsInner() {
   const auditReconExport = useServerFn(auditReconExportFn);
   const [recon, setRecon] = useState<ReconDashboard | null>(null);
   const [reconLoading, setReconLoading] = useState(false);
+  // Finance Workspace (v9): operations-first surface — lazy, cached per window.
+  const workspaceFn = useServerFn(getFinanceWorkspaceFn);
+  const wsSearchFn = useServerFn(workspaceSearchFn);
+  const wsNoteFn = useServerFn(addFinanceNoteFn);
+  const wsDecisionFn = useServerFn(recordReviewDecisionFn);
+  const [workspace, setWorkspace] = useState<FinanceWorkspace | null>(null);
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
+
 
 
   const [tab, setTab] = useState<Tab>("overview");
@@ -271,6 +294,60 @@ function PaymentsInner() {
     void auditReconExport({ data: { report } }).catch(() => {});
   }, [auditReconExport]);
 
+  // Finance Workspace (v9): only fetched while its tab is open.
+  const loadWorkspace = useCallback(() => {
+    setWorkspaceLoading(true);
+    return workspaceFn({ data: { windowDays } })
+      .then((res) => setWorkspace(res))
+      .catch(() => setWorkspace(null))
+      .finally(() => setWorkspaceLoading(false));
+  }, [workspaceFn, windowDays]);
+
+  useEffect(() => {
+    if (tab !== "workspace") return;
+    let alive = true;
+    setWorkspaceLoading(true);
+    workspaceFn({ data: { windowDays } })
+      .then((res) => { if (alive) setWorkspace(res); })
+      .catch(() => { if (alive) setWorkspace(null); })
+      .finally(() => { if (alive) setWorkspaceLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, workspaceFn]);
+
+  // Every workspace task resolves into an existing surface — nothing new to learn.
+  const onWorkspaceAction = useCallback((a: WorkspaceAction) => {
+    const today = new Date().toISOString().slice(0, 10);
+    setLedgerRegion("all");
+    if (a === "ledger_failed") { setPreset({ status: "failed" }); setTab("ledger"); return; }
+    if (a === "ledger_pending") { setPreset({ status: "pending" }); setTab("ledger"); return; }
+    if (a === "ledger_refunds") { setPreset({ status: "refunded" }); setTab("ledger"); return; }
+    if (a === "ledger_today") { setPreset({ from: today, to: today }); setTab("ledger"); return; }
+    if (a === "ledger_all") { setPreset({}); setTab("ledger"); return; }
+    if (a === "recon") { setTab("recon"); return; }
+  }, []);
+
+  const onWorkspaceSearch = useCallback(
+    (q: string) => wsSearchFn({ data: { q } }),
+    [wsSearchFn],
+  );
+
+  const onWorkspaceNote = useCallback(
+    async (entityId: string, body: string, mention: string | null) => {
+      await wsNoteFn({ data: { entityId, body, mention } });
+      await loadWorkspace();
+    },
+    [wsNoteFn, loadWorkspace],
+  );
+
+  const onWorkspaceDecision = useCallback(
+    async (d: WorkspaceDecision) => {
+      await wsDecisionFn({ data: d });
+      await loadWorkspace();
+    },
+    [wsDecisionFn, loadWorkspace],
+  );
+
+
   // Every executive export is audited through the existing security trail.
   const onCfoExport = useCallback((report: string) => {
     void auditExportFn({ data: { report } }).catch(() => {});
@@ -370,6 +447,8 @@ function PaymentsInner() {
             onChange={setTab}
             items={[
               { value: "overview", label: "Overview", icon: <LayoutDashboard className="size-3" /> },
+              { value: "workspace", label: "Workspace", icon: <ClipboardList className="size-3" /> },
+
               { value: "ops", label: "Operations", icon: <Gauge className="size-3" /> },
               { value: "finance", label: "Finance", icon: <LineChart className="size-3" /> },
               { value: "india", label: "🇮🇳 India" },
@@ -481,7 +560,31 @@ function PaymentsInner() {
               )}
 
 
+              {tab === "workspace" && (
+                workspace
+                  ? (
+                    <WorkspacePanel
+                      data={workspace}
+                      loading={workspaceLoading}
+                      onAction={onWorkspaceAction}
+                      onOpenPayment={setDetailId}
+                      onSearch={onWorkspaceSearch}
+                      onNote={onWorkspaceNote}
+                      onDecision={onWorkspaceDecision}
+                    />
+                  )
+                  : workspaceLoading ? <Fallback /> : (
+                    <Panel title="Finance workspace">
+                      <EmptyState
+                        title="No data available"
+                        hint="Your daily brief, tasks, calendar, approvals and vendor payouts appear as soon as the marketplace records finance activity."
+                      />
+                    </Panel>
+                  )
+              )}
+
               {tab === "recon" && (
+
                 recon
                   ? <ReconciliationPanel data={recon} onDrill={onReconDrill} onAuditExport={onReconExport} />
                   : reconLoading ? <Fallback /> : (

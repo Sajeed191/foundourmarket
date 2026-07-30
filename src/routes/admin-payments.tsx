@@ -22,6 +22,12 @@ import {
   getGlobalFinanceFn,
   type GlobalFinance,
 } from "@/lib/payments-global-v6.functions";
+import {
+  getRegionalBreakdownFn,
+  type RegionalBreakdown,
+} from "@/lib/payments-global-v65.functions";
+import type { BreakdownDrill } from "@/components/admin/payments/RegionalBreakdownPanel";
+
 
 import { EmptyState, Panel } from "@/components/admin/payments/ui";
 import { LiveActivityFeed } from "@/components/admin/payments/LiveActivityFeed";

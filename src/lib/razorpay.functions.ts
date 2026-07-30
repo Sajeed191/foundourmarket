@@ -647,12 +647,25 @@ export const placeCodOrder = createServerFn({ method: "POST" })
     const { assertCustomerAllowed } = await import("./customer-restrictions.server");
     await assertCustomerAllowed(userId, "order");
 
+    // Load the shipping address FIRST (RLS guarantees ownership of the row) so
+    // its country can participate in region resolution.
+    const { data: addr, error: addrErr } = await supabase
+      .from("addresses")
+      .select("full_name,phone,line1,line2,city,state,postal,country")
+      .eq("id", data.addressId)
+      .maybeSingle();
+    if (addrErr || !addr) throw new Error("Shipping address not found.");
+
     const edgeCountry =
       getRequestHeader("cf-ipcountry") ||
       getRequestHeader("x-vercel-ip-country") ||
       getRequestHeader("x-country") ||
       null;
-    const codResolution = await resolveRegion(supabase, userId, edgeCountry);
+    const codResolution = await resolveRegion(supabase, userId, {
+      edgeCountry,
+      shippingCountry: (addr as { country?: string | null }).country ?? null,
+      hints: data.clientHints ?? null,
+    });
     const region = codResolution.region;
     console.log("[razorpay.placeCod] region resolved", {
       user_id: userId,
@@ -660,19 +673,13 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       detected_market: region,
       confidence_score: codResolution.confidence,
       pricing_source: codResolution.pricingSource,
+      decided_by: codResolution.decision.decidedBy,
     });
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
     if (priced.totals.total < 1) {
       throw new Error("Order total is too low to process.");
     }
 
-    // Load shipping address (RLS guarantees ownership of the row)
-    const { data: addr, error: addrErr } = await supabase
-      .from("addresses")
-      .select("full_name,phone,line1,line2,city,state,postal,country")
-      .eq("id", data.addressId)
-      .maybeSingle();
-    if (addrErr || !addr) throw new Error("Shipping address not found.");
 
     // Create the order with server-computed, region-native figures
     const { data: order, error: oErr } = await supabaseAdmin

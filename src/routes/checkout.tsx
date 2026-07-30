@@ -1280,12 +1280,3 @@ function InternationalSoon({ live, loading }: { live: boolean; loading: boolean 
     </div>
   );
 }
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground text-xs uppercase tracking-widest">{label}</span>
-      <span className="font-mono">{value}</span>
-    </div>
-  );
-}

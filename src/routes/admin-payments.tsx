@@ -447,6 +447,8 @@ function PaymentsInner() {
             onChange={setTab}
             items={[
               { value: "overview", label: "Overview", icon: <LayoutDashboard className="size-3" /> },
+              { value: "workspace", label: "Workspace", icon: <ClipboardList className="size-3" /> },
+
               { value: "ops", label: "Operations", icon: <Gauge className="size-3" /> },
               { value: "finance", label: "Finance", icon: <LineChart className="size-3" /> },
               { value: "india", label: "🇮🇳 India" },

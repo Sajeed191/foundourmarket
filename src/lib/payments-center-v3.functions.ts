@@ -8,7 +8,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireStaff, logSecurity, type StaffRole } from "./admin-guard.server";
-import { buildPaymentsOverview, buildLedger } from "./payments-center-v3.server";
+import { buildPaymentsOverview, buildLedger, buildPaymentDetail } from "./payments-center-v3.server";
 
 const PAY_STAFF: StaffRole[] = ["admin", "super_admin", "manager"];
 
@@ -23,8 +23,18 @@ export type {
   LedgerResult,
   Bucket,
   DayPoint,
+  HourPoint,
   Region,
+  HealthBlock,
+  HealthFactor,
+  Insight,
+  QuickCounts,
+  VendorPayoutBlock,
+  VendorPayoutRow,
+  PaymentDetail,
+  TimelineEvent,
 } from "./payments-center-v3.server";
+
 
 /** Executive overview: KPIs, region split, charts, gateways, refunds, activity. */
 export const getPaymentsOverviewFn = createServerFn({ method: "POST" })

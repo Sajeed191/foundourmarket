@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge, Globe2 } from "lucide-react";
+import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge, Globe2, HeartPulse } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,13 @@ import {
   type RegionalBreakdown,
 } from "@/lib/payments-global-v65.functions";
 import type { BreakdownDrill } from "@/components/admin/payments/RegionalBreakdownPanel";
+import {
+  getCFODashboardFn,
+  auditCFOExportFn,
+  type CFODashboard,
+} from "@/lib/payments-cfo-v7.functions";
+import type { CFODrill } from "@/components/admin/payments/CFOPanel";
+
 
 
 import { EmptyState, Panel } from "@/components/admin/payments/ui";
@@ -56,6 +63,10 @@ const GlobalFinancePanel = lazy(() =>
 const RegionalBreakdownPanel = lazy(() =>
   import("@/components/admin/payments/RegionalBreakdownPanel").then((m) => ({ default: m.RegionalBreakdownPanel })),
 );
+const CFOPanel = lazy(() =>
+  import("@/components/admin/payments/CFOPanel").then((m) => ({ default: m.CFOPanel })),
+);
+
 
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
@@ -76,7 +87,7 @@ export const Route = createFileRoute("/admin-payments")({
   component: PaymentsPage,
 });
 
-type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "ledger";
+type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "cfo" | "ledger";
 
 const WINDOWS = [30, 90, 180, 365];
 
@@ -111,6 +122,12 @@ function PaymentsInner() {
   const [breakdown, setBreakdown] = useState<RegionalBreakdown | null>(null);
   const [breakdownLoading, setBreakdownLoading] = useState(false);
   const [ledgerRegion, setLedgerRegion] = useState<"all" | "india" | "international">("all");
+  // CFO Dashboard (v7): lazy on first open, cached in state, one request per window.
+  const cfoFn = useServerFn(getCFODashboardFn);
+  const auditExportFn = useServerFn(auditCFOExportFn);
+  const [cfo, setCfo] = useState<CFODashboard | null>(null);
+  const [cfoLoading, setCfoLoading] = useState(false);
+
 
   const [tab, setTab] = useState<Tab>("overview");
 
@@ -188,6 +205,33 @@ function PaymentsInner() {
     });
     setTab("ledger");
   }, []);
+
+  // CFO Dashboard (v7): lazy on first open of its tab, cached, refreshed with
+  // the window / refresh key only — no duplicate database reads.
+  useEffect(() => {
+    if (tab !== "cfo") return;
+    let alive = true;
+    setCfoLoading(true);
+    cfoFn({ data: { windowDays } })
+      .then((res) => { if (alive) setCfo(res); })
+      .catch(() => { if (alive) setCfo(null); })
+      .finally(() => { if (alive) setCfoLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, cfoFn]);
+
+  // CFO drill-down: alerts and recommendations open the filtered ledger.
+  const onCfoDrill = useCallback((d: CFODrill) => {
+    setLedgerRegion("all");
+    setPreset({ status: d.status });
+    setTab("ledger");
+  }, []);
+
+  // Every executive export is audited through the existing security trail.
+  const onCfoExport = useCallback((report: string) => {
+    void auditExportFn({ data: { report } }).catch(() => {});
+  }, [auditExportFn]);
+
+
 
 
 
@@ -286,6 +330,8 @@ function PaymentsInner() {
               { value: "india", label: "🇮🇳 India" },
               { value: "international", label: "🌍 International" },
               { value: "global", label: "🌐 Global", icon: <Globe2 className="size-3" /> },
+              { value: "cfo", label: "CFO", icon: <HeartPulse className="size-3" /> },
+
 
               { value: "ledger", label: "Payments", icon: <Table2 className="size-3" /> },
             ]}
@@ -374,6 +420,20 @@ function PaymentsInner() {
                     )}
                 </div>
               )}
+
+              {tab === "cfo" && (
+                cfo
+                  ? <CFOPanel data={cfo} onDrill={onCfoDrill} windowDays={windowDays} onAuditExport={onCfoExport} />
+                  : cfoLoading ? <Fallback /> : (
+                    <Panel title="CFO dashboard">
+                      <EmptyState
+                        title="No data available"
+                        hint="Financial health, profitability, cash flow and forecasts populate automatically once the marketplace records its first payment."
+                      />
+                    </Panel>
+                  )
+              )}
+
 
               {tab === "ledger" && (
                 <PaymentsLedger

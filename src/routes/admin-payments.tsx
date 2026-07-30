@@ -560,7 +560,31 @@ function PaymentsInner() {
               )}
 
 
+              {tab === "workspace" && (
+                workspace
+                  ? (
+                    <WorkspacePanel
+                      data={workspace}
+                      loading={workspaceLoading}
+                      onAction={onWorkspaceAction}
+                      onOpenPayment={setDetailId}
+                      onSearch={onWorkspaceSearch}
+                      onNote={onWorkspaceNote}
+                      onDecision={onWorkspaceDecision}
+                    />
+                  )
+                  : workspaceLoading ? <Fallback /> : (
+                    <Panel title="Finance workspace">
+                      <EmptyState
+                        title="No data available"
+                        hint="Your daily brief, tasks, calendar, approvals and vendor payouts appear as soon as the marketplace records finance activity."
+                      />
+                    </Panel>
+                  )
+              )}
+
               {tab === "recon" && (
+
                 recon
                   ? <ReconciliationPanel data={recon} onDrill={onReconDrill} onAuditExport={onReconExport} />
                   : reconLoading ? <Fallback /> : (

@@ -164,7 +164,9 @@ function channelStatuses(
 
 
 function SellerAssistancePage() {
-  const supportStatus = useSupportStatus();
+  const { data: supportFacts, unavailable: factsUnavailable } = useSupportFacts();
+  const supportStatus = channelStatuses(supportFacts, factsUnavailable);
+
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);

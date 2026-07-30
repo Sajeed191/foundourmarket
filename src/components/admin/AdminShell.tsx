@@ -172,7 +172,23 @@ export function AdminShell({
   const intel = useCustomerIntelSummary(!!user);
   const cmd = useCommandCenter();
 
-  useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
+  // First boot: with zero super admins the marketplace must be set up before
+  // Admin is reachable at all.
+  useEffect(() => {
+    if (loading || user) return;
+    let active = true;
+    void (async () => {
+      try {
+        const { getSetupState } = await import("@/lib/setup.functions");
+        const s = await getSetupState();
+        if (!active) return;
+        nav({ to: s.needsSetup ? "/setup" : "/auth" });
+      } catch {
+        if (active) nav({ to: "/auth" });
+      }
+    })();
+    return () => { active = false; };
+  }, [loading, user, nav]);
   useEffect(() => { setOpen(false); }, [path, activeTab]);
 
   useEffect(() => {

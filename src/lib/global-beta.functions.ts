@@ -4,6 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { resolveRegion, repriceFromDb } from "./razorpay.functions";
 import { enqueueOrderEmail } from "./order-emails.server";
+import { getPublicCatalogQuery } from "@/lib/security/catalog-access";
+
 
 const lineItemSchema = z.object({
   slug: z.string().min(1).max(200),

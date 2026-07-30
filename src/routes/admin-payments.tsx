@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge } from "lucide-react";
+import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge, Globe2 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,11 @@ import {
   getFinancialIntelligenceFn,
   type FinancialIntelligence,
 } from "@/lib/payments-intel-v4.functions";
+import {
+  getGlobalFinanceFn,
+  type GlobalFinance,
+} from "@/lib/payments-global-v6.functions";
+
 import { EmptyState, Panel } from "@/components/admin/payments/ui";
 import { LiveActivityFeed } from "@/components/admin/payments/LiveActivityFeed";
 import type { LedgerFacets, LedgerPreset } from "@/components/admin/payments/PaymentsLedger";
@@ -39,9 +44,13 @@ const FinanceOpsPanel = lazy(() =>
 const FinancialIntelligencePanel = lazy(() =>
   import("@/components/admin/payments/FinancialIntelligencePanel").then((m) => ({ default: m.FinancialIntelligencePanel })),
 );
+const GlobalFinancePanel = lazy(() =>
+  import("@/components/admin/payments/GlobalFinancePanel").then((m) => ({ default: m.GlobalFinancePanel })),
+);
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
 );
+
 
 export const Route = createFileRoute("/admin-payments")({
   head: () => ({
@@ -57,7 +66,7 @@ export const Route = createFileRoute("/admin-payments")({
   component: PaymentsPage,
 });
 
-type Tab = "overview" | "ops" | "finance" | "india" | "international" | "ledger";
+type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "ledger";
 
 const WINDOWS = [30, 90, 180, 365];
 
@@ -85,7 +94,11 @@ function PaymentsInner() {
   const [opsLoading, setOpsLoading] = useState(false);
   const [intel, setIntel] = useState<FinancialIntelligence | null>(null);
   const [intelLoading, setIntelLoading] = useState(false);
+  const globalFn = useServerFn(getGlobalFinanceFn);
+  const [globalData, setGlobalData] = useState<GlobalFinance | null>(null);
+  const [globalLoading, setGlobalLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
+
   const [windowDays, setWindowDays] = useState(90);
   const [data, setData] = useState<PaymentsOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,6 +136,19 @@ function PaymentsInner() {
       .finally(() => { if (alive) setIntelLoading(false); });
     return () => { alive = false; };
   }, [tab, windowDays, refreshKey, intelFn]);
+  // Global Financial Intelligence (v6): lazy on first open, cached in state,
+  // refreshed only with the window / refresh key — no duplicate requests.
+  useEffect(() => {
+    if (tab !== "global") return;
+    let alive = true;
+    setGlobalLoading(true);
+    globalFn({ data: { windowDays } })
+      .then((res) => { if (alive) setGlobalData(res); })
+      .catch(() => { if (alive) setGlobalData(null); })
+      .finally(() => { if (alive) setGlobalLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, globalFn]);
+
 
   // Finance Operations is fetched lazily on first open, then kept in state
   // and refreshed with the window / refresh key (no duplicate requests).
@@ -216,6 +242,8 @@ function PaymentsInner() {
               { value: "finance", label: "Finance", icon: <LineChart className="size-3" /> },
               { value: "india", label: "🇮🇳 India" },
               { value: "international", label: "🌍 International" },
+              { value: "global", label: "🌐 Global", icon: <Globe2 className="size-3" /> },
+
               { value: "ledger", label: "Payments", icon: <Table2 className="size-3" /> },
             ]}
           />
@@ -282,6 +310,19 @@ function PaymentsInner() {
               )}
               {tab === "india" && <RegionPanel block={data.regions.india} />}
               {tab === "international" && <RegionPanel block={data.regions.international} />}
+              {tab === "global" && (
+                globalData
+                  ? <GlobalFinancePanel data={globalData} />
+                  : globalLoading ? <Fallback /> : (
+                    <Panel title="Global financial intelligence">
+                      <EmptyState
+                        title="No financial data available yet."
+                        hint="India, international and global analytics populate automatically once the marketplace records its first payment."
+                      />
+                    </Panel>
+                  )
+              )}
+
               {tab === "ledger" && (
                 <PaymentsLedger
                   region="all"

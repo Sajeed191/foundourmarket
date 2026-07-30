@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, LayoutDashboard, Table2, RefreshCw } from "lucide-react";
+import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,10 @@ import {
   getPaymentsOverviewFn,
   type PaymentsOverview,
 } from "@/lib/payments-center-v3.functions";
+import {
+  getFinancialIntelligenceFn,
+  type FinancialIntelligence,
+} from "@/lib/payments-intel-v4.functions";
 import { EmptyState, Panel } from "@/components/admin/payments/ui";
 import { LiveActivityFeed } from "@/components/admin/payments/LiveActivityFeed";
 import type { LedgerFacets, LedgerPreset } from "@/components/admin/payments/PaymentsLedger";
@@ -23,6 +27,9 @@ const PaymentsOverviewPanel = lazy(() =>
 );
 const RegionPanel = lazy(() =>
   import("@/components/admin/payments/RegionPanel").then((m) => ({ default: m.RegionPanel })),
+);
+const FinancialIntelligencePanel = lazy(() =>
+  import("@/components/admin/payments/FinancialIntelligencePanel").then((m) => ({ default: m.FinancialIntelligencePanel })),
 );
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
@@ -42,7 +49,7 @@ export const Route = createFileRoute("/admin-payments")({
   component: PaymentsPage,
 });
 
-type Tab = "overview" | "india" | "international" | "ledger";
+type Tab = "overview" | "finance" | "india" | "international" | "ledger";
 
 const WINDOWS = [30, 90, 180, 365];
 
@@ -64,6 +71,9 @@ const Fallback = () => (
 
 function PaymentsInner() {
   const overviewFn = useServerFn(getPaymentsOverviewFn);
+  const intelFn = useServerFn(getFinancialIntelligenceFn);
+  const [intel, setIntel] = useState<FinancialIntelligence | null>(null);
+  const [intelLoading, setIntelLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const [windowDays, setWindowDays] = useState(90);
   const [data, setData] = useState<PaymentsOverview | null>(null);
@@ -89,6 +99,19 @@ function PaymentsInner() {
   }, [overviewFn, windowDays]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Financial Intelligence is fetched lazily the first time its tab is opened,
+  // then refreshed with the window / refresh key (cached in state — no duplicate calls).
+  useEffect(() => {
+    if (tab !== "finance") return;
+    let alive = true;
+    setIntelLoading(true);
+    intelFn({ data: { windowDays } })
+      .then((res) => { if (alive) setIntel(res); })
+      .catch(() => { if (alive) setIntel(null); })
+      .finally(() => { if (alive) setIntelLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, intelFn]);
 
   // Realtime: one debounced refresh for all finance tables (no duplicate requests).
   useEffect(() => {
@@ -119,6 +142,14 @@ function PaymentsInner() {
     setTab("overview"); // settlements: no source yet, overview explains why
   }, []);
 
+  const onIntelAction = useCallback((action: string) => {
+    if (action === "ledger_failed") { setPreset({ status: "failed" }); setTab("ledger"); return; }
+    if (action === "ledger_refunds") { setPreset({ status: "refunded" }); setTab("ledger"); return; }
+    if (action === "region_india") { setTab("india"); return; }
+    if (action === "region_intl") { setTab("international"); return; }
+    setTab("overview");
+  }, []);
+
   const facets: LedgerFacets = useMemo(() => {
     if (!data) return { currencies: [], gateways: [], methods: [], countries: [] };
     const cur = new Set<string>();
@@ -147,6 +178,7 @@ function PaymentsInner() {
             onChange={setTab}
             items={[
               { value: "overview", label: "Overview", icon: <LayoutDashboard className="size-3" /> },
+              { value: "finance", label: "Finance", icon: <LineChart className="size-3" /> },
               { value: "india", label: "🇮🇳 India" },
               { value: "international", label: "🌍 International" },
               { value: "ledger", label: "Payments", icon: <Table2 className="size-3" /> },
@@ -189,6 +221,18 @@ function PaymentsInner() {
           <div className="min-w-0">
             <Suspense fallback={<Fallback />}>
               {tab === "overview" && <PaymentsOverviewPanel data={data} />}
+              {tab === "finance" && (
+                intel
+                  ? <FinancialIntelligencePanel data={intel} onAction={onIntelAction} />
+                  : intelLoading ? <Fallback /> : (
+                    <Panel title="Financial intelligence">
+                      <EmptyState
+                        title="No financial data available yet."
+                        hint="Revenue, refunds, failures and commission analytics appear as soon as the marketplace records activity."
+                      />
+                    </Panel>
+                  )
+              )}
               {tab === "india" && <RegionPanel block={data.regions.india} />}
               {tab === "international" && <RegionPanel block={data.regions.international} />}
               {tab === "ledger" && (

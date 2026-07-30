@@ -563,10 +563,13 @@ function SellerAssistancePage() {
                             </span>
                             {isChatOpen ? "Open" : s.label}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-white/55">
-                            <Lock className="size-2.5" />
-                            {isChatOpen ? "Active" : s.eta}
-                          </span>
+                          {(isChatOpen || s.eta) && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider text-white/55">
+                              <Lock className="size-2.5" />
+                              {isChatOpen ? "Active" : s.eta}
+                            </span>
+                          )}
+
                         </>
                       );
                     })()}

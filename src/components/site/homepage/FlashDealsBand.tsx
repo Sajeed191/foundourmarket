@@ -398,7 +398,36 @@ export function FlashDealsBand() {
   }, [autoplayable, autoplayMs, heroes.length, goTo]);
 
 
-  if (heroes.length === 0) return null;
+  // Nothing live: stay silent while loading, then show one premium empty card.
+  if (heroes.length === 0) {
+    if (loading) return null;
+    return (
+      <section
+        aria-labelledby="flash-deals-heading"
+        className="relative mx-auto max-w-7xl scroll-mt-24 px-4 pb-12 pt-11 sm:px-6 motion-safe:animate-fade-in"
+      >
+        <h2 id="flash-deals-heading" className="sr-only">
+          Flash Deals
+        </h2>
+        <div className="rounded-[26px] border border-white/[0.08] bg-card/40 px-6 py-12 text-center backdrop-blur-2xl shadow-[0_12px_30px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <p className="font-display text-[17px] font-semibold tracking-tight text-foreground/90 sm:text-[19px]">
+            No Flash Deals available today
+          </p>
+          <p className="mx-auto mt-2 max-w-sm text-[12.5px] text-muted-foreground">
+            New offers arrive every day. Check back soon.
+          </p>
+          <Link
+            to="/products/trending"
+            className="mt-6 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-accent/55 px-7 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent transition-[background-color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-accent/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:w-auto"
+          >
+            Browse Products
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
 
   return (
     <section

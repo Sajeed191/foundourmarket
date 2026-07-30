@@ -112,7 +112,7 @@ export const Route = createFileRoute("/admin-payments")({
   component: PaymentsPage,
 });
 
-type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "cfo" | "recon" | "ledger";
+type Tab = "overview" | "workspace" | "ops" | "finance" | "india" | "international" | "global" | "cfo" | "recon" | "ledger";
 
 const WINDOWS = [30, 90, 180, 365];
 

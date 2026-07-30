@@ -107,6 +107,11 @@ function PaymentsInner() {
   const globalFn = useServerFn(getGlobalFinanceFn);
   const [globalData, setGlobalData] = useState<GlobalFinance | null>(null);
   const [globalLoading, setGlobalLoading] = useState(false);
+  const breakdownFn = useServerFn(getRegionalBreakdownFn);
+  const [breakdown, setBreakdown] = useState<RegionalBreakdown | null>(null);
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
+  const [ledgerRegion, setLedgerRegion] = useState<"all" | "india" | "international">("all");
+
   const [tab, setTab] = useState<Tab>("overview");
 
   const [windowDays, setWindowDays] = useState(90);

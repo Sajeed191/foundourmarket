@@ -224,7 +224,9 @@ function PaymentsInner() {
 
   const onQuick = useCallback((k: QuickKey) => {
     setQuick(k);
+    setLedgerRegion("all");
     const today = new Date().toISOString().slice(0, 10);
+
     if (k === "today") { setPreset({ from: today, to: today }); setTab("ledger"); return; }
     if (k === "pending") { setPreset({ status: "pending" }); setTab("ledger"); return; }
     if (k === "failed") { setPreset({ status: "failed" }); setTab("ledger"); return; }

@@ -263,12 +263,25 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     const { assertCustomerAllowed } = await import("./customer-restrictions.server");
     await assertCustomerAllowed(userId, "order");
 
+    // Load the shipping address FIRST (RLS guarantees ownership) so its country
+    // can participate in region resolution before the currency is fixed.
+    const { data: addr, error: addrErr } = await supabase
+      .from("addresses")
+      .select("full_name,phone,line1,line2,city,state,postal,country")
+      .eq("id", data.addressId)
+      .maybeSingle();
+    if (addrErr || !addr) throw new Error("Shipping address not found.");
+
     const edgeCountry =
       getRequestHeader("cf-ipcountry") ||
       getRequestHeader("x-vercel-ip-country") ||
       getRequestHeader("x-country") ||
       null;
-    const resolution = await resolveRegion(supabase, userId, edgeCountry);
+    const resolution = await resolveRegion(supabase, userId, {
+      edgeCountry,
+      shippingCountry: (addr as { country?: string | null }).country ?? null,
+      hints: data.clientHints ?? null,
+    });
     const region = resolution.region;
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
 
@@ -280,19 +293,14 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       confidence_score: resolution.confidence,
       currency_selected: priced.totals.currency,
       pricing_source: resolution.pricingSource,
+      decided_by: resolution.decision.decidedBy,
+      upi_eligible: resolution.decision.upiEligible,
       amount_minor: toMinorUnits(priced.totals.total),
     });
     if (priced.totals.total < 1) {
       throw new Error("Order total is too low to process.");
     }
 
-    // Load shipping address (RLS guarantees ownership)
-    const { data: addr, error: addrErr } = await supabase
-      .from("addresses")
-      .select("full_name,phone,line1,line2,city,state,postal,country")
-      .eq("id", data.addressId)
-      .maybeSingle();
-    if (addrErr || !addr) throw new Error("Shipping address not found.");
 
     // Create the pending order first (status pending) in the region's currency.
     // Use the admin client so order writes go only through this trusted,

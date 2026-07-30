@@ -39,18 +39,23 @@ export type PaymentsKpis = {
   };
 };
 
+export type HourPoint = { h: number; v: number; n: number };
+
 export type RegionBlock = {
   region: Region;
   revenue: number;
   orders: number;
+  aov: number;
   refund_value: number;
   refund_count: number;
   methods: Bucket[];
   currencies: Bucket[];
   daily: DayPoint[];
+  hourly: HourPoint[];
   geo: Bucket[];
   cities: Bucket[];
   customers: { id: string; label: string; v: number; n: number }[];
+  gateways: Bucket[];
   gst_estimate: number | null;
   cod_value: number;
   prepaid_value: number;
@@ -67,6 +72,9 @@ export type GatewayBlock = {
   failed: number;
   revenue: number;
   success_rate: number | null;
+  failure_rate: number | null;
+  /** No latency telemetry source exists yet → null, never a fake number. */
+  latency_ms: number | null;
   last_sync: string | null;
 };
 
@@ -88,12 +96,61 @@ export type ActivityItem = {
   at: string;
 };
 
+export type HealthFactor = {
+  key: string;
+  label: string;
+  /** 0–100 sub-score, or null when the platform has no source for this metric. */
+  score: number | null;
+  weight: number;
+  detail: string;
+};
+
+export type HealthBlock = {
+  score: number | null;
+  grade: "Excellent" | "Good" | "Fair" | "At risk" | null;
+  factors: HealthFactor[];
+  excluded: string[];
+};
+
+export type Insight = {
+  id: string;
+  tone: "good" | "warn" | "bad" | "info";
+  title: string;
+  detail: string;
+};
+
+export type QuickCounts = {
+  today: number;
+  pending: number;
+  refund_queue: number;
+  failed: number;
+  settlements: number | null;
+};
+
+export type VendorPayoutRow = {
+  vendor_id: string;
+  vendor: string;
+  pending: number;
+  completed: number;
+  next_settlement: string | null;
+  total_sales: number | null;
+  commission: number | null;
+  net_earnings: number | null;
+  currency: string;
+};
+
+export type VendorPayoutBlock = { enabled: boolean; rows: VendorPayoutRow[] };
+
 export type PaymentsOverview = {
   kpis: PaymentsKpis;
+  health: HealthBlock;
+  insights: Insight[];
+  quick: QuickCounts;
   regions: Record<Region, RegionBlock>;
   daily: DayPoint[];
   gateways: GatewayBlock[];
   refunds: RefundBlock;
+  vendor_payouts: VendorPayoutBlock;
   /** Platform has no settlements source yet. */
   settlements: null;
   activity: ActivityItem[];
@@ -101,6 +158,7 @@ export type PaymentsOverview = {
   generated_at: string;
   has_any_data: boolean;
 };
+
 
 type OrderLite = {
   id: string;

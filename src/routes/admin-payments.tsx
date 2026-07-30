@@ -330,6 +330,8 @@ function PaymentsInner() {
               { value: "india", label: "🇮🇳 India" },
               { value: "international", label: "🌍 International" },
               { value: "global", label: "🌐 Global", icon: <Globe2 className="size-3" /> },
+              { value: "cfo", label: "CFO", icon: <HeartPulse className="size-3" /> },
+
 
               { value: "ledger", label: "Payments", icon: <Table2 className="size-3" /> },
             ]}

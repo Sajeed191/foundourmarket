@@ -39,18 +39,23 @@ export type PaymentsKpis = {
   };
 };
 
+export type HourPoint = { h: number; v: number; n: number };
+
 export type RegionBlock = {
   region: Region;
   revenue: number;
   orders: number;
+  aov: number;
   refund_value: number;
   refund_count: number;
   methods: Bucket[];
   currencies: Bucket[];
   daily: DayPoint[];
+  hourly: HourPoint[];
   geo: Bucket[];
   cities: Bucket[];
   customers: { id: string; label: string; v: number; n: number }[];
+  gateways: Bucket[];
   gst_estimate: number | null;
   cod_value: number;
   prepaid_value: number;
@@ -67,6 +72,9 @@ export type GatewayBlock = {
   failed: number;
   revenue: number;
   success_rate: number | null;
+  failure_rate: number | null;
+  /** No latency telemetry source exists yet → null, never a fake number. */
+  latency_ms: number | null;
   last_sync: string | null;
 };
 
@@ -88,12 +96,61 @@ export type ActivityItem = {
   at: string;
 };
 
+export type HealthFactor = {
+  key: string;
+  label: string;
+  /** 0–100 sub-score, or null when the platform has no source for this metric. */
+  score: number | null;
+  weight: number;
+  detail: string;
+};
+
+export type HealthBlock = {
+  score: number | null;
+  grade: "Excellent" | "Good" | "Fair" | "At risk" | null;
+  factors: HealthFactor[];
+  excluded: string[];
+};
+
+export type Insight = {
+  id: string;
+  tone: "good" | "warn" | "bad" | "info";
+  title: string;
+  detail: string;
+};
+
+export type QuickCounts = {
+  today: number;
+  pending: number;
+  refund_queue: number;
+  failed: number;
+  settlements: number | null;
+};
+
+export type VendorPayoutRow = {
+  vendor_id: string;
+  vendor: string;
+  pending: number;
+  completed: number;
+  next_settlement: string | null;
+  total_sales: number | null;
+  commission: number | null;
+  net_earnings: number | null;
+  currency: string;
+};
+
+export type VendorPayoutBlock = { enabled: boolean; rows: VendorPayoutRow[] };
+
 export type PaymentsOverview = {
   kpis: PaymentsKpis;
+  health: HealthBlock;
+  insights: Insight[];
+  quick: QuickCounts;
   regions: Record<Region, RegionBlock>;
   daily: DayPoint[];
   gateways: GatewayBlock[];
   refunds: RefundBlock;
+  vendor_payouts: VendorPayoutBlock;
   /** Platform has no settlements source yet. */
   settlements: null;
   activity: ActivityItem[];
@@ -101,6 +158,7 @@ export type PaymentsOverview = {
   generated_at: string;
   has_any_data: boolean;
 };
+
 
 type OrderLite = {
   id: string;
@@ -314,19 +372,20 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
 
   // ---- Region blocks
   const mkRegion = (region: Region): RegionBlock => ({
-    region, revenue: 0, orders: 0, refund_value: 0, refund_count: 0,
-    methods: [], currencies: [], daily: [], geo: [], cities: [], customers: [],
+    region, revenue: 0, orders: 0, aov: 0, refund_value: 0, refund_count: 0,
+    methods: [], currencies: [], daily: [], hourly: [], geo: [], cities: [], customers: [], gateways: [],
     gst_estimate: region === "india" ? 0 : null, cod_value: 0, prepaid_value: 0,
   });
   const regions: Record<Region, RegionBlock> = { india: mkRegion("india"), international: mkRegion("international") };
   const acc: Record<Region, {
     methods: Map<string, Bucket>; currencies: Map<string, Bucket>; geo: Map<string, Bucket>;
     cities: Map<string, Bucket>; customers: Map<string, { id: string; label: string; v: number; n: number }>;
-    daily: Map<string, DayPoint>;
+    daily: Map<string, DayPoint>; gateways: Map<string, Bucket>; hourly: HourPoint[];
   }> = {
-    india: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map() },
-    international: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map() },
+    india: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map(), gateways: new Map(), hourly: Array.from({ length: 24 }, (_, h) => ({ h, v: 0, n: 0 })) },
+    international: { methods: new Map(), currencies: new Map(), geo: new Map(), cities: new Map(), customers: new Map(), daily: new Map(), gateways: new Map(), hourly: Array.from({ length: 24 }, (_, h) => ({ h, v: 0, n: 0 })) },
   };
+
   const dailyAll = new Map<string, DayPoint>();
 
   const touchDay = (m: Map<string, DayPoint>, date: string) => {
@@ -370,9 +429,21 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
 
     if (region === "india" && order?.tax != null) block.gst_estimate = (block.gst_estimate ?? 0) + num(order.tax);
 
+    const gwKey = (order?.payment_provider
+      ?? (p.razorpay_payment_id ? "razorpay" : null)
+      ?? (p.method === "cod" ? "cod" : null)
+      ?? p.method
+      ?? "unknown").toLowerCase();
+    bump(a.gateways, gwKey, amt);
+
+    const hr = new Date(p.created_at).getHours();
+    const slot = a.hourly[hr];
+    if (slot) { slot.v += amt; slot.n += 1; }
+
     const d = dayKey(p.created_at);
     const dp = touchDay(a.daily, d); dp.revenue += amt; dp.orders += 1;
     const da = touchDay(dailyAll, d); da.revenue += amt; da.orders += 1;
+
   }
 
   for (const r of refunds) {
@@ -392,9 +463,13 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     b.currencies = sortBuckets(a.currencies);
     b.geo = sortBuckets(a.geo, 10);
     b.cities = sortBuckets(a.cities, 10);
+    b.gateways = sortBuckets(a.gateways, 8);
     b.customers = [...a.customers.values()].sort((x, y) => y.v - x.v).slice(0, 8);
     b.daily = [...a.daily.values()].sort((x, y) => x.date.localeCompare(y.date));
+    b.hourly = a.hourly;
+    b.aov = b.orders ? b.revenue / b.orders : 0;
   }
+
 
   // ---- Gateways
   const gwAcc = new Map<string, GatewayBlock>();
@@ -405,8 +480,10 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     const created: GatewayBlock = {
       provider: key, display_name: key.charAt(0).toUpperCase() + key.slice(1),
       enabled: null, mode: null, configured: null,
-      transactions: 0, succeeded: 0, failed: 0, revenue: 0, success_rate: null, last_sync: null,
+      transactions: 0, succeeded: 0, failed: 0, revenue: 0,
+      success_rate: null, failure_rate: null, latency_ms: null, last_sync: null,
     };
+
     gwAcc.set(key, created);
     return created;
   };
@@ -433,8 +510,14 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     if (!g.last_sync || p.created_at > g.last_sync) g.last_sync = p.created_at;
   }
   const gateways = [...gwAcc.values()]
-    .map((g) => ({ ...g, success_rate: g.transactions ? (g.succeeded / g.transactions) * 100 : null }))
+    .map((g) => ({
+      ...g,
+      success_rate: g.transactions ? (g.succeeded / g.transactions) * 100 : null,
+      failure_rate: g.transactions ? (g.failed / g.transactions) * 100 : null,
+      latency_ms: null,
+    }))
     .sort((a, b) => b.revenue - a.revenue || a.provider.localeCompare(b.provider));
+
 
   // ---- Refunds block
   const reasons = new Map<string, Bucket>();
@@ -488,12 +571,184 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 30);
 
+  // ---- Payment health score (only metrics with a real source contribute)
+  const totalPaymentAttempts = attemptedN;
+  const refundRate = totalCollected > 0 ? (refundValue / totalCollected) * 100 : null;
+  const pendingBacklogRate = totalPaymentAttempts ? ((pendingN + processingN) / totalPaymentAttempts) * 100 : null;
+  const failureRate = totalPaymentAttempts ? (failedN / totalPaymentAttempts) * 100 : null;
+  const configurable = gateways.filter((g) => g.enabled != null);
+  const gatewayReady = configurable.length
+    ? (configurable.filter((g) => g.enabled && g.configured).length / configurable.length) * 100
+    : null;
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+  const factors: HealthFactor[] = [
+    {
+      key: "success_rate", label: "Success rate", weight: 0.35,
+      score: successRate == null ? null : clamp(successRate),
+      detail: successRate == null ? "No payment attempts recorded" : `${successRate.toFixed(1)}% of attempts captured`,
+    },
+    {
+      key: "failures", label: "Failed payments", weight: 0.2,
+      score: failureRate == null ? null : clamp(100 - failureRate * 2),
+      detail: failureRate == null ? "No payment attempts recorded" : `${failedN} failure(s) · ${failureRate.toFixed(1)}%`,
+    },
+    {
+      key: "pending", label: "Pending backlog", weight: 0.15,
+      score: pendingBacklogRate == null ? null : clamp(100 - pendingBacklogRate * 2),
+      detail: pendingBacklogRate == null ? "No payment attempts recorded" : `${pendingN + processingN} awaiting completion`,
+    },
+    {
+      key: "refunds", label: "Refund rate", weight: 0.15,
+      score: refundRate == null ? null : clamp(100 - refundRate * 4),
+      detail: refundRate == null ? "No collected revenue to compare" : `${refundRate.toFixed(1)}% of collected revenue`,
+    },
+    {
+      key: "gateways", label: "Gateway readiness", weight: 0.15,
+      score: gatewayReady,
+      detail: gatewayReady == null ? "No gateway configuration found" : `${configurable.filter((g) => g.enabled && g.configured).length}/${configurable.length} gateways live`,
+    },
+    {
+      key: "latency", label: "Processing latency", weight: 0,
+      score: null,
+      detail: "No latency telemetry source connected",
+    },
+  ];
+  const usable = factors.filter((f) => f.score != null && f.weight > 0);
+  const weightSum = usable.reduce((s, f) => s + f.weight, 0);
+  const healthScore = weightSum
+    ? Math.round(usable.reduce((s, f) => s + (f.score as number) * f.weight, 0) / weightSum)
+    : null;
+  const health: HealthBlock = {
+    score: healthScore,
+    grade:
+      healthScore == null ? null
+        : healthScore >= 90 ? "Excellent"
+        : healthScore >= 75 ? "Good"
+        : healthScore >= 55 ? "Fair"
+        : "At risk",
+    factors,
+    excluded: factors.filter((f) => f.score == null).map((f) => f.label),
+  };
+
+  // ---- Smart insights (derived from real aggregates only)
+  const insights: Insight[] = [];
+  if (kpis.deltas.success_rate != null && Math.abs(kpis.deltas.success_rate) >= 1) {
+    const up = kpis.deltas.success_rate > 0;
+    insights.push({
+      id: "sr",
+      tone: up ? "good" : "warn",
+      title: `Payment success rate ${up ? "increased" : "decreased"} ${Math.abs(kpis.deltas.success_rate).toFixed(1)}%`,
+      detail: `Compared with the previous ${Math.round(half)} days.`,
+    });
+  }
+  if (refundRate != null) {
+    insights.push({
+      id: "refund-rate",
+      tone: refundRate <= 3 ? "good" : refundRate <= 8 ? "info" : "warn",
+      title: `Refund rate is ${refundRate.toFixed(1)}% of collected revenue`,
+      detail: `${refunds.length} refund(s) totalling ${refundValue.toFixed(0)} across the window.`,
+    });
+  }
+  const intlRev = regions.international.revenue;
+  const inRev = regions.india.revenue;
+  if (intlRev > 0 && inRev + intlRev > 0) {
+    insights.push({
+      id: "intl-share",
+      tone: "info",
+      title: `International orders are ${((intlRev / (inRev + intlRev)) * 100).toFixed(1)}% of revenue`,
+      detail: `${regions.international.orders} cross-border payment(s) captured.`,
+    });
+  }
+  const allMethods = new Map<string, Bucket>();
+  for (const region of ["india", "international"] as Region[]) {
+    for (const m of regions[region].methods) bump(allMethods, m.k, m.v);
+  }
+  const topMethod = [...allMethods.values()].sort((a, b) => b.n - a.n)[0];
+  if (topMethod) {
+    insights.push({
+      id: "top-method",
+      tone: "info",
+      title: `${topMethod.k.toUpperCase()} is the most-used payment method`,
+      detail: `${topMethod.n} successful payment(s) via ${topMethod.k}.`,
+    });
+  }
+  const worstGw = gateways
+    .filter((g) => g.transactions >= 5 && g.failed > 0)
+    .sort((a, b) => (b.failure_rate ?? 0) - (a.failure_rate ?? 0))[0];
+  if (worstGw && (worstGw.failure_rate ?? 0) >= 10) {
+    insights.push({
+      id: "gw-failures",
+      tone: "bad",
+      title: `Most failures are occurring on ${worstGw.display_name}`,
+      detail: `${worstGw.failed} of ${worstGw.transactions} transactions failed (${(worstGw.failure_rate ?? 0).toFixed(1)}%).`,
+    });
+  }
+  if (pendingN > 0) {
+    insights.push({
+      id: "pending",
+      tone: pendingN > 10 ? "warn" : "info",
+      title: `${pendingN} payment(s) are still pending`,
+      detail: `Worth ${pendingAmt.toFixed(0)} in uncollected value.`,
+    });
+  }
+
+  const quick: QuickCounts = {
+    today: payments.filter((p) => dayKey(p.created_at) === todayKey).length,
+    pending: pendingN + processingN,
+    refund_queue: refundBlock.queue.length,
+    failed: failedN,
+    settlements: null,
+  };
+
+  // ---- Vendor payouts (only when the marketplace actually has vendor rows)
+  let vendorPayouts: VendorPayoutBlock = { enabled: false, rows: [] };
+  const [vendorRes, payoutRes, commissionRes] = await Promise.all([
+    supabaseAdmin.from("vendors").select("id,business_name,commission_rate").limit(500),
+    supabaseAdmin.from("vendor_payouts").select("vendor_id,amount,currency,status,period_end,processed_at").limit(5000),
+    supabaseAdmin.from("vendor_commissions").select("vendor_id,amount,rate,currency,status").limit(5000),
+  ]);
+  const vendorRows = (vendorRes.data ?? []) as unknown as { id: string; business_name: string | null; commission_rate: number | null }[];
+  if (vendorRows.length) {
+    const payoutRows = (payoutRes.data ?? []) as unknown as { vendor_id: string; amount: number | null; currency: string | null; status: string | null; period_end: string | null; processed_at: string | null }[];
+    const commRows = (commissionRes.data ?? []) as unknown as { vendor_id: string; amount: number | null; currency: string | null; status: string | null }[];
+    vendorPayouts = {
+      enabled: true,
+      rows: vendorRows.map((v) => {
+        const mine = payoutRows.filter((p) => p.vendor_id === v.id);
+        const comm = commRows.filter((c) => c.vendor_id === v.id);
+        const pending = mine.filter((p) => ["pending", "processing"].includes(classify(p.status))).reduce((s, p) => s + num(p.amount), 0);
+        const completed = mine.filter((p) => classify(p.status) === "succeeded").reduce((s, p) => s + num(p.amount), 0);
+        const commission = comm.length ? comm.reduce((s, c) => s + num(c.amount), 0) : null;
+        const upcoming = mine
+          .filter((p) => classify(p.status) !== "succeeded" && p.period_end)
+          .map((p) => p.period_end as string)
+          .sort()[0] ?? null;
+        return {
+          vendor_id: v.id,
+          vendor: v.business_name ?? "Vendor",
+          pending,
+          completed,
+          next_settlement: upcoming,
+          total_sales: null,
+          commission,
+          net_earnings: commission == null ? null : pending + completed,
+          currency: (mine[0]?.currency ?? comm[0]?.currency ?? "INR").toUpperCase(),
+        };
+      }).sort((a, b) => b.pending - a.pending || b.completed - a.completed),
+    };
+  }
+
   return {
     kpis,
+    health,
+    insights,
+    quick,
     regions,
     daily: [...dailyAll.values()].sort((a, b) => a.date.localeCompare(b.date)),
     gateways,
     refunds: refundBlock,
+    vendor_payouts: vendorPayouts,
     settlements: null,
     activity,
     window_days: windowDays,
@@ -501,6 +756,7 @@ export async function buildPaymentsOverview(windowDays: number): Promise<Payment
     has_any_data: payments.length > 0 || orders.length > 0 || refunds.length > 0,
   };
 }
+
 
 export type LedgerFilters = {
   search?: string;
@@ -635,4 +891,143 @@ export async function buildLedger(f: LedgerFilters): Promise<LedgerResult> {
   const total = rows.length;
   const start = f.page * f.pageSize;
   return { rows: rows.slice(start, start + f.pageSize), total, capped: payments.length >= CAP };
+}
+
+// ---------------------------------------------------------------------------
+// Transaction detail (read-only drawer payload)
+// ---------------------------------------------------------------------------
+
+export type TimelineEvent = { at: string; label: string; detail?: string | null; tone: "good" | "info" | "warn" | "bad" };
+
+export type PaymentDetail = {
+  id: string;
+  order_id: string | null;
+  order_status: string | null;
+  payment_status: string;
+  amount: number;
+  currency: string;
+  method: string | null;
+  gateway: string;
+  transaction_id: string | null;
+  gateway_order_id: string | null;
+  created_at: string;
+  customer: { name: string; email: string | null; phone: string | null; country: string | null; city: string | null; state: string | null };
+  totals: { subtotal: number | null; discount: number | null; shipping: number | null; tax: number | null; total: number | null };
+  timeline: TimelineEvent[];
+  transactions: { id: string; amount: number; currency: string; status: string; method: string | null; created_at: string }[];
+  refunds: { id: string; amount: number; currency: string; status: string; reason: string | null; created_at: string }[];
+  settlement: null;
+  invoice_ref: string | null;
+};
+
+export async function buildPaymentDetail(paymentId: string): Promise<PaymentDetail | null> {
+  const { data: pay } = await supabaseAdmin
+    .from("payments")
+    .select("id,order_id,user_id,method,status,amount,currency,transaction_id,razorpay_payment_id,razorpay_order_id,created_at")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!pay) return null;
+  const p = pay as unknown as PaymentLite;
+
+  const [orderRes, siblingRes, refundRes, profileRes] = await Promise.all([
+    p.order_id
+      ? supabaseAdmin
+          .from("orders")
+          .select("id,currency,total,subtotal,discount,shipping,tax,status,payment_status,payment_method,payment_provider,market_region,shipping_address,created_at,updated_at,user_id,contact_email,paid_at")
+          .eq("id", p.order_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    p.order_id
+      ? supabaseAdmin
+          .from("payments")
+          .select("id,amount,currency,status,method,created_at")
+          .eq("order_id", p.order_id)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    p.order_id
+      ? supabaseAdmin
+          .from("refunds")
+          .select("id,amount,currency,status,reason,created_at,updated_at")
+          .eq("order_id", p.order_id)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    p.user_id
+      ? supabaseAdmin.from("profiles").select("id,full_name,phone").eq("id", p.user_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const o = (orderRes.data ?? null) as unknown as (OrderLite & {
+    subtotal: number | null; discount: number | null;
+    shipping: number | null; updated_at: string | null; paid_at: string | null;
+  }) | null;
+  const prof = (profileRes.data ?? null) as unknown as { full_name: string | null; phone: string | null } | null;
+  const siblings = ((siblingRes.data ?? []) as unknown as { id: string; amount: number | null; currency: string | null; status: string | null; method: string | null; created_at: string }[]);
+  const refundRows = ((refundRes.data ?? []) as unknown as { id: string; amount: number | null; currency: string | null; status: string | null; reason: string | null; created_at: string; updated_at: string | null }[]);
+
+  const gateway = (o?.payment_provider
+    ?? (p.razorpay_payment_id ? "razorpay" : null)
+    ?? (p.method === "cod" ? "cod" : null)
+    ?? p.method
+    ?? "unknown").toLowerCase();
+
+  const timeline: TimelineEvent[] = [];
+  if (o?.created_at) timeline.push({ at: o.created_at, label: "Order placed", detail: null, tone: "info" });
+  for (const s of siblings) {
+    const c = classify(s.status);
+    timeline.push({
+      at: s.created_at,
+      label: c === "succeeded" ? "Payment captured" : c === "failed" ? "Payment failed" : `Payment ${c}`,
+      detail: s.method,
+      tone: c === "succeeded" ? "good" : c === "failed" ? "bad" : "warn",
+    });
+  }
+  for (const r of refundRows) {
+    timeline.push({ at: r.created_at, label: "Refund requested", detail: r.reason, tone: "warn" });
+    if (r.updated_at && classify(r.status) === "succeeded") {
+      timeline.push({ at: r.updated_at, label: "Refund completed", detail: null, tone: "good" });
+    }
+  }
+  if (o?.updated_at && o.status) timeline.push({ at: o.updated_at, label: `Order ${o.status}`, detail: null, tone: "info" });
+  timeline.sort((a, b) => a.at.localeCompare(b.at));
+
+  return {
+    id: p.id,
+    order_id: p.order_id,
+    order_status: o?.status ?? null,
+    payment_status: classify(p.status) === "other" ? (p.status ?? "unknown") : classify(p.status),
+    amount: num(p.amount),
+    currency: (p.currency ?? o?.currency ?? "INR").toUpperCase(),
+    method: p.method ?? o?.payment_method ?? null,
+    gateway,
+    transaction_id: p.razorpay_payment_id ?? p.transaction_id ?? null,
+    gateway_order_id: p.razorpay_order_id ?? null,
+    created_at: p.created_at,
+    customer: {
+      name: prof?.full_name || o?.contact_email || "Guest",
+      email: o?.contact_email ?? null,
+      phone: prof?.phone ?? null,
+      country: addrField(o?.shipping_address ?? null, ["country", "country_code"]),
+      city: addrField(o?.shipping_address ?? null, ["city", "town"]),
+      state: addrField(o?.shipping_address ?? null, ["state", "region", "province"]),
+    },
+    totals: {
+      subtotal: o?.subtotal ?? null,
+      discount: o?.discount ?? null,
+      shipping: o?.shipping ?? null,
+      tax: o?.tax ?? null,
+      total: o?.total ?? null,
+    },
+    timeline,
+    transactions: siblings.map((s) => ({
+      id: s.id, amount: num(s.amount), currency: (s.currency ?? "INR").toUpperCase(),
+      status: classify(s.status) === "other" ? (s.status ?? "unknown") : classify(s.status),
+      method: s.method, created_at: s.created_at,
+    })),
+    refunds: refundRows.map((r) => ({
+      id: r.id, amount: num(r.amount), currency: (r.currency ?? "INR").toUpperCase(),
+      status: r.status ?? "pending", reason: r.reason, created_at: r.created_at,
+    })),
+    settlement: null,
+    invoice_ref: o?.id ?? null,
+  };
 }

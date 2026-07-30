@@ -1,4 +1,4 @@
-import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
+import { AreaChart, Area, BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Banknote, Globe2, MapPin, Users } from "lucide-react";
 import type { RegionBlock } from "@/lib/payments-center-v3.functions";
 import { BarList, EmptyState, Panel, StatKpi, money, compact } from "./ui";
@@ -34,9 +34,10 @@ export function RegionPanel({ block }: { block: RegionBlock }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5">
         <StatKpi label="Revenue" icon={<Banknote className="size-3.5" />} value={money(block.revenue, currency)} />
         <StatKpi label="Orders" icon={<Globe2 className="size-3.5" />} value={block.orders} />
+        <StatKpi label="Average order value" value={money(block.aov, currency)} />
         <StatKpi label="Refunds" value={money(block.refund_value, currency)} sub={`${block.refund_count} refund(s)`} />
         {india ? (
           <StatKpi label="GST collected" value={block.gst_estimate == null ? "No data" : money(block.gst_estimate, "INR")} sub="from order tax" />
@@ -123,7 +124,25 @@ export function RegionPanel({ block }: { block: RegionBlock }) {
           )}
         </Panel>
 
-        <Panel title="Settlement timeline" hint="Gateway payouts">
+        <Panel title="Hourly revenue" hint="When customers actually pay (local time)">
+          {block.hourly.some((h) => h.v > 0) ? (
+            <div className="h-48 -ml-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={block.hourly} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+                  <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="h" tick={axis} tickLine={false} axisLine={false} tickFormatter={(h: number) => `${h}h`} minTickGap={12} />
+                  <YAxis tick={axis} tickLine={false} axisLine={false} width={48} tickFormatter={(v) => compact(v)} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => money(v, currency)} labelFormatter={(h) => `${h}:00`} />
+                  <Bar dataKey="v" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <EmptyState title="No hourly revenue yet." />
+          )}
+        </Panel>
+
+        <Panel title="Settlement queue & timeline" hint="Gateway payouts">
           <EmptyState
             title="No settlement data available yet."
             hint="Connect a gateway settlement feed to track payout dates and reference numbers."

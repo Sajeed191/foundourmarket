@@ -11,7 +11,12 @@ import {
 } from "@/lib/payments-center-v3.functions";
 import { EmptyState, Panel } from "@/components/admin/payments/ui";
 import { LiveActivityFeed } from "@/components/admin/payments/LiveActivityFeed";
-import type { LedgerFacets } from "@/components/admin/payments/PaymentsLedger";
+import type { LedgerFacets, LedgerPreset } from "@/components/admin/payments/PaymentsLedger";
+import { QuickActionBar, type QuickKey } from "@/components/admin/payments/QuickActionBar";
+
+const TransactionDrawer = lazy(() =>
+  import("@/components/admin/payments/TransactionDrawer").then((m) => ({ default: m.TransactionDrawer })),
+);
 
 const PaymentsOverviewPanel = lazy(() =>
   import("@/components/admin/payments/PaymentsOverviewPanel").then((m) => ({ default: m.PaymentsOverviewPanel })),
@@ -65,6 +70,9 @@ function PaymentsInner() {
   const [loading, setLoading] = useState(true);
   const [pulse, setPulse] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [quick, setQuick] = useState<QuickKey | null>(null);
+  const [preset, setPreset] = useState<LedgerPreset | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const reqId = useRef(0);
 
   const load = useCallback(async () => {
@@ -99,6 +107,17 @@ function PaymentsInner() {
       .subscribe();
     return () => { if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
   }, [load]);
+
+  const onQuick = useCallback((k: QuickKey) => {
+    setQuick(k);
+    const today = new Date().toISOString().slice(0, 10);
+    if (k === "today") { setPreset({ from: today, to: today }); setTab("ledger"); return; }
+    if (k === "pending") { setPreset({ status: "pending" }); setTab("ledger"); return; }
+    if (k === "failed") { setPreset({ status: "failed" }); setTab("ledger"); return; }
+    if (k === "refunds") { setPreset({ status: "refunded" }); setTab("ledger"); return; }
+    if (k === "exports") { setPreset({}); setTab("ledger"); return; }
+    setTab("overview"); // settlements: no source yet, overview explains why
+  }, []);
 
   const facets: LedgerFacets = useMemo(() => {
     if (!data) return { currencies: [], gateways: [], methods: [], countries: [] };
@@ -152,6 +171,8 @@ function PaymentsInner() {
         </div>
       </div>
 
+      {data && <QuickActionBar counts={data.quick} active={quick} onSelect={onQuick} />}
+
       {loading && !data && <Fallback />}
 
       {!loading && !data && (
@@ -171,7 +192,13 @@ function PaymentsInner() {
               {tab === "india" && <RegionPanel block={data.regions.india} />}
               {tab === "international" && <RegionPanel block={data.regions.international} />}
               {tab === "ledger" && (
-                <PaymentsLedger region="all" facets={facets} refreshKey={refreshKey} />
+                <PaymentsLedger
+                  region="all"
+                  facets={facets}
+                  refreshKey={refreshKey}
+                  preset={preset}
+                  onSelect={setDetailId}
+                />
               )}
             </Suspense>
           </div>
@@ -185,6 +212,12 @@ function PaymentsInner() {
         <div className="xl:hidden">
           <LiveActivityFeed items={data.activity} live={pulse} />
         </div>
+      )}
+
+      {detailId && (
+        <Suspense fallback={null}>
+          <TransactionDrawer paymentId={detailId} onClose={() => setDetailId(null)} />
+        </Suspense>
       )}
     </div>
   );

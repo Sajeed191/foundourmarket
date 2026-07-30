@@ -5,6 +5,9 @@ import {
 } from "lucide-react";
 import type { PaymentsOverview } from "@/lib/payments-center-v3.functions";
 import { BarList, EmptyState, Panel, StatKpi, StatusBadge, money, when, compact } from "./ui";
+import { PaymentHealthCard, SmartInsights } from "./HealthAndInsights";
+import { GatewayMonitor } from "./GatewayMonitor";
+import { VendorPayoutsPanel } from "./VendorPayoutsPanel";
 
 const axis = { stroke: "hsl(var(--muted-foreground))", fontSize: 10 } as const;
 
@@ -27,6 +30,11 @@ export function PaymentsOverviewPanel({ data }: { data: PaymentsOverview }) {
   const k = data.kpis;
   return (
     <div className="space-y-4">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4">
+        <PaymentHealthCard health={data.health} />
+        <SmartInsights insights={data.insights} />
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5">
         <StatKpi label="Today's Revenue" icon={<IndianRupee className="size-3.5" />} value={money(k.today_revenue)} delta={k.deltas.today_revenue} sub="vs yesterday" />
         <StatKpi label="Today's Orders" icon={<ShoppingBag className="size-3.5" />} value={k.today_orders} delta={k.deltas.today_orders} sub="vs yesterday" />
@@ -86,37 +94,7 @@ export function PaymentsOverviewPanel({ data }: { data: PaymentsOverview }) {
         </Panel>
       </div>
 
-      <Panel title="Payment gateways" hint="Live configuration + real transaction performance">
-        {data.gateways.length ? (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {data.gateways.map((g) => (
-              <div key={g.provider} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Plug className="size-3.5 text-accent shrink-0" />
-                    <span className="text-sm font-semibold truncate capitalize">{g.display_name}</span>
-                  </div>
-                  <StatusBadge status={g.enabled == null ? "unknown" : g.enabled ? (g.configured ? "settled" : "pending") : "cancelled"} />
-                </div>
-                <dl className="mt-3 grid grid-cols-2 gap-y-1.5 text-[11px]">
-                  <dt className="text-muted-foreground">Transactions</dt>
-                  <dd className="text-right font-mono">{g.transactions || "—"}</dd>
-                  <dt className="text-muted-foreground">Success rate</dt>
-                  <dd className="text-right font-mono">{g.success_rate == null ? "No data" : `${g.success_rate.toFixed(1)}%`}</dd>
-                  <dt className="text-muted-foreground">Failures</dt>
-                  <dd className="text-right font-mono">{g.failed || "—"}</dd>
-                  <dt className="text-muted-foreground">Revenue</dt>
-                  <dd className="text-right font-mono">{g.revenue ? money(g.revenue) : "—"}</dd>
-                  <dt className="text-muted-foreground">Last sync</dt>
-                  <dd className="text-right font-mono">{g.last_sync ? when(g.last_sync) : "No data"}</dd>
-                </dl>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <EmptyState title="No gateways connected yet." />
-        )}
-      </Panel>
+      <GatewayMonitor gateways={data.gateways} />
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Panel title="Refund queue" hint="Awaiting processing">
@@ -184,6 +162,8 @@ export function PaymentsOverviewPanel({ data }: { data: PaymentsOverview }) {
           <EmptyState title="No refund history available yet." />
         )}
       </Panel>
+
+      <VendorPayoutsPanel block={data.vendor_payouts} />
 
       <Panel title="Financial notes" hint="Data sources">
         <p className="text-[11px] text-muted-foreground leading-relaxed">

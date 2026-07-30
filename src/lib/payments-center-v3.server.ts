@@ -892,3 +892,144 @@ export async function buildLedger(f: LedgerFilters): Promise<LedgerResult> {
   const start = f.page * f.pageSize;
   return { rows: rows.slice(start, start + f.pageSize), total, capped: payments.length >= CAP };
 }
+
+// ---------------------------------------------------------------------------
+// Transaction detail (read-only drawer payload)
+// ---------------------------------------------------------------------------
+
+export type TimelineEvent = { at: string; label: string; detail?: string | null; tone: "good" | "info" | "warn" | "bad" };
+
+export type PaymentDetail = {
+  id: string;
+  order_id: string | null;
+  order_number: string | null;
+  order_status: string | null;
+  payment_status: string;
+  amount: number;
+  currency: string;
+  method: string | null;
+  gateway: string;
+  transaction_id: string | null;
+  gateway_order_id: string | null;
+  created_at: string;
+  customer: { name: string; email: string | null; phone: string | null; country: string | null; city: string | null; state: string | null };
+  totals: { subtotal: number | null; discount: number | null; shipping: number | null; tax: number | null; total: number | null };
+  timeline: TimelineEvent[];
+  transactions: { id: string; amount: number; currency: string; status: string; method: string | null; created_at: string }[];
+  refunds: { id: string; amount: number; currency: string; status: string; reason: string | null; created_at: string }[];
+  settlement: null;
+  invoice_ref: string | null;
+};
+
+export async function buildPaymentDetail(paymentId: string): Promise<PaymentDetail | null> {
+  const { data: pay } = await supabaseAdmin
+    .from("payments")
+    .select("id,order_id,user_id,method,status,amount,currency,transaction_id,razorpay_payment_id,razorpay_order_id,created_at")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!pay) return null;
+  const p = pay as unknown as PaymentLite;
+
+  const [orderRes, siblingRes, refundRes, profileRes] = await Promise.all([
+    p.order_id
+      ? supabaseAdmin
+          .from("orders")
+          .select("id,order_number,currency,total,subtotal,discount,shipping_fee,tax,status,payment_status,payment_method,payment_provider,market_region,shipping_address,created_at,updated_at,user_id,contact_email,contact_phone")
+          .eq("id", p.order_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    p.order_id
+      ? supabaseAdmin
+          .from("payments")
+          .select("id,amount,currency,status,method,created_at")
+          .eq("order_id", p.order_id)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    p.order_id
+      ? supabaseAdmin
+          .from("refunds")
+          .select("id,amount,currency,status,reason,created_at,updated_at")
+          .eq("order_id", p.order_id)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    p.user_id
+      ? supabaseAdmin.from("profiles").select("id,full_name,phone").eq("id", p.user_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const o = (orderRes.data ?? null) as unknown as (OrderLite & {
+    order_number: string | null; subtotal: number | null; discount: number | null;
+    shipping_fee: number | null; updated_at: string | null; contact_phone: string | null;
+  }) | null;
+  const prof = (profileRes.data ?? null) as unknown as { full_name: string | null; phone: string | null } | null;
+  const siblings = ((siblingRes.data ?? []) as unknown as { id: string; amount: number | null; currency: string | null; status: string | null; method: string | null; created_at: string }[]);
+  const refundRows = ((refundRes.data ?? []) as unknown as { id: string; amount: number | null; currency: string | null; status: string | null; reason: string | null; created_at: string; updated_at: string | null }[]);
+
+  const gateway = (o?.payment_provider
+    ?? (p.razorpay_payment_id ? "razorpay" : null)
+    ?? (p.method === "cod" ? "cod" : null)
+    ?? p.method
+    ?? "unknown").toLowerCase();
+
+  const timeline: TimelineEvent[] = [];
+  if (o?.created_at) timeline.push({ at: o.created_at, label: "Order placed", detail: o.order_number ?? null, tone: "info" });
+  for (const s of siblings) {
+    const c = classify(s.status);
+    timeline.push({
+      at: s.created_at,
+      label: c === "succeeded" ? "Payment captured" : c === "failed" ? "Payment failed" : `Payment ${c}`,
+      detail: s.method,
+      tone: c === "succeeded" ? "good" : c === "failed" ? "bad" : "warn",
+    });
+  }
+  for (const r of refundRows) {
+    timeline.push({ at: r.created_at, label: "Refund requested", detail: r.reason, tone: "warn" });
+    if (r.updated_at && classify(r.status) === "succeeded") {
+      timeline.push({ at: r.updated_at, label: "Refund completed", detail: null, tone: "good" });
+    }
+  }
+  if (o?.updated_at && o.status) timeline.push({ at: o.updated_at, label: `Order ${o.status}`, detail: null, tone: "info" });
+  timeline.sort((a, b) => a.at.localeCompare(b.at));
+
+  return {
+    id: p.id,
+    order_id: p.order_id,
+    order_number: o?.order_number ?? null,
+    order_status: o?.status ?? null,
+    payment_status: classify(p.status) === "other" ? (p.status ?? "unknown") : classify(p.status),
+    amount: num(p.amount),
+    currency: (p.currency ?? o?.currency ?? "INR").toUpperCase(),
+    method: p.method ?? o?.payment_method ?? null,
+    gateway,
+    transaction_id: p.razorpay_payment_id ?? p.transaction_id ?? null,
+    gateway_order_id: p.razorpay_order_id ?? null,
+    created_at: p.created_at,
+    customer: {
+      name: prof?.full_name || o?.contact_email || "Guest",
+      email: o?.contact_email ?? null,
+      phone: o?.contact_phone ?? prof?.phone ?? null,
+      country: addrField(o?.shipping_address ?? null, ["country", "country_code"]),
+      city: addrField(o?.shipping_address ?? null, ["city", "town"]),
+      state: addrField(o?.shipping_address ?? null, ["state", "region", "province"]),
+    },
+    totals: {
+      subtotal: o?.subtotal ?? null,
+      discount: o?.discount ?? null,
+      shipping: o?.shipping_fee ?? null,
+      tax: o?.tax ?? null,
+      total: o?.total ?? null,
+    },
+    timeline,
+    transactions: siblings.map((s) => ({
+      id: s.id, amount: num(s.amount), currency: (s.currency ?? "INR").toUpperCase(),
+      status: classify(s.status) === "other" ? (s.status ?? "unknown") : classify(s.status),
+      method: s.method, created_at: s.created_at,
+    })),
+    refunds: refundRows.map((r) => ({
+      id: r.id, amount: num(r.amount), currency: (r.currency ?? "INR").toUpperCase(),
+      status: r.status ?? "pending", reason: r.reason, created_at: r.created_at,
+    })),
+    settlement: null,
+    invoice_ref: o?.order_number ?? o?.id ?? null,
+  };
+}

@@ -620,11 +620,12 @@ export async function buildCFODashboard(windowDays: number): Promise<CFODashboar
       vendorAgg.set(vid, row);
     }
   }
-  for (const [vid, amt] of refVendors) {
+  for (const [vid, agg] of refVendors) {
     const row = vendorAgg.get(vid) ?? { revenue: 0, orders: new Set<string>(), refunds: 0, first: 0, second: 0, commission: 0 };
-    row.refunds += amt;
+    row.refunds += agg.v;
     vendorAgg.set(vid, row);
   }
+
   let commissionTotal = 0;
   for (const c of commissions) {
     const amt = toINR(num(c.amount), c.currency);

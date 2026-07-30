@@ -39,9 +39,13 @@ const FinanceOpsPanel = lazy(() =>
 const FinancialIntelligencePanel = lazy(() =>
   import("@/components/admin/payments/FinancialIntelligencePanel").then((m) => ({ default: m.FinancialIntelligencePanel })),
 );
+const GlobalFinancePanel = lazy(() =>
+  import("@/components/admin/payments/GlobalFinancePanel").then((m) => ({ default: m.GlobalFinancePanel })),
+);
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
 );
+
 
 export const Route = createFileRoute("/admin-payments")({
   head: () => ({

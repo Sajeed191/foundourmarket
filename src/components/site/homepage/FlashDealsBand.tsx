@@ -323,12 +323,15 @@ export function FlashDealsBand() {
   const [cycle, setCycle] = useState(0);
   const campaign = useCampaignLabel();
 
-  // Hero = 4 featured live deals. Grid = 2 different live deals, never overlapping the hero.
+  // Hero = 4 featured live deals. Below it, exactly 2 secondary cards.
+  // Everything else lives on the dedicated Explore page (presentation cap only —
+  // rotation, eligibility and the admin pool are untouched).
   const heroes = useMemo(() => items.slice(0, 4), [items]);
   const heroIds = useMemo(() => new Set(heroes.map((h) => h.product.id)), [heroes]);
-  // Everything live this window that is not currently in the hero carousel.
-  // `items` is already capped by the admin Flash Deals limit (default 20).
-  const gridDeals = useMemo(() => items.filter((i) => !heroIds.has(i.product.id)), [items, heroIds]);
+  const gridDeals = useMemo(
+    () => items.filter((i) => !heroIds.has(i.product.id)).slice(0, 2),
+    [items, heroIds],
+  );
 
 
   const onScroll = useCallback(() => {

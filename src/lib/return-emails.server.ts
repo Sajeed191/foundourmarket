@@ -10,7 +10,7 @@ import { TEMPLATES } from '@/lib/email-templates/registry'
 import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const FROM_DOMAIN = 'foundourmarket.com'
-const SENDER_DOMAIN = 'sent.foundourmarket.com'
+const SENDER_DOMAIN = 'notifyy.foundourmarket.com'
 
 export type ReturnEmailEvent =
   | 'return-requested'

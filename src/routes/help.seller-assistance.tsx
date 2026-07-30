@@ -165,6 +165,77 @@ function channelStatuses(
   };
 }
 
+/**
+ * Real support presence & service levels. Every tile either shows a measured
+ * value or an explicit unavailable message — never a placeholder number.
+ */
+function SupportFactsStrip({
+  facts,
+  unavailable,
+}: {
+  facts: SupportFacts | null;
+  unavailable: boolean;
+}) {
+  const presenceLabel = !facts
+    ? null
+    : facts.presence === "online"
+      ? "Online"
+      : facts.presence === "away"
+        ? "Busy"
+        : "Offline";
+
+  const tiles: { label: string; value: string | null; empty: string; sub?: string | null }[] = [
+    {
+      label: "Support status",
+      value: presenceLabel,
+      empty: "Support status cannot be determined at this time.",
+      sub: facts?.lastActiveAt ? `Last active ${fmtLastActive(facts.lastActiveAt)}` : null,
+    },
+    {
+      label: "Average first reply",
+      value: facts ? fmtMinutes(facts.avgFirstResponseMinutes) : null,
+      empty: "Average response time will appear once sufficient support history is available.",
+      sub: facts && facts.firstResponseSample > 0 ? `From ${facts.firstResponseSample} requests · last 90 days` : null,
+    },
+    {
+      label: "Average resolution",
+      value: facts ? fmtHours(facts.avgResolutionHours) : null,
+      empty: "Resolution time will appear once sufficient support history is available.",
+      sub: facts && facts.resolutionSample > 0 ? `From ${facts.resolutionSample} resolved requests` : null,
+    },
+    {
+      label: "Requests in queue",
+      value: facts && facts.openTickets != null ? String(facts.openTickets) : null,
+      empty: "Current queue information is unavailable.",
+    },
+  ];
+
+  return (
+    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {tiles.map((t) => (
+        <div
+          key={t.label}
+          className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-xl"
+        >
+          <p className="text-[9px] font-mono uppercase tracking-widest text-white/45">{t.label}</p>
+          {t.value ? (
+            <>
+              <p className="mt-1 text-lg font-semibold tabular-nums">{t.value}</p>
+              {t.sub && <p className="mt-0.5 text-[10px] text-white/45">{t.sub}</p>}
+            </>
+          ) : (
+            <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
+              {unavailable ? "Currently unavailable." : t.empty}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+
 
 function SellerAssistancePage() {
   const { data: supportFacts, unavailable: factsUnavailable } = useSupportFacts();

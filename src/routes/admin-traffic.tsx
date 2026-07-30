@@ -129,7 +129,7 @@ function Intelligence({ data }: { data: TrafficIntelligence }) {
             ["war", "War Room"], ["journey", "Journey"], ["products", "Products"],
             ["sources", "Sources"], ["regions", "Regions"], ["devices", "Devices"],
             ["search", "Search"], ["heatmaps", "Heatmaps"], ["advisor", "AI Advisor"], ["exec", "Executive"],
-            ["v10", "Enterprise v10"],
+            ["v10", "Enterprise v10"], ["v11", "Conversion v11"],
           ].map(([v, l]) => (
             <TabsTrigger key={v} value={v} className="text-[11px] font-mono uppercase tracking-wider whitespace-nowrap">{l}</TabsTrigger>
           ))}

@@ -20,6 +20,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
+import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RuntimeIsolationRouteImport } from './routes/runtime-isolation'
 import { Route as RuntimeFreezeRafRouteImport } from './routes/runtime-freeze-raf'
@@ -103,6 +104,7 @@ import { Route as AdminInboxPlacementRouteImport } from './routes/admin-inbox-pl
 import { Route as AdminImageIntelligenceRouteImport } from './routes/admin-image-intelligence'
 import { Route as AdminFlashDealsRouteImport } from './routes/admin-flash-deals'
 import { Route as AdminFinancialRouteImport } from './routes/admin-financial'
+import { Route as AdminFactoryResetRouteImport } from './routes/admin-factory-reset'
 import { Route as AdminExecutiveRouteImport } from './routes/admin-executive'
 import { Route as AdminEmailsRouteImport } from './routes/admin-emails'
 import { Route as AdminEmailQueueRouteImport } from './routes/admin-email-queue'
@@ -245,6 +247,11 @@ const SigninRoute = SigninRouteImport.update({
 const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
   id: '/shipping-policy',
   path: '/shipping-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -667,6 +674,11 @@ const AdminFlashDealsRoute = AdminFlashDealsRouteImport.update({
 const AdminFinancialRoute = AdminFinancialRouteImport.update({
   id: '/admin-financial',
   path: '/admin-financial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFactoryResetRoute = AdminFactoryResetRouteImport.update({
+  id: '/admin-factory-reset',
+  path: '/admin-factory-reset',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminExecutiveRoute = AdminExecutiveRouteImport.update({
@@ -1162,6 +1174,7 @@ export interface FileRoutesByFullPath {
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
+  '/admin-factory-reset': typeof AdminFactoryResetRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-image-intelligence': typeof AdminImageIntelligenceRoute
@@ -1245,6 +1258,7 @@ export interface FileRoutesByFullPath {
   '/runtime-freeze-raf': typeof RuntimeFreezeRafRoute
   '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
+  '/setup': typeof SetupRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
@@ -1346,6 +1360,7 @@ export interface FileRoutesByTo {
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
+  '/admin-factory-reset': typeof AdminFactoryResetRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-image-intelligence': typeof AdminImageIntelligenceRoute
@@ -1429,6 +1444,7 @@ export interface FileRoutesByTo {
   '/runtime-freeze-raf': typeof RuntimeFreezeRafRoute
   '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
+  '/setup': typeof SetupRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
@@ -1530,6 +1546,7 @@ export interface FileRoutesById {
   '/admin-email-queue': typeof AdminEmailQueueRoute
   '/admin-emails': typeof AdminEmailsRoute
   '/admin-executive': typeof AdminExecutiveRoute
+  '/admin-factory-reset': typeof AdminFactoryResetRoute
   '/admin-financial': typeof AdminFinancialRoute
   '/admin-flash-deals': typeof AdminFlashDealsRoute
   '/admin-image-intelligence': typeof AdminImageIntelligenceRoute
@@ -1613,6 +1630,7 @@ export interface FileRoutesById {
   '/runtime-freeze-raf': typeof RuntimeFreezeRafRoute
   '/runtime-isolation': typeof RuntimeIsolationRoute
   '/search': typeof SearchRoute
+  '/setup': typeof SetupRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
@@ -1716,6 +1734,7 @@ export interface FileRouteTypes {
     | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-executive'
+    | '/admin-factory-reset'
     | '/admin-financial'
     | '/admin-flash-deals'
     | '/admin-image-intelligence'
@@ -1799,6 +1818,7 @@ export interface FileRouteTypes {
     | '/runtime-freeze-raf'
     | '/runtime-isolation'
     | '/search'
+    | '/setup'
     | '/shipping-policy'
     | '/signin'
     | '/signup'
@@ -1900,6 +1920,7 @@ export interface FileRouteTypes {
     | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-executive'
+    | '/admin-factory-reset'
     | '/admin-financial'
     | '/admin-flash-deals'
     | '/admin-image-intelligence'
@@ -1983,6 +2004,7 @@ export interface FileRouteTypes {
     | '/runtime-freeze-raf'
     | '/runtime-isolation'
     | '/search'
+    | '/setup'
     | '/shipping-policy'
     | '/signin'
     | '/signup'
@@ -2083,6 +2105,7 @@ export interface FileRouteTypes {
     | '/admin-email-queue'
     | '/admin-emails'
     | '/admin-executive'
+    | '/admin-factory-reset'
     | '/admin-financial'
     | '/admin-flash-deals'
     | '/admin-image-intelligence'
@@ -2166,6 +2189,7 @@ export interface FileRouteTypes {
     | '/runtime-freeze-raf'
     | '/runtime-isolation'
     | '/search'
+    | '/setup'
     | '/shipping-policy'
     | '/signin'
     | '/signup'
@@ -2268,6 +2292,7 @@ export interface RootRouteChildren {
   AdminEmailQueueRoute: typeof AdminEmailQueueRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminExecutiveRoute: typeof AdminExecutiveRoute
+  AdminFactoryResetRoute: typeof AdminFactoryResetRoute
   AdminFinancialRoute: typeof AdminFinancialRoute
   AdminFlashDealsRoute: typeof AdminFlashDealsRoute
   AdminImageIntelligenceRoute: typeof AdminImageIntelligenceRoute
@@ -2351,6 +2376,7 @@ export interface RootRouteChildren {
   RuntimeFreezeRafRoute: typeof RuntimeFreezeRafRoute
   RuntimeIsolationRoute: typeof RuntimeIsolationRoute
   SearchRoute: typeof SearchRoute
+  SetupRoute: typeof SetupRoute
   ShippingPolicyRoute: typeof ShippingPolicyRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
@@ -2484,6 +2510,13 @@ declare module '@tanstack/react-router' {
       path: '/shipping-policy'
       fullPath: '/shipping-policy'
       preLoaderRoute: typeof ShippingPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -3065,6 +3098,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-financial'
       fullPath: '/admin-financial'
       preLoaderRoute: typeof AdminFinancialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-factory-reset': {
+      id: '/admin-factory-reset'
+      path: '/admin-factory-reset'
+      fullPath: '/admin-factory-reset'
+      preLoaderRoute: typeof AdminFactoryResetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-executive': {
@@ -3790,6 +3830,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminEmailQueueRoute: AdminEmailQueueRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminExecutiveRoute: AdminExecutiveRoute,
+  AdminFactoryResetRoute: AdminFactoryResetRoute,
   AdminFinancialRoute: AdminFinancialRoute,
   AdminFlashDealsRoute: AdminFlashDealsRoute,
   AdminImageIntelligenceRoute: AdminImageIntelligenceRoute,
@@ -3873,6 +3914,7 @@ const rootRouteChildren: RootRouteChildren = {
   RuntimeFreezeRafRoute: RuntimeFreezeRafRoute,
   RuntimeIsolationRoute: RuntimeIsolationRoute,
   SearchRoute: SearchRoute,
+  SetupRoute: SetupRoute,
   ShippingPolicyRoute: ShippingPolicyRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,

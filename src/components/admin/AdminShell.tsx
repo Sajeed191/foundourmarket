@@ -126,6 +126,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/admin-seed", label: "Seed data", icon: Database, roles: ["admin", "super_admin", "manager"] },
       { to: "/admin-rating-recovery", label: "Rating recovery", icon: Star, roles: ["admin", "super_admin"] },
       { to: "/admin-reset", label: "Production reset", icon: AlertTriangle, roles: ["super_admin"] },
+      { to: "/admin-factory-reset", label: "Factory reset", icon: AlertTriangle, roles: ["super_admin"] },
 
 
     ],
@@ -171,7 +172,23 @@ export function AdminShell({
   const intel = useCustomerIntelSummary(!!user);
   const cmd = useCommandCenter();
 
-  useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user, nav]);
+  // First boot: with zero super admins the marketplace must be set up before
+  // Admin is reachable at all.
+  useEffect(() => {
+    if (loading || user) return;
+    let active = true;
+    void (async () => {
+      try {
+        const { getSetupState } = await import("@/lib/setup.functions");
+        const s = await getSetupState();
+        if (!active) return;
+        nav({ to: s.needsSetup ? "/setup" : "/auth" });
+      } catch {
+        if (active) nav({ to: "/auth" });
+      }
+    })();
+    return () => { active = false; };
+  }, [loading, user, nav]);
   useEffect(() => { setOpen(false); }, [path, activeTab]);
 
   useEffect(() => {

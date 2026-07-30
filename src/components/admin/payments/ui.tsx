@@ -61,12 +61,15 @@ export function Trend({ delta }: { delta: number | null | undefined }) {
 }
 
 export function StatKpi({
-  label, value, sub, delta, icon, tone,
+  label, value, sub, delta, icon, tone, onClick, drillHint,
 }: {
   label: string; value: ReactNode; sub?: ReactNode; delta?: number | null; icon?: ReactNode; tone?: string;
+  /** When provided the card becomes a drill-down button into its supporting records. */
+  onClick?: () => void;
+  drillHint?: string;
 }) {
-  return (
-    <div className="glass border border-white/10 rounded-2xl p-3.5 min-w-0">
+  const body = (
+    <>
       <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
         {icon && <span className={tone ?? "text-accent"}>{icon}</span>}
         <span className="truncate">{label}</span>
@@ -76,9 +79,26 @@ export function StatKpi({
         {delta !== undefined && <Trend delta={delta} />}
         {sub && <span className="text-[10px] text-muted-foreground truncate">{sub}</span>}
       </div>
-    </div>
+    </>
+  );
+  if (!onClick) {
+    return <div className="glass border border-white/10 rounded-2xl p-3.5 min-w-0">{body}</div>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={drillHint ?? "Open supporting records"}
+      className="glass border border-white/10 rounded-2xl p-3.5 min-w-0 text-left w-full transition hover:border-accent/40 hover:bg-white/[0.04] focus:outline-none focus:border-accent/60"
+    >
+      {body}
+      <span className="mt-1.5 block text-[9px] font-mono uppercase tracking-[0.18em] text-accent/80">
+        View records →
+      </span>
+    </button>
   );
 }
+
 
 export function Panel({
   title, hint, actions, children, className,

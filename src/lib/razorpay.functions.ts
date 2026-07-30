@@ -54,52 +54,85 @@ export type RegionResolution = {
   pricingSource: "profile_locked" | "edge_geo" | "default";
   /** 0–100 confidence in the resolved region. */
   confidence: number;
+  /** Full decision trace (signals considered, winner, UPI eligibility). */
+  decision: RegionDecision;
 };
 
+export type RegionResolveOptions = {
+  /** Edge geo-IP country header value. */
+  edgeCountry?: string | null;
+  /** Country on the shipping address already chosen for this order. */
+  shippingCountry?: string | null;
+  /** Country on the billing address, when one exists. */
+  billingCountry?: string | null;
+  /** Advisory, client-sent browser hints (never override a trusted signal). */
+  hints?: { locale?: string | null; timezone?: string | null; ipCountry?: string | null } | null;
+};
+
+/** Map the resolver's winning signal onto the legacy pricing-source label. */
+function legacyPricingSource(key: RegionDecision["decidedBy"]): RegionResolution["pricingSource"] {
+  if (key === "selected_region" || key === "profile_region") return "profile_locked";
+  if (key === "platform_fallback") return "default";
+  return "edge_geo";
+}
+
 /**
- * Resolve the authoritative market region for billing.
+ * Resolve the authoritative market region for billing (Region Resolution v2).
  *
- * Priority:
- *   1. The user's locked profile region (highest trust).
- *   2. Edge geo-IP country header — IN ⇒ India (prevents Indian users from
- *      ever being charged in USD just because they never explicitly locked).
- *   3. International as the final safe default.
+ * Signals are gathered server-side and ranked by `resolveMarketRegion`:
+ *   1. locked profile region (the customer's own explicit selection)
+ *   2. shipping address country   3. saved profile region
+ *   4. billing address country    5. edge geo-IP country
+ *   6. browser locale             7. browser timezone
+ *   8. IP geolocation             9. platform fallback (international / USD)
  *
- * The client never supplies the region used for billing.
+ * Client-supplied hints are advisory only and can never override a trusted
+ * server-read signal, so the billing region can't be forced by a payload.
  */
 export async function resolveRegion(
   supabase: any,
   userId: string,
-  countryHeader?: string | null,
+  countryOrOptions?: string | null | RegionResolveOptions,
 ): Promise<RegionResolution> {
+  const opts: RegionResolveOptions =
+    typeof countryOrOptions === "string" || countryOrOptions == null
+      ? { edgeCountry: (countryOrOptions as string | null) ?? null }
+      : countryOrOptions;
+
   const { data } = await supabase
     .from("profiles")
     .select("market_region")
     .eq("id", userId)
     .maybeSingle();
 
-  const country = (countryHeader || "").toUpperCase() || null;
+  const lockedRegion =
+    data?.market_region === "india" || data?.market_region === "international"
+      ? (data.market_region as Region)
+      : null;
 
-  if (data?.market_region === "india" || data?.market_region === "international") {
-    return {
-      region: data.market_region,
-      detectedCountry: country,
-      pricingSource: "profile_locked",
-      confidence: 100,
-    };
-  }
+  const decision = resolveMarketRegion({
+    // A locked profile region is a write-once customer selection → priority 1.
+    selectedRegion: lockedRegion,
+    selectedRegionTrusted: true,
+    shippingCountry: opts.shippingCountry ?? null,
+    profileRegion: lockedRegion,
+    billingCountry: opts.billingCountry ?? null,
+    edgeCountry: opts.edgeCountry ?? null,
+    locale: opts.hints?.locale ?? null,
+    timezone: opts.hints?.timezone ?? null,
+    ipCountry: opts.hints?.ipCountry ?? null,
+  });
 
-  // No locked region yet → trust the edge geo signal so Indian shoppers are
-  // billed in INR even when they were never prompted to lock a region.
-  if (country === "IN") {
-    return { region: "india", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
-  }
-  if (country) {
-    return { region: "international", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
-  }
-
-  return { region: "international", detectedCountry: null, pricingSource: "default", confidence: 40 };
+  return {
+    region: decision.region as Region,
+    detectedCountry:
+      normalizeCountry(opts.edgeCountry) ?? normalizeCountry(opts.shippingCountry) ?? null,
+    pricingSource: legacyPricingSource(decision.decidedBy),
+    confidence: decision.confidence,
+    decision,
+  };
 }
+
 
 /**
  * Re-price the cart entirely from trusted database values (anti-tampering).

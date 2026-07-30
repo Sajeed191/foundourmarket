@@ -262,7 +262,7 @@ export async function buildFinanceOps(windowDays: number): Promise<FinanceOps> {
   const allOrders = (ordersRes.data ?? []) as unknown as OrderRow[];
   const allPayments = (paymentsRes.data ?? []) as unknown as PaymentRow[];
   const allRefunds = (refundsRes.data ?? []) as unknown as RefundRow[];
-  const adminLogs = (adminRes.data ?? []) as {
+  const adminLogs = (adminRes.data ?? []) as unknown as {
     id: string; actor_id: string | null; action: string; entity_type: string | null;
     entity_id: string | null; metadata: Record<string, unknown> | null; created_at: string;
   }[];
@@ -616,7 +616,7 @@ export async function buildFinanceOps(windowDays: number): Promise<FinanceOps> {
     .map((l) => {
       const meta = l.metadata ?? {};
       return {
-        id: l.id,
+        id: String(l.id),
         at: l.created_at,
         actor: l.actor_id ? (actorNames.get(l.actor_id) ?? "Staff") : null,
         dataset: String(meta["dataset"] ?? l.entity_type ?? l.action.replace(/[._]/g, " ")),
@@ -726,7 +726,7 @@ export async function recordFinanceAction(input: {
     metadata: {
       dataset: input.dataset ?? null,
       rows: input.rows ?? null,
-      filters: input.filters ?? null,
+      filters: (input.filters ?? null) as never,
     },
   });
 }

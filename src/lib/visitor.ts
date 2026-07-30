@@ -237,6 +237,52 @@ export function captureContext(path: string) {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ * Page engagement capture (real measurements only).
+ * Emits a `page_exit` event carrying the measured dwell time and the
+ * maximum scroll depth actually reached on the page being left. This is
+ * the only new capture required by Conversion Intelligence v11 — no
+ * schema change, no business-logic change.
+ * ------------------------------------------------------------------ */
+let pageEnteredAt = 0;
+let maxScrollPct = 0;
+let engagementBound = false;
+
+function measureScroll() {
+  const doc = document.documentElement;
+  const scrollable = doc.scrollHeight - window.innerHeight;
+  const pct = scrollable > 0 ? ((window.scrollY || doc.scrollTop) / scrollable) * 100 : 100;
+  if (pct > maxScrollPct) maxScrollPct = Math.min(100, Math.round(pct));
+}
+
+function emitPageEngagement(path: string) {
+  if (!path || !pageEnteredAt) return;
+  const seconds = Math.round((Date.now() - pageEnteredAt) / 1000);
+  if (seconds < 0) return;
+  const { route, productSlug, categorySlug } = classifyRoute(path);
+  void trackEvent("page_exit", {
+    path,
+    productSlug: productSlug ?? undefined,
+    value: seconds,
+    metadata: {
+      route,
+      category_slug: categorySlug,
+      dwell_seconds: seconds,
+      scroll_depth_pct: maxScrollPct,
+    },
+  });
+}
+
+function bindEngagement() {
+  if (engagementBound || typeof window === "undefined") return;
+  engagementBound = true;
+  window.addEventListener("scroll", measureScroll, { passive: true });
+  window.addEventListener("pagehide", () => emitPageEngagement(lastPath));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") emitPageEngagement(lastPath);
+  });
+}
+
 /**
  * Record a page view + keep the visitor session live. Called on every route
  * change. Also emits a `page_view` analytics_event with classified metadata.
@@ -244,7 +290,12 @@ export function captureContext(path: string) {
 export async function trackVisit(path: string): Promise<void> {
   if (typeof window === "undefined") return;
   if (path === lastPath) return; // guard against duplicate effect fires
+  if (lastPath) emitPageEngagement(lastPath);
   lastPath = path;
+  pageEnteredAt = Date.now();
+  maxScrollPct = 0;
+  bindEngagement();
+
 
   const { id: sid, isNew } = sessionId();
   const referrer = document.referrer || "";

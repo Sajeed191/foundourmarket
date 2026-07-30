@@ -153,6 +153,35 @@ function Intelligence({ data }: { data: TrafficIntelligence }) {
   );
 }
 
+function ConversionV11() {
+  const [days, setDays] = useState<7 | 14 | 30 | 90>(14);
+  const [filters, setFilters] = useState<V11Filters>({});
+  const { data, loading, refreshing } = useTrafficV11(days, filters);
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          Conversion intelligence {refreshing && <Loader2 className="size-3 animate-spin" />}
+        </span>
+        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
+          {([7, 14, 30, 90] as const).map((p) => (
+            <button key={p} onClick={() => setDays(p)}
+              className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full ${days === p ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}>{p}d</button>
+          ))}
+        </div>
+      </div>
+      {loading || !data ? (
+        <div className="flex items-center justify-center py-24"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <Suspense fallback={<div className="flex items-center justify-center py-24"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>}>
+          <TrafficV11Panel data={data} filters={filters} setFilters={setFilters} />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
+
 function EnterpriseV10() {
   const [days, setDays] = useState<7 | 14 | 30 | 90>(14);
   const { data, loading, refreshing } = useTrafficV10(days);

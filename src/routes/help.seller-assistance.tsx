@@ -578,7 +578,9 @@ function SellerAssistancePage() {
               );
             })}
           </div>
+          <SupportFactsStrip facts={supportFacts} unavailable={factsUnavailable} />
         </Section>
+
 
         {/* FORM */}
         <Section eyebrow="Submit a request" title="Tell us what's going on" id="seller-form">

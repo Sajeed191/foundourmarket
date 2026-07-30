@@ -16,6 +16,12 @@ import {
   toMinorUnits,
 } from "./pricing";
 import { enqueueOrderEmail } from "./order-emails.server";
+import {
+  resolveMarketRegion,
+  normalizeCountry,
+  type RegionDecision,
+} from "./region-resolution";
+
 
 const lineItemSchema = z.object({
   slug: z.string().min(1).max(200),

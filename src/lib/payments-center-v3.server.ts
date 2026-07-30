@@ -902,7 +902,6 @@ export type TimelineEvent = { at: string; label: string; detail?: string | null;
 export type PaymentDetail = {
   id: string;
   order_id: string | null;
-  order_number: string | null;
   order_status: string | null;
   payment_status: string;
   amount: number;
@@ -934,7 +933,7 @@ export async function buildPaymentDetail(paymentId: string): Promise<PaymentDeta
     p.order_id
       ? supabaseAdmin
           .from("orders")
-          .select("id,order_number,currency,total,subtotal,discount,shipping_fee,tax,status,payment_status,payment_method,payment_provider,market_region,shipping_address,created_at,updated_at,user_id,contact_email,contact_phone")
+          .select("id,currency,total,subtotal,discount,shipping,tax,status,payment_status,payment_method,payment_provider,market_region,shipping_address,created_at,updated_at,user_id,contact_email,paid_at")
           .eq("id", p.order_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -958,8 +957,8 @@ export async function buildPaymentDetail(paymentId: string): Promise<PaymentDeta
   ]);
 
   const o = (orderRes.data ?? null) as unknown as (OrderLite & {
-    order_number: string | null; subtotal: number | null; discount: number | null;
-    shipping_fee: number | null; updated_at: string | null; contact_phone: string | null;
+    subtotal: number | null; discount: number | null;
+    shipping: number | null; updated_at: string | null; paid_at: string | null;
   }) | null;
   const prof = (profileRes.data ?? null) as unknown as { full_name: string | null; phone: string | null } | null;
   const siblings = ((siblingRes.data ?? []) as unknown as { id: string; amount: number | null; currency: string | null; status: string | null; method: string | null; created_at: string }[]);
@@ -972,7 +971,7 @@ export async function buildPaymentDetail(paymentId: string): Promise<PaymentDeta
     ?? "unknown").toLowerCase();
 
   const timeline: TimelineEvent[] = [];
-  if (o?.created_at) timeline.push({ at: o.created_at, label: "Order placed", detail: o.order_number ?? null, tone: "info" });
+  if (o?.created_at) timeline.push({ at: o.created_at, label: "Order placed", detail: null, tone: "info" });
   for (const s of siblings) {
     const c = classify(s.status);
     timeline.push({
@@ -994,7 +993,6 @@ export async function buildPaymentDetail(paymentId: string): Promise<PaymentDeta
   return {
     id: p.id,
     order_id: p.order_id,
-    order_number: o?.order_number ?? null,
     order_status: o?.status ?? null,
     payment_status: classify(p.status) === "other" ? (p.status ?? "unknown") : classify(p.status),
     amount: num(p.amount),
@@ -1007,7 +1005,7 @@ export async function buildPaymentDetail(paymentId: string): Promise<PaymentDeta
     customer: {
       name: prof?.full_name || o?.contact_email || "Guest",
       email: o?.contact_email ?? null,
-      phone: o?.contact_phone ?? prof?.phone ?? null,
+      phone: prof?.phone ?? null,
       country: addrField(o?.shipping_address ?? null, ["country", "country_code"]),
       city: addrField(o?.shipping_address ?? null, ["city", "town"]),
       state: addrField(o?.shipping_address ?? null, ["state", "region", "province"]),
@@ -1015,7 +1013,7 @@ export async function buildPaymentDetail(paymentId: string): Promise<PaymentDeta
     totals: {
       subtotal: o?.subtotal ?? null,
       discount: o?.discount ?? null,
-      shipping: o?.shipping_fee ?? null,
+      shipping: o?.shipping ?? null,
       tax: o?.tax ?? null,
       total: o?.total ?? null,
     },
@@ -1030,6 +1028,6 @@ export async function buildPaymentDetail(paymentId: string): Promise<PaymentDeta
       status: r.status ?? "pending", reason: r.reason, created_at: r.created_at,
     })),
     settlement: null,
-    invoice_ref: o?.order_number ?? o?.id ?? null,
+    invoice_ref: o?.id ?? null,
   };
 }

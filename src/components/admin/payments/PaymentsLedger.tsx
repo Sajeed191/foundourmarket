@@ -72,8 +72,13 @@ export function PaymentsLedger({
     setStatus(preset.status ?? "all");
     setFrom(preset.from ?? "");
     setTo(preset.to ?? "");
+    setCountry(preset.country ?? "all");
+    setCurrency(preset.currency ?? "all");
+    setGateway(preset.gateway ?? "all");
+    setMethod(preset.method ?? "all");
     setPage(0);
   }, [preset]);
+
   useEffect(() => { setPage(0); }, [search, status, orderStatus, currency, gateway, method, country, from, to, minAmount, maxAmount, sort, region, pageSize]);
 
   const load = useCallback(async () => {

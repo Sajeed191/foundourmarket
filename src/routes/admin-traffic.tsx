@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
@@ -15,6 +15,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTrafficIntelligence } from "@/lib/use-traffic-intelligence";
 import { exportRows, exportJson, type ExportFormat } from "@/lib/traffic-export";
 import type { TrafficIntelligence } from "@/lib/traffic-intelligence";
+import { useTrafficV10 } from "@/lib/use-traffic-v10";
+
+// Traffic Intelligence v10 — additive enterprise layer, lazily loaded.
+const TrafficV10Panel = lazy(() =>
+  import("@/components/admin/traffic/TrafficV10Panel").then((m) => ({ default: m.TrafficV10Panel })),
+);
 
 export const Route = createFileRoute("/admin-traffic")({
   head: () => ({ meta: [{ title: "Traffic Intelligence — Admin" }] }),
@@ -115,6 +121,7 @@ function Intelligence({ data }: { data: TrafficIntelligence }) {
             ["war", "War Room"], ["journey", "Journey"], ["products", "Products"],
             ["sources", "Sources"], ["regions", "Regions"], ["devices", "Devices"],
             ["search", "Search"], ["heatmaps", "Heatmaps"], ["advisor", "AI Advisor"], ["exec", "Executive"],
+            ["v10", "Enterprise v10"],
           ].map(([v, l]) => (
             <TabsTrigger key={v} value={v} className="text-[11px] font-mono uppercase tracking-wider whitespace-nowrap">{l}</TabsTrigger>
           ))}
@@ -131,7 +138,35 @@ function Intelligence({ data }: { data: TrafficIntelligence }) {
       <TabsContent value="heatmaps"><Heatmaps data={data} /></TabsContent>
       <TabsContent value="advisor"><Advisor data={data} /></TabsContent>
       <TabsContent value="exec"><Executive data={data} /></TabsContent>
+      <TabsContent value="v10"><EnterpriseV10 /></TabsContent>
     </Tabs>
+  );
+}
+
+function EnterpriseV10() {
+  const [days, setDays] = useState<7 | 14 | 30 | 90>(14);
+  const { data, loading, refreshing } = useTrafficV10(days);
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+          Real-time enterprise analytics {refreshing && <Loader2 className="size-3 animate-spin" />}
+        </span>
+        <div className="inline-flex rounded-full border border-border bg-card p-0.5">
+          {([7, 14, 30, 90] as const).map((p) => (
+            <button key={p} onClick={() => setDays(p)}
+              className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full ${days === p ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}>{p}d</button>
+          ))}
+        </div>
+      </div>
+      {loading || !data ? (
+        <div className="flex items-center justify-center py-24"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <Suspense fallback={<div className="flex items-center justify-center py-24"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>}>
+          <TrafficV10Panel data={data} />
+        </Suspense>
+      )}
+    </div>
   );
 }
 

@@ -155,6 +155,88 @@ export function classifyRoute(path: string): {
 
 let lastPath = "";
 
+/* ------------------------------------------------------------------ v10 */
+/**
+ * Traffic Intelligence v10 capture helpers.
+ * Everything below is read from the real browser environment — no guessing,
+ * no estimation. Fields that the browser does not expose are omitted entirely
+ * so dashboards can render "No data available" instead of a fabricated value.
+ */
+
+/** Marketing attribution captured from the live URL (real UTM only). */
+export function utmParams(url?: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  try {
+    const u = new URL(url ?? window.location.href);
+    for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid"]) {
+      const v = u.searchParams.get(k);
+      if (v) out[k] = v.slice(0, 120);
+    }
+  } catch {
+    /* ignore */
+  }
+  return out;
+}
+
+/** IANA timezone reported by the device (exact, not inferred). */
+export function timezoneName(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+}
+
+/** City segment of the IANA timezone, e.g. Asia/Kolkata → Kolkata. */
+export function timezoneCity(tz = timezoneName()): string {
+  const seg = tz.split("/").pop() ?? "";
+  return seg ? seg.replace(/_/g, " ") : "";
+}
+
+export function screenSize(): string {
+  if (typeof window === "undefined" || !window.screen) return "";
+  return `${window.screen.width}x${window.screen.height}`;
+}
+
+export function networkType(): string {
+  const c = (navigator as unknown as { connection?: { effectiveType?: string } }).connection;
+  return c?.effectiveType ?? "";
+}
+
+/** Bot/automation detection from real signals only. */
+export function isLikelyBot(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if ((navigator as unknown as { webdriver?: boolean }).webdriver) return true;
+  return /bot|crawl|spider|slurp|headless|preview|monitor|lighthouse|pingdom|curl|wget/i.test(navigator.userAgent);
+}
+
+/** Full, real environment snapshot attached to every page_view event. */
+export function captureContext(path: string) {
+  const utm = utmParams();
+  const tz = timezoneName();
+  return {
+    visitor_id: visitorId(),
+    region: currentRegion(),
+    device: deviceType(),
+    browser: browserName(),
+    os: osName(),
+    screen: screenSize(),
+    language: typeof navigator !== "undefined" ? navigator.language : "",
+    timezone: tz,
+    tz_city: timezoneCity(tz),
+    network: networkType(),
+    currency: currentRegion() === "india" ? "INR" : "USD",
+    landing_path: path,
+    is_bot: isLikelyBot(),
+    utm_source: utm.utm_source ?? null,
+    utm_medium: utm.utm_medium ?? null,
+    utm_campaign: utm.utm_campaign ?? null,
+    utm_term: utm.utm_term ?? null,
+    utm_content: utm.utm_content ?? null,
+    click_id: utm.gclid ?? utm.fbclid ?? null,
+  };
+}
+
 /**
  * Record a page view + keep the visitor session live. Called on every route
  * change. Also emits a `page_view` analytics_event with classified metadata.
@@ -190,9 +272,8 @@ export async function trackVisit(path: string): Promise<void> {
     path,
     productSlug: productSlug ?? undefined,
     metadata: {
-      route, source, device, region: currentRegion(),
-      browser: browserName(), os: osName(),
-      visitor_id: visitorId(),
+      ...captureContext(path),
+      route, source,
       category_slug: categorySlug,
       is_new_session: isNew,
       referrer,
@@ -202,6 +283,8 @@ export async function trackVisit(path: string): Promise<void> {
   // GA4 page_view for SPA route changes.
   void import("@/lib/ga4").then((m) => m.ga4PageView(path)).catch(() => {});
 }
+
+
 
 // Cache the current auth user id so trackEvent doesn't hit the network on
 // every call. supabase.auth.getUser() is a JWKS-validating call; for

@@ -23,6 +23,9 @@ import {
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { loadCrisp, openCrispChat, closeCrispChat, setCrispUser } from "@/lib/crisp";
+import { useSupportFacts, fmtMinutes, fmtHours, type SupportFacts } from "@/lib/support-facts";
+import { fmtLastActive } from "@/lib/support-presence";
+
 
 const WHATSAPP_NUMBERS = [
   { number: "919745844213", display: "+91 97458 44213", department: "General Marketplace Support" },

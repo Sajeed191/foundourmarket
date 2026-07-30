@@ -294,6 +294,60 @@ function PaymentsInner() {
     void auditReconExport({ data: { report } }).catch(() => {});
   }, [auditReconExport]);
 
+  // Finance Workspace (v9): only fetched while its tab is open.
+  const loadWorkspace = useCallback(() => {
+    setWorkspaceLoading(true);
+    return workspaceFn({ data: { windowDays } })
+      .then((res) => setWorkspace(res))
+      .catch(() => setWorkspace(null))
+      .finally(() => setWorkspaceLoading(false));
+  }, [workspaceFn, windowDays]);
+
+  useEffect(() => {
+    if (tab !== "workspace") return;
+    let alive = true;
+    setWorkspaceLoading(true);
+    workspaceFn({ data: { windowDays } })
+      .then((res) => { if (alive) setWorkspace(res); })
+      .catch(() => { if (alive) setWorkspace(null); })
+      .finally(() => { if (alive) setWorkspaceLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, workspaceFn]);
+
+  // Every workspace task resolves into an existing surface — nothing new to learn.
+  const onWorkspaceAction = useCallback((a: WorkspaceAction) => {
+    const today = new Date().toISOString().slice(0, 10);
+    setLedgerRegion("all");
+    if (a === "ledger_failed") { setPreset({ status: "failed" }); setTab("ledger"); return; }
+    if (a === "ledger_pending") { setPreset({ status: "pending" }); setTab("ledger"); return; }
+    if (a === "ledger_refunds") { setPreset({ status: "refunded" }); setTab("ledger"); return; }
+    if (a === "ledger_today") { setPreset({ from: today, to: today }); setTab("ledger"); return; }
+    if (a === "ledger_all") { setPreset({}); setTab("ledger"); return; }
+    if (a === "recon") { setTab("recon"); return; }
+  }, []);
+
+  const onWorkspaceSearch = useCallback(
+    (q: string) => wsSearchFn({ data: { q } }),
+    [wsSearchFn],
+  );
+
+  const onWorkspaceNote = useCallback(
+    async (entityId: string, body: string, mention: string | null) => {
+      await wsNoteFn({ data: { entityId, body, mention } });
+      await loadWorkspace();
+    },
+    [wsNoteFn, loadWorkspace],
+  );
+
+  const onWorkspaceDecision = useCallback(
+    async (d: WorkspaceDecision) => {
+      await wsDecisionFn({ data: d });
+      await loadWorkspace();
+    },
+    [wsDecisionFn, loadWorkspace],
+  );
+
+
   // Every executive export is audited through the existing security trail.
   const onCfoExport = useCallback((report: string) => {
     void auditExportFn({ data: { report } }).catch(() => {});

@@ -25,6 +25,22 @@ import { AddressForm } from "@/components/site/AddressForm";
 import { SavedAddressRail } from "@/components/site/SavedAddressRail";
 import { SmartDeliveryCard } from "@/components/site/SmartDeliveryCard";
 import { createRazorpayOrder, verifyRazorpayPayment, cancelRazorpayOrder, placeCodOrder } from "@/lib/razorpay.functions";
+
+/**
+ * Advisory browser region hints (locale + timezone). The server only consults
+ * these when no trusted signal (shipping country, profile region, geo-IP) is
+ * available — they can never change pricing on their own.
+ */
+function browserRegionHints() {
+  try {
+    return {
+      locale: typeof navigator !== "undefined" ? navigator.language ?? null : null,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
 import { buildOrderAttribution } from "@/lib/marketing-tracking";
 import { recordEvent } from "@/lib/personalization";
 import { syncRazorpayPaymentMethods } from "@/lib/payment-methods.functions";
@@ -276,6 +292,7 @@ function CheckoutPage() {
             addressId: selectedAddress.id,
             promoCode: coupon?.code ?? null,
             attribution: buildOrderAttribution(),
+            clientHints: browserRegionHints(),
           },
         });
       try {
@@ -554,6 +571,7 @@ function CheckoutPage() {
           addressId: selectedAddress.id,
           promoCode: coupon?.code ?? null,
           attribution: buildOrderAttribution(),
+          clientHints: browserRegionHints(),
         },
       });
 

@@ -16,6 +16,12 @@ import {
   toMinorUnits,
 } from "./pricing";
 import { enqueueOrderEmail } from "./order-emails.server";
+import {
+  resolveMarketRegion,
+  normalizeCountry,
+  type RegionDecision,
+} from "./region-resolution";
+
 
 const lineItemSchema = z.object({
   slug: z.string().min(1).max(200),
@@ -31,12 +37,27 @@ const attributionSchema = z
   .optional()
   .nullable();
 
+/**
+ * Advisory browser hints used ONLY when no trusted server-side region signal
+ * exists. They can never override the shipping country, profile region or
+ * geo-IP, so they cannot be used to force a cheaper currency.
+ */
+const clientHintsSchema = z
+  .object({
+    locale: z.string().trim().max(35).optional().nullable(),
+    timezone: z.string().trim().max(60).optional().nullable(),
+  })
+  .optional()
+  .nullable();
+
 const createSchema = z.object({
   items: z.array(lineItemSchema).min(1).max(100),
   addressId: z.string().uuid(),
   promoCode: z.string().trim().max(64).optional().nullable(),
   attribution: attributionSchema,
+  clientHints: clientHintsSchema,
 });
+
 
 const verifySchema = z.object({
   orderId: z.string().uuid(),
@@ -54,52 +75,85 @@ export type RegionResolution = {
   pricingSource: "profile_locked" | "edge_geo" | "default";
   /** 0–100 confidence in the resolved region. */
   confidence: number;
+  /** Full decision trace (signals considered, winner, UPI eligibility). */
+  decision: RegionDecision;
 };
 
+export type RegionResolveOptions = {
+  /** Edge geo-IP country header value. */
+  edgeCountry?: string | null;
+  /** Country on the shipping address already chosen for this order. */
+  shippingCountry?: string | null;
+  /** Country on the billing address, when one exists. */
+  billingCountry?: string | null;
+  /** Advisory, client-sent browser hints (never override a trusted signal). */
+  hints?: { locale?: string | null; timezone?: string | null; ipCountry?: string | null } | null;
+};
+
+/** Map the resolver's winning signal onto the legacy pricing-source label. */
+function legacyPricingSource(key: RegionDecision["decidedBy"]): RegionResolution["pricingSource"] {
+  if (key === "selected_region" || key === "profile_region") return "profile_locked";
+  if (key === "platform_fallback") return "default";
+  return "edge_geo";
+}
+
 /**
- * Resolve the authoritative market region for billing.
+ * Resolve the authoritative market region for billing (Region Resolution v2).
  *
- * Priority:
- *   1. The user's locked profile region (highest trust).
- *   2. Edge geo-IP country header — IN ⇒ India (prevents Indian users from
- *      ever being charged in USD just because they never explicitly locked).
- *   3. International as the final safe default.
+ * Signals are gathered server-side and ranked by `resolveMarketRegion`:
+ *   1. locked profile region (the customer's own explicit selection)
+ *   2. shipping address country   3. saved profile region
+ *   4. billing address country    5. edge geo-IP country
+ *   6. browser locale             7. browser timezone
+ *   8. IP geolocation             9. platform fallback (international / USD)
  *
- * The client never supplies the region used for billing.
+ * Client-supplied hints are advisory only and can never override a trusted
+ * server-read signal, so the billing region can't be forced by a payload.
  */
 export async function resolveRegion(
   supabase: any,
   userId: string,
-  countryHeader?: string | null,
+  countryOrOptions?: string | null | RegionResolveOptions,
 ): Promise<RegionResolution> {
+  const opts: RegionResolveOptions =
+    typeof countryOrOptions === "string" || countryOrOptions == null
+      ? { edgeCountry: (countryOrOptions as string | null) ?? null }
+      : countryOrOptions;
+
   const { data } = await supabase
     .from("profiles")
     .select("market_region")
     .eq("id", userId)
     .maybeSingle();
 
-  const country = (countryHeader || "").toUpperCase() || null;
+  const lockedRegion =
+    data?.market_region === "india" || data?.market_region === "international"
+      ? (data.market_region as Region)
+      : null;
 
-  if (data?.market_region === "india" || data?.market_region === "international") {
-    return {
-      region: data.market_region,
-      detectedCountry: country,
-      pricingSource: "profile_locked",
-      confidence: 100,
-    };
-  }
+  const decision = resolveMarketRegion({
+    // A locked profile region is a write-once customer selection → priority 1.
+    selectedRegion: lockedRegion,
+    selectedRegionTrusted: true,
+    shippingCountry: opts.shippingCountry ?? null,
+    profileRegion: lockedRegion,
+    billingCountry: opts.billingCountry ?? null,
+    edgeCountry: opts.edgeCountry ?? null,
+    locale: opts.hints?.locale ?? null,
+    timezone: opts.hints?.timezone ?? null,
+    ipCountry: opts.hints?.ipCountry ?? null,
+  });
 
-  // No locked region yet → trust the edge geo signal so Indian shoppers are
-  // billed in INR even when they were never prompted to lock a region.
-  if (country === "IN") {
-    return { region: "india", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
-  }
-  if (country) {
-    return { region: "international", detectedCountry: country, pricingSource: "edge_geo", confidence: 85 };
-  }
-
-  return { region: "international", detectedCountry: null, pricingSource: "default", confidence: 40 };
+  return {
+    region: decision.region as Region,
+    detectedCountry:
+      normalizeCountry(opts.edgeCountry) ?? normalizeCountry(opts.shippingCountry) ?? null,
+    pricingSource: legacyPricingSource(decision.decidedBy),
+    confidence: decision.confidence,
+    decision,
+  };
 }
+
 
 /**
  * Re-price the cart entirely from trusted database values (anti-tampering).
@@ -224,12 +278,25 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     const { assertCustomerAllowed } = await import("./customer-restrictions.server");
     await assertCustomerAllowed(userId, "order");
 
+    // Load the shipping address FIRST (RLS guarantees ownership) so its country
+    // can participate in region resolution before the currency is fixed.
+    const { data: addr, error: addrErr } = await supabase
+      .from("addresses")
+      .select("full_name,phone,line1,line2,city,state,postal,country")
+      .eq("id", data.addressId)
+      .maybeSingle();
+    if (addrErr || !addr) throw new Error("Shipping address not found.");
+
     const edgeCountry =
       getRequestHeader("cf-ipcountry") ||
       getRequestHeader("x-vercel-ip-country") ||
       getRequestHeader("x-country") ||
       null;
-    const resolution = await resolveRegion(supabase, userId, edgeCountry);
+    const resolution = await resolveRegion(supabase, userId, {
+      edgeCountry,
+      shippingCountry: (addr as { country?: string | null }).country ?? null,
+      hints: data.clientHints ?? null,
+    });
     const region = resolution.region;
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
 
@@ -241,19 +308,14 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       confidence_score: resolution.confidence,
       currency_selected: priced.totals.currency,
       pricing_source: resolution.pricingSource,
+      decided_by: resolution.decision.decidedBy,
+      upi_eligible: resolution.decision.upiEligible,
       amount_minor: toMinorUnits(priced.totals.total),
     });
     if (priced.totals.total < 1) {
       throw new Error("Order total is too low to process.");
     }
 
-    // Load shipping address (RLS guarantees ownership)
-    const { data: addr, error: addrErr } = await supabase
-      .from("addresses")
-      .select("full_name,phone,line1,line2,city,state,postal,country")
-      .eq("id", data.addressId)
-      .maybeSingle();
-    if (addrErr || !addr) throw new Error("Shipping address not found.");
 
     // Create the pending order first (status pending) in the region's currency.
     // Use the admin client so order writes go only through this trusted,
@@ -565,6 +627,8 @@ const codSchema = z.object({
   addressId: z.string().uuid(),
   promoCode: z.string().trim().max(64).optional().nullable(),
   attribution: attributionSchema,
+  clientHints: clientHintsSchema,
+
 });
 
 /**
@@ -585,12 +649,25 @@ export const placeCodOrder = createServerFn({ method: "POST" })
     const { assertCustomerAllowed } = await import("./customer-restrictions.server");
     await assertCustomerAllowed(userId, "order");
 
+    // Load the shipping address FIRST (RLS guarantees ownership of the row) so
+    // its country can participate in region resolution.
+    const { data: addr, error: addrErr } = await supabase
+      .from("addresses")
+      .select("full_name,phone,line1,line2,city,state,postal,country")
+      .eq("id", data.addressId)
+      .maybeSingle();
+    if (addrErr || !addr) throw new Error("Shipping address not found.");
+
     const edgeCountry =
       getRequestHeader("cf-ipcountry") ||
       getRequestHeader("x-vercel-ip-country") ||
       getRequestHeader("x-country") ||
       null;
-    const codResolution = await resolveRegion(supabase, userId, edgeCountry);
+    const codResolution = await resolveRegion(supabase, userId, {
+      edgeCountry,
+      shippingCountry: (addr as { country?: string | null }).country ?? null,
+      hints: data.clientHints ?? null,
+    });
     const region = codResolution.region;
     console.log("[razorpay.placeCod] region resolved", {
       user_id: userId,
@@ -598,19 +675,13 @@ export const placeCodOrder = createServerFn({ method: "POST" })
       detected_market: region,
       confidence_score: codResolution.confidence,
       pricing_source: codResolution.pricingSource,
+      decided_by: codResolution.decision.decidedBy,
     });
     const priced = await repriceFromDb(supabase, region, data.items, data.promoCode);
     if (priced.totals.total < 1) {
       throw new Error("Order total is too low to process.");
     }
 
-    // Load shipping address (RLS guarantees ownership of the row)
-    const { data: addr, error: addrErr } = await supabase
-      .from("addresses")
-      .select("full_name,phone,line1,line2,city,state,postal,country")
-      .eq("id", data.addressId)
-      .maybeSingle();
-    if (addrErr || !addr) throw new Error("Shipping address not found.");
 
     // Create the order with server-computed, region-native figures
     const { data: order, error: oErr } = await supabaseAdmin

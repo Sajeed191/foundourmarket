@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge, Globe2, HeartPulse } from "lucide-react";
+import { Loader2, LayoutDashboard, Table2, RefreshCw, LineChart, Gauge, Globe2, HeartPulse, Scale } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SegmentedTabs } from "@/components/admin/SegmentedTabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +33,12 @@ import {
   type CFODashboard,
 } from "@/lib/payments-cfo-v7.functions";
 import type { CFODrill } from "@/components/admin/payments/CFOPanel";
+import {
+  getReconDashboardFn,
+  auditReconExportFn,
+  type ReconDashboard,
+} from "@/lib/payments-recon-v8.functions";
+import type { ReconDrill } from "@/components/admin/payments/ReconciliationPanel";
 
 
 
@@ -68,6 +74,10 @@ const CFOPanel = lazy(() =>
 );
 
 
+const ReconciliationPanel = lazy(() =>
+  import("@/components/admin/payments/ReconciliationPanel").then((m) => ({ default: m.ReconciliationPanel })),
+);
+
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
 );
@@ -87,7 +97,7 @@ export const Route = createFileRoute("/admin-payments")({
   component: PaymentsPage,
 });
 
-type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "cfo" | "ledger";
+type Tab = "overview" | "ops" | "finance" | "india" | "international" | "global" | "cfo" | "recon" | "ledger";
 
 const WINDOWS = [30, 90, 180, 365];
 
@@ -127,6 +137,11 @@ function PaymentsInner() {
   const auditExportFn = useServerFn(auditCFOExportFn);
   const [cfo, setCfo] = useState<CFODashboard | null>(null);
   const [cfoLoading, setCfoLoading] = useState(false);
+  // Reconciliation & Executive Intelligence (v8): lazy, cached, one request per window.
+  const reconFn = useServerFn(getReconDashboardFn);
+  const auditReconExport = useServerFn(auditReconExportFn);
+  const [recon, setRecon] = useState<ReconDashboard | null>(null);
+  const [reconLoading, setReconLoading] = useState(false);
 
 
   const [tab, setTab] = useState<Tab>("overview");
@@ -225,6 +240,36 @@ function PaymentsInner() {
     setPreset({ status: d.status });
     setTab("ledger");
   }, []);
+
+  // Reconciliation dashboard (v8): fetched only when its tab is open.
+  useEffect(() => {
+    if (tab !== "recon") return;
+    let alive = true;
+    setReconLoading(true);
+    reconFn({ data: { windowDays } })
+      .then((res) => { if (alive) setRecon(res); })
+      .catch(() => { if (alive) setRecon(null); })
+      .finally(() => { if (alive) setReconLoading(false); });
+    return () => { alive = false; };
+  }, [tab, windowDays, refreshKey, reconFn]);
+
+  // Executive drill-down: any reconciliation KPI opens its supporting records.
+  const onReconDrill = useCallback((d: ReconDrill) => {
+    setLedgerRegion(d.region ?? "all");
+    setPreset({
+      status: d.status,
+      from: d.from,
+      to: d.to,
+      country: d.country,
+      currency: d.currency,
+      gateway: d.gateway,
+    });
+    setTab("ledger");
+  }, []);
+
+  const onReconExport = useCallback((report: string) => {
+    void auditReconExport({ data: { report } }).catch(() => {});
+  }, [auditReconExport]);
 
   // Every executive export is audited through the existing security trail.
   const onCfoExport = useCallback((report: string) => {
@@ -331,6 +376,7 @@ function PaymentsInner() {
               { value: "international", label: "🌍 International" },
               { value: "global", label: "🌐 Global", icon: <Globe2 className="size-3" /> },
               { value: "cfo", label: "CFO", icon: <HeartPulse className="size-3" /> },
+              { value: "recon", label: "Reconcile", icon: <Scale className="size-3" /> },
 
 
               { value: "ledger", label: "Payments", icon: <Table2 className="size-3" /> },
@@ -434,6 +480,19 @@ function PaymentsInner() {
                   )
               )}
 
+
+              {tab === "recon" && (
+                recon
+                  ? <ReconciliationPanel data={recon} onDrill={onReconDrill} onAuditExport={onReconExport} />
+                  : reconLoading ? <Fallback /> : (
+                    <Panel title="Financial reconciliation">
+                      <EmptyState
+                        title="No data available"
+                        hint="Reconciliation, verification, leakage and audit intelligence populate automatically once orders and payments exist."
+                      />
+                    </Panel>
+                  )
+              )}
 
               {tab === "ledger" && (
                 <PaymentsLedger

@@ -53,6 +53,10 @@ const FinancialIntelligencePanel = lazy(() =>
 const GlobalFinancePanel = lazy(() =>
   import("@/components/admin/payments/GlobalFinancePanel").then((m) => ({ default: m.GlobalFinancePanel })),
 );
+const RegionalBreakdownPanel = lazy(() =>
+  import("@/components/admin/payments/RegionalBreakdownPanel").then((m) => ({ default: m.RegionalBreakdownPanel })),
+);
+
 const PaymentsLedger = lazy(() =>
   import("@/components/admin/payments/PaymentsLedger").then((m) => ({ default: m.PaymentsLedger })),
 );

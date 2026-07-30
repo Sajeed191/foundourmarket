@@ -317,18 +317,21 @@ function MiniDeal({ item, index, fluid = false }: { item: FlashItem; index: numb
  * Presentation only: pricing, eligibility and rotation stay in useFlashDeals.
  */
 export function FlashDealsBand() {
-  const { items } = useFlashDeals();
+  const { items, loading } = useFlashDeals();
   const railRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [cycle, setCycle] = useState(0);
   const campaign = useCampaignLabel();
 
-  // Hero = 4 featured live deals. Grid = 2 different live deals, never overlapping the hero.
+  // Hero = 4 featured live deals. Below it, exactly 2 secondary cards.
+  // Everything else lives on the dedicated Explore page (presentation cap only —
+  // rotation, eligibility and the admin pool are untouched).
   const heroes = useMemo(() => items.slice(0, 4), [items]);
   const heroIds = useMemo(() => new Set(heroes.map((h) => h.product.id)), [heroes]);
-  // Everything live this window that is not currently in the hero carousel.
-  // `items` is already capped by the admin Flash Deals limit (default 20).
-  const gridDeals = useMemo(() => items.filter((i) => !heroIds.has(i.product.id)), [items, heroIds]);
+  const gridDeals = useMemo(
+    () => items.filter((i) => !heroIds.has(i.product.id)).slice(0, 2),
+    [items, heroIds],
+  );
 
 
   const onScroll = useCallback(() => {
@@ -395,7 +398,36 @@ export function FlashDealsBand() {
   }, [autoplayable, autoplayMs, heroes.length, goTo]);
 
 
-  if (heroes.length === 0) return null;
+  // Nothing live: stay silent while loading, then show one premium empty card.
+  if (heroes.length === 0) {
+    if (loading) return null;
+    return (
+      <section
+        aria-labelledby="flash-deals-heading"
+        className="relative mx-auto max-w-7xl scroll-mt-24 px-4 pb-12 pt-11 sm:px-6 motion-safe:animate-fade-in"
+      >
+        <h2 id="flash-deals-heading" className="sr-only">
+          Flash Deals
+        </h2>
+        <div className="rounded-[26px] border border-white/[0.08] bg-card/40 px-6 py-12 text-center backdrop-blur-2xl shadow-[0_12px_30px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <p className="font-display text-[17px] font-semibold tracking-tight text-foreground/90 sm:text-[19px]">
+            No Flash Deals available today
+          </p>
+          <p className="mx-auto mt-2 max-w-sm text-[12.5px] text-muted-foreground">
+            New offers arrive every day. Check back soon.
+          </p>
+          <Link
+            to="/products/trending"
+            className="mt-6 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-accent/55 px-7 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent transition-[background-color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-accent/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:w-auto"
+          >
+            Browse Products
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
 
   return (
     <section
@@ -491,20 +523,24 @@ export function FlashDealsBand() {
         )}
 
 
-        {/* Live deals grid — remaining live flash deals, 2 columns on mobile */}
-        <div className="mt-6 px-4 sm:px-6">
-          <div className="grid grid-cols-2 items-stretch gap-3.5 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
-            {gridDeals.map((item, i) => (
-              <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} fluid />
-            ))}
+        {/* Secondary deals — exactly 2 cards, everything else lives on Explore */}
+        {gridDeals.length > 0 && (
+          <div className="mt-6 px-4 sm:px-6">
+            <div className="grid grid-cols-2 items-stretch gap-3.5 lg:gap-5">
+              {gridDeals.map((item, i) => (
+                <MiniDeal key={item.dealId ?? item.product.slug} item={item} index={i} fluid />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
 
         <div className="mt-7 flex justify-center px-4 sm:px-6">
           <Link
             to="/deals"
-            className="group inline-flex h-10 items-center gap-2 rounded-full border border-accent/55 bg-transparent px-7 sm:px-9 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent transition-[background-color,border-color,transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-accent/80 hover:bg-accent/[0.08] hover:shadow-[0_12px_28px_-16px_rgba(255,138,0,0.85)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+            aria-label="Explore all flash deals"
+            className="fd-ripple group inline-flex min-h-[48px] w-full items-center justify-center gap-2 overflow-hidden rounded-full px-8 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_16px_34px_-20px_rgba(255,138,0,0.9)] transition-[transform,box-shadow,filter] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-18px_rgba(255,138,0,0.95)] active:translate-y-0 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:w-auto"
+            style={{ background: "var(--gradient-ember)" }}
           >
             Explore Flash Deals
             <ArrowRight

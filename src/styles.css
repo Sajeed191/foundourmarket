@@ -4169,3 +4169,24 @@ textarea.editor-deeplink-target {
 @media (prefers-reduced-motion: reduce) {
   .fd-countdown-final { animation: none; }
 }
+
+/* Tap ripple for the Explore Flash Deals pill */
+.fd-ripple { position: relative; isolation: isolate; }
+.fd-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.5), transparent 60%);
+  opacity: 0;
+  transform: scale(0.3);
+}
+.fd-ripple:active::after { animation: fd-ripple 520ms ease-out; }
+@keyframes fd-ripple {
+  0% { opacity: 0.45; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fd-ripple:active::after { animation: none; }
+}

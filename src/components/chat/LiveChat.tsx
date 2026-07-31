@@ -1120,7 +1120,23 @@ function FixedOrb({
     clearLongPress();
   }, [clearLongPress]);
 
+  // Premium ripple feedback (auto-cleaned; respects reduced motion via CSS).
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
+  const rippleTimers = useRef<number[]>([]);
+  const spawnRipple = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 2;
+    const id = Date.now() + Math.random();
+    setRipples((prev) => [...prev, { id, x: e.clientX - rect.left, y: e.clientY - rect.top, size }]);
+    const t = window.setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 600);
+    rippleTimers.current.push(t);
+  }, []);
+  useEffect(() => () => { rippleTimers.current.forEach((t) => window.clearTimeout(t)); }, []);
+
   const ring = ringClass(availability);
+
 
 
   return (

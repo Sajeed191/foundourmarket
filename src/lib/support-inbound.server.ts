@@ -72,8 +72,8 @@ function pickSource(to: InboundEmail['to']): string {
   const known = rcpts.find((r) => SUPPORT_ADDRESSES.includes(r))
   return known ?? PRIMARY_SOURCE
 }
-
-function extractTicketNumber(subject: string | undefined): string | null {
+/** Legacy helper kept for compatibility; delegates to the v3.0 parser. */
+export function extractTicketNumber(subject: string | undefined): string | null {
   return parseTicketReference(subject)?.ticketNumber ?? null
 }
 

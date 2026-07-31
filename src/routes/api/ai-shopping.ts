@@ -354,40 +354,71 @@ async function realStreamFinalReply(
 }
 
 /**
- * Abuse budget (Enterprise Security Program v2.0 — finding `ai_shopping_open_cost`).
- * Each request can trigger up to MAX_TOOL_ROUNDS paid gateway calls, so the
- * endpoint is metered per caller IP. Generous enough that no real shopper will
- * ever see it; tight enough that a script cannot burn AI credits.
+ * Abuse budget (Enterprise Security Hardening v3.0 — finding
+ * `ai_shopping_open_cost`). The endpoint stays PUBLIC (no login) and is
+ * protected by the layered guard in `@/lib/security/ai-abuse-guard.server`:
+ * IP + visitor + conversation limiters, daily and global budgets, prompt-flood
+ * detection, cooldowns, and hard size caps. Thresholds are never revealed to
+ * the client.
  */
-const AI_RATE_LIMIT = 20; // requests
-const AI_RATE_WINDOW_MS = 60_000; // per minute
 const MAX_MESSAGE_CHARS = 4_000;
 const MAX_TOTAL_CHARS = 24_000;
+const MAX_BODY_BYTES = 64 * 1024;
+
+const FALLBACK_REPLY =
+  "I'm getting a lot of requests right now, so I'm keeping things light for a moment. " +
+  "You can still browse categories, search the catalog, or open a product page — " +
+  "try me again shortly and I'll give you full recommendations.";
 
 export const Route = createFileRoute("/api/ai-shopping")({
   server: {
     handlers: {
+      // Issues a lightweight signed visitor token. No login, no PII.
+      GET: async () => {
+        const { issueVisitorToken } = await import("@/lib/security/ai-abuse-guard.server");
+        return new Response(JSON.stringify({ token: issueVisitorToken() }), {
+          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        });
+      },
       POST: async ({ request }) => {
-        const limit = consumeRateLimit(
-          callerKey(request, "ai-shopping"),
-          AI_RATE_LIMIT,
-          AI_RATE_WINDOW_MS,
-        );
-        if (!limit.allowed) {
-          logSecurityEvent("rate_limit_exceeded", {
-            endpoint: "ai-shopping",
-            retryAfter: limit.retryAfter,
+        const {
+          evaluateAiRequest,
+          promptFingerprint,
+          verifyVisitorToken,
+        } = await import("@/lib/security/ai-abuse-guard.server");
+
+        const caller = callerKey(request, "ai-shopping");
+        const raw = await request.text().catch(() => "");
+        if (raw.length > MAX_BODY_BYTES) {
+          logSecurityEvent("payload_too_large", { endpoint: "ai-shopping", bytes: raw.length });
+          return new Response(JSON.stringify({ error: "That message is too large." }), {
+            status: 413,
+            headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
           });
-          return tooManyRequests(
-            limit,
-            "You're sending messages a little too quickly — please try again in a moment.",
-          );
         }
 
-        const body = (await request.json().catch(() => ({}))) as {
+        let body: {
           messages?: ChatMessage[];
           context?: ShoppingContext;
-        };
+          conversationId?: string;
+          visitorToken?: string;
+        } = {};
+        try {
+          body = raw ? JSON.parse(raw) : {};
+        } catch {
+          return new Response(JSON.stringify({ error: "Invalid request." }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        // Visitor token is optional; when present it must be authentic.
+        const presented = body.visitorToken ?? request.headers.get("x-visitor-token");
+        const visitor = verifyVisitorToken(presented);
+        if (presented && !visitor.valid) {
+          logSecurityEvent("invalid_visitor_token", { endpoint: "ai-shopping", reason: visitor.reason ?? "" });
+        }
+
         const shoppingContext = body.context ?? null;
         const incoming = Array.isArray(body.messages) ? body.messages : [];
         let budget = MAX_TOTAL_CHARS;
@@ -414,10 +445,39 @@ export const Route = createFileRoute("/api/ai-shopping")({
         }
         const userText = sanitized[sanitized.length - 1].content ?? "";
 
+        const decision = evaluateAiRequest({
+          callerKey: caller,
+          visitorId: visitor.valid ? visitor.id : null,
+          conversationId: typeof body.conversationId === "string" ? body.conversationId.slice(0, 64) : null,
+          promptFingerprint: promptFingerprint(userText),
+          payloadBytes: raw.length,
+          userAgent: request.headers.get("user-agent"),
+        });
+
+        if (!decision.allowed) {
+          logSecurityEvent(decision.reason === "abuse_detected" ? "abuse_detected" : "rate_limit_exceeded", {
+            endpoint: "ai-shopping",
+            reason: decision.reason,
+            retryAfter: decision.rate.retryAfter,
+          });
+          return tooManyRequests(
+            decision.rate,
+            "You're sending messages a little too quickly — please try again in a moment.",
+          );
+        }
+
+        const degraded = decision.degraded;
+        if (degraded) logSecurityEvent("budget_exceeded", { endpoint: "ai-shopping" });
 
         const stream = new ReadableStream<Uint8Array>({
           async start(controller) {
             try {
+              if (degraded) {
+                // Budget protection: answer without spending an AI call.
+                await softStreamText(FALLBACK_REPLY, controller);
+                controller.enqueue(jsonLine({ type: "done" }));
+                return;
+              }
               await streamAiShopping(userText, sanitized, controller, shoppingContext);
             } catch (err) {
               const message = err instanceof Error ? err.message : "AI request failed";
@@ -439,3 +499,4 @@ export const Route = createFileRoute("/api/ai-shopping")({
     },
   },
 });
+

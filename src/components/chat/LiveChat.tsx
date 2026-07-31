@@ -42,6 +42,8 @@ import {
   getAvailability,
   onChatOpenRequest,
   onChatCloseRequest,
+  openCrispChat,
+  markCrispOrbClick,
   type Availability,
   type CrispMessage,
 } from "@/lib/crisp";
@@ -332,17 +334,8 @@ export function LiveChat() {
           unread={unread}
           onTap={() => {
             dismissGreeting();
-            // Even when no agent is online the tap must open a surface —
-            // hard-navigating to /contact felt like "the button does nothing".
-            // The chat panel itself shows the offline state and takes a message.
-
-            // Communication Hub: remember the last choice so repeat taps go
-            // straight to the surface the customer prefers. First tap (no
-            // memory) shows the chooser sheet.
-            const last = getLastHubChoice();
-            if (last === "ai") openAiAssistant();
-            else if (last === "support") setOpen(true);
-            else openHub();
+            markCrispOrbClick();
+            void openCrispChat();
           }}
           onLongPress={() => { dismissGreeting(); openHub(); }}
           greetVisible={greetVisible}

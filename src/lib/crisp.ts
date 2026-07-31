@@ -1,7 +1,5 @@
-// Crisp Chat integration — the native Crisp widget is loaded but kept
-// permanently hidden. All UI is rendered by our custom premium chat
-// (src/components/chat/LiveChat.tsx) which drives Crisp through its
-// programmatic JS API (message:send / message:received / availability).
+// Crisp Chat integration. The branded FoundOurMarket orb launches Crisp's
+// native conversation window through its supported JavaScript API.
 //
 // Website ID is a public identifier (shipped in Crisp's own embed snippet).
 export const CRISP_WEBSITE_ID = "e01c081c-fa06-440a-a578-99ed7f53ed1a";
@@ -39,25 +37,11 @@ const perf = {
   },
 };
 
-// Force the native Crisp chatbox + launcher to stay hidden at all times.
+// Retained only to remove the legacy rule from returning client sessions.
 const HIDE_STYLE_ID = "crisp-force-hide-style";
-function ensureHideStyle(): void {
+function removeLegacyHideStyle(): void {
   if (typeof document === "undefined") return;
-  if (document.getElementById(HIDE_STYLE_ID)) return;
-  const el = document.createElement("style");
-  el.id = HIDE_STYLE_ID;
-  el.textContent = `
-    #crisp-chatbox,
-    .crisp-client,
-    [class*="crisp-client"],
-    iframe[src*="crisp.chat"] {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-    }
-  `;
-  document.head.appendChild(el);
+  document.getElementById(HIDE_STYLE_ID)?.remove();
 }
 
 // ---- Diagnostics (staff-only panel reads this; never rendered to customers) ----
@@ -70,7 +54,14 @@ export type CrispDiagnostics = {
   lastAttemptAt: number | null;
   loadDurationMs: number | null;
   lastError: string | null;
+  lastJsError: string | null;
   availability: Availability | "unknown";
+  retryCount: number;
+  orbClickReceived: boolean;
+  chatOpenCommandSent: boolean;
+  chatOpenSuccess: boolean;
+  lastOrbClickAt: number | null;
+  lastOpenCommandAt: number | null;
 };
 
 const diag: CrispDiagnostics = {
@@ -82,7 +73,14 @@ const diag: CrispDiagnostics = {
   lastAttemptAt: null,
   loadDurationMs: null,
   lastError: null,
+  lastJsError: null,
   availability: "unknown",
+  retryCount: 0,
+  orbClickReceived: false,
+  chatOpenCommandSent: false,
+  chatOpenSuccess: false,
+  lastOrbClickAt: null,
+  lastOpenCommandAt: null,
 };
 
 export function getCrispDiagnostics(): CrispDiagnostics {
@@ -106,13 +104,11 @@ export function loadCrisp(): Promise<void> {
 
   loadPromise = new Promise<void>((resolve, reject) => {
     try {
-      ensureHideStyle();
+      removeLegacyHideStyle();
       window.$crisp = window.$crisp || [];
       window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
 
-      // Keep Crisp's own UI fully hidden — we render our own.
       window.$crisp.push(["safe", true]);
-      window.$crisp.push(["do", "chat:hide"]);
 
       const finish = () => {
         const ms = loadStart ? Math.round(performance.now() - loadStart) : 0;
@@ -121,8 +117,10 @@ export function loadCrisp(): Promise<void> {
         diag.scriptLoaded = true;
         diag.loadDurationMs = ms;
         diag.lastError = null;
-        // Re-assert hidden once loaded.
-        try { window.$crisp!.push(["do", "chat:hide"]); } catch { /* noop */ }
+        diag.sdkReady = typeof (window as any).$crisp?.get === "function";
+        try {
+          window.$crisp!.push(["on", "chat:opened", () => { diag.chatOpenSuccess = true; }]);
+        } catch { /* diagnostics only */ }
         resolve();
       };
 
@@ -146,6 +144,7 @@ export function loadCrisp(): Promise<void> {
         try { s.remove(); } catch { /* noop */ }
         diag.scriptInjected = false;
         if (diag.attempts < MAX_ATTEMPTS) {
+          diag.retryCount += 1;
           const delay = 1500 * diag.attempts;
           window.setTimeout(() => { void loadCrisp().catch(() => {}); }, delay);
         }
@@ -190,17 +189,34 @@ export function preloadCrisp(): void {
 const OPEN_EVENT = "fom-chat:open";
 const CLOSE_EVENT = "fom-chat:close";
 
-// Opening / closing now drives our custom UI via window events. Crisp itself
-// stays hidden. These keep the old call sites working unchanged.
-export function openCrispChat(): void {
+export function markCrispOrbClick(): void {
+  diag.orbClickReceived = true;
+  diag.lastOrbClickAt = Date.now();
+}
+
+export async function openCrispChat(): Promise<boolean> {
   if (typeof window === "undefined") return;
   perf.mark("open-request");
-  void loadCrisp();
-  window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+  try {
+    await loadCrisp();
+    if (!window.$crisp) throw new Error("Crisp command queue is unavailable");
+    window.$crisp.push(["do", "chat:show"]);
+    window.$crisp.push(["do", "chat:open"]);
+    diag.chatOpenCommandSent = true;
+    diag.lastOpenCommandAt = Date.now();
+    window.setTimeout(() => {
+      diag.chatOpenSuccess = isCrispChatOpen() || diag.chatOpenSuccess;
+    }, 300);
+    return true;
+  } catch (error) {
+    diag.lastError = error instanceof Error ? error.message : "Chat open failed";
+    return false;
+  }
 }
 
 export function closeCrispChat(): void {
   if (typeof window === "undefined") return;
+  try { window.$crisp?.push(["do", "chat:close"]); } catch { /* noop */ }
   window.dispatchEvent(new CustomEvent(CLOSE_EVENT));
 }
 
@@ -217,7 +233,25 @@ export function onChatCloseRequest(cb: () => void): () => void {
 }
 
 export function isCrispChatOpen(): boolean {
-  return false;
+  if (typeof window === "undefined") return false;
+  try { return (window as any).$crisp?.get?.("chat:opened") === true; } catch { return false; }
+}
+
+export async function forceInitializeCrisp(): Promise<boolean> {
+  loadPromise = null;
+  try { await loadCrisp(); return typeof (window as any).$crisp?.get === "function"; } catch { return false; }
+}
+
+export async function destroyAndReloadCrisp(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  document.getElementById("crisp-widget-script")?.remove();
+  document.querySelectorAll(".crisp-client, #crisp-chatbox").forEach((node) => node.remove());
+  window.$crisp = [];
+  loadPromise = null;
+  diag.scriptInjected = false;
+  diag.scriptLoaded = false;
+  diag.sdkReady = false;
+  return forceInitializeCrisp();
 }
 
 export function setCrispUser(opts: { email?: string; nickname?: string }): void {

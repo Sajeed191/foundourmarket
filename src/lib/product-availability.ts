@@ -100,6 +100,25 @@ export function useProductAvailability() {
 }
 
 /**
+ * The catalog every customer-facing discovery surface must render.
+ *
+ * `useProducts()` returns the raw catalog (admin surfaces need the unfiltered
+ * list). This hook applies the single visibility rule above — admin-hidden
+ * (draft / hidden / archived / scheduled) and region-hidden products are
+ * dropped — so Home, Browse, Category, Search, Recommendations, Flash Deals,
+ * Compare and every rail share one definition of "visible".
+ */
+export function useVisibleProducts(): { products: Product[]; loading: boolean } {
+  const { products, loading } = useProducts();
+  const { market } = useRegion();
+  const visible = useMemo(
+    () => products.filter((p) => isProductVisible(p, market)),
+    [products, market],
+  );
+  return { products: visible, loading };
+}
+
+/**
  * Live count of saved products that are still active/visible — the value the
  * Wishlist navigation badge must show. Deleted / deactivated products drop out
  * automatically without a page reload.

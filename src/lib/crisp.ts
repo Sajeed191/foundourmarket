@@ -195,7 +195,7 @@ export function markCrispOrbClick(): void {
 }
 
 export async function openCrispChat(): Promise<boolean> {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return false;
   perf.mark("open-request");
   try {
     await loadCrisp();

@@ -83,12 +83,14 @@ export function ScrollLockGuard() {
     const t = window.setTimeout(schedule, 300);
 
     const mo = new MutationObserver(schedule);
-    mo.observe(document.body, { attributes: true, attributeFilter: ["style", "data-scroll-locked"] });
+    mo.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["style", "data-scroll-locked"],
+      childList: true,
+    });
 
     // Safety net: a dead pointer surface should never survive a user gesture.
-    const onPointerDown = () => {
-      if (document.body.style.pointerEvents === "none") release();
-    };
+    const onPointerDown = () => release();
     window.addEventListener("pointerdown", onPointerDown, true);
 
     return () => {

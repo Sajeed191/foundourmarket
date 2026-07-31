@@ -539,12 +539,17 @@ export function CategoryAdminSheet({
     }
   }
 
-  async function bulkVisibility(homepage_visible: boolean) {
+  /** Bulk hide/show — same customer-visibility rule as the per-row action. */
+  async function bulkVisibility(show: boolean) {
     const ids = Array.from(selected);
     if (!ids.length) return;
     const { error } = await supabase
       .from("categories")
-      .update({ homepage_visible })
+      .update(
+        show
+          ? { status: "published" as CategoryStatus }
+          : { status: "hidden" as CategoryStatus, homepage_visible: false },
+      )
       .in("id", ids);
     if (error) {
       toast.error(error.message);

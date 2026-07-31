@@ -555,7 +555,7 @@ export function CategoryAdminSheet({
       toast.error(error.message);
       return;
     }
-    toast.success(`${ids.length} ${homepage_visible ? "shown" : "hidden"}`);
+    toast.success(`${ids.length} ${show ? "shown" : "hidden"}`);
     setSelected(new Set());
     await load();
     invalidateCategories();

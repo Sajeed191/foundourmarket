@@ -1132,7 +1132,9 @@ function FixedOrb({
   return (
     <div
       ref={wrapRef}
+      data-fom-chat-orb="1"
       className="fixed z-[60] flex items-end gap-2"
+
       style={{
         right: `calc(${EDGE_INSET}px + env(safe-area-inset-right, 0px))`,
         bottom: 0,

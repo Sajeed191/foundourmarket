@@ -25,7 +25,10 @@ import {
   Search,
   CircleDot,
   Sparkles,
+  Landmark,
+  ChevronRight,
 } from "lucide-react";
+import { requiresBankDetails } from "@/lib/refund-bank/validation";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";

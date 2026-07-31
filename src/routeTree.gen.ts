@@ -159,6 +159,7 @@ import { Route as AdminCustomersCustomerIdRouteImport } from './routes/admin-cus
 import { Route as AccountSupportRouteImport } from './routes/account_.support'
 import { Route as AccountSecurityRouteImport } from './routes/account_.security'
 import { Route as AccountReturnsRouteImport } from './routes/account_.returns'
+import { Route as AccountRefundDetailsRouteImport } from './routes/account_.refund-details'
 import { Route as AccountProfileRouteImport } from './routes/account_.profile'
 import { Route as AccountPreferencesRouteImport } from './routes/account_.preferences'
 import { Route as AccountPaymentsRouteImport } from './routes/account_.payments'
@@ -958,6 +959,11 @@ const AccountReturnsRoute = AccountReturnsRouteImport.update({
   path: '/account/returns',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRefundDetailsRoute = AccountRefundDetailsRouteImport.update({
+  id: '/account_/refund-details',
+  path: '/account/refund-details',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountProfileRoute = AccountProfileRouteImport.update({
   id: '/account_/profile',
   path: '/account/profile',
@@ -1291,6 +1297,7 @@ export interface FileRoutesByFullPath {
   '/account/payments': typeof AccountPaymentsRoute
   '/account/preferences': typeof AccountPreferencesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/account/refund-details': typeof AccountRefundDetailsRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
   '/account/support': typeof AccountSupportRoute
@@ -1479,6 +1486,7 @@ export interface FileRoutesByTo {
   '/account/payments': typeof AccountPaymentsRoute
   '/account/preferences': typeof AccountPreferencesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/account/refund-details': typeof AccountRefundDetailsRoute
   '/account/returns': typeof AccountReturnsRoute
   '/account/security': typeof AccountSecurityRoute
   '/account/support': typeof AccountSupportRoute
@@ -1667,6 +1675,7 @@ export interface FileRoutesById {
   '/account_/payments': typeof AccountPaymentsRoute
   '/account_/preferences': typeof AccountPreferencesRoute
   '/account_/profile': typeof AccountProfileRoute
+  '/account_/refund-details': typeof AccountRefundDetailsRoute
   '/account_/returns': typeof AccountReturnsRoute
   '/account_/security': typeof AccountSecurityRoute
   '/account_/support': typeof AccountSupportRoute
@@ -1857,6 +1866,7 @@ export interface FileRouteTypes {
     | '/account/payments'
     | '/account/preferences'
     | '/account/profile'
+    | '/account/refund-details'
     | '/account/returns'
     | '/account/security'
     | '/account/support'
@@ -2045,6 +2055,7 @@ export interface FileRouteTypes {
     | '/account/payments'
     | '/account/preferences'
     | '/account/profile'
+    | '/account/refund-details'
     | '/account/returns'
     | '/account/security'
     | '/account/support'
@@ -2232,6 +2243,7 @@ export interface FileRouteTypes {
     | '/account_/payments'
     | '/account_/preferences'
     | '/account_/profile'
+    | '/account_/refund-details'
     | '/account_/returns'
     | '/account_/security'
     | '/account_/support'
@@ -2421,6 +2433,7 @@ export interface RootRouteChildren {
   AccountPaymentsRoute: typeof AccountPaymentsRoute
   AccountPreferencesRoute: typeof AccountPreferencesRoute
   AccountProfileRoute: typeof AccountProfileRoute
+  AccountRefundDetailsRoute: typeof AccountRefundDetailsRoute
   AccountReturnsRoute: typeof AccountReturnsRoute
   AccountSecurityRoute: typeof AccountSecurityRoute
   AccountSupportRoute: typeof AccountSupportRoute
@@ -3511,6 +3524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountReturnsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account_/refund-details': {
+      id: '/account_/refund-details'
+      path: '/account/refund-details'
+      fullPath: '/account/refund-details'
+      preLoaderRoute: typeof AccountRefundDetailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account_/profile': {
       id: '/account_/profile'
       path: '/account/profile'
@@ -3975,6 +3995,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountPaymentsRoute: AccountPaymentsRoute,
   AccountPreferencesRoute: AccountPreferencesRoute,
   AccountProfileRoute: AccountProfileRoute,
+  AccountRefundDetailsRoute: AccountRefundDetailsRoute,
   AccountReturnsRoute: AccountReturnsRoute,
   AccountSecurityRoute: AccountSecurityRoute,
   AccountSupportRoute: AccountSupportRoute,

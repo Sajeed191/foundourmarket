@@ -37,12 +37,36 @@ const perf = {
   },
 };
 
-// Retained only to remove the legacy rule from returning client sessions.
+// White-label: the vendor launcher bubble is suppressed so only the branded
+// FoundOurMarket orb is ever visible. The conversation window itself stays
+// fully functional (opened through the official `chat:show` + `chat:open` API).
 const HIDE_STYLE_ID = "crisp-force-hide-style";
+const LAUNCHER_STYLE_ID = "fom-chat-launcher-style";
+
 function removeLegacyHideStyle(): void {
   if (typeof document === "undefined") return;
   document.getElementById(HIDE_STYLE_ID)?.remove();
 }
+
+/**
+ * Hides ONLY the vendor launcher bubble (never the chatbox), so customers see
+ * a single, branded entry point. Safe/idempotent.
+ */
+function injectLauncherSuppression(): void {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(LAUNCHER_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = LAUNCHER_STYLE_ID;
+  style.textContent = `
+/* FoundOurMarket white-label: vendor launcher bubble only — chatbox untouched. */
+.crisp-client .cc-1brb6[data-visible="true"] > div > a[role="button"][data-maximized="false"],
+.crisp-client .cc-kv6t .cc-1xry[data-maximized="false"],
+.crisp-client a[data-id="chat_launcher"] { display: none !important; }
+`;
+  document.head.appendChild(style);
+  diag.launcherHidden = true;
+}
+
 
 // ---- Diagnostics (staff-only panel reads this; never rendered to customers) ----
 export type CrispDiagnostics = {
@@ -62,6 +86,10 @@ export type CrispDiagnostics = {
   chatOpenSuccess: boolean;
   lastOrbClickAt: number | null;
   lastOpenCommandAt: number | null;
+  launcherHidden: boolean;
+  queuedOpen: boolean;
+  networkOnline: boolean;
+  theme: string;
 };
 
 const diag: CrispDiagnostics = {
@@ -81,6 +109,10 @@ const diag: CrispDiagnostics = {
   chatOpenSuccess: false,
   lastOrbClickAt: null,
   lastOpenCommandAt: null,
+  launcherHidden: false,
+  queuedOpen: false,
+  networkOnline: true,
+  theme: "unknown",
 };
 
 export function getCrispDiagnostics(): CrispDiagnostics {
@@ -88,8 +120,14 @@ export function getCrispDiagnostics(): CrispDiagnostics {
     ...diag,
     sdkReady: typeof window !== "undefined" && typeof (window as any).$crisp?.get === "function",
     availability: typeof window === "undefined" ? "unknown" : getAvailability(),
+    networkOnline: typeof navigator === "undefined" ? true : navigator.onLine !== false,
+    theme:
+      typeof document === "undefined"
+        ? "unknown"
+        : document.documentElement.getAttribute("data-theme") ?? "unknown",
   };
 }
+
 
 const MAX_ATTEMPTS = 3;
 
@@ -105,10 +143,14 @@ export function loadCrisp(): Promise<void> {
   loadPromise = new Promise<void>((resolve, reject) => {
     try {
       removeLegacyHideStyle();
+      injectLauncherSuppression();
       window.$crisp = window.$crisp || [];
       window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
 
       window.$crisp.push(["safe", true]);
+      // White-label: keep the vendor widget fully hidden until the branded orb
+      // asks for it, so no second launcher can ever appear.
+      window.$crisp.push(["do", "chat:hide"]);
 
       const finish = () => {
         const readyStartedAt = Date.now();
@@ -123,10 +165,17 @@ export function loadCrisp(): Promise<void> {
             diag.lastError = null;
             try {
               window.$crisp!.push(["on", "chat:opened", () => { diag.chatOpenSuccess = true; }]);
+              // When the customer closes the conversation, hide the whole
+              // vendor widget again — the branded orb takes over.
+              window.$crisp!.push(["on", "chat:closed", () => {
+                try { window.$crisp!.push(["do", "chat:hide"]); } catch { /* noop */ }
+              }]);
+              window.$crisp!.push(["do", "chat:hide"]);
             } catch { /* diagnostics only */ }
             resolve();
             return;
           }
+
           if (Date.now() - readyStartedAt < 12_000) {
             window.setTimeout(confirmReady, 100);
             return;
@@ -212,7 +261,9 @@ export function markCrispOrbClick(): void {
 export async function openCrispChat(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   perf.mark("open-request");
+  diag.queuedOpen = true;
   try {
+    // Queues the request while the SDK is still loading; resolves once ready.
     await loadCrisp();
     if (!diag.scriptLoaded || !window.$crisp || typeof window.$crisp.push !== "function") {
       throw new Error(diag.lastError ?? "Crisp SDK is not ready");
@@ -220,20 +271,27 @@ export async function openCrispChat(): Promise<boolean> {
     window.$crisp.push(["do", "chat:show"]);
     window.$crisp.push(["do", "chat:open"]);
     diag.chatOpenCommandSent = true;
+    diag.queuedOpen = false;
     diag.lastOpenCommandAt = Date.now();
     window.setTimeout(() => {
       diag.chatOpenSuccess = isCrispChatOpen() || diag.chatOpenSuccess;
     }, 300);
     return true;
   } catch (error) {
+    diag.queuedOpen = false;
     diag.lastError = error instanceof Error ? error.message : "Chat open failed";
     return false;
   }
 }
 
+
 export function closeCrispChat(): void {
   if (typeof window === "undefined") return;
-  try { window.$crisp?.push(["do", "chat:close"]); } catch { /* noop */ }
+  try {
+    window.$crisp?.push(["do", "chat:close"]);
+    // Return to the branded-orb-only state.
+    window.$crisp?.push(["do", "chat:hide"]);
+  } catch { /* noop */ }
   window.dispatchEvent(new CustomEvent(CLOSE_EVENT));
 }
 

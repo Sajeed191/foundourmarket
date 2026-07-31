@@ -140,6 +140,10 @@ function ChatDiagnosticsPage() {
             value={diag?.lastAttemptAt ? new Date(diag.lastAttemptAt).toLocaleTimeString() : "—"}
           />
           <Row label="Load duration" ok value={diag?.loadDurationMs != null ? `${diag.loadDurationMs} ms` : "—"} />
+          <Row label="Vendor launcher replaced" ok={diag?.launcherHidden} value={diag?.launcherHidden ? "Yes (branded orb only)" : "No"} />
+          <Row label="Queued open pending" ok={!diag?.queuedOpen} value={diag?.queuedOpen ? "Queued" : "None"} />
+          <Row label="Network status" ok={diag?.networkOnline} value={diag?.networkOnline ? "Online" : "Offline"} />
+          <Row label="Active theme" ok value={diag?.theme ?? "—"} />
           <Row label="Last error" ok={!diag?.lastError} value={diag?.lastError ?? "None"} />
           <Row label="Last JS error" ok={!diag?.lastJsError} value={diag?.lastJsError ?? "None"} />
         </Section>

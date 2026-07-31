@@ -517,6 +517,30 @@ html[data-low-end="true"] .animate-float-slow { animation: none; }
   .orb-ring-online, .orb-ring-busy, .orb-ring-spin { animation: none !important; }
 }
 
+/* Branded chat launcher: ripple + gentle float (GPU-only). */
+@keyframes fom-chat-ripple {
+  from { transform: scale(0); opacity: 0.5; }
+  to   { transform: scale(1); opacity: 0; }
+}
+.fom-chat-ripple { animation: fom-chat-ripple 600ms ease-out forwards; }
+@keyframes fom-chat-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.fom-chat-orb { animation: fom-chat-float 5s ease-in-out infinite; }
+.fom-chat-orb:hover, .fom-chat-orb:active, .fom-chat-orb:focus-visible { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .fom-chat-orb, .fom-chat-ripple { animation: none !important; }
+}
+
+/* White-label safety net: never show the vendor chat launcher bubble.
+   The conversation window itself is untouched. */
+.crisp-client a[data-id="chat_launcher"],
+.crisp-client .cc-1brb6[data-visible="true"] > div > a[role="button"][data-maximized="false"] {
+  display: none !important;
+}
+
+
 /* Live chat: typing dots */
 @keyframes typing-bounce {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }

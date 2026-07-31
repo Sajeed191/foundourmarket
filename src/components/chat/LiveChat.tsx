@@ -335,7 +335,9 @@ export function LiveChat() {
           onTap={() => {
             dismissGreeting();
             markCrispOrbClick();
-            void openCrispChat();
+            void openCrispChat().then((ok) => {
+              if (!ok) toast.error("Chat is temporarily unavailable. Please try again in a moment.");
+            });
           }}
           onLongPress={() => { dismissGreeting(); openHub(); }}
           greetVisible={greetVisible}
@@ -1120,7 +1122,24 @@ function FixedOrb({
     clearLongPress();
   }, [clearLongPress]);
 
+  // Premium ripple feedback (auto-cleaned; respects reduced motion via CSS).
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
+  const rippleTimers = useRef<number[]>([]);
+  const spawnRipple = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 2;
+    const id = Date.now() + Math.random();
+    setRipples((prev) => [...prev, { id, x: e.clientX - rect.left, y: e.clientY - rect.top, size }]);
+    const t = window.setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 600);
+    rippleTimers.current.push(t);
+  }, []);
+  useEffect(() => () => { rippleTimers.current.forEach((t) => window.clearTimeout(t)); }, []);
+
   const ring = ringClass(availability);
+
+
 
   return (
     <div
@@ -1139,30 +1158,45 @@ function FixedOrb({
         type="button"
         data-floating-control
         aria-label={
-          availability === "online" ? "Live chat online — tap to open, long-press for options"
-          : availability === "away" ? "Support busy — tap to open, long-press for options"
-          : "Support offline — tap to contact us"
+          availability === "online" ? "FoundOurMarket Support — live chat online. Tap to open, long-press for options"
+          : availability === "away" ? "FoundOurMarket Support — busy. Tap to open, long-press for options"
+          : "FoundOurMarket Support — offline. Tap to leave a message"
         }
-        onPointerDown={onPointerDown}
+        aria-haspopup="dialog"
+        onPointerDown={(e) => { spawnRipple(e); onPointerDown(e); }}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onTap(); }
+        }}
         onContextMenu={(e) => e.preventDefault()}
-        className={`group relative grid place-items-center size-14 md:size-[60px] lg:size-16 min-w-[48px] min-h-[48px] rounded-full bg-gradient-to-br from-primary to-[oklch(0.62_0.17_35)] text-primary-foreground shadow-[0_10px_28px_-10px_rgba(0,0,0,0.55)] ring-2 ${ring.color} backdrop-blur-md transition-[box-shadow] duration-200 hover:shadow-[0_16px_36px_-10px_var(--color-primary,theme(colors.orange.500))] select-none`}
+        className={`fom-chat-orb group relative grid place-items-center overflow-hidden size-14 md:size-[60px] lg:size-16 min-w-11 min-h-11 rounded-full bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_10px_30px_-12px_color-mix(in_oklab,var(--color-primary)_70%,transparent),0_2px_10px_-4px_color-mix(in_oklab,var(--color-foreground)_28%,transparent)] ring-2 ${ring.color} border border-border/40 backdrop-blur-xl transition-[transform,box-shadow] duration-200 ease-out hover:scale-[1.06] active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background select-none motion-reduce:transition-none motion-reduce:hover:scale-100`}
       >
+        {/* Glass sheen */}
+        <span aria-hidden className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-b from-background/25 to-transparent opacity-60" />
         {ring.anim && (
           <span
             aria-hidden
-            className={`pointer-events-none absolute -inset-1 rounded-full ring-2 ${ring.color} ${ring.anim}`}
+            className={`pointer-events-none absolute -inset-1 rounded-full ring-2 ${ring.color} ${ring.anim} motion-reduce:animate-none`}
           />
         )}
-        <Headset className="size-6 md:size-[26px] lg:size-7" strokeWidth={1.8} />
+        {ripples.map((r) => (
+          <span
+            key={r.id}
+            aria-hidden
+            className="pointer-events-none absolute rounded-full bg-primary-foreground/35 fom-chat-ripple motion-reduce:hidden"
+            style={{ left: r.x, top: r.y, width: r.size, height: r.size, marginLeft: -r.size / 2, marginTop: -r.size / 2 }}
+          />
+        ))}
+        <Headset className="relative size-6 md:size-[26px] lg:size-7" strokeWidth={1.8} />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold grid place-items-center ring-2 ring-background animate-in zoom-in duration-200">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold grid place-items-center ring-2 ring-background animate-in zoom-in duration-200">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
       </button>
+
       {greetVisible && (
         <button
           type="button"

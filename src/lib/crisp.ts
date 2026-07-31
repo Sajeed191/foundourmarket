@@ -86,6 +86,10 @@ export type CrispDiagnostics = {
   chatOpenSuccess: boolean;
   lastOrbClickAt: number | null;
   lastOpenCommandAt: number | null;
+  launcherHidden: boolean;
+  queuedOpen: boolean;
+  networkOnline: boolean;
+  theme: string;
 };
 
 const diag: CrispDiagnostics = {
@@ -105,6 +109,10 @@ const diag: CrispDiagnostics = {
   chatOpenSuccess: false,
   lastOrbClickAt: null,
   lastOpenCommandAt: null,
+  launcherHidden: false,
+  queuedOpen: false,
+  networkOnline: true,
+  theme: "unknown",
 };
 
 export function getCrispDiagnostics(): CrispDiagnostics {
@@ -112,8 +120,14 @@ export function getCrispDiagnostics(): CrispDiagnostics {
     ...diag,
     sdkReady: typeof window !== "undefined" && typeof (window as any).$crisp?.get === "function",
     availability: typeof window === "undefined" ? "unknown" : getAvailability(),
+    networkOnline: typeof navigator === "undefined" ? true : navigator.onLine !== false,
+    theme:
+      typeof document === "undefined"
+        ? "unknown"
+        : document.documentElement.getAttribute("data-theme") ?? "unknown",
   };
 }
+
 
 const MAX_ATTEMPTS = 3;
 

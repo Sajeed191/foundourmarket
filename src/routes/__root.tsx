@@ -41,6 +41,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { SyncToastsMount } from "@/lib/infra/sync-toasts";
 import { ShareDialog } from "@/components/site/ShareDialog";
 import { FloatingContextObserver } from "@/components/site/FloatingContextObserver";
+import { ScrollLockGuard } from "@/components/site/ScrollLockGuard";
+
 
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
 import { safeInternalPath } from "@/lib/safe-redirect";

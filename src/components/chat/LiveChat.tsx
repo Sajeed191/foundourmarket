@@ -335,7 +335,9 @@ export function LiveChat() {
           onTap={() => {
             dismissGreeting();
             markCrispOrbClick();
-            void openCrispChat();
+            void openCrispChat().then((ok) => {
+              if (!ok) toast.error("Chat is temporarily unavailable. Please try again in a moment.");
+            });
           }}
           onLongPress={() => { dismissGreeting(); openHub(); }}
           greetVisible={greetVisible}

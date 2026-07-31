@@ -1,6 +1,8 @@
 // Server-only: converts inbound support emails into FoundOurMarket™ tickets.
 // Single source of truth = public.support_tickets. Never import from client code.
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
+import { logSecurityEvent } from '@/lib/security/audit'
+import { parseTicketReference, verifyReplyToken } from '@/lib/security/reply-token.server'
 
 const SUPPORT_ADDRESSES = ['support@foundourmarket.com', 'foundourmarket@gmail.com']
 const PRIMARY_SOURCE = 'support@foundourmarket.com'
@@ -70,11 +72,9 @@ function pickSource(to: InboundEmail['to']): string {
   const known = rcpts.find((r) => SUPPORT_ADDRESSES.includes(r))
   return known ?? PRIMARY_SOURCE
 }
-
-function extractTicketNumber(subject: string | undefined): string | null {
-  if (!subject) return null
-  const m = subject.match(/\[?(FOM-\d{6})\]?/i)
-  return m ? m[1].toUpperCase() : null
+/** Legacy helper kept for compatibility; delegates to the v3.0 parser. */
+export function extractTicketNumber(subject: string | undefined): string | null {
+  return parseTicketReference(subject)?.ticketNumber ?? null
 }
 
 function cleanBody(email: InboundEmail): string {
@@ -273,10 +273,20 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
   const sender = fromEmail as string
 
   // ---- Existing ticket reply? ----
-  const ticketNumber = extractTicketNumber(email.subject)
+  // v3.0: accepts BOTH `FOM-000123` (legacy) and `FOM-000123.<token>` (secure
+  // reply token). No migration required — the token is an additional proof,
+  // never a requirement.
+  const reference = parseTicketReference(email.subject)
+  const ticketNumber = reference?.ticketNumber ?? null
   let ticketId: string | null = null
   let ownerId: string | null = null
   let createdNew = false
+  /** True when someone quoted a real ticket they could not prove they own. */
+  let spoofAttempt = false
+
+  if (!ticketNumber && /FOM-/i.test(email.subject ?? '')) {
+    logSecurityEvent('malformed_ticket_reference', { channel: 'email' })
+  }
 
   if (ticketNumber) {
     const { data: existing } = await supabaseAdmin
@@ -287,16 +297,23 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
     if (existing) {
       // SECURITY (finding `support_ticket_spoof`): ticket numbers are short and
       // sequential, so the subject line alone must NEVER be enough to join a
-      // thread. The sender must be the ticket owner (auth email or guest email)
-      // or an address that already participated in the thread. Anything else
-      // falls through to a brand-new ticket — never silently appended, and the
-      // reopen side-effect never fires.
-      const owns = await senderOwnsTicket(
-        sender,
-        existing.id as string,
-        (existing.user_id as string | null) ?? null,
-        (existing.guest_email as string | null) ?? null,
-      )
+      // thread. The sender must present a valid reply token, or be the ticket
+      // owner (auth email or guest email), or an address that already
+      // participated in the thread. Anything else falls through to a brand-new
+      // ticket — never silently appended, and the reopen side-effect never
+      // fires. The response never reveals whether the ticket exists.
+      const verdict = verifyReplyToken(ticketNumber, reference?.token ?? null)
+      if (verdict === 'invalid') {
+        logSecurityEvent('invalid_reply_token', { channel: 'email' })
+      }
+      const owns =
+        verdict === 'valid' ||
+        (await senderOwnsTicket(
+          sender,
+          existing.id as string,
+          (existing.user_id as string | null) ?? null,
+          (existing.guest_email as string | null) ?? null,
+        ))
       if (owns) {
         ticketId = existing.id as string
         ownerId = (existing.user_id as string | null) ?? null
@@ -305,6 +322,8 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
           await supabaseAdmin.from('support_tickets').update({ status: 'open' }).eq('id', ticketId)
         }
       } else {
+        spoofAttempt = true
+        logSecurityEvent('sender_ticket_mismatch', { channel: 'email' })
         await logEvent({
           status: 'rejected',
           reason: 'sender_ticket_mismatch',
@@ -315,6 +334,7 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
       }
     }
   }
+
 
 
   // ---- New ticket ----
@@ -372,7 +392,9 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
   const messageId = message.id as string
 
   // ---- Attachments ----
-  const stored = await storeAttachments(ticketId, ownerId, email.attachments)
+  // SECURITY: an unverified sender who quoted someone else's ticket number gets
+  // a fresh ticket, but their attachments are never stored.
+  const stored = spoofAttempt ? [] : await storeAttachments(ticketId, ownerId, email.attachments)
   if (stored.length) {
     await supabaseAdmin.from('support_messages').update({ attachments: stored }).eq('id', messageId)
   }

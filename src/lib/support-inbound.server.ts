@@ -1,6 +1,8 @@
 // Server-only: converts inbound support emails into FoundOurMarket™ tickets.
 // Single source of truth = public.support_tickets. Never import from client code.
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
+import { logSecurityEvent } from '@/lib/security/audit'
+import { parseTicketReference, verifyReplyToken } from '@/lib/security/reply-token.server'
 
 const SUPPORT_ADDRESSES = ['support@foundourmarket.com', 'foundourmarket@gmail.com']
 const PRIMARY_SOURCE = 'support@foundourmarket.com'

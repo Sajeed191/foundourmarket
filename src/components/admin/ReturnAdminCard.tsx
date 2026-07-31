@@ -304,6 +304,17 @@ export function ReturnAdminCard({
         </section>
       </div>
 
+      {/* Secure refund bank details (staff-gated, encrypted at rest) */}
+      {resolution === "refund" && (
+        <RefundBankPanel
+          returnId={r.id}
+          customerName={r.customer.name}
+          refundAmount={r.refund_amount}
+          currency={r.order.currency}
+          refundMethod={r.refund_method ?? "gateway"}
+        />
+      )}
+
       {/* Customer Evidence (collapsible) */}
       {photos.length > 0 && (
         <section className="rounded-xl border border-border/60 bg-background/40 p-3">

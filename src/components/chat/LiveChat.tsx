@@ -1035,7 +1035,7 @@ function FixedOrb({
         // Refresh baseline on genuine resize (orientation, window resize).
         const vv = window.visualViewport;
         if (vv) cachedRef.current.baselineVV = vv.height + vv.offsetTop;
-        applyPosition();
+        applyPositionRef.current();
       }, 180);
     };
     const onOrientation = () => {
@@ -1043,7 +1043,7 @@ function FixedOrb({
       resizeTimer = window.setTimeout(() => {
         const vv = window.visualViewport;
         if (vv) cachedRef.current.baselineVV = vv.height + vv.offsetTop;
-        applyPosition();
+        applyPositionRef.current();
       }, 220);
     };
     // visualViewport RESIZE (not scroll) — fires when the software keyboard
@@ -1052,7 +1052,7 @@ function FixedOrb({
     let vvTimer: number | undefined;
     const onVVResize = () => {
       if (vvTimer) window.clearTimeout(vvTimer);
-      vvTimer = window.setTimeout(applyPosition, 60);
+      vvTimer = window.setTimeout(() => applyPositionRef.current(), 60);
     };
 
     window.addEventListener("resize", onResize);
@@ -1063,7 +1063,7 @@ function FixedOrb({
     // lift (real layout events, not scroll); visibility updates for context.
     const unsubscribe = subscribeFloating(() => {
       writeBottom();
-      applyVisibility();
+      applyVisibilityRef.current();
     });
 
     return () => {
@@ -1071,13 +1071,16 @@ function FixedOrb({
       unsubscribe();
       cancelWait();
       cleanupWait();
+      window.clearTimeout(failsafe);
       if (resizeTimer) window.clearTimeout(resizeTimer);
       if (vvTimer) window.clearTimeout(vvTimer);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onOrientation);
       window.visualViewport?.removeEventListener("resize", onVVResize);
     };
-  }, [applyPosition, applyVisibility]);
+    // Run once — callbacks are read through refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [writeBottom]);
 
 
   // Re-apply visibility whenever the hide flag changes.

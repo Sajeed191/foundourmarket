@@ -111,17 +111,32 @@ export function loadCrisp(): Promise<void> {
       window.$crisp.push(["safe", true]);
 
       const finish = () => {
-        const ms = loadStart ? Math.round(performance.now() - loadStart) : 0;
-        perf.mark("load-end");
-        perf.log(`SDK ready in ${ms}ms`);
-        diag.scriptLoaded = true;
-        diag.loadDurationMs = ms;
-        diag.lastError = null;
-        diag.sdkReady = typeof (window as any).$crisp?.get === "function";
-        try {
-          window.$crisp!.push(["on", "chat:opened", () => { diag.chatOpenSuccess = true; }]);
-        } catch { /* diagnostics only */ }
-        resolve();
+        const readyStartedAt = Date.now();
+        const confirmReady = () => {
+          if (typeof (window as any).$crisp?.get === "function") {
+            const ms = loadStart ? Math.round(performance.now() - loadStart) : 0;
+            perf.mark("load-end");
+            perf.log(`SDK ready in ${ms}ms`);
+            diag.scriptLoaded = true;
+            diag.sdkReady = true;
+            diag.loadDurationMs = ms;
+            diag.lastError = null;
+            try {
+              window.$crisp!.push(["on", "chat:opened", () => { diag.chatOpenSuccess = true; }]);
+            } catch { /* diagnostics only */ }
+            resolve();
+            return;
+          }
+          if (Date.now() - readyStartedAt < 12_000) {
+            window.setTimeout(confirmReady, 100);
+            return;
+          }
+          loadPromise = null;
+          diag.sdkReady = false;
+          diag.lastError = "Crisp script loaded but SDK readiness timed out";
+          resolve();
+        };
+        confirmReady();
       };
 
       const existing = document.getElementById("crisp-widget-script") as HTMLScriptElement | null;
@@ -199,7 +214,9 @@ export async function openCrispChat(): Promise<boolean> {
   perf.mark("open-request");
   try {
     await loadCrisp();
-    if (!window.$crisp) throw new Error("Crisp command queue is unavailable");
+    if (typeof (window as any).$crisp?.get !== "function" || !window.$crisp) {
+      throw new Error(diag.lastError ?? "Crisp SDK is not ready");
+    }
     window.$crisp.push(["do", "chat:show"]);
     window.$crisp.push(["do", "chat:open"]);
     diag.chatOpenCommandSent = true;

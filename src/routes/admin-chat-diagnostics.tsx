@@ -14,6 +14,10 @@ export const Route = createFileRoute("/admin-chat-diagnostics")({
         content:
           "Staff-only health view of the live chat widget: script load, website ID, readiness, availability and last error.",
       },
+      { property: "og:title", content: "Live Chat Diagnostics — FoundOurMarket™" },
+      { property: "og:description", content: "Staff-only diagnostics for the FoundOurMarket live support integration." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),

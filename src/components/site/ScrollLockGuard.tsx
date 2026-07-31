@@ -18,7 +18,6 @@ const OPEN_OVERLAY_SELECTOR = [
   '[data-radix-popper-content-wrapper]',
   '[role="dialog"][data-state="open"]',
   '[role="alertdialog"][data-state="open"]',
-  '[data-radix-focus-guard]',
   '[data-state="open"][data-radix-menu-content]',
   '[data-vaul-drawer][data-state="open"]',
 ].join(",");
@@ -27,7 +26,30 @@ function overlayOpen(): boolean {
   return !!document.querySelector(OPEN_OVERLAY_SELECTOR);
 }
 
+/**
+ * Radix renders its dim overlay as a sibling of the content inside a portal.
+ * When the dialog unmounts mid exit-animation (route change, Suspense swap,
+ * conditional `{cond && <Modal/>}` flipping), the overlay node can survive with
+ * `data-state="open"` — an invisible full-screen shield that swallows every
+ * click, including the Live Chat orb. Remove those orphans.
+ */
+function sweepOrphanOverlays(): void {
+  if (overlayOpen()) return;
+  document
+    .querySelectorAll<HTMLElement>('[data-state="open"].fixed.inset-0[aria-hidden="true"]')
+    .forEach((el) => {
+      // Only remove shields that contain no interactive content of their own.
+      if (el.querySelector("button, a, input, [role]")) return;
+      el.remove();
+    });
+  // Focus guards left behind by an unmounted dialog trap keyboard focus.
+  if (!document.querySelector('[role="dialog"],[role="alertdialog"]')) {
+    document.querySelectorAll("[data-radix-focus-guard]").forEach((el) => el.remove());
+  }
+}
+
 function release() {
+  sweepOrphanOverlays();
   const body = document.body;
   const locked =
     body.hasAttribute("data-scroll-locked") ||
@@ -42,6 +64,7 @@ function release() {
   }
   body.style.removeProperty("margin-right");
 }
+
 
 export function ScrollLockGuard() {
   useEffect(() => {

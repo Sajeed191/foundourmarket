@@ -45,10 +45,11 @@ export function requiresBankDetails(method: string | null | undefined): boolean 
 }
 
 /** Reject anything that looks like markup / script injection. */
-const safeText = (max: number) =>
+const safeText = (max: number, min = 0, label = "This field") =>
   z
     .string()
     .trim()
+    .min(min, `${label} is required`)
     .max(max, `Must be ${max} characters or fewer`)
     .refine((v) => !/[<>]/.test(v), "Special characters < and > are not allowed");
 

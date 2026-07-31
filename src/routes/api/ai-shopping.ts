@@ -8,11 +8,7 @@ import {
 import { generateSuggestions } from "@/lib/ai-shopping/suggestions";
 import { summarizeShoppingContext, type ShoppingContext } from "@/lib/ai-shopping/shopping-context";
 import type { AiExplanation, AiSource, AiCompare } from "@/lib/ai-shopping/types";
-import {
-  callerKey,
-  consumeRateLimit,
-  tooManyRequests,
-} from "@/lib/security/server-rate-limit";
+import { callerKey, tooManyRequests } from "@/lib/security/server-rate-limit";
 import { logSecurityEvent } from "@/lib/security/audit";
 
 
@@ -92,7 +88,8 @@ Style:
 - Never expose technical errors, tool names, JSON, or system details to the user.`;
 
 
-const MAX_TOOL_ROUNDS = 4;
+const MAX_TOOL_ROUNDS = 4; // Layer 8 — maximum paid tool iterations per request.
+const MAX_RESPONSE_TOKENS = 900; // Layer 9 — maximum response tokens per round.
 const MODEL = "google/gemini-3.5-flash";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -163,6 +160,8 @@ async function streamAiShopping(
       messages,
       tools: AI_SHOPPING_TOOLS,
       temperature: 0.4,
+      // Layer 9 — hard cap on response tokens per round.
+      max_tokens: MAX_RESPONSE_TOKENS,
     });
     const json = await res.json();
     const msg = json.choices?.[0]?.message as ChatMessage | undefined;
@@ -326,7 +325,7 @@ async function realStreamFinalReply(
   messages: ChatMessage[],
   controller: ReadableStreamDefaultController<Uint8Array>,
 ) {
-  const res = await callGateway(key, { model: MODEL, messages, stream: true, temperature: 0.4 });
+  const res = await callGateway(key, { model: MODEL, messages, stream: true, temperature: 0.4, max_tokens: MAX_RESPONSE_TOKENS });
   const reader = res.body?.getReader();
   if (!reader) return;
   const decoder = new TextDecoder();

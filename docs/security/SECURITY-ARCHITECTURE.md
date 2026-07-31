@@ -118,3 +118,42 @@ Framework-free, run with `bun run <file>`:
 - [ ] Any privileged action: `requireStaff` + `logSecurity` audit row
 - [ ] Any AI surface: published-only catalog access, sanitized tool output
 - [ ] A regression test that fails if the protection is removed
+
+## 12. Hardening v3.0 additions
+
+### 12.1 Support inbound ticket integrity (`support_ticket_spoof`)
+- Subjects are parsed by `parseTicketReference()` and accept **both**
+  `FOM-XXXXXX` (legacy) and `FOM-XXXXXX.<token>` (secure reply token).
+- `verifyReplyToken()` (HMAC-SHA256, timing-safe) is an *additional* proof of
+  ownership — never a requirement, so no ticket migration is needed.
+- Append requires: valid reply token **or** guest-email match **or** auth-owner
+  email match **or** prior verified participation on that thread.
+- On failure: no append, no reopen, **no attachment storage**; a fresh ticket is
+  created for the sender and `sender_ticket_mismatch` is audited. The response
+  never reveals whether the referenced ticket exists.
+- Secret: `SUPPORT_REPLY_TOKEN_SECRET` (falls back to `SUPPORT_INBOUND_SECRET`).
+  When absent, token checks are skipped and identity verification still applies.
+
+### 12.2 AI endpoint cost protection (`ai_shopping_open_cost`)
+`/api/ai-shopping` stays public (no login). `src/lib/security/ai-abuse-guard.server.ts`
+applies ten layers: IP limiter, visitor limiter, conversation limiter, daily
+per-caller budget, global emergency budget, prompt-size cap, history cap, tool
+iteration cap (`MAX_TOOL_ROUNDS`), response-token cap (`max_tokens`), and an
+automatic cooldown after repeated denials. Abuse heuristics cover prompt
+flooding, oversized payloads, and bot user agents.
+- Signed, PII-free visitor tokens are issued by `GET /api/ai-shopping`
+  (`AI_VISITOR_TOKEN_SECRET`); forged tokens are rejected and audited, absent
+  tokens degrade to IP-only protection so guests are never blocked.
+- Exceeding the global daily budget returns a lightweight non-LLM fallback
+  instead of an error — credits are protected without an outage.
+- Denials return HTTP 429 with `Retry-After` and a friendly message; internal
+  thresholds are never disclosed.
+
+### 12.3 Regression tests
+- `src/lib/security/hardening-v3.test.ts` — 45 assertions covering reply tokens,
+  visitor tokens, and every abuse layer. Run with `bun run <file>`.
+
+Informational findings `user_roles_missing_select_scope`,
+`realtime_admin_wildcard_topics_broad`, and
+`realtime_anon_read_only_catalog_topics` remain correct by design and were not
+modified.

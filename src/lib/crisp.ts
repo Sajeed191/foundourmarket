@@ -261,7 +261,9 @@ export function markCrispOrbClick(): void {
 export async function openCrispChat(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   perf.mark("open-request");
+  diag.queuedOpen = true;
   try {
+    // Queues the request while the SDK is still loading; resolves once ready.
     await loadCrisp();
     if (!diag.scriptLoaded || !window.$crisp || typeof window.$crisp.push !== "function") {
       throw new Error(diag.lastError ?? "Crisp SDK is not ready");
@@ -269,16 +271,19 @@ export async function openCrispChat(): Promise<boolean> {
     window.$crisp.push(["do", "chat:show"]);
     window.$crisp.push(["do", "chat:open"]);
     diag.chatOpenCommandSent = true;
+    diag.queuedOpen = false;
     diag.lastOpenCommandAt = Date.now();
     window.setTimeout(() => {
       diag.chatOpenSuccess = isCrispChatOpen() || diag.chatOpenSuccess;
     }, 300);
     return true;
   } catch (error) {
+    diag.queuedOpen = false;
     diag.lastError = error instanceof Error ? error.message : "Chat open failed";
     return false;
   }
 }
+
 
 export function closeCrispChat(): void {
   if (typeof window === "undefined") return;

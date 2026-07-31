@@ -46,6 +46,7 @@ const DEPLOYED_ANON_TOPICS = [
   "reviews:some-slug",
   "rt-announcements",
   "rt-cms-page",
+  "rt-cms-posts-list",
   "rt-homepage-sections",
   "rt-storefront-blocks",
 ];
@@ -96,7 +97,6 @@ const SENSITIVE_TOPICS = [
   "dash-draft-activity",
   "bulk-visibility",
   "category-cms",
-  "rt-cms-posts-list",
   "live-orders",
   "activity-feed",
   "support-settings-live",

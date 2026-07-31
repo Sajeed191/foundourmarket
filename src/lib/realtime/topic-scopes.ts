@@ -81,6 +81,8 @@ const exact = (t: string) => (topic: string) => topic === t;
 export const PUBLIC_CATALOG_TOPIC_RULES: TopicRule[] = [
   { match: prefix('rt-products'), scope: 'catalog.read', audience: 'anon' },
   { match: prefix('rt-banners-'), scope: 'catalog.read', audience: 'anon' },
+  // `rt-cms-%` covers public pages, blog posts and the public blog index
+  // (`rt-cms-posts-list`, used by the anonymous /blog route).
   { match: prefix('rt-cms-'), scope: 'catalog.read', audience: 'anon' },
   { match: prefix('reviews:'), scope: 'catalog.read', audience: 'anon' },
   { match: exact('categories-live'), scope: 'catalog.read', audience: 'anon' },
@@ -154,7 +156,6 @@ export const STAFF_TOPIC_RULES: TopicRule[] = [
   { match: exact('dash-draft-activity'), scope: 'ops.read', audience: 'staff' },
   { match: exact('bulk-visibility'), scope: 'ops.read', audience: 'staff' },
   { match: exact('category-cms'), scope: 'ops.read', audience: 'staff' },
-  { match: exact('rt-cms-posts-list'), scope: 'ops.read', audience: 'staff' },
 ];
 
 /** Topic families that must NEVER be reachable by anonymous visitors. */

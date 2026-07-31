@@ -60,12 +60,49 @@ function ensureHideStyle(): void {
   document.head.appendChild(el);
 }
 
+// ---- Diagnostics (staff-only panel reads this; never rendered to customers) ----
+export type CrispDiagnostics = {
+  scriptInjected: boolean;
+  scriptLoaded: boolean;
+  sdkReady: boolean;
+  websiteIdMasked: string;
+  attempts: number;
+  lastAttemptAt: number | null;
+  loadDurationMs: number | null;
+  lastError: string | null;
+  availability: Availability | "unknown";
+};
+
+const diag: CrispDiagnostics = {
+  scriptInjected: false,
+  scriptLoaded: false,
+  sdkReady: false,
+  websiteIdMasked: `${CRISP_WEBSITE_ID.slice(0, 4)}…${CRISP_WEBSITE_ID.slice(-4)}`,
+  attempts: 0,
+  lastAttemptAt: null,
+  loadDurationMs: null,
+  lastError: null,
+  availability: "unknown",
+};
+
+export function getCrispDiagnostics(): CrispDiagnostics {
+  return {
+    ...diag,
+    sdkReady: typeof window !== "undefined" && typeof (window as any).$crisp?.get === "function",
+    availability: typeof window === "undefined" ? "unknown" : getAvailability(),
+  };
+}
+
+const MAX_ATTEMPTS = 3;
+
 export function loadCrisp(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   if (loadPromise) return loadPromise;
 
   loadStart = typeof performance !== "undefined" ? performance.now() : 0;
   perf.mark("load-start");
+  diag.attempts += 1;
+  diag.lastAttemptAt = Date.now();
 
   loadPromise = new Promise<void>((resolve, reject) => {
     try {
@@ -81,6 +118,9 @@ export function loadCrisp(): Promise<void> {
         const ms = loadStart ? Math.round(performance.now() - loadStart) : 0;
         perf.mark("load-end");
         perf.log(`SDK ready in ${ms}ms`);
+        diag.scriptLoaded = true;
+        diag.loadDurationMs = ms;
+        diag.lastError = null;
         // Re-assert hidden once loaded.
         try { window.$crisp!.push(["do", "chat:hide"]); } catch { /* noop */ }
         resolve();
@@ -88,6 +128,7 @@ export function loadCrisp(): Promise<void> {
 
       const existing = document.getElementById("crisp-widget-script") as HTMLScriptElement | null;
       if (existing) {
+        diag.scriptInjected = true;
         setTimeout(finish, 0);
         return;
       }
@@ -99,18 +140,30 @@ export function loadCrisp(): Promise<void> {
       s.onload = finish;
       s.onerror = () => {
         loadPromise = null;
+        diag.lastError = "Script blocked or failed to load (network / ad blocker / CSP)";
         perf.log("SDK failed to load");
-        reject(new Error("Failed to load Crisp"));
+        // Remove the dead tag so a retry can inject a fresh one.
+        try { s.remove(); } catch { /* noop */ }
+        diag.scriptInjected = false;
+        if (diag.attempts < MAX_ATTEMPTS) {
+          const delay = 1500 * diag.attempts;
+          window.setTimeout(() => { void loadCrisp().catch(() => {}); }, delay);
+        }
+        // Never reject loudly — chat degrades, the page keeps working.
+        resolve();
       };
       document.head.appendChild(s);
+      diag.scriptInjected = true;
     } catch (err) {
       loadPromise = null;
+      diag.lastError = (err as Error)?.message ?? "Unknown Crisp init error";
       reject(err as Error);
     }
   });
 
   return loadPromise;
 }
+
 
 let preloaded = false;
 export function preloadCrisp(): void {

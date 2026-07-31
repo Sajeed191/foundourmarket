@@ -73,20 +73,33 @@ export const SUPPORTED_COUNTRIES = Object.keys(CURRENCY_BY_COUNTRY);
 export const refundBankInputSchema = z
   .object({
     returnId: z.string().uuid(),
-    accountHolderName: safeText(120).min(2, "Account holder name is required"),
-    bankName: safeText(120).min(2, "Bank name is required"),
+    accountHolderName: safeText(120, 2, "Account holder name"),
+    bankName: safeText(120, 2, "Bank name"),
     accountNumber: z
       .string()
       .trim()
       .regex(ACCOUNT_RE, "Account number must be 6–20 digits"),
     confirmAccountNumber: z.string().trim(),
-    ifsc: z.string().trim().toUpperCase().max(20).optional().or(z.literal("")),
-    branchName: safeText(120).optional().or(z.literal("")),
-    upiId: z.string().trim().max(80).optional().or(z.literal("")),
+    ifsc: z
+      .string()
+      .trim()
+      .max(20)
+      .transform((v) => v.toUpperCase())
+      .default(""),
+    branchName: safeText(120).default(""),
+    upiId: z.string().trim().max(80).default(""),
     accountType: z.enum(ACCOUNT_TYPES),
-    country: z.string().trim().toUpperCase().min(2).max(2),
-    currency: z.string().trim().toUpperCase().min(3).max(3),
-    notes: safeText(500).optional().or(z.literal("")),
+    country: z
+      .string()
+      .trim()
+      .length(2, "Select a country")
+      .transform((v) => v.toUpperCase()),
+    currency: z
+      .string()
+      .trim()
+      .length(3, "Select a currency")
+      .transform((v) => v.toUpperCase()),
+    notes: safeText(500).default(""),
     confirmed: z.literal(true, {
       errorMap: () => ({ message: "Please confirm the details are correct" }),
     }),

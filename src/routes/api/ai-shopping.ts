@@ -8,6 +8,13 @@ import {
 import { generateSuggestions } from "@/lib/ai-shopping/suggestions";
 import { summarizeShoppingContext, type ShoppingContext } from "@/lib/ai-shopping/shopping-context";
 import type { AiExplanation, AiSource, AiCompare } from "@/lib/ai-shopping/types";
+import {
+  callerKey,
+  consumeRateLimit,
+  tooManyRequests,
+} from "@/lib/security/server-rate-limit";
+import { logSecurityEvent } from "@/lib/security/audit";
+
 
 type ChatMessage = {
   role: "system" | "user" | "assistant" | "tool";
@@ -346,20 +353,59 @@ async function realStreamFinalReply(
   }
 }
 
+/**
+ * Abuse budget (Enterprise Security Program v2.0 — finding `ai_shopping_open_cost`).
+ * Each request can trigger up to MAX_TOOL_ROUNDS paid gateway calls, so the
+ * endpoint is metered per caller IP. Generous enough that no real shopper will
+ * ever see it; tight enough that a script cannot burn AI credits.
+ */
+const AI_RATE_LIMIT = 20; // requests
+const AI_RATE_WINDOW_MS = 60_000; // per minute
+const MAX_MESSAGE_CHARS = 4_000;
+const MAX_TOTAL_CHARS = 24_000;
+
 export const Route = createFileRoute("/api/ai-shopping")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const limit = consumeRateLimit(
+          callerKey(request, "ai-shopping"),
+          AI_RATE_LIMIT,
+          AI_RATE_WINDOW_MS,
+        );
+        if (!limit.allowed) {
+          logSecurityEvent("rate_limit_exceeded", {
+            endpoint: "ai-shopping",
+            retryAfter: limit.retryAfter,
+          });
+          return tooManyRequests(
+            limit,
+            "You're sending messages a little too quickly — please try again in a moment.",
+          );
+        }
+
         const body = (await request.json().catch(() => ({}))) as {
           messages?: ChatMessage[];
           context?: ShoppingContext;
         };
         const shoppingContext = body.context ?? null;
         const incoming = Array.isArray(body.messages) ? body.messages : [];
+        let budget = MAX_TOTAL_CHARS;
         const sanitized: ChatMessage[] = incoming
           .filter((m) => m && (m.role === "user" || m.role === "assistant"))
-          .map((m) => ({ role: m.role, content: typeof m.content === "string" ? m.content : "" }))
-          .slice(-24);
+          .map((m) => ({
+            role: m.role,
+            content: (typeof m.content === "string" ? m.content : "").slice(0, MAX_MESSAGE_CHARS),
+          }))
+          .slice(-24)
+          // Trim oldest-first if the conversation is still oversized, so a
+          // crafted history cannot inflate token spend per request.
+          .reverse()
+          .filter((m) => {
+            budget -= m.content.length;
+            return budget >= 0;
+          })
+          .reverse();
         if (sanitized.length === 0 || sanitized[sanitized.length - 1].role !== "user") {
           return new Response(JSON.stringify({ error: "Last message must be from the user." }), {
             status: 400,
@@ -367,6 +413,7 @@ export const Route = createFileRoute("/api/ai-shopping")({
           });
         }
         const userText = sanitized[sanitized.length - 1].content ?? "";
+
 
         const stream = new ReadableStream<Uint8Array>({
           async start(controller) {

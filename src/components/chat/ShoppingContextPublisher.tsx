@@ -10,6 +10,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import {
   usePublishShoppingContext,
   type ShoppingCartItem,
@@ -40,7 +41,7 @@ export function ShoppingContextPublisher() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { detailed } = useCart();
   const { slugs: wishlistSlugs } = useWishlist();
-  const { products } = useProducts();
+  const { products } = useVisibleProducts();
 
   const owned = isOwnedByPagePublisher(path);
   const page = classify(path);

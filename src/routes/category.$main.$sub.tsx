@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { Product } from "@/lib/products";
@@ -50,7 +51,7 @@ export const Route = createFileRoute("/category/$main/$sub")({
 function SubcategoryPage() {
   const { main, sub } = Route.useParams();
   const { categories, loading: catsLoading } = useAllCategories();
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
 
   const cat = categories.find((c) => c.slug === sub);
   const parent = categories.find((c) => c.slug === main);

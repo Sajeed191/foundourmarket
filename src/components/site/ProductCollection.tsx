@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { fairPagedSlice } from "@/lib/fair-rotation";
 import {
@@ -53,7 +54,7 @@ export function ProductCollection({
    */
   forceBadge?: BadgeKey | null;
 }) {
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
   const { map: badgeAssignments } = useBadgeCatalog();
   const rules = useHomepageCollectionRules();
   const rotationNonce = useRotationNonce();

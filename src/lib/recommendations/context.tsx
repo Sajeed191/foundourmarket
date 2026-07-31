@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useWishlist } from "@/lib/wishlist";
 import { useCart } from "@/lib/cart";
@@ -95,7 +96,7 @@ function dayBucket(): number {
 }
 
 export function RecommendationProvider({ children }: { children: ReactNode }) {
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
   const { slugs: recent } = useRecentlyViewed();
   const { slugs: wishlistSet } = useWishlist();
   const { items } = useCart();
@@ -134,7 +135,7 @@ export function RecommendationProvider({ children }: { children: ReactNode }) {
 export function useRecommendationSignals(): SignalsContextValue {
   const ctx = useContext(SignalsContext);
   // Fallback: components used outside the provider still work via local hooks.
-  const fallbackProducts = useProducts();
+  const fallbackProducts = useVisibleProducts();
   const fallbackRecent = useRecentlyViewed();
   const fallbackWishlist = useWishlist();
   const fallbackCart = useCart();

@@ -10,6 +10,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useCategories, useAdminCategories, toggleCategoryVisible } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { useRegion } from "@/lib/region";
 import { useProductAdminEditing } from "@/lib/admin-overlay";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
@@ -509,7 +510,7 @@ function Home() {
   // Single responsive homepage for every device — no capability detection,
   // no homepage swapping. These constants keep the (now always-on) premium
   // path live; the dead branches that referenced GPU safe mode tree-shake away.
-  const { products, loading: productsLoading } = useProducts();
+  const { products, loading: productsLoading } = useVisibleProducts();
   const { map: badgeAssignments, loading: badgesLoading } = useBadgeCatalog();
   const { categories: publicCategories } = useCategories();
   const { sections } = useHomepageSections();

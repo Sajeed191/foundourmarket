@@ -5,6 +5,7 @@ import { useRecommendationRail, useRecommendationSignals } from "@/lib/recommend
 import type { StrategyKey } from "@/lib/recommendations";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductRail } from "@/components/site/ProductRail";
 import { LazyMount } from "@/components/site/LazyMount";
@@ -66,7 +67,7 @@ function EngineRail({
 export function SmartRecommendations() {
   const { personalized } = useRecommendationSignals();
   const { entries } = useRecentlyViewed();
-  const { products } = useProducts();
+  const { products } = useVisibleProducts();
 
   // Seed "Because You Viewed" from the most recently viewed in-catalog product.
   const seed = useMemo(() => {

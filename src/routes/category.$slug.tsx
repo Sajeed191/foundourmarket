@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
 import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { Product } from "@/lib/products";
@@ -53,7 +54,7 @@ function CategoryPage() {
   const { slug } = Route.useParams();
   const { categories, subsByParent, loading: catsLoading } = useAllCategories();
   const cat = categories.find((c) => c.slug === slug);
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
 
   // Main category page = subcategory chooser. Products are NOT shown here.
   const subs = cat ? subsByParent(cat.id) : [];

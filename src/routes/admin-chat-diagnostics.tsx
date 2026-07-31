@@ -50,7 +50,7 @@ if (typeof window !== "undefined" && !(window as any).__fomChatDiagHooked) {
 }
 
 function readEnv(): Env {
-  const orb = document.querySelector("button[data-floating-control]") as HTMLElement | null;
+  const orb = document.querySelector('[data-fom-chat-orb="1"] button, button[aria-label="Open live chat"]') as HTMLElement | null;
   const wrap = orb?.parentElement ?? null;
   const orbCs = orb ? getComputedStyle(orb) : null;
   const wrapCs = wrap ? getComputedStyle(wrap) : null;

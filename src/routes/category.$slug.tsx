@@ -121,6 +121,21 @@ function CategoryPage() {
     [presentation],
   );
 
+  // Hidden / unpublished / unknown category: `useAllCategories` only ever
+  // returns published categories, so a missing match means the department is
+  // hidden from customers. Products inside it stay live everywhere else.
+  if (!catsLoading && !cat) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-28 text-center">
+        <h1 className="text-3xl font-display mb-3">Category not available</h1>
+        <p className="text-sm text-muted-foreground mb-6">
+          This department isn’t available right now. Browse everything else in the marketplace.
+        </p>
+        <Link to="/categories" className="text-accent underline">Browse all categories</Link>
+      </div>
+    );
+  }
+
   // Old flat URL for a subcategory → redirect to the nested /category/main/sub.
   if (!catsLoading && cat && parent) {
     return <Navigate to="/category/$main/$sub" params={{ main: parent.slug, sub: cat.slug }} replace />;

@@ -102,6 +102,21 @@ function SubcategoryPage() {
     [presentation],
   );
 
+  // Hidden / unpublished category (or hidden parent department): only
+  // published categories reach the client, so a missing match means it is
+  // hidden from customers. Products inside remain live elsewhere.
+  if (!catsLoading && (!cat || !parent)) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-28 text-center">
+        <h1 className="text-3xl font-display mb-3">Category not available</h1>
+        <p className="text-sm text-muted-foreground mb-6">
+          This collection isn’t available right now. Browse everything else in the marketplace.
+        </p>
+        <Link to="/categories" className="text-accent underline">Browse all categories</Link>
+      </div>
+    );
+  }
+
   // If the slug isn't actually a subcategory of `main`, send to the flat page so
   // the URL stays correct (no broken nested URLs, zero SEO loss).
   if (!catsLoading && cat && parent && cat.parent_id !== parent.id) {

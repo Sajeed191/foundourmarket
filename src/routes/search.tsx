@@ -21,6 +21,7 @@ import { useFacets } from "@/lib/search-facets";
 import { fetchVariantFacets, type VariantFacetMap } from "@/lib/variant-facets";
 import { primeVariantSummaries } from "@/lib/variant-swatch-cache";
 import { useRegion } from "@/lib/region";
+import { isProductVisible } from "@/lib/product-availability";
 import { ProductCard } from "@/components/site/ProductCard";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import { buildBrowsePresentation } from "@/lib/browse";
@@ -869,7 +870,12 @@ function SearchPage() {
       page_offset: 0,
     }).then(({ data }: { data: any[] | null }) => {
       if (cancelled) return;
-      const rows = (data ?? []).map((r: any) => rowToProduct(r));
+      // Visibility is enforced in SQL (status / deleted / hide_from_search);
+      // the region gate is applied here because it depends on the shopper's
+      // resolved market. Hidden or region-hidden products never reach results.
+      const rows = (data ?? [])
+        .map((r: any) => rowToProduct(r))
+        .filter((p: Product) => isProductVisible(p, market));
       const seen = new Set<string>();
       const deduped = rows.filter((p: Product) => (seen.has(p.slug) ? false : (seen.add(p.slug), true)));
       setRawRows(deduped);
@@ -877,7 +883,7 @@ function SearchPage() {
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.q, search.cat]);
+  }, [search.q, search.cat, market]);
 
   // Lightweight variant facet layer: once the result set loads, fetch ONLY the
   // colour/size/stock/price columns for those slugs (never full variants) and

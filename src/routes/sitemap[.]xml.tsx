@@ -9,8 +9,16 @@ export const Route = createFileRoute("/sitemap.xml")({
         const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
 
         const [products, categories, pages, posts] = await Promise.all([
-          sb.from("products_public").select("slug,updated_at"),
-          sb.from("categories").select("slug,parent_id,id"),
+          // Only customer-visible products and categories are indexable.
+          // Hidden/draft/archived/scheduled products, products excluded from
+          // search, and products hidden in both markets are left out — as are
+          // hidden categories (their products stay indexed individually).
+          sb
+            .from("products_public")
+            .select("slug,updated_at,status,hide_from_search,india_visible,international_visible")
+            .in("status", ["published", "preorder", "out_of_stock"])
+            .eq("hide_from_search", false),
+          sb.from("categories").select("slug,parent_id,id,status").eq("status", "published"),
           sb.from("cms_pages_public").select("slug,updated_at"),
           sb.from("cms_posts_public" as "cms_posts").select("slug,updated_at,published_at")
             .not("published_at", "is", null).lte("published_at", new Date().toISOString()),
@@ -32,7 +40,9 @@ export const Route = createFileRoute("/sitemap.xml")({
           { loc: `${origin}/pages/shipping` },
           { loc: `${origin}/pages/returns` },
         ];
-        (products.data ?? []).forEach((p: any) => urls.push({ loc: `${origin}/products/${p.slug}`, lastmod: p.updated_at }));
+        (products.data ?? [])
+          .filter((p: any) => p.india_visible !== false || p.international_visible !== false)
+          .forEach((p: any) => urls.push({ loc: `${origin}/products/${p.slug}`, lastmod: p.updated_at }));
         {
           const cats = (categories.data ?? []) as any[];
           const bySlug = new Map(cats.map((c) => [c.id, c.slug]));

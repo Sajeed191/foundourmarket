@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } fro
 
 import { supabase } from "@/integrations/supabase/client";
 import { useProduct, invalidateProducts, refreshProducts } from "@/lib/use-products";
+import { isProductVisible } from "@/lib/product-availability";
 import { openShare, toPreviewImage } from "@/lib/share";
 import { useAllCategories } from "@/lib/use-categories";
 import { useRegion } from "@/lib/region";
@@ -471,6 +472,19 @@ function ProductPage() {
 
   if (loading) {
     return <ProductPageSkeleton />;
+  }
+
+  // Hidden product (draft / hidden / archived) or hidden in the shopper's
+  // market: customers get the standard not-found page, staff keep full access
+  // so they can review and edit it. Nothing is deleted — orders, inventory,
+  // reviews and analytics are untouched.
+  if (product && !isAdmin && !isProductVisible(product, market)) {
+    return (
+      <div className="py-32 text-center">
+        <h1 className="text-3xl font-display mb-4">Product not available</h1>
+        <Link to="/" className="text-accent underline">Back to shop</Link>
+      </div>
+    );
   }
 
   if (!product) {

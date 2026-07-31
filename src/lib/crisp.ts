@@ -287,7 +287,11 @@ export async function openCrispChat(): Promise<boolean> {
 
 export function closeCrispChat(): void {
   if (typeof window === "undefined") return;
-  try { window.$crisp?.push(["do", "chat:close"]); } catch { /* noop */ }
+  try {
+    window.$crisp?.push(["do", "chat:close"]);
+    // Return to the branded-orb-only state.
+    window.$crisp?.push(["do", "chat:hide"]);
+  } catch { /* noop */ }
   window.dispatchEvent(new CustomEvent(CLOSE_EVENT));
 }
 

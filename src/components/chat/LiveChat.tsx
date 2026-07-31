@@ -1122,6 +1122,7 @@ function FixedOrb({
 
   const ring = ringClass(availability);
 
+
   return (
     <div
       ref={wrapRef}

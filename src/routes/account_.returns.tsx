@@ -1015,6 +1015,24 @@ function ReturnsPage() {
                     <ResolutionTimeline view={view} />
                   </div>
 
+                  {requiresBankDetails(detail.refund_method) && (
+                    <Link
+                      to="/account/refund-details"
+                      search={{ return: detail.id }}
+                      className="mt-4 flex items-center justify-between gap-3 rounded-2xl ring-1 ring-primary/30 bg-primary/10 px-4 py-3.5 min-h-[56px]"
+                    >
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <Landmark className="size-4 text-accent-hi shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block text-[13px] font-medium text-white/90">Add bank details</span>
+                          <span className="block text-[11px] text-white/45">Required to receive your refund</span>
+                        </span>
+                      </span>
+                      <ChevronRight className="size-4 text-white/40 shrink-0" />
+                    </Link>
+                  )}
+
+
                   <dl className="mt-5 space-y-2.5 text-[12.5px]">
                     <div className="flex justify-between gap-3">
                       <dt className="text-white/45">Reason</dt>

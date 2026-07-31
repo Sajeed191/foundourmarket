@@ -150,7 +150,7 @@ export async function listAudit(bankId: string) {
     action: string;
     actor_id: string | null;
     actor_role: string | null;
-    detail: Record<string, unknown>;
+    detail: Record<string, string | number | boolean | null>;
     source_ip: string | null;
     created_at: string;
   }[];

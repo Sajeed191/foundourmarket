@@ -7,6 +7,7 @@ import {
 import type { AdminReturnRow } from "@/lib/returns-admin.functions";
 import type { Product } from "@/lib/products";
 import { ImageLightbox } from "@/components/site/ImageLightbox";
+import { RefundBankPanel } from "@/components/admin/RefundBankPanel";
 
 const RETURN_STATUSES = ["requested", "approved", "received", "completed", "rejected"] as const;
 const REFUND_STATUSES = ["pending", "issued", "failed"] as const;

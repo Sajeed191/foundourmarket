@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, X, ArrowRight, Sparkles, Package, Tag, LayoutGrid } from "lucide-react";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { useCategories } from "@/lib/use-categories";
 import { useRegion } from "@/lib/region";

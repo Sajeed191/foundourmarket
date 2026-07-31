@@ -22,7 +22,6 @@ import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { useCompare } from "@/hooks/use-compare";

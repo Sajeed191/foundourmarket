@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";

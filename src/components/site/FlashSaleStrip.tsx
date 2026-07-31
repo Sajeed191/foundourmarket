@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Flame, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { Price } from "@/components/site/Price";
 import { useRegion } from "@/lib/region";

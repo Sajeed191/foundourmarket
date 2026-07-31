@@ -9,7 +9,6 @@ import { useMemo } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import {
   usePublishShoppingContext,

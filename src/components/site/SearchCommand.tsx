@@ -2,7 +2,6 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, X, TrendingUp, History, Tag, ArrowRight, Loader2, CornerDownLeft, ArrowUp, ArrowDown, Flame, Store, Star } from "lucide-react";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { useCategories } from "@/lib/use-categories";
 import { iconForCategory } from "@/components/site/CategoryCard";

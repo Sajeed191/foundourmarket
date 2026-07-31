@@ -2,7 +2,6 @@ import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";

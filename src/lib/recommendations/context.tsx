@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useWishlist } from "@/lib/wishlist";

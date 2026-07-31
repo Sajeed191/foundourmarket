@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductRail } from "@/components/site/ProductRail";

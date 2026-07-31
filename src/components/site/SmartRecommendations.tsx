@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { useRecommendationRail, useRecommendationSignals } from "@/lib/recommendations";
 import type { StrategyKey } from "@/lib/recommendations";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductRail } from "@/components/site/ProductRail";

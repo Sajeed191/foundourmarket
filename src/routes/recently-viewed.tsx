@@ -11,7 +11,6 @@ import {
   Check,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useProducts } from "@/lib/use-products";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
 import { buildVisibleMap, useVisibleProducts } from "@/lib/product-availability";

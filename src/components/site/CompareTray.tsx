@@ -1,7 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { X, ArrowRight, Scale } from "lucide-react";
 import { useCompare } from "@/hooks/use-compare";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { resolveImage } from "@/lib/products";
 

@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCategories, useAdminCategories, toggleCategoryVisible } from "@/lib/use-categories";
-import { useProducts } from "@/lib/use-products";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { useRegion } from "@/lib/region";
 import { useProductAdminEditing } from "@/lib/admin-overlay";

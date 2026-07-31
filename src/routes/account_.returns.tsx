@@ -26,7 +26,6 @@ import {
   CircleDot,
   Sparkles,
   Landmark,
-  ChevronRight,
 } from "lucide-react";
 import { requiresBankDetails } from "@/lib/refund-bank/validation";
 import { motion, AnimatePresence } from "framer-motion";

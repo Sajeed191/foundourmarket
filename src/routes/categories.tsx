@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { ArrowRight } from "lucide-react";
 import { useAllCategories, type Category } from "@/lib/use-categories";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { iconForCategory } from "@/components/site/CategoryCard";
 
 export const Route = createFileRoute("/categories")({
@@ -124,7 +124,7 @@ function DepartmentCard({
 
 function CategoriesPage() {
   const { mains, subsByParent } = useAllCategories();
-  const { products } = useProducts();
+  const { products } = useVisibleProducts();
 
   const counts = useMemo(
     () =>

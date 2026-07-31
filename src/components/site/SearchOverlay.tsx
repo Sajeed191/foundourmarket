@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, X, ArrowRight, Sparkles, Package, Tag, LayoutGrid } from "lucide-react";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { useCategories } from "@/lib/use-categories";
 import { useRegion } from "@/lib/region";
 import type { Product } from "@/lib/products";
@@ -29,7 +29,7 @@ const EMPTY_SUGGESTIONS = ["wireless headphones", "smart watch", "linen shirt", 
  */
 export function SearchOverlay({ open, onClose, query, onQueryChange }: Props) {
   const nav = useNavigate();
-  const { products } = useProducts();
+  const { products } = useVisibleProducts();
   const { categories } = useCategories();
   const { formatProduct } = useRegion();
   const inputRef = useRef<HTMLInputElement>(null);

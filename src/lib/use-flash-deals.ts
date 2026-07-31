@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import type { Product } from "@/lib/products";
 import { useRotationNonce } from "@/lib/use-rotation-nonce";
 import { seededShuffle, windowSeed } from "@/lib/rotation-windows";
@@ -73,7 +73,7 @@ type UseFlashDealsOptions = {
  * Deals" destination so all surfaces return the exact same products.
  */
 export function useFlashDeals(options?: UseFlashDealsOptions) {
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
   const { map: badgeAssignments, loading: badgesLoading } = useBadgeCatalog();
   const rules = useHomepageCollectionRules();
   const [deals, setDeals] = useState<DealRow[]>([]);

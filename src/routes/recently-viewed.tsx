@@ -11,10 +11,9 @@ import {
   Check,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useProducts } from "@/lib/use-products";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
-import { buildVisibleMap } from "@/lib/product-availability";
+import { buildVisibleMap, useVisibleProducts } from "@/lib/product-availability";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
 import { discountPercent, type Product } from "@/lib/products";
@@ -71,7 +70,7 @@ const SORTS: { key: SortKey; label: string }[] = [
 ];
 
 function RecentlyViewedPage() {
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
   const { entries, clear, remove } = useRecentlyViewed();
   const { priceOf, compareOf, market } = useRegion();
 

@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { X, ArrowRight, Scale } from "lucide-react";
 import { useCompare } from "@/hooks/use-compare";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { resolveImage } from "@/lib/products";
 
 export function CompareTray() {
   const { slugs, remove, clear } = useCompare();
-  const { products } = useProducts();
+  const { products } = useVisibleProducts();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   if (slugs.length === 0 || pathname === "/compare") return null;

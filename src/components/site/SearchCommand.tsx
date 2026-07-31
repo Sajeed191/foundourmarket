@@ -2,7 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, X, TrendingUp, History, Tag, ArrowRight, Loader2, CornerDownLeft, ArrowUp, ArrowDown, Flame, Store, Star } from "lucide-react";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { useCategories } from "@/lib/use-categories";
 import { iconForCategory } from "@/components/site/CategoryCard";
 import { Price } from "@/components/site/Price";
@@ -34,7 +34,7 @@ type Item =
 
 export function SearchCommand({ open, onClose }: { open: boolean; onClose: () => void }) {
   const nav = useNavigate();
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
   const { categories } = useCategories();
   const { priceOf } = useRegion();
 

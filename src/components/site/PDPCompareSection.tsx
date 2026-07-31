@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { resolveImage, type Product } from "@/lib/products";
 import { useRegion } from "@/lib/region";
 import { useCompare } from "@/hooks/use-compare";
@@ -85,7 +85,7 @@ function recommendationFor(
 // ============================ Component ============================
 
 export function PDPCompareSection({ currentProduct }: { currentProduct: Product }) {
-  const { products } = useProducts();
+  const { products } = useVisibleProducts();
   const { priceOf, shippingFeeOf } = useRegion();
   const { slugs, toggle, has, isFull, max } = useCompare();
   const navigate = useNavigate();

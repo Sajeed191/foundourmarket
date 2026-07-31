@@ -22,14 +22,13 @@ import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useProducts } from "@/lib/use-products";
 import { useCart } from "@/lib/cart";
 import { useWishlist } from "@/lib/wishlist";
 import { useCompare } from "@/hooks/use-compare";
 import { useRecentlyViewed, type RecentlyViewedEntry } from "@/hooks/use-recently-viewed";
 import { useRegion } from "@/lib/region";
 import { recordEvent } from "@/lib/personalization";
-import { buildVisibleMap } from "@/lib/product-availability";
+import { buildVisibleMap, useVisibleProducts } from "@/lib/product-availability";
 import { getViewedPrices, comparePrice, type PriceChange } from "@/lib/viewed-prices";
 import { ProductCard } from "@/components/site/ProductCard";
 import { ProductSkeletonGrid } from "@/components/site/ProductSkeleton";
@@ -220,7 +219,7 @@ function describeActivity(e: Entry, market: string): CardStatus {
 
 function ContinueShoppingPage() {
   const { user, loading: authLoading } = useAuth();
-  const { products, loading: productsLoading } = useProducts();
+  const { products, loading: productsLoading } = useVisibleProducts();
   const { market, priceOf } = useRegion();
   const { items: cartItems } = useCart();
   const { slugs: wishSlugs } = useWishlist();

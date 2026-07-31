@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Flame, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { Price } from "@/components/site/Price";
 import { useRegion } from "@/lib/region";
 import { AdminProductOverlay } from "@/components/admin/AdminProductOverlay";
@@ -37,7 +37,7 @@ function pad(n: number) {
 
 export function FlashSaleStrip() {
   const [sale, setSale] = useState<FlashSale | null>(null);
-  const { products } = useProducts();
+  const { products } = useVisibleProducts();
   const { priceOf } = useRegion();
   
   const countdown = useCountdown(sale?.ends_at ?? null, false);

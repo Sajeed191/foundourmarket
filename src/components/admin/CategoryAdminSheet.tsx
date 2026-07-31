@@ -455,11 +455,28 @@ export function CategoryAdminSheet({
     });
   }
 
+  /**
+   * Hide / show a category for customers.
+   *
+   * Hiding sets `status = 'hidden'`, which removes the category from every
+   * customer surface (home, browse, navigation, category pages, search
+   * filters, sitemap and SEO) in one move. Products inside it are NOT hidden —
+   * they stay searchable and purchasable unless individually hidden.
+   * `homepage_visible` remains a homepage-placement flag only, so
+   * subcategories keep their placement when shown again.
+   */
   async function quickHomepage(row: Row) {
-    const next = !row.homepage_visible;
+    const hiding = row.status === "published";
     const { error } = await supabase
       .from("categories")
-      .update({ homepage_visible: next })
+      .update(
+        hiding
+          ? { status: "hidden" as CategoryStatus, homepage_visible: false }
+          : {
+              status: "published" as CategoryStatus,
+              homepage_visible: row.parent_id ? row.homepage_visible : true,
+            },
+      )
       .eq("id", row.id);
     if (error) {
       toast.error(error.message);
@@ -522,18 +539,23 @@ export function CategoryAdminSheet({
     }
   }
 
-  async function bulkVisibility(homepage_visible: boolean) {
+  /** Bulk hide/show — same customer-visibility rule as the per-row action. */
+  async function bulkVisibility(show: boolean) {
     const ids = Array.from(selected);
     if (!ids.length) return;
     const { error } = await supabase
       .from("categories")
-      .update({ homepage_visible })
+      .update(
+        show
+          ? { status: "published" as CategoryStatus }
+          : { status: "hidden" as CategoryStatus, homepage_visible: false },
+      )
       .in("id", ids);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(`${ids.length} ${homepage_visible ? "shown" : "hidden"}`);
+    toast.success(`${ids.length} ${show ? "shown" : "hidden"}`);
     setSelected(new Set());
     await load();
     invalidateCategories();
@@ -575,9 +597,9 @@ export function CategoryAdminSheet({
         case "sub":
           return !!r.parent_id;
         case "visible":
-          return !!r.homepage_visible;
+          return r.status === "published";
         case "hidden":
-          return !r.homepage_visible;
+          return r.status !== "published";
         case "empty":
           return count(r) === 0;
         default:
@@ -669,15 +691,20 @@ export function CategoryAdminSheet({
             </div>
           </button>
         </div>
+        {r.status !== "published" && (
+          <p className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/[0.07] px-2 py-1.5 text-[10px] leading-snug text-amber-200/90">
+            This category is hidden from customers. Products remain searchable unless individually hidden.
+          </p>
+        )}
         <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-white/5 pt-2">
           <QuickBtn onClick={() => open(r)} title="Edit">
             <Pencil className="size-3.5" />
           </QuickBtn>
           <QuickBtn
             onClick={() => quickHomepage(r)}
-            title={r.homepage_visible ? "Hide" : "Show"}
+            title={r.status === "published" ? "Hide from customers" : "Show to customers"}
           >
-            {r.homepage_visible ? (
+            {r.status === "published" ? (
               <EyeOff className="size-3.5" />
             ) : (
               <Eye className="size-3.5" />

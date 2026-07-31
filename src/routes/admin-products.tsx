@@ -1184,6 +1184,33 @@ function ProductCard({
             <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${p.in_stock ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : "text-muted-foreground border-white/10 bg-white/5"}`}>
               {p.in_stock ? "Active" : "Inactive"}
             </span>
+            {/* Customer visibility at a glance: publication status first, then
+                which markets can actually see the product. */}
+            {(() => {
+              const st = p.status ?? "published";
+              const live = st === "published" || st === "preorder" || st === "out_of_stock";
+              const india = p.india_visible !== false;
+              const intlOn = p.international_visible !== false;
+              const label = !live
+                ? st === "draft" ? "Draft" : st === "archived" ? "Archived" : st === "scheduled" ? "Scheduled" : "Hidden"
+                : !india && !intlOn
+                  ? "Hidden globally"
+                  : india && intlOn
+                    ? "Visible · Global"
+                    : india
+                      ? "India only"
+                      : "International only";
+              const cls = !live || (!india && !intlOn)
+                ? "text-rose-300 border-rose-500/30 bg-rose-500/10"
+                : india && intlOn
+                  ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+                  : "text-amber-300 border-amber-500/30 bg-amber-500/10";
+              return (
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${cls}`}>
+                  {live && (india || intlOn) ? <Eye className="size-2.5" /> : <EyeOff className="size-2.5" />} {label}
+                </span>
+              );
+            })()}
           </div>
           {hs.issues.length > 0 && (
             <div className="flex flex-wrap items-center gap-1 mt-1.5">

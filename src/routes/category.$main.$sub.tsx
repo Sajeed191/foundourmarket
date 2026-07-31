@@ -2,7 +2,7 @@ import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllCategories } from "@/lib/use-categories";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { BrowseCard } from "@/components/site/BrowseCard";
 import { VirtualizedProductGrid } from "@/components/site/VirtualizedProductGrid";
 import type { Product } from "@/lib/products";
@@ -50,7 +50,7 @@ export const Route = createFileRoute("/category/$main/$sub")({
 function SubcategoryPage() {
   const { main, sub } = Route.useParams();
   const { categories, loading: catsLoading } = useAllCategories();
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
 
   const cat = categories.find((c) => c.slug === sub);
   const parent = categories.find((c) => c.slug === main);
@@ -101,6 +101,21 @@ function SubcategoryPage() {
     ),
     [presentation],
   );
+
+  // Hidden / unpublished category (or hidden parent department): only
+  // published categories reach the client, so a missing match means it is
+  // hidden from customers. Products inside remain live elsewhere.
+  if (!catsLoading && (!cat || !parent)) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-28 text-center">
+        <h1 className="text-3xl font-display mb-3">Category not available</h1>
+        <p className="text-sm text-muted-foreground mb-6">
+          This collection isn’t available right now. Browse everything else in the marketplace.
+        </p>
+        <Link to="/categories" className="text-accent underline">Browse all categories</Link>
+      </div>
+    );
+  }
 
   // If the slug isn't actually a subcategory of `main`, send to the flat page so
   // the URL stays correct (no broken nested URLs, zero SEO loss).

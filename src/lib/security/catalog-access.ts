@@ -48,7 +48,9 @@ export function getPublicCatalogQuery(
     .from("products")
     .select(select)
     .eq("status", "published")
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    // Hidden in BOTH markets = hidden globally; never expose it publicly.
+    .or("india_visible.eq.true,international_visible.eq.true");
 
   if (audience === "discovery") {
     q = q.eq("hide_from_search", false).eq("hide_from_recommendations", false);

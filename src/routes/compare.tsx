@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, memo } from "react";
 import { X, Check, ShoppingBag, Scale, Plus, ChevronDown } from "lucide-react";
 import { StarRating } from "@/components/site/StarRating";
 import { useCompare } from "@/hooks/use-compare";
-import { useProducts } from "@/lib/use-products";
+import { useVisibleProducts } from "@/lib/product-availability";
 import { resolveImage, fetchProductsBySlugs, type Product } from "@/lib/products";
 import { useCart } from "@/lib/cart";
 
@@ -138,7 +138,7 @@ const RowGrid = memo(function RowGrid({
 
 function ComparePage() {
   const { slugs, remove, clear, isFull, max } = useCompare();
-  const { products, loading } = useProducts();
+  const { products, loading } = useVisibleProducts();
   const { add } = useCart();
 
   const [full, setFull] = useState<Record<string, Product>>({});

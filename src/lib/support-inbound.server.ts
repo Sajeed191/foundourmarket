@@ -231,18 +231,41 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
   if (ticketNumber) {
     const { data: existing } = await supabaseAdmin
       .from('support_tickets')
-      .select('id, user_id, ticket_number, status')
+      .select('id, user_id, guest_email, ticket_number, status')
       .eq('ticket_number', ticketNumber)
       .maybeSingle()
     if (existing) {
-      ticketId = existing.id as string
-      ownerId = (existing.user_id as string | null) ?? null
-      // Reopen if customer replies on a resolved/closed ticket.
-      if (['resolved', 'closed'].includes(String(existing.status))) {
-        await supabaseAdmin.from('support_tickets').update({ status: 'open' }).eq('id', ticketId)
+      // SECURITY (finding `support_ticket_spoof`): ticket numbers are short and
+      // sequential, so the subject line alone must NEVER be enough to join a
+      // thread. The sender must be the ticket owner (auth email or guest email)
+      // or an address that already participated in the thread. Anything else
+      // falls through to a brand-new ticket — never silently appended, and the
+      // reopen side-effect never fires.
+      const owns = await senderOwnsTicket(
+        sender,
+        existing.id as string,
+        (existing.user_id as string | null) ?? null,
+        (existing.guest_email as string | null) ?? null,
+      )
+      if (owns) {
+        ticketId = existing.id as string
+        ownerId = (existing.user_id as string | null) ?? null
+        // Reopen if the verified customer replies on a resolved/closed ticket.
+        if (['resolved', 'closed'].includes(String(existing.status))) {
+          await supabaseAdmin.from('support_tickets').update({ status: 'open' }).eq('id', ticketId)
+        }
+      } else {
+        await logEvent({
+          status: 'rejected',
+          reason: 'sender_ticket_mismatch',
+          email,
+          fromEmail: sender,
+          toSource: source,
+        })
       }
     }
   }
+
 
   // ---- New ticket ----
   if (!ticketId) {

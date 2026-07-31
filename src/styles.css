@@ -4248,3 +4248,380 @@ textarea.editor-deeplink-target {
 @media (prefers-reduced-motion: reduce) {
   .fd-ripple:active::after { animation: none; }
 }
+
+
+/* =====================================================================
+   FoundOurMarket™ THEME TOKEN SYSTEM — semantic layer (all themes)
+
+   One vocabulary every surface can consume: state tokens (hover / active /
+   selected / disabled / focus), status tokens (success / warning / error /
+   info), overlay + ink, and a five-step elevation scale. Dark keeps its
+   exact production values; light and grey get their own tuned ramp, so a
+   single token edit propagates across the whole application.
+   ===================================================================== */
+
+:root {
+  /* Ink = the neutral a theme paints translucent surfaces with.
+     Dark paints with light ink (white overlays), light/grey with dark ink. */
+  --fom-ink: oklch(1 0 0);
+
+  /* Interaction states — always derived, never hardcoded in components. */
+  --state-hover: color-mix(in oklab, var(--fom-ink) 6%, transparent);
+  --state-active: color-mix(in oklab, var(--fom-ink) 10%, transparent);
+  --state-selected: color-mix(in oklab, var(--accent) 14%, transparent);
+  --state-disabled-fg: color-mix(in oklab, var(--foreground) 38%, transparent);
+  --state-disabled-bg: color-mix(in oklab, var(--fom-ink) 4%, transparent);
+  --focus-ring: color-mix(in oklab, var(--accent) 70%, transparent);
+
+  /* Semantic status — the only non-orange hues allowed in the system. */
+  --success: oklch(0.72 0.16 155);
+  --success-foreground: oklch(0.16 0.02 155);
+  --warning: oklch(0.78 0.15 78);
+  --warning-foreground: oklch(0.18 0.03 78);
+  --error: var(--destructive);
+  --error-foreground: var(--destructive-foreground);
+  --info: oklch(0.7 0.13 240);
+  --info-foreground: oklch(0.16 0.02 240);
+
+  /* Scrim used by dialogs, drawers and sheets. */
+  --overlay: oklch(0.08 0.008 260 / 0.72);
+
+  /* Elevation scale — 1 card, 2 sticky/nav, 3 dropdown/menu,
+     4 dialog/drawer, 5 floating action + toast. */
+  --elevation-1: var(--shadow-card);
+  --elevation-2: var(--shadow-soft);
+  --elevation-3: var(--shadow-float);
+  --elevation-4: 0 24px 70px -28px oklch(0 0 0 / 0.7);
+  --elevation-5: 0 30px 90px -30px oklch(0 0 0 / 0.75);
+}
+
+[data-theme="light"] {
+  --fom-ink: oklch(0.24 0.02 262);
+  --success: oklch(0.55 0.14 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.62 0.14 72);
+  --warning-foreground: oklch(0.99 0 0);
+  --info: oklch(0.55 0.14 245);
+  --info-foreground: oklch(0.99 0 0);
+  --overlay: oklch(0.24 0.02 262 / 0.4);
+  --elevation-4: 0 24px 64px -26px oklch(0.24 0.02 262 / 0.22);
+  --elevation-5: 0 30px 80px -28px oklch(0.24 0.02 262 / 0.26);
+}
+
+[data-theme="grey"] {
+  --fom-ink: oklch(0.22 0.02 265);
+  --success: oklch(0.54 0.14 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.61 0.14 72);
+  --warning-foreground: oklch(0.99 0 0);
+  --info: oklch(0.54 0.14 245);
+  --info-foreground: oklch(0.99 0 0);
+  --overlay: oklch(0.22 0.02 265 / 0.44);
+  --elevation-4: 0 24px 64px -26px oklch(0.22 0.02 265 / 0.26);
+  --elevation-5: 0 30px 80px -28px oklch(0.22 0.02 265 / 0.3);
+}
+
+@theme inline {
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-overlay: var(--overlay);
+  --shadow-e1: var(--elevation-1);
+  --shadow-e2: var(--elevation-2);
+  --shadow-e3: var(--elevation-3);
+  --shadow-e4: var(--elevation-4);
+  --shadow-e5: var(--elevation-5);
+}
+
+/* Opt-out: captions and controls that sit on photography or a dark scrim
+   keep their light-on-dark treatment in every theme. */
+.on-media { color-scheme: dark; }
+
+
+/* =====================================================================
+   LIGHT + GREY — CENTRALIZED SURFACE BRIDGE (generated block)
+
+   The component layer expresses elevation with white-alpha utilities
+   (bg-white/5, border-white/10, ring-white/10 …) tuned for the dark theme.
+   On light and grey those overlays read as invisible or wrong, so every one
+   of them is remapped here — once, centrally — onto the theme ink token.
+   Components stay untouched, DARK IS UNAFFECTED (these selectors only match
+   under [data-theme="light"] / [data-theme="grey"]), and a future theme
+   only needs to define --fom-ink.
+
+   Translucent white TEXT is remapped to the theme's ink unless the element
+   sits inside `.on-media` (captions over photography / dark scrims).
+   Regenerate the whole block rather than hand-editing single rules.
+   ===================================================================== */
+
+@layer utilities {
+[data-theme="light"] [class~="bg-white/10"],
+[data-theme="grey"] [class~="bg-white/10"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/12"],
+[data-theme="grey"] [class~="bg-white/12"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/15"],
+[data-theme="grey"] [class~="bg-white/15"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/20"],
+[data-theme="grey"] [class~="bg-white/20"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/25"],
+[data-theme="grey"] [class~="bg-white/25"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/30"],
+[data-theme="grey"] [class~="bg-white/30"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/35"],
+[data-theme="grey"] [class~="bg-white/35"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/40"],
+[data-theme="grey"] [class~="bg-white/40"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/5"],
+[data-theme="grey"] [class~="bg-white/5"] { background-color: color-mix(in oklab, var(--fom-ink) 4.5%, transparent); }
+[data-theme="light"] [class~="bg-white/8"],
+[data-theme="grey"] [class~="bg-white/8"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.015]"],
+[data-theme="grey"] [class~="bg-white/[0.015]"] { background-color: color-mix(in oklab, var(--fom-ink) 1.35%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.025]"],
+[data-theme="grey"] [class~="bg-white/[0.025]"] { background-color: color-mix(in oklab, var(--fom-ink) 2.25%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.028]"],
+[data-theme="grey"] [class~="bg-white/[0.028]"] { background-color: color-mix(in oklab, var(--fom-ink) 2.52%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.02]"],
+[data-theme="grey"] [class~="bg-white/[0.02]"] { background-color: color-mix(in oklab, var(--fom-ink) 1.8%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.035]"],
+[data-theme="grey"] [class~="bg-white/[0.035]"] { background-color: color-mix(in oklab, var(--fom-ink) 3.15%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.03]"],
+[data-theme="grey"] [class~="bg-white/[0.03]"] { background-color: color-mix(in oklab, var(--fom-ink) 2.7%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.045]"],
+[data-theme="grey"] [class~="bg-white/[0.045]"] { background-color: color-mix(in oklab, var(--fom-ink) 4.05%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.04]"],
+[data-theme="grey"] [class~="bg-white/[0.04]"] { background-color: color-mix(in oklab, var(--fom-ink) 3.6%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.05]"],
+[data-theme="grey"] [class~="bg-white/[0.05]"] { background-color: color-mix(in oklab, var(--fom-ink) 4.5%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.06]"],
+[data-theme="grey"] [class~="bg-white/[0.06]"] { background-color: color-mix(in oklab, var(--fom-ink) 5.4%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.07]"],
+[data-theme="grey"] [class~="bg-white/[0.07]"] { background-color: color-mix(in oklab, var(--fom-ink) 6.3%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.08]"],
+[data-theme="grey"] [class~="bg-white/[0.08]"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.16]"],
+[data-theme="grey"] [class~="bg-white/[0.16]"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="bg-white/[0.18]"],
+[data-theme="grey"] [class~="bg-white/[0.18]"] { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="border-white/10"],
+[data-theme="grey"] [class~="border-white/10"] { border-color: color-mix(in oklab, var(--fom-ink) 14.0%, transparent); }
+[data-theme="light"] [class~="border-white/12"],
+[data-theme="grey"] [class~="border-white/12"] { border-color: color-mix(in oklab, var(--fom-ink) 16.8%, transparent); }
+[data-theme="light"] [class~="border-white/15"],
+[data-theme="grey"] [class~="border-white/15"] { border-color: color-mix(in oklab, var(--fom-ink) 21.0%, transparent); }
+[data-theme="light"] [class~="border-white/20"],
+[data-theme="grey"] [class~="border-white/20"] { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="border-white/25"],
+[data-theme="grey"] [class~="border-white/25"] { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="border-white/30"],
+[data-theme="grey"] [class~="border-white/30"] { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="border-white/40"],
+[data-theme="grey"] [class~="border-white/40"] { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="border-white/5"],
+[data-theme="grey"] [class~="border-white/5"] { border-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="border-white/8"],
+[data-theme="grey"] [class~="border-white/8"] { border-color: color-mix(in oklab, var(--fom-ink) 11.2%, transparent); }
+[data-theme="light"] [class~="border-white/[0.03]"],
+[data-theme="grey"] [class~="border-white/[0.03]"] { border-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="border-white/[0.04]"],
+[data-theme="grey"] [class~="border-white/[0.04]"] { border-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="border-white/[0.05]"],
+[data-theme="grey"] [class~="border-white/[0.05]"] { border-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="border-white/[0.06]"],
+[data-theme="grey"] [class~="border-white/[0.06]"] { border-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="border-white/[0.07]"],
+[data-theme="grey"] [class~="border-white/[0.07]"] { border-color: color-mix(in oklab, var(--fom-ink) 9.8%, transparent); }
+[data-theme="light"] [class~="border-white/[0.08]"],
+[data-theme="grey"] [class~="border-white/[0.08]"] { border-color: color-mix(in oklab, var(--fom-ink) 11.2%, transparent); }
+[data-theme="light"] [class~="border-white/[0.09]"],
+[data-theme="grey"] [class~="border-white/[0.09]"] { border-color: color-mix(in oklab, var(--fom-ink) 12.6%, transparent); }
+[data-theme="light"] [class~="border-white/[0.14]"],
+[data-theme="grey"] [class~="border-white/[0.14]"] { border-color: color-mix(in oklab, var(--fom-ink) 19.6%, transparent); }
+[data-theme="light"] [class~="divide-white/5"] > * + *,
+[data-theme="grey"] [class~="divide-white/5"] > * + * { border-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="from-white/10"],
+[data-theme="grey"] [class~="from-white/10"] { --tw-gradient-from: color-mix(in oklab, var(--fom-ink) 5.0%, transparent); }
+[data-theme="light"] [class~="from-white/[0.03]"],
+[data-theme="grey"] [class~="from-white/[0.03]"] { --tw-gradient-from: color-mix(in oklab, var(--fom-ink) 1.8%, transparent); }
+[data-theme="light"] [class~="from-white/[0.04]"],
+[data-theme="grey"] [class~="from-white/[0.04]"] { --tw-gradient-from: color-mix(in oklab, var(--fom-ink) 2.4%, transparent); }
+[data-theme="light"] [class~="from-white/[0.06]"],
+[data-theme="grey"] [class~="from-white/[0.06]"] { --tw-gradient-from: color-mix(in oklab, var(--fom-ink) 3.6%, transparent); }
+[data-theme="light"] [class~="ring-white/10"],
+[data-theme="grey"] [class~="ring-white/10"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 14.0%, transparent); }
+[data-theme="light"] [class~="ring-white/12"],
+[data-theme="grey"] [class~="ring-white/12"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 16.8%, transparent); }
+[data-theme="light"] [class~="ring-white/15"],
+[data-theme="grey"] [class~="ring-white/15"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 21.0%, transparent); }
+[data-theme="light"] [class~="ring-white/20"],
+[data-theme="grey"] [class~="ring-white/20"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="ring-white/25"],
+[data-theme="grey"] [class~="ring-white/25"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="ring-white/5"],
+[data-theme="grey"] [class~="ring-white/5"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="ring-white/[0.05]"],
+[data-theme="grey"] [class~="ring-white/[0.05]"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="ring-white/[0.06]"],
+[data-theme="grey"] [class~="ring-white/[0.06]"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 9.0%, transparent); }
+[data-theme="light"] [class~="ring-white/[0.07]"],
+[data-theme="grey"] [class~="ring-white/[0.07]"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 9.8%, transparent); }
+[data-theme="light"] [class~="ring-white/[0.08]"],
+[data-theme="grey"] [class~="ring-white/[0.08]"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 11.2%, transparent); }
+[data-theme="light"] [class~="ring-white/[0.09]"],
+[data-theme="grey"] [class~="ring-white/[0.09]"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 12.6%, transparent); }
+[data-theme="light"] [class~="text-white/10"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/10"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 50%, transparent); }
+[data-theme="light"] [class~="text-white/15"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/15"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 53%, transparent); }
+[data-theme="light"] [class~="text-white/20"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/20"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 56%, transparent); }
+[data-theme="light"] [class~="text-white/25"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/25"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 59%, transparent); }
+[data-theme="light"] [class~="text-white/30"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/30"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 62%, transparent); }
+[data-theme="light"] [class~="text-white/35"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/35"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 64%, transparent); }
+[data-theme="light"] [class~="text-white/40"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/40"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 67%, transparent); }
+[data-theme="light"] [class~="text-white/45"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/45"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 70%, transparent); }
+[data-theme="light"] [class~="text-white/50"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/50"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 73%, transparent); }
+[data-theme="light"] [class~="text-white/55"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/55"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 75%, transparent); }
+[data-theme="light"] [class~="text-white/60"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/60"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 78%, transparent); }
+[data-theme="light"] [class~="text-white/65"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/65"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 81%, transparent); }
+[data-theme="light"] [class~="text-white/70"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/70"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 84%, transparent); }
+[data-theme="light"] [class~="text-white/75"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/75"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 86%, transparent); }
+[data-theme="light"] [class~="text-white/8"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/8"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 49%, transparent); }
+[data-theme="light"] [class~="text-white/80"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/80"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 89%, transparent); }
+[data-theme="light"] [class~="text-white/85"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/85"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 92%, transparent); }
+[data-theme="light"] [class~="text-white/90"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/90"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 94%, transparent); }
+[data-theme="light"] [class~="text-white/95"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] [class~="text-white/95"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 97%, transparent); }
+[data-theme="light"] [class~="to-white/[0.015]"],
+[data-theme="grey"] [class~="to-white/[0.015]"] { --tw-gradient-to: color-mix(in oklab, var(--fom-ink) 0.9%, transparent); }
+[data-theme="light"] [class~="to-white/[0.01]"],
+[data-theme="grey"] [class~="to-white/[0.01]"] { --tw-gradient-to: color-mix(in oklab, var(--fom-ink) 0.6%, transparent); }
+[data-theme="light"] [class~="via-white/10"],
+[data-theme="grey"] [class~="via-white/10"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 5.0%, transparent); }
+[data-theme="light"] [class~="via-white/12"],
+[data-theme="grey"] [class~="via-white/12"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 5.0%, transparent); }
+[data-theme="light"] [class~="via-white/15"],
+[data-theme="grey"] [class~="via-white/15"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 5.0%, transparent); }
+[data-theme="light"] [class~="via-white/25"],
+[data-theme="grey"] [class~="via-white/25"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 5.0%, transparent); }
+[data-theme="light"] [class~="via-white/5"],
+[data-theme="grey"] [class~="via-white/5"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 3.0%, transparent); }
+[data-theme="light"] [class~="via-white/[0.06]"],
+[data-theme="grey"] [class~="via-white/[0.06]"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 3.6%, transparent); }
+[data-theme="light"] [class~="via-white/[0.08]"],
+[data-theme="grey"] [class~="via-white/[0.08]"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 4.8%, transparent); }
+[data-theme="light"] [class~="via-white/[0.14]"],
+[data-theme="grey"] [class~="via-white/[0.14]"] { --tw-gradient-via: color-mix(in oklab, var(--fom-ink) 5.0%, transparent); }
+
+/* variant states */
+[data-theme="light"] [class~="active:bg-white/10"]:active,
+[data-theme="grey"] [class~="active:bg-white/10"]:active { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="active:bg-white/[0.02]"]:active,
+[data-theme="grey"] [class~="active:bg-white/[0.02]"]:active { background-color: color-mix(in oklab, var(--fom-ink) 1.8%, transparent); }
+[data-theme="light"] [class~="active:bg-white/[0.03]"]:active,
+[data-theme="grey"] [class~="active:bg-white/[0.03]"]:active { background-color: color-mix(in oklab, var(--fom-ink) 2.7%, transparent); }
+[data-theme="light"] [class~="active:bg-white/[0.04]"]:active,
+[data-theme="grey"] [class~="active:bg-white/[0.04]"]:active { background-color: color-mix(in oklab, var(--fom-ink) 3.6%, transparent); }
+[data-theme="light"] [class~="active:bg-white/[0.07]"]:active,
+[data-theme="grey"] [class~="active:bg-white/[0.07]"]:active { background-color: color-mix(in oklab, var(--fom-ink) 6.3%, transparent); }
+[data-theme="light"] [class~="before:bg-white/10"]::before,
+[data-theme="grey"] [class~="before:bg-white/10"]::before { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="disabled:hover:border-white/10"]:disabled:hover,
+[data-theme="grey"] [class~="disabled:hover:border-white/10"]:disabled:hover { border-color: color-mix(in oklab, var(--fom-ink) 14.0%, transparent); }
+[data-theme="light"] [class~="focus-within:bg-white/[0.07]"]:focus-within,
+[data-theme="grey"] [class~="focus-within:bg-white/[0.07]"]:focus-within { background-color: color-mix(in oklab, var(--fom-ink) 6.3%, transparent); }
+[data-theme="light"] [class~="focus:bg-white/[0.04]"]:focus,
+[data-theme="grey"] [class~="focus:bg-white/[0.04]"]:focus { background-color: color-mix(in oklab, var(--fom-ink) 3.6%, transparent); }
+[data-theme="light"] [class~="focus:bg-white/[0.05]"]:focus,
+[data-theme="grey"] [class~="focus:bg-white/[0.05]"]:focus { background-color: color-mix(in oklab, var(--fom-ink) 4.5%, transparent); }
+[data-theme="light"] [class~="focus:border-white/30"]:focus,
+[data-theme="grey"] [class~="focus:border-white/30"]:focus { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] .group:hover [class~="group-hover:ring-white/40"],
+[data-theme="grey"] .group:hover [class~="group-hover:ring-white/40"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] .group:hover [class~="group-hover:text-white/60"]:not(.on-media):not(.on-media *),
+[data-theme="grey"] .group:hover [class~="group-hover:text-white/60"]:not(.on-media):not(.on-media *) { color: color-mix(in oklab, var(--fom-ink) 78%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/10"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/10"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/15"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/15"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/20"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/20"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/40"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/40"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/5"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/5"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 4.5%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/8"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/8"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.02]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.02]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 1.8%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.035]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.035]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 3.15%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.03]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.03]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 2.7%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.04]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.04]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 3.6%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.05]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.05]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 4.5%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.06]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.06]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 5.4%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.075]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.075]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 6.75%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.07]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.07]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 6.3%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.08]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.08]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="hover:bg-white/[0.09]"]:hover,
+[data-theme="grey"] [class~="hover:bg-white/[0.09]"]:hover { background-color: color-mix(in oklab, var(--fom-ink) 7.0%, transparent); }
+[data-theme="light"] [class~="hover:border-white/10"]:hover,
+[data-theme="grey"] [class~="hover:border-white/10"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 14.0%, transparent); }
+[data-theme="light"] [class~="hover:border-white/15"]:hover,
+[data-theme="grey"] [class~="hover:border-white/15"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 21.0%, transparent); }
+[data-theme="light"] [class~="hover:border-white/20"]:hover,
+[data-theme="grey"] [class~="hover:border-white/20"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="hover:border-white/25"]:hover,
+[data-theme="grey"] [class~="hover:border-white/25"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="hover:border-white/30"]:hover,
+[data-theme="grey"] [class~="hover:border-white/30"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="hover:border-white/[0.12]"]:hover,
+[data-theme="grey"] [class~="hover:border-white/[0.12]"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 16.8%, transparent); }
+[data-theme="light"] [class~="hover:border-white/[0.14]"]:hover,
+[data-theme="grey"] [class~="hover:border-white/[0.14]"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 19.6%, transparent); }
+[data-theme="light"] [class~="hover:border-white/[0.15]"]:hover,
+[data-theme="grey"] [class~="hover:border-white/[0.15]"]:hover { border-color: color-mix(in oklab, var(--fom-ink) 21.0%, transparent); }
+[data-theme="light"] [class~="hover:ring-white/25"]:hover,
+[data-theme="grey"] [class~="hover:ring-white/25"]:hover { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 22.0%, transparent); }
+[data-theme="light"] [class~="hover:text-white/65"]:not(.on-media):not(.on-media *):hover,
+[data-theme="grey"] [class~="hover:text-white/65"]:not(.on-media):not(.on-media *):hover { color: color-mix(in oklab, var(--fom-ink) 81%, transparent); }
+[data-theme="light"] [class~="hover:text-white/70"]:not(.on-media):not(.on-media *):hover,
+[data-theme="grey"] [class~="hover:text-white/70"]:not(.on-media):not(.on-media *):hover { color: color-mix(in oklab, var(--fom-ink) 84%, transparent); }
+[data-theme="light"] [class~="hover:text-white/80"]:not(.on-media):not(.on-media *):hover,
+[data-theme="grey"] [class~="hover:text-white/80"]:not(.on-media):not(.on-media *):hover { color: color-mix(in oklab, var(--fom-ink) 89%, transparent); }
+@media (min-width: 64rem) {
+[data-theme="light"] [class~="lg:ring-white/15"],
+[data-theme="grey"] [class~="lg:ring-white/15"] { --tw-ring-color: color-mix(in oklab, var(--fom-ink) 21.0%, transparent); }
+}
+[data-theme="light"] [class~="placeholder:text-white/30"]:not(.on-media):not(.on-media *)::placeholder,
+[data-theme="grey"] [class~="placeholder:text-white/30"]:not(.on-media):not(.on-media *)::placeholder { color: color-mix(in oklab, var(--fom-ink) 62%, transparent); }
+[data-theme="light"] [class~="placeholder:text-white/35"]:not(.on-media):not(.on-media *)::placeholder,
+[data-theme="grey"] [class~="placeholder:text-white/35"]:not(.on-media):not(.on-media *)::placeholder { color: color-mix(in oklab, var(--fom-ink) 64%, transparent); }
+[data-theme="light"] [class~="placeholder:text-white/40"]:not(.on-media):not(.on-media *)::placeholder,
+[data-theme="grey"] [class~="placeholder:text-white/40"]:not(.on-media):not(.on-media *)::placeholder { color: color-mix(in oklab, var(--fom-ink) 67%, transparent); }
+}

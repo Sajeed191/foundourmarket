@@ -169,6 +169,56 @@ async function matchCustomer(fromEmail: string): Promise<{ userId: string | null
   return { userId: null }
 }
 
+/**
+ * SECURITY: verify that an inbound sender is entitled to write into an existing
+ * ticket referenced by its `FOM-XXXXXX` number.
+ *
+ * Accepted proofs of ownership (any one is sufficient):
+ *  1. The ticket is guest-owned and `guest_email` matches the sender.
+ *  2. The ticket has an auth owner whose account email matches the sender.
+ *  3. The sender already posted a message on this exact thread (covers
+ *     legitimate aliases and staff CC'd conversations that were established
+ *     through a verified path).
+ *
+ * Everything else is treated as an unverified third party.
+ */
+export async function senderOwnsTicket(
+  sender: string,
+  ticketId: string,
+  ownerUserId: string | null,
+  guestEmail: string | null,
+): Promise<boolean> {
+  const normalizedSender = sender.trim().toLowerCase()
+  if (!normalizedSender) return false
+
+  if (guestEmail && guestEmail.trim().toLowerCase() === normalizedSender) return true
+
+  if (ownerUserId) {
+    try {
+      const { data } = await supabaseAdmin.auth.admin.getUserById(ownerUserId)
+      const ownerEmail = data?.user?.email?.trim().toLowerCase()
+      if (ownerEmail && ownerEmail === normalizedSender) return true
+    } catch (err) {
+      console.error('[support-inbound] owner email lookup failed', String(err))
+    }
+  }
+
+  try {
+    const { data } = await supabaseAdmin
+      .from('support_messages')
+      .select('id')
+      .eq('ticket_id', ticketId)
+      .eq('sender_email', normalizedSender)
+      .limit(1)
+    if (data && data.length > 0) return true
+  } catch (err) {
+    console.error('[support-inbound] thread participant lookup failed', String(err))
+  }
+
+  return false
+}
+
+
 async function storeAttachments(
   ticketId: string,
   ownerId: string | null,

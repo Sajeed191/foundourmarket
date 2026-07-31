@@ -143,10 +143,14 @@ export function loadCrisp(): Promise<void> {
   loadPromise = new Promise<void>((resolve, reject) => {
     try {
       removeLegacyHideStyle();
+      injectLauncherSuppression();
       window.$crisp = window.$crisp || [];
       window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
 
       window.$crisp.push(["safe", true]);
+      // White-label: keep the vendor widget fully hidden until the branded orb
+      // asks for it, so no second launcher can ever appear.
+      window.$crisp.push(["do", "chat:hide"]);
 
       const finish = () => {
         const readyStartedAt = Date.now();
@@ -161,10 +165,17 @@ export function loadCrisp(): Promise<void> {
             diag.lastError = null;
             try {
               window.$crisp!.push(["on", "chat:opened", () => { diag.chatOpenSuccess = true; }]);
+              // When the customer closes the conversation, hide the whole
+              // vendor widget again — the branded orb takes over.
+              window.$crisp!.push(["on", "chat:closed", () => {
+                try { window.$crisp!.push(["do", "chat:hide"]); } catch { /* noop */ }
+              }]);
+              window.$crisp!.push(["do", "chat:hide"]);
             } catch { /* diagnostics only */ }
             resolve();
             return;
           }
+
           if (Date.now() - readyStartedAt < 12_000) {
             window.setTimeout(confirmReady, 100);
             return;

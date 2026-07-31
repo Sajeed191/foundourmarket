@@ -169,6 +169,56 @@ async function matchCustomer(fromEmail: string): Promise<{ userId: string | null
   return { userId: null }
 }
 
+/**
+ * SECURITY: verify that an inbound sender is entitled to write into an existing
+ * ticket referenced by its `FOM-XXXXXX` number.
+ *
+ * Accepted proofs of ownership (any one is sufficient):
+ *  1. The ticket is guest-owned and `guest_email` matches the sender.
+ *  2. The ticket has an auth owner whose account email matches the sender.
+ *  3. The sender already posted a message on this exact thread (covers
+ *     legitimate aliases and staff CC'd conversations that were established
+ *     through a verified path).
+ *
+ * Everything else is treated as an unverified third party.
+ */
+export async function senderOwnsTicket(
+  sender: string,
+  ticketId: string,
+  ownerUserId: string | null,
+  guestEmail: string | null,
+): Promise<boolean> {
+  const normalizedSender = sender.trim().toLowerCase()
+  if (!normalizedSender) return false
+
+  if (guestEmail && guestEmail.trim().toLowerCase() === normalizedSender) return true
+
+  if (ownerUserId) {
+    try {
+      const { data } = await supabaseAdmin.auth.admin.getUserById(ownerUserId)
+      const ownerEmail = data?.user?.email?.trim().toLowerCase()
+      if (ownerEmail && ownerEmail === normalizedSender) return true
+    } catch (err) {
+      console.error('[support-inbound] owner email lookup failed', String(err))
+    }
+  }
+
+  try {
+    const { data } = await supabaseAdmin
+      .from('support_messages')
+      .select('id')
+      .eq('ticket_id', ticketId)
+      .eq('sender_email', normalizedSender)
+      .limit(1)
+    if (data && data.length > 0) return true
+  } catch (err) {
+    console.error('[support-inbound] thread participant lookup failed', String(err))
+  }
+
+  return false
+}
+
+
 async function storeAttachments(
   ticketId: string,
   ownerId: string | null,
@@ -231,18 +281,41 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
   if (ticketNumber) {
     const { data: existing } = await supabaseAdmin
       .from('support_tickets')
-      .select('id, user_id, ticket_number, status')
+      .select('id, user_id, guest_email, ticket_number, status')
       .eq('ticket_number', ticketNumber)
       .maybeSingle()
     if (existing) {
-      ticketId = existing.id as string
-      ownerId = (existing.user_id as string | null) ?? null
-      // Reopen if customer replies on a resolved/closed ticket.
-      if (['resolved', 'closed'].includes(String(existing.status))) {
-        await supabaseAdmin.from('support_tickets').update({ status: 'open' }).eq('id', ticketId)
+      // SECURITY (finding `support_ticket_spoof`): ticket numbers are short and
+      // sequential, so the subject line alone must NEVER be enough to join a
+      // thread. The sender must be the ticket owner (auth email or guest email)
+      // or an address that already participated in the thread. Anything else
+      // falls through to a brand-new ticket — never silently appended, and the
+      // reopen side-effect never fires.
+      const owns = await senderOwnsTicket(
+        sender,
+        existing.id as string,
+        (existing.user_id as string | null) ?? null,
+        (existing.guest_email as string | null) ?? null,
+      )
+      if (owns) {
+        ticketId = existing.id as string
+        ownerId = (existing.user_id as string | null) ?? null
+        // Reopen if the verified customer replies on a resolved/closed ticket.
+        if (['resolved', 'closed'].includes(String(existing.status))) {
+          await supabaseAdmin.from('support_tickets').update({ status: 'open' }).eq('id', ticketId)
+        }
+      } else {
+        await logEvent({
+          status: 'rejected',
+          reason: 'sender_ticket_mismatch',
+          email,
+          fromEmail: sender,
+          toSource: source,
+        })
       }
     }
   }
+
 
   // ---- New ticket ----
   if (!ticketId) {

@@ -990,6 +990,16 @@ function FixedOrb({
     el.style.pointerEvents = off ? "none" : "";
   }, [hidden]);
 
+  // Keep the latest callbacks in refs so the setup effect below can run ONCE.
+  // Previously it depended on `applyVisibility`, whose identity changes on
+  // every scroll-hide toggle — each change tore down and restarted the
+  // layout-ready wait, so on slow/mobile sessions `placed` could never flip to
+  // true and the orb stayed `visibility: hidden` (visible-looking but dead).
+  const applyPositionRef = useRef(applyPosition);
+  const applyVisibilityRef = useRef(applyVisibility);
+  applyPositionRef.current = applyPosition;
+  applyVisibilityRef.current = applyVisibility;
+
   useEffect(() => {
     // Register with the floating-widgets collision system as priority 1 on the
     // right edge so lower-priority widgets (Admin toolbar) shift out of its way.
@@ -999,17 +1009,22 @@ function FixedOrb({
       width: ORB_SIZE,
       height: ORB_SIZE,
     });
+    const place = () => {
+      const vv = window.visualViewport;
+      cachedRef.current.baselineVV = vv ? vv.height + vv.offsetTop : window.innerHeight;
+      applyPositionRef.current();
+      applyVisibilityRef.current();
+      setPlaced(true);
+    };
     let cleanupWait = () => {};
     const cancelWait = waitForLayoutReady(isHeaderLayoutReady, () => {
-      const raf = requestAnimationFrame(() => {
-        const vv = window.visualViewport;
-        cachedRef.current.baselineVV = vv ? vv.height + vv.offsetTop : window.innerHeight;
-        applyPosition();
-        applyVisibility();
-        setPlaced(true);
-      });
+      const raf = requestAnimationFrame(place);
       cleanupWait = () => cancelAnimationFrame(raf);
     });
+    // Hard safety net: whatever happens to rAF (background tab, throttling,
+    // reduced motion, hydration stalls), the orb must become interactive.
+    const failsafe = window.setTimeout(place, 1500);
+
 
     // Debounced window resize: browsers fire resize continuously during
     // address-bar animation, so wait for it to settle before recomputing.

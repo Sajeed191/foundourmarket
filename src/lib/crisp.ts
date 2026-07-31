@@ -37,12 +37,36 @@ const perf = {
   },
 };
 
-// Retained only to remove the legacy rule from returning client sessions.
+// White-label: the vendor launcher bubble is suppressed so only the branded
+// FoundOurMarket orb is ever visible. The conversation window itself stays
+// fully functional (opened through the official `chat:show` + `chat:open` API).
 const HIDE_STYLE_ID = "crisp-force-hide-style";
+const LAUNCHER_STYLE_ID = "fom-chat-launcher-style";
+
 function removeLegacyHideStyle(): void {
   if (typeof document === "undefined") return;
   document.getElementById(HIDE_STYLE_ID)?.remove();
 }
+
+/**
+ * Hides ONLY the vendor launcher bubble (never the chatbox), so customers see
+ * a single, branded entry point. Safe/idempotent.
+ */
+function injectLauncherSuppression(): void {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(LAUNCHER_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = LAUNCHER_STYLE_ID;
+  style.textContent = `
+/* FoundOurMarket white-label: vendor launcher bubble only — chatbox untouched. */
+.crisp-client .cc-1brb6[data-visible="true"] > div > a[role="button"][data-maximized="false"],
+.crisp-client .cc-kv6t .cc-1xry[data-maximized="false"],
+.crisp-client a[data-id="chat_launcher"] { display: none !important; }
+`;
+  document.head.appendChild(style);
+  diag.launcherHidden = true;
+}
+
 
 // ---- Diagnostics (staff-only panel reads this; never rendered to customers) ----
 export type CrispDiagnostics = {

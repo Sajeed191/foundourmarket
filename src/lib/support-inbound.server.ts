@@ -74,9 +74,7 @@ function pickSource(to: InboundEmail['to']): string {
 }
 
 function extractTicketNumber(subject: string | undefined): string | null {
-  if (!subject) return null
-  const m = subject.match(/\[?(FOM-\d{6})\]?/i)
-  return m ? m[1].toUpperCase() : null
+  return parseTicketReference(subject)?.ticketNumber ?? null
 }
 
 function cleanBody(email: InboundEmail): string {

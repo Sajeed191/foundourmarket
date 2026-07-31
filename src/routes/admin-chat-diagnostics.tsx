@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, AlertTriangle, RefreshCw, MessageSquare } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { getCrispDiagnostics, loadCrisp, openCrispChat, type CrispDiagnostics } from "@/lib/crisp";
+import { destroyAndReloadCrisp, forceInitializeCrisp, getCrispDiagnostics, loadCrisp, openCrispChat, type CrispDiagnostics } from "@/lib/crisp";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin-chat-diagnostics")({
   head: () => ({
@@ -13,6 +14,10 @@ export const Route = createFileRoute("/admin-chat-diagnostics")({
         content:
           "Staff-only health view of the live chat widget: script load, website ID, readiness, availability and last error.",
       },
+      { property: "og:title", content: "Live Chat Diagnostics — FoundOurMarket™" },
+      { property: "og:description", content: "Staff-only diagnostics for the FoundOurMarket live support integration." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -102,20 +107,23 @@ function ChatDiagnosticsPage() {
     <AdminShell title="Live Chat Diagnostics" subtitle="Staff-only widget health">
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
-          <button
+          <Button
             type="button"
             onClick={refresh}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm hover:bg-muted"
+            variant="secondary"
+            size="sm"
           >
             <RefreshCw className="size-4" /> Refresh
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => openCrispChat()}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+            size="sm"
           >
             <MessageSquare className="size-4" /> Test open chat
-          </button>
+          </Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => void forceInitializeCrisp().then(refresh)}>Force initialize</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => void destroyAndReloadCrisp().then(refresh)}>Destroy &amp; reload</Button>
         </div>
 
         <Section title="Widget">
@@ -125,6 +133,7 @@ function ChatDiagnosticsPage() {
           <Row label="Website ID" ok value={diag?.websiteIdMasked ?? "—"} />
           <Row label="Availability" ok={diag?.availability === "online"} value={diag?.availability ?? "—"} />
           <Row label="Load attempts" ok value={String(diag?.attempts ?? 0)} />
+          <Row label="Retry count" ok={(diag?.retryCount ?? 0) === 0} value={String(diag?.retryCount ?? 0)} />
           <Row
             label="Last init"
             ok
@@ -132,6 +141,7 @@ function ChatDiagnosticsPage() {
           />
           <Row label="Load duration" ok value={diag?.loadDurationMs != null ? `${diag.loadDurationMs} ms` : "—"} />
           <Row label="Last error" ok={!diag?.lastError} value={diag?.lastError ?? "None"} />
+          <Row label="Last JS error" ok={!diag?.lastJsError} value={diag?.lastJsError ?? "None"} />
         </Section>
 
         <Section title="Page & interaction">
@@ -139,6 +149,9 @@ function ChatDiagnosticsPage() {
           <Row label="Button clickable" ok={env?.orbInteractive} value={env?.orbInteractive ? "Yes" : "Blocked"} />
           <Row label="body pointer-events" ok={env?.bodyPointerEvents !== "none"} value={env?.bodyPointerEvents ?? "—"} />
           <Row label="Blocking overlay" ok={!env?.blockingOverlay} value={env?.blockingOverlay ?? "None"} />
+          <Row label="Orb click received" ok={diag?.orbClickReceived} value={diag?.orbClickReceived ? "Yes" : "No"} />
+          <Row label="Chat open command sent" ok={diag?.chatOpenCommandSent} value={diag?.chatOpenCommandSent ? "Yes" : "No"} />
+          <Row label="Chat open success" ok={diag?.chatOpenSuccess} value={diag?.chatOpenSuccess ? "Yes" : "Not confirmed"} />
           <Row label="Current page" ok value={env?.page ?? "—"} />
           <Row label="Browser" ok value={env?.browser ?? "—"} />
           <Row label="Device" ok value={env?.device ?? "—"} />

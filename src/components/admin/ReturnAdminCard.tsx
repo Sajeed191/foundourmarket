@@ -7,6 +7,7 @@ import {
 import type { AdminReturnRow } from "@/lib/returns-admin.functions";
 import type { Product } from "@/lib/products";
 import { ImageLightbox } from "@/components/site/ImageLightbox";
+import { RefundBankPanel } from "@/components/admin/RefundBankPanel";
 
 const RETURN_STATUSES = ["requested", "approved", "received", "completed", "rejected"] as const;
 const REFUND_STATUSES = ["pending", "issued", "failed"] as const;
@@ -303,6 +304,17 @@ export function ReturnAdminCard({
           )}
         </section>
       </div>
+
+      {/* Secure refund bank details (staff-gated, encrypted at rest) */}
+      {resolution === "refund" && (
+        <RefundBankPanel
+          returnId={r.id}
+          customerName={r.customer.name}
+          refundAmount={r.refund_amount}
+          currency={r.order.currency}
+          refundMethod={r.refund_method ?? "gateway"}
+        />
+      )}
 
       {/* Customer Evidence (collapsible) */}
       {photos.length > 0 && (

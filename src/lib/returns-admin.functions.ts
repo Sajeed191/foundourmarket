@@ -20,6 +20,7 @@ export type AdminReturnRow = {
   notes: string | null;
   refund_amount: number;
   refund_status: string;
+  refund_method: string | null;
   resolution_type: string;
   replacement_status: string;
   replacement_order_id: string | null;
@@ -54,7 +55,7 @@ export const getReturnsAdminFn = createServerFn({ method: "POST" })
     const { data: returns, error } = await supabaseAdmin
       .from("returns")
       .select(
-        "id,order_id,user_id,status,reason,notes,refund_amount,refund_status,resolution_type,replacement_status,replacement_order_id,created_at,photo_urls,return_items(id,product_slug,quantity,reason)",
+        "id,order_id,user_id,status,reason,notes,refund_amount,refund_status,refund_method,resolution_type,replacement_status,replacement_order_id,created_at,photo_urls,return_items(id,product_slug,quantity,reason)",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);

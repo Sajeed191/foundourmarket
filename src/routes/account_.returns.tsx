@@ -25,7 +25,9 @@ import {
   Search,
   CircleDot,
   Sparkles,
+  Landmark,
 } from "lucide-react";
+import { requiresBankDetails } from "@/lib/refund-bank/validation";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,6 +111,7 @@ type ReturnRow = {
   reason: string;
   refund_amount: number;
   refund_status: string;
+  refund_method?: string | null;
   resolution_type: string;
   replacement_status: string;
   created_at: string;
@@ -434,7 +437,7 @@ function ReturnsPage() {
     if (!user) return;
     supabase
       .from("returns")
-      .select("id,order_id,status,reason,refund_amount,refund_status,resolution_type,replacement_status,created_at,return_items(product_slug,quantity)")
+      .select("id,order_id,status,reason,refund_amount,refund_status,refund_method,resolution_type,replacement_status,created_at,return_items(product_slug,quantity)")
       .order("created_at", { ascending: false })
       .then(({ data }) => setReturns((data as ReturnRow[]) ?? []));
   }, [user]);
@@ -1013,6 +1016,24 @@ function ReturnsPage() {
                   <div className="mt-5">
                     <ResolutionTimeline view={view} />
                   </div>
+
+                  {requiresBankDetails(detail.refund_method) && (
+                    <Link
+                      to="/account/refund-details"
+                      search={{ return: detail.id }}
+                      className="mt-4 flex items-center justify-between gap-3 rounded-2xl ring-1 ring-primary/30 bg-primary/10 px-4 py-3.5 min-h-[56px]"
+                    >
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <Landmark className="size-4 text-accent-hi shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block text-[13px] font-medium text-white/90">Add bank details</span>
+                          <span className="block text-[11px] text-white/45">Required to receive your refund</span>
+                        </span>
+                      </span>
+                      <ChevronRight className="size-4 text-white/40 shrink-0" />
+                    </Link>
+                  )}
+
 
                   <dl className="mt-5 space-y-2.5 text-[12.5px]">
                     <div className="flex justify-between gap-3">

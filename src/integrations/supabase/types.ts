@@ -4480,6 +4480,160 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_bank_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          detail: Json
+          id: number
+          refund_bank_id: string | null
+          return_id: string | null
+          source_ip: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          detail?: Json
+          id?: number
+          refund_bank_id?: string | null
+          return_id?: string | null
+          source_ip?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          detail?: Json
+          id?: number
+          refund_bank_id?: string | null
+          return_id?: string | null
+          source_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_bank_audit_refund_bank_id_fkey"
+            columns: ["refund_bank_id"]
+            isOneToOne: false
+            referencedRelation: "refund_bank_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refund_bank_details: {
+        Row: {
+          account_type: string | null
+          bank_name: string | null
+          branch_name: string | null
+          country: string | null
+          created_at: string
+          currency: string | null
+          customer_notes: string | null
+          id: string
+          key_version: number
+          last_reminder_at: string | null
+          masked_account: string | null
+          masked_holder: string | null
+          masked_upi: string | null
+          order_id: string
+          payload_ciphertext: string | null
+          payload_iv: string | null
+          payload_tag: string | null
+          refund_reference: string | null
+          refund_sent_at: string | null
+          refund_sent_by: string | null
+          rejection_reason: string | null
+          reminder_count: number
+          requested_at: string | null
+          requested_by: string | null
+          return_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          account_type?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          customer_notes?: string | null
+          id?: string
+          key_version?: number
+          last_reminder_at?: string | null
+          masked_account?: string | null
+          masked_holder?: string | null
+          masked_upi?: string | null
+          order_id: string
+          payload_ciphertext?: string | null
+          payload_iv?: string | null
+          payload_tag?: string | null
+          refund_reference?: string | null
+          refund_sent_at?: string | null
+          refund_sent_by?: string | null
+          rejection_reason?: string | null
+          reminder_count?: number
+          requested_at?: string | null
+          requested_by?: string | null
+          return_id: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          account_type?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          customer_notes?: string | null
+          id?: string
+          key_version?: number
+          last_reminder_at?: string | null
+          masked_account?: string | null
+          masked_holder?: string | null
+          masked_upi?: string | null
+          order_id?: string
+          payload_ciphertext?: string | null
+          payload_iv?: string | null
+          payload_tag?: string | null
+          refund_reference?: string | null
+          refund_sent_at?: string | null
+          refund_sent_by?: string | null
+          rejection_reason?: string | null
+          reminder_count?: number
+          requested_at?: string | null
+          requested_by?: string | null
+          return_id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_bank_details_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: true
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       refunds: {
         Row: {
           amount: number
@@ -4651,6 +4805,7 @@ export type Database = {
           photo_urls: string[]
           reason: string
           refund_amount: number
+          refund_method: string
           refund_status: string
           replacement_order_id: string | null
           replacement_status: string
@@ -4669,6 +4824,7 @@ export type Database = {
           photo_urls?: string[]
           reason: string
           refund_amount?: number
+          refund_method?: string
           refund_status?: string
           replacement_order_id?: string | null
           replacement_status?: string
@@ -4687,6 +4843,7 @@ export type Database = {
           photo_urls?: string[]
           reason?: string
           refund_amount?: number
+          refund_method?: string
           refund_status?: string
           replacement_order_id?: string | null
           replacement_status?: string

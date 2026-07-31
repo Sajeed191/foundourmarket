@@ -392,7 +392,9 @@ export async function processInboundEmail(email: InboundEmail): Promise<InboundR
   const messageId = message.id as string
 
   // ---- Attachments ----
-  const stored = await storeAttachments(ticketId, ownerId, email.attachments)
+  // SECURITY: an unverified sender who quoted someone else's ticket number gets
+  // a fresh ticket, but their attachments are never stored.
+  const stored = spoofAttempt ? [] : await storeAttachments(ticketId, ownerId, email.attachments)
   if (stored.length) {
     await supabaseAdmin.from('support_messages').update({ attachments: stored }).eq('id', messageId)
   }

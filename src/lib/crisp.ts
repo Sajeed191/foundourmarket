@@ -113,7 +113,7 @@ export function loadCrisp(): Promise<void> {
       const finish = () => {
         const readyStartedAt = Date.now();
         const confirmReady = () => {
-          if (typeof (window as any).$crisp?.get === "function") {
+          if (Array.isArray(window.$crisp) && typeof window.$crisp.push === "function") {
             const ms = loadStart ? Math.round(performance.now() - loadStart) : 0;
             perf.mark("load-end");
             perf.log(`SDK ready in ${ms}ms`);
@@ -214,7 +214,7 @@ export async function openCrispChat(): Promise<boolean> {
   perf.mark("open-request");
   try {
     await loadCrisp();
-    if (typeof (window as any).$crisp?.get !== "function" || !window.$crisp) {
+    if (!diag.scriptLoaded || !window.$crisp || typeof window.$crisp.push !== "function") {
       throw new Error(diag.lastError ?? "Crisp SDK is not ready");
     }
     window.$crisp.push(["do", "chat:show"]);
@@ -256,7 +256,7 @@ export function isCrispChatOpen(): boolean {
 
 export async function forceInitializeCrisp(): Promise<boolean> {
   loadPromise = null;
-  try { await loadCrisp(); return typeof (window as any).$crisp?.get === "function"; } catch { return false; }
+  try { await loadCrisp(); return diag.scriptLoaded && typeof window.$crisp?.push === "function"; } catch { return false; }
 }
 
 export async function destroyAndReloadCrisp(): Promise<boolean> {

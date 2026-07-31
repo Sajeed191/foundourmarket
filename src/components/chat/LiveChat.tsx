@@ -332,10 +332,10 @@ export function LiveChat() {
           unread={unread}
           onTap={() => {
             dismissGreeting();
-            if (availability === "offline") {
-              window.location.href = "/contact";
-              return;
-            }
+            // Even when no agent is online the tap must open a surface —
+            // hard-navigating to /contact felt like "the button does nothing".
+            // The chat panel itself shows the offline state and takes a message.
+
             // Communication Hub: remember the last choice so repeat taps go
             // straight to the surface the customer prefers. First tap (no
             // memory) shows the chooser sheet.
@@ -990,6 +990,16 @@ function FixedOrb({
     el.style.pointerEvents = off ? "none" : "";
   }, [hidden]);
 
+  // Keep the latest callbacks in refs so the setup effect below can run ONCE.
+  // Previously it depended on `applyVisibility`, whose identity changes on
+  // every scroll-hide toggle — each change tore down and restarted the
+  // layout-ready wait, so on slow/mobile sessions `placed` could never flip to
+  // true and the orb stayed `visibility: hidden` (visible-looking but dead).
+  const applyPositionRef = useRef(applyPosition);
+  const applyVisibilityRef = useRef(applyVisibility);
+  applyPositionRef.current = applyPosition;
+  applyVisibilityRef.current = applyVisibility;
+
   useEffect(() => {
     // Register with the floating-widgets collision system as priority 1 on the
     // right edge so lower-priority widgets (Admin toolbar) shift out of its way.
@@ -999,17 +1009,22 @@ function FixedOrb({
       width: ORB_SIZE,
       height: ORB_SIZE,
     });
+    const place = () => {
+      const vv = window.visualViewport;
+      cachedRef.current.baselineVV = vv ? vv.height + vv.offsetTop : window.innerHeight;
+      applyPositionRef.current();
+      applyVisibilityRef.current();
+      setPlaced(true);
+    };
     let cleanupWait = () => {};
     const cancelWait = waitForLayoutReady(isHeaderLayoutReady, () => {
-      const raf = requestAnimationFrame(() => {
-        const vv = window.visualViewport;
-        cachedRef.current.baselineVV = vv ? vv.height + vv.offsetTop : window.innerHeight;
-        applyPosition();
-        applyVisibility();
-        setPlaced(true);
-      });
+      const raf = requestAnimationFrame(place);
       cleanupWait = () => cancelAnimationFrame(raf);
     });
+    // Hard safety net: whatever happens to rAF (background tab, throttling,
+    // reduced motion, hydration stalls), the orb must become interactive.
+    const failsafe = window.setTimeout(place, 1500);
+
 
     // Debounced window resize: browsers fire resize continuously during
     // address-bar animation, so wait for it to settle before recomputing.
@@ -1020,7 +1035,7 @@ function FixedOrb({
         // Refresh baseline on genuine resize (orientation, window resize).
         const vv = window.visualViewport;
         if (vv) cachedRef.current.baselineVV = vv.height + vv.offsetTop;
-        applyPosition();
+        applyPositionRef.current();
       }, 180);
     };
     const onOrientation = () => {
@@ -1028,7 +1043,7 @@ function FixedOrb({
       resizeTimer = window.setTimeout(() => {
         const vv = window.visualViewport;
         if (vv) cachedRef.current.baselineVV = vv.height + vv.offsetTop;
-        applyPosition();
+        applyPositionRef.current();
       }, 220);
     };
     // visualViewport RESIZE (not scroll) — fires when the software keyboard
@@ -1037,7 +1052,7 @@ function FixedOrb({
     let vvTimer: number | undefined;
     const onVVResize = () => {
       if (vvTimer) window.clearTimeout(vvTimer);
-      vvTimer = window.setTimeout(applyPosition, 60);
+      vvTimer = window.setTimeout(() => applyPositionRef.current(), 60);
     };
 
     window.addEventListener("resize", onResize);
@@ -1048,7 +1063,7 @@ function FixedOrb({
     // lift (real layout events, not scroll); visibility updates for context.
     const unsubscribe = subscribeFloating(() => {
       writeBottom();
-      applyVisibility();
+      applyVisibilityRef.current();
     });
 
     return () => {
@@ -1056,13 +1071,16 @@ function FixedOrb({
       unsubscribe();
       cancelWait();
       cleanupWait();
+      window.clearTimeout(failsafe);
       if (resizeTimer) window.clearTimeout(resizeTimer);
       if (vvTimer) window.clearTimeout(vvTimer);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onOrientation);
       window.visualViewport?.removeEventListener("resize", onVVResize);
     };
-  }, [applyPosition, applyVisibility]);
+    // Run once — callbacks are read through refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [writeBottom]);
 
 
   // Re-apply visibility whenever the hide flag changes.
@@ -1114,7 +1132,9 @@ function FixedOrb({
   return (
     <div
       ref={wrapRef}
+      data-fom-chat-orb="1"
       className="fixed z-[60] flex items-end gap-2"
+
       style={{
         right: `calc(${EDGE_INSET}px + env(safe-area-inset-right, 0px))`,
         bottom: 0,

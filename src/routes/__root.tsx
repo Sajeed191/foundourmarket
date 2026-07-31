@@ -1113,6 +1113,8 @@ function AppRoot() {
                             <GlobalSearchMount />
                             <ContinueShoppingHistoryCleanup />
                             <FloatingContextObserver />
+                            <ScrollLockGuard />
+
 
                           </div>
                           </RecommendationProvider>

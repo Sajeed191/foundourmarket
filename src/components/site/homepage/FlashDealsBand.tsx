@@ -1,3 +1,4 @@
+import { PremiumCTALink, PremiumCTARow, PremiumCTAFace } from "@/components/site/PremiumCTA";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BadgeCheck, Clock, Star, Truck, ShieldCheck } from "lucide-react";
@@ -175,6 +176,19 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
   const badge = BADGES[index % BADGES.length];
   const stock = stockChip(p.stockQuantity);
 
+  // Expired deals swap the primary "Grab Deal" CTA for a neutral "View Product".
+  // Client-only so SSR markup stays stable.
+  const [expired, setExpired] = useState(false);
+  useEffect(() => {
+    if (!item.endAt) return;
+    const end = new Date(item.endAt).getTime();
+    const tick = () => setExpired(Date.now() >= end);
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [item.endAt]);
+
+
   return (
     <Link
       to="/products/$slug"
@@ -250,13 +264,9 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
 
         <TrustRow />
 
-        <span className="mt-3.5 inline-flex h-12 w-fit items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-accent to-accent/85 px-7 text-center text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-18px_rgba(255,138,0,0.75),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-[transform,box-shadow] duration-[180ms] ease-out group-hover:shadow-[0_20px_46px_-14px_rgba(255,138,0,1),0_0_0_1px_rgba(255,138,0,0.25),inset_0_1px_0_0_rgba(255,255,255,0.26)] group-active:scale-[0.98]">
-          Grab Deal
-          <ArrowRight
-            className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1"
-            aria-hidden
-          />
-        </span>
+        <PremiumCTAFace variant={expired ? "explore" : "primary"} className="mt-3.5 w-fit">
+          {expired ? "View Product" : "Grab Deal"}
+        </PremiumCTAFace>
       </div>
     </Link>
   );
@@ -538,18 +548,16 @@ export function FlashDealsBand() {
         {/* Explore CTA — own full-width band, never clipped or overlaid.
             Uses the solid accent fill (not --gradient-ember, which is a faint
             10%-alpha glow and made the label unreadable on mobile). */}
-        <div className="relative z-[1] mt-6 flex w-full justify-center px-4 pb-8 sm:mt-7 sm:px-6">
-          <Link
+        <div className="fom-cta-row relative z-[1] pb-4">
+          <PremiumCTALink
             to="/deals"
+            variant="primary"
+            block
             aria-label="Explore all flash deals"
-            className="fd-ripple group inline-flex min-h-[48px] w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-accent to-accent/90 px-8 text-center text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-18px_rgba(255,138,0,0.75),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-18px_rgba(255,138,0,0.95)] active:translate-y-0 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:w-auto"
+            className="sm:w-auto"
           >
             Explore Flash Deals
-            <ArrowRight
-              className="size-4 shrink-0 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1"
-              aria-hidden
-            />
-          </Link>
+          </PremiumCTALink>
         </div>
 
       </LazyMount>

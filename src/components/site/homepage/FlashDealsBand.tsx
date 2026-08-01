@@ -176,6 +176,19 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
   const badge = BADGES[index % BADGES.length];
   const stock = stockChip(p.stockQuantity);
 
+  // Expired deals swap the primary "Grab Deal" CTA for a neutral "View Product".
+  // Client-only so SSR markup stays stable.
+  const [expired, setExpired] = useState(false);
+  useEffect(() => {
+    if (!item.endAt) return;
+    const end = new Date(item.endAt).getTime();
+    const tick = () => setExpired(Date.now() >= end);
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [item.endAt]);
+
+
   return (
     <Link
       to="/products/$slug"

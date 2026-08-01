@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import { PremiumCTALink, PremiumCTARow } from "@/components/site/PremiumCTA";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Zap, Heart, Star, Truck, Timer } from "lucide-react";
 

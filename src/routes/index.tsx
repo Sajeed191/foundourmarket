@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { PremiumCTALink, PremiumCTARow } from "@/components/site/PremiumCTA";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 
 import {

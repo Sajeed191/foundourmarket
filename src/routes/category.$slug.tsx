@@ -143,11 +143,6 @@ function CategoryPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2 sm:pt-12 sm:pb-0">
-      <nav className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-5">
-        <Link to="/" className="hover:text-foreground">Home</Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">{cat?.name ?? slug}</span>
-      </nav>
 
       {/* Hero banner */}
       <header data-product-card-frame className="relative mb-10 overflow-hidden rounded-3xl product-card-glass p-6 sm:p-10">

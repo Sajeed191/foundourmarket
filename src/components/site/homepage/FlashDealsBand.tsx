@@ -264,13 +264,9 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
 
         <TrustRow />
 
-        <span className="mt-3.5 inline-flex h-12 w-fit items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-accent to-accent/85 px-7 text-center text-[11px] font-semibold uppercase leading-none tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-18px_rgba(255,138,0,0.75),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-[transform,box-shadow] duration-[180ms] ease-out group-hover:shadow-[0_20px_46px_-14px_rgba(255,138,0,1),0_0_0_1px_rgba(255,138,0,0.25),inset_0_1px_0_0_rgba(255,255,255,0.26)] group-active:scale-[0.98]">
-          Grab Deal
-          <ArrowRight
-            className="size-4 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1"
-            aria-hidden
-          />
-        </span>
+        <PremiumCTAFace variant={expired ? "explore" : "primary"} className="mt-3.5 w-fit">
+          {expired ? "View Product" : "Grab Deal"}
+        </PremiumCTAFace>
       </div>
     </Link>
   );

@@ -113,11 +113,10 @@ function DepartmentCard({
           </span>
         )}
 
-        {/* Premium CTA — "Explore →" pill, pinned to bottom */}
-        <span className="mt-auto inline-flex h-8 w-fit items-center gap-1 rounded-full border border-accent/40 bg-white/[0.04] px-3.5 text-[13px] font-semibold text-accent backdrop-blur-sm transition-colors group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground">
+        {/* Premium CTA — glass "Explore" pill, pinned to bottom */}
+        <PremiumCTAFace variant="explore" icon={Compass} className="mt-auto w-fit min-h-[44px] px-4 py-2.5 text-[13px]">
           Explore
-          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-        </span>
+        </PremiumCTAFace>
       </div>
     </Link>
   );

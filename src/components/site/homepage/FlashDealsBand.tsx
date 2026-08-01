@@ -548,18 +548,16 @@ export function FlashDealsBand() {
         {/* Explore CTA — own full-width band, never clipped or overlaid.
             Uses the solid accent fill (not --gradient-ember, which is a faint
             10%-alpha glow and made the label unreadable on mobile). */}
-        <div className="relative z-[1] mt-6 flex w-full justify-center px-4 pb-8 sm:mt-7 sm:px-6">
-          <Link
+        <div className="relative z-[1] flex w-full justify-center pb-8">
+          <PremiumCTALink
             to="/deals"
+            variant="primary"
+            block
             aria-label="Explore all flash deals"
-            className="fd-ripple group inline-flex min-h-[48px] w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-accent to-accent/90 px-8 text-center text-[11.5px] font-semibold uppercase tracking-[0.14em] text-accent-foreground shadow-[0_14px_30px_-18px_rgba(255,138,0,0.75),inset_0_1px_0_0_rgba(255,255,255,0.22)] transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-18px_rgba(255,138,0,0.95)] active:translate-y-0 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:w-auto"
+            className="sm:w-auto"
           >
             Explore Flash Deals
-            <ArrowRight
-              className="size-4 shrink-0 transition-transform duration-[180ms] motion-safe:group-hover:translate-x-1"
-              aria-hidden
-            />
-          </Link>
+          </PremiumCTALink>
         </div>
 
       </LazyMount>

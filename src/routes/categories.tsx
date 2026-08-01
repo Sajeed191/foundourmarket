@@ -1,7 +1,7 @@
 import { PremiumCTALink, PremiumCTARow, PremiumCTAFace } from "@/components/site/PremiumCTA";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Compass } from "lucide-react";
 import { useAllCategories, type Category } from "@/lib/use-categories";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { iconForCategory } from "@/components/site/CategoryCard";

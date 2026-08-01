@@ -32,9 +32,9 @@ function useDealPricing(item: FlashItem) {
 /** Honest stock chip — wording derived from real inventory, never invented urgency. */
 function stockChip(qty: number | undefined | null) {
   if (qty == null || qty <= 0) return null;
-  if (qty <= 3) return { label: "Almost Gone", tone: "text-rose-300/80 border-rose-400/20 bg-rose-400/[0.07]" };
-  if (qty <= 10) return { label: "Limited Stock", tone: "text-amber-200/85 border-amber-300/20 bg-amber-300/[0.07]" };
-  if (qty <= 25) return { label: "Selling Fast", tone: "text-foreground/65 border-white/10 bg-white/[0.04]" };
+  if (qty <= 3) return { label: "Almost Gone", tone: "fd-chip-critical text-rose-300/80 border-rose-400/20 bg-rose-400/[0.07]" };
+  if (qty <= 10) return { label: "Limited Stock", tone: "fd-chip-limited text-amber-200/85 border-amber-300/20 bg-amber-300/[0.07]" };
+  if (qty <= 25) return { label: "Selling Fast", tone: "fd-chip-fast text-foreground/65 border-white/10 bg-white/[0.04]" };
   return null;
 }
 

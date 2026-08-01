@@ -1,3 +1,4 @@
+import { PremiumCTALink, PremiumCTARow, PremiumCTAFace } from "@/components/site/PremiumCTA";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { ArrowRight } from "lucide-react";

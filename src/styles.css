@@ -4903,15 +4903,7 @@ textarea.editor-deeplink-target {
   margin-bottom: 12px;
 }
 
-/* ---- 8. Bottom navigation & floating elements ---- */
-[data-theme="light"] .bottom-nav-light {
-  background: oklch(1 0 0 / 0.96);
-  border: 1px solid var(--divider);
-  box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 0.9),
-    0 -1px 0 var(--divider),
-    0 20px 46px -24px oklch(0.24 0.02 262 / 0.28);
-}
+/* ---- 8. Floating elements (bottom nav stays theme-independent by design) ---- */
 [data-theme="light"] .fom-orb,
 [data-theme="light"] .scroll-top-btn {
   box-shadow: var(--shadow-ember), 0 10px 26px -16px oklch(0.24 0.02 262 / 0.3);

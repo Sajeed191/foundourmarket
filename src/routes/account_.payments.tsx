@@ -211,13 +211,7 @@ function PaymentsPage() {
   return (
     <div className="container-page py-10 sm:py-16 max-w-4xl pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Link to="/account" className="hover:text-foreground transition">Account</Link>
-          <span>/</span>
-          <span className="text-foreground">Payment Methods</span>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Payment Methods</h1>
             <p className="mt-1 text-sm text-muted-foreground">

@@ -137,13 +137,6 @@ function AddPaymentMethodPage() {
 
   return (
     <div className="container-page py-8 sm:py-14 max-w-3xl pb-[calc(7rem+env(safe-area-inset-bottom))]">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Link to="/account" className="hover:text-foreground transition">Account</Link>
-        <span>/</span>
-        <Link to="/account/payments" className="hover:text-foreground transition">Payment Methods</Link>
-        <span>/</span>
-        <span className="text-foreground">Add</span>
-      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}

@@ -5390,3 +5390,173 @@ textarea.editor-deeplink-target {
 
 /* ---- 15. Accessibility: touch targets never below 44px ---- */
 [data-theme="light"] .fom-cta { min-height: 44px; }
+
+/* ============================================================
+   FoundOurMarket™ — LIGHT THEME PREMIUM UPGRADE v3.2 (LIGHT ONLY)
+   Depth pass: layered canvas, section rhythm, card elevation,
+   flash-deal contrast, price hierarchy. Dark/Grey untouched.
+   ============================================================ */
+
+[data-theme="light"] {
+  --fom-l-canvas: #fafafa;
+  --fom-l-surface: #ffffff;
+  --fom-l-hairline: #e8eaf0;
+  --fom-l-ink: #14171f;
+  --fom-l-ink-soft: #5b6272;
+  --fom-l-ember: #e2650f;
+  --fom-sh-card: 0 1px 2px rgba(20, 23, 31, 0.05), 0 8px 22px -12px rgba(20, 23, 31, 0.16);
+  --fom-sh-card-hover: 0 2px 4px rgba(20, 23, 31, 0.06), 0 20px 42px -18px rgba(20, 23, 31, 0.26);
+  --fom-sh-float: 0 2px 6px rgba(20, 23, 31, 0.06), 0 26px 60px -26px rgba(20, 23, 31, 0.3);
+}
+
+/* ---- Layered luxury canvas (no flat white, no grey blocks) ---- */
+[data-theme="light"] body {
+  background-color: var(--fom-l-canvas);
+  background-image:
+    radial-gradient(120% 60% at 50% -10%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(90% 50% at 100% 0%, rgba(255, 141, 66, 0.055) 0%, rgba(255, 141, 66, 0) 55%),
+    radial-gradient(80% 45% at 0% 30%, rgba(20, 23, 31, 0.028) 0%, rgba(20, 23, 31, 0) 60%);
+  background-attachment: fixed;
+}
+[data-theme="light"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+/* ---- Section rhythm: breathing space + soft dividers ---- */
+[data-theme="light"] main > section,
+[data-theme="light"] main > div > section {
+  position: relative;
+}
+[data-theme="light"] main > section + section::before,
+[data-theme="light"] main > div > section + section::before {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(20, 23, 31, 0.08), transparent);
+}
+
+/* ---- Product cards: elevated, layered, never flat ---- */
+[data-theme="light"] .product-card-shell {
+  background: var(--fom-l-surface) !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  border-radius: 22px !important;
+  box-shadow: var(--fom-sh-card) !important;
+  transition:
+    transform 220ms var(--fom-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow 220ms var(--fom-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 220ms ease;
+}
+[data-theme="light"] .product-card-shell:hover {
+  transform: translateY(-3px);
+  border-color: #dfe3ec !important;
+  box-shadow: var(--fom-sh-card-hover) !important;
+}
+[data-theme="light"] .product-card-shell:active { transform: scale(0.99); }
+/* Image stage gets a soft studio tint so products never blend into white */
+[data-theme="light"] .product-card-shell img {
+  background: linear-gradient(165deg, #f7f8fa 0%, #ffffff 55%, #f4f6f9 100%);
+}
+
+/* ---- Price hierarchy ---- */
+[data-theme="light"] .product-card-shell .fom-price-current,
+[data-theme="light"] .fd-card .fom-price-current {
+  color: var(--fom-l-ember) !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+[data-theme="light"] .fom-price-compare {
+  color: #9aa1af !important;
+  font-weight: 400;
+}
+
+/* ---- Flash Deals: connected premium card + always-readable chips ---- */
+[data-theme="light"] .fd-card {
+  background: var(--fom-l-surface) !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-float) !important;
+  backdrop-filter: none !important;
+}
+[data-theme="light"] .fd-card-hero { border-radius: 30px !important; }
+[data-theme="light"] .fd-card-mini { border-radius: 22px !important; }
+[data-theme="light"] .fd-card:hover { box-shadow: var(--fom-sh-card-hover) !important; }
+[data-theme="light"] .fd-card h3,
+[data-theme="light"] .fd-card .font-display { color: var(--fom-l-ink) !important; }
+
+[data-theme="light"] .fd-chip {
+  background: #f3f5f8 !important;
+  border-color: #e2e6ee !important;
+  color: #3d4351 !important;
+  backdrop-filter: none !important;
+}
+[data-theme="light"] .fd-chip-editorial {
+  background: #fff5e8 !important;
+  border-color: #f6dcbc !important;
+  color: #b4600c !important;
+}
+[data-theme="light"] .fd-chip[class*="rose"],
+[data-theme="light"] .fd-chip[class*="red"] {
+  background: #fdeeee !important;
+  border-color: #f7d3d3 !important;
+  color: #c0342c !important;
+}
+[data-theme="light"] .fd-chip[class*="amber"],
+[data-theme="light"] .fd-chip[class*="orange"] {
+  background: #fff3e4 !important;
+  border-color: #f8dcbb !important;
+  color: #b8620e !important;
+}
+[data-theme="light"] .fd-chip[class*="emerald"],
+[data-theme="light"] .fd-chip[class*="green"] {
+  background: #eaf7ef !important;
+  border-color: #cbe9d7 !important;
+  color: #1f7a48 !important;
+}
+/* Countdown readability */
+[data-theme="light"] .fd-card .font-mono.tabular-nums { color: var(--fom-l-ember) !important; }
+
+/* ---- Category cards: floating, softly cropped ---- */
+[data-theme="light"] a > .group.rounded-2xl,
+[data-theme="light"] .category-card,
+[data-theme="light"] [data-category-card] {
+  background: var(--fom-l-surface);
+  border-color: var(--fom-l-hairline);
+  box-shadow: var(--fom-sh-card);
+}
+[data-theme="light"] [data-category-card]:hover { box-shadow: var(--fom-sh-card-hover); }
+
+/* ---- Shared surfaces: shadows instead of hard outlines ---- */
+[data-theme="light"] .card-premium,
+[data-theme="light"] .card-elevated,
+[data-theme="light"] .product-card-glass,
+[data-theme="light"] .glass,
+[data-theme="light"] .glass-strong {
+  border-color: var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-card);
+}
+
+/* ---- Search bar: floating premium pill with glowing action ---- */
+[data-theme="light"] .fom-search-pill,
+[data-theme="light"] [data-search-pill] {
+  box-shadow: var(--fom-sh-float);
+}
+
+/* ---- Typography polish ---- */
+[data-theme="light"] h1 { letter-spacing: -0.03em; }
+[data-theme="light"] h2,
+[data-theme="light"] h3 { color: var(--fom-l-ink); }
+[data-theme="light"] .text-muted-foreground { color: var(--fom-l-ink-soft); }
+
+/* ---- Motion + accessibility guards ---- */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="light"] .product-card-shell,
+  [data-theme="light"] .fd-card { transition: none !important; }
+}

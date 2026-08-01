@@ -4994,16 +4994,16 @@ textarea.editor-deeplink-target {
   background: #eaf7f1;
   border: 1px solid #cfeadd;
   border-radius: 999px;
-  padding: 3px 8px;
-  line-height: 1;
+  padding: 2px 6px;
+  line-height: 1.1;
 }
 [data-theme="light"] .product-card-shell .text-orange-300 {
   color: #a4470c;
   background: #fdf1e6;
   border: 1px solid #f7ddc4;
   border-radius: 999px;
-  padding: 3px 8px;
-  line-height: 1;
+  padding: 2px 6px;
+  line-height: 1.1;
 }
 
 /* ---- Floating wishlist / quick-view buttons ---- */

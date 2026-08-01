@@ -4933,3 +4933,166 @@ textarea.editor-deeplink-target {
   [data-theme="light"] .card-premium { transition: none; }
   [data-theme="light"] .product-card-shell:hover { transform: none; }
 }
+
+/* =====================================================================
+   LIGHT THEME v3.1 — PRODUCT CARD & FLASH DEAL UPGRADE
+   Scoped entirely to [data-theme="light"]. Dark & Grey untouched.
+   Presentation only — no layout, logic or markup dependencies.
+   ===================================================================== */
+
+/* ---- Card shell: floating premium panel ---- */
+[data-theme="light"] .product-card-shell {
+  border-radius: 24px;
+  border-color: #e8ecf2 !important;
+  box-shadow:
+    0 1px 2px oklch(0.24 0.02 262 / 0.05),
+    0 12px 30px -20px oklch(0.24 0.02 262 / 0.22);
+}
+[data-theme="light"] .product-card-shell:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 4px oklch(0.24 0.02 262 / 0.05),
+    0 26px 52px -26px oklch(0.24 0.02 262 / 0.3);
+}
+[data-theme="light"] .product-card-shell:active { transform: translateY(-1px); }
+
+/* ---- Image stage: bright white studio plate, never grey mush ---- */
+[data-theme="light"] .product-card-shell [data-product-media] {
+  background: linear-gradient(180deg, #ffffff, #fbfcfd) !important;
+  border-bottom: 1px solid #eef1f6;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 3%;
+}
+[data-theme="light"] .product-card-shell [data-product-media] img {
+  border-radius: 14px;
+}
+
+/* ---- Typography ladder ---- */
+[data-theme="light"] .product-card-shell h3 {
+  color: #111111;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+[data-theme="light"] .product-card-shell .product-rating-text { color: #2b3040; }
+[data-theme="light"] .product-card-shell .text-muted-foreground { color: #5f6675; }
+
+/* ---- Price hierarchy: orange current, grey struck compare ---- */
+[data-theme="light"] .product-card-shell .fom-price-current,
+[data-theme="light"] .product-card-shell [data-price-current] {
+  color: var(--accent);
+  font-weight: 800;
+}
+[data-theme="light"] .product-card-shell .fom-price-compare,
+[data-theme="light"] .product-card-shell [data-price-compare] {
+  color: #8a90a0;
+}
+
+/* ---- Trust cues as compact premium chips (shipping / returns / stock) ---- */
+[data-theme="light"] .product-card-shell .text-emerald-400 {
+  color: #10714f;
+  background: #eaf7f1;
+  border: 1px solid #cfeadd;
+  border-radius: 999px;
+  padding: 2px 6px;
+  line-height: 1.1;
+}
+[data-theme="light"] .product-card-shell .text-orange-300 {
+  color: #a4470c;
+  background: #fdf1e6;
+  border: 1px solid #f7ddc4;
+  border-radius: 999px;
+  padding: 2px 6px;
+  line-height: 1.1;
+}
+
+/* ---- Floating wishlist / quick-view buttons ---- */
+[data-theme="light"] .product-card-shell button[aria-label*="ishlist"],
+[data-theme="light"] .product-card-shell button[aria-label*="uick view"] {
+  background: #ffffff !important;
+  border: 1px solid #e8ecf2 !important;
+  box-shadow: 0 4px 14px -6px oklch(0.24 0.02 262 / 0.28) !important;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+[data-theme="light"] .product-card-shell button[aria-label*="ishlist"]:active,
+[data-theme="light"] .product-card-shell button[aria-label*="uick view"]:active {
+  transform: scale(0.92);
+}
+
+/* =====================================================================
+   FLASH DEALS — LIGHT THEME LUXURY IDENTITY
+   ===================================================================== */
+[data-theme="light"] .fd-card {
+  background: #ffffff !important;
+  border-color: #e8ecf2 !important;
+  backdrop-filter: none !important;
+  box-shadow:
+    0 1px 2px oklch(0.24 0.02 262 / 0.05),
+    0 16px 38px -24px oklch(0.24 0.02 262 / 0.26);
+}
+[data-theme="light"] .fd-card:hover {
+  border-color: color-mix(in oklab, var(--accent) 35%, #e8ecf2) !important;
+  box-shadow:
+    0 2px 4px oklch(0.24 0.02 262 / 0.05),
+    0 28px 56px -28px oklch(0.24 0.02 262 / 0.32);
+}
+/* Media bed reads as a bright studio window instead of a dark slab */
+[data-theme="light"] .fd-card > div:first-child > div,
+[data-theme="light"] .fd-card .fd-frame,
+[data-theme="light"] .fd-card [class*="aspect-square"] {
+  background:
+    radial-gradient(120% 90% at 50% 6%, #ffffff, #f5f7fa 78%) !important;
+  border-color: #eef1f6 !important;
+  box-shadow: inset 0 0 0 1px #f2f5f9 !important;
+}
+[data-theme="light"] .fd-card h3 { color: #111111; }
+[data-theme="light"] .fd-card p { color: #414755; }
+
+/* ---- Promotional labels: WCAG-AA capsules, never low-opacity text ---- */
+[data-theme="light"] .fd-chip {
+  height: auto !important;
+  min-height: 24px;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  border-radius: 999px !important;
+  border-width: 1px !important;
+  backdrop-filter: none !important;
+  text-shadow: none !important;
+}
+[data-theme="light"] .fd-chip-editorial {
+  background: #ffffff !important;
+  border-color: color-mix(in oklab, var(--accent) 45%, #ffffff) !important;
+  color: #a4470c !important;
+}
+[data-theme="light"] .fd-chip-critical {
+  background: #fdecec !important;
+  border-color: #f5cdcd !important;
+  color: #9b1c1c !important;
+}
+[data-theme="light"] .fd-chip-limited {
+  background: #fdf3e3 !important;
+  border-color: #f3dcb4 !important;
+  color: #8a4b06 !important;
+}
+[data-theme="light"] .fd-chip-fast {
+  background: #eef4ff !important;
+  border-color: #d3e0fb !important;
+  color: #1d4ed8 !important;
+}
+@media (max-width: 400px) {
+  [data-theme="light"] .fd-card-mini .fd-chip {
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    min-height: 22px;
+  }
+}
+
+/* ---- Section rhythm: magazine-style breathing room ---- */
+[data-theme="light"] main > section + section { margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="light"] .product-card-shell:hover,
+  [data-theme="light"] .fd-card:hover { transform: none; }
+}

@@ -5096,3 +5096,124 @@ textarea.editor-deeplink-target {
   [data-theme="light"] .product-card-shell:hover,
   [data-theme="light"] .fd-card:hover { transform: none; }
 }
+
+/* =====================================================================
+   Light Theme Premium Upgrade v3.0 — LIGHT THEME ONLY
+   Scoped strictly to [data-theme="light"]. Dark & Grey untouched.
+   Visual layer only: no layout shifts, no new animations on scroll paths.
+   ===================================================================== */
+
+/* ---- 1. Marketing badges: definition on white ---- */
+[data-theme="light"] [data-product-badge] {
+  box-shadow:
+    0 1px 2px rgba(16, 20, 32, 0.16),
+    0 6px 16px -8px rgba(16, 20, 32, 0.28) !important;
+  text-shadow: none !important;
+  letter-spacing: 0.045em;
+}
+
+/* ---- 2. Trust / shipping pills → soft green premium pills ---- */
+[data-theme="light"] .product-card-shell .text-emerald-300,
+[data-theme="light"] .product-card-shell .text-emerald-400,
+[data-theme="light"] .product-card-shell .text-green-400,
+[data-theme="light"] .fom-trust-chip {
+  color: #0f7a52;
+}
+[data-theme="light"] .fom-trust-chip {
+  background: #ecfaf3;
+  border-color: #bfe8d5;
+}
+
+/* ---- 3. Add to Cart / primary actions ---- */
+[data-theme="light"] .product-card-shell button[data-add-to-cart],
+[data-theme="light"] [data-add-to-cart] {
+  background: linear-gradient(180deg, #ff7a2f 0%, #ea5f12 100%);
+  color: #fff;
+  border: 1px solid rgba(196, 79, 6, 0.35);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 8px 20px -10px rgba(214, 88, 14, 0.75);
+}
+[data-theme="light"] [data-add-to-cart]:active { transform: translateY(1px); }
+
+/* ---- 4. View All / secondary CTA: floating pill ---- */
+[data-theme="light"] .fom-cta-secondary,
+[data-theme="light"] .fom-cta-explore {
+  background: #ffffff;
+  color: #b04a06;
+  border: 1px solid rgba(224, 108, 24, 0.35);
+  box-shadow:
+    0 1px 2px rgba(16, 20, 32, 0.06),
+    0 12px 28px -18px rgba(16, 20, 32, 0.4);
+}
+[data-theme="light"] .fom-cta-secondary:hover,
+[data-theme="light"] .fom-cta-explore:hover {
+  border-color: rgba(224, 108, 24, 0.6);
+  box-shadow:
+    0 2px 4px rgba(16, 20, 32, 0.07),
+    0 18px 34px -18px rgba(214, 88, 14, 0.45);
+}
+
+/* ---- 5. Header: crisp white glass ---- */
+[data-theme="light"] [data-app-header] .glass-strong {
+  background: linear-gradient(180deg, #ffffffee 0%, #ffffffd9 100%);
+  border-color: #e6eaf1;
+  box-shadow:
+    0 1px 0 #eef1f6,
+    0 14px 34px -24px rgba(16, 20, 32, 0.45);
+}
+[data-theme="light"] [data-app-header] .text-white\/70,
+[data-theme="light"] [data-app-header] .text-white\/65 { color: #4b5263; }
+
+/* ---- 6. Search + form inputs ---- */
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background: #ffffff;
+  border-color: #dfe4ec;
+  color: #14161d;
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: #8b93a3; }
+[data-theme="light"] input:focus-visible,
+[data-theme="light"] textarea:focus-visible,
+[data-theme="light"] select:focus-visible {
+  border-color: rgba(224, 108, 24, 0.55);
+  box-shadow: 0 0 0 3px rgba(224, 108, 24, 0.16);
+  outline: none;
+}
+
+/* ---- 7. Bottom navigation: premium floating white dock ---- */
+[data-theme="light"] [data-app-bottom-nav] .nav-glass {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%) !important;
+  border: 1px solid #e3e8ef !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 -1px 0 #eef1f6,
+    0 18px 40px -20px rgba(16, 20, 32, 0.45) !important;
+}
+[data-theme="light"] [data-app-bottom-nav] .text-white\/70,
+[data-theme="light"] [data-app-bottom-nav] .text-white\/65 { color: #565e70; }
+[data-theme="light"] [data-app-bottom-nav] .ring-background { --tw-ring-color: #ffffff; }
+
+/* ---- 8. PDP + generic surfaces: floating white cards ---- */
+[data-theme="light"] .glass,
+[data-theme="light"] .card-premium,
+[data-theme="light"] .card-elevated {
+  background: #ffffff;
+  border-color: #e7ebf1;
+  box-shadow:
+    0 1px 2px rgba(16, 20, 32, 0.05),
+    0 14px 32px -24px rgba(16, 20, 32, 0.4);
+}
+
+/* ---- 9. Dividers: hairlines instead of harsh lines ---- */
+[data-theme="light"] hr,
+[data-theme="light"] .divide-border\/50 > * + *,
+[data-theme="light"] .border-border\/50 { border-color: #eaeef4; }
+
+/* ---- 10. Typography hierarchy ---- */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3 { color: #101319; }
+[data-theme="light"] .text-muted-foreground { color: #5c6474; }

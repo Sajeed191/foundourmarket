@@ -329,15 +329,11 @@ function ProductSection({
         </LazyMount>
       )}
       {showViewAll && (
-        <div className="relative mt-6 sm:mt-8 flex justify-center">
-          <Link
-            to={viewAllTo}
-            className="group inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/[0.04] px-7 py-3.5 text-[12px] font-mono font-semibold uppercase tracking-[0.18em] text-accent transition-[background-color,border-color,box-shadow] duration-200 hover:bg-accent/10 hover:border-accent/60 hover:shadow-[0_10px_30px_-12px_rgba(255,138,0,0.5)]"
-          >
+        <PremiumCTARow>
+          <PremiumCTALink to={viewAllTo} variant="secondary">
             View All
-            <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1" />
-          </Link>
-        </div>
+          </PremiumCTALink>
+        </PremiumCTARow>
       )}
     </SectionTracker>
   );

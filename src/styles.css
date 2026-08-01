@@ -5217,3 +5217,176 @@ textarea.editor-deeplink-target {
 [data-theme="light"] h2,
 [data-theme="light"] h3 { color: #101319; }
 [data-theme="light"] .text-muted-foreground { color: #5c6474; }
+
+/* =====================================================================
+   FoundOurMarket™ — LIGHT THEME PREMIUM UPGRADE v3.1 (LIGHT ONLY)
+   Scoped strictly to [data-theme="light"]. Dark & Grey untouched.
+   Presentation layer only — no layout/DOM/logic changes.
+   Layered surfaces (#FAFAFB page / #F5F6F8 alt / #FFFFFF cards),
+   hairline #E7EAF0 borders, 3-step soft elevation, 200–250ms motion.
+   ===================================================================== */
+
+[data-theme="light"] {
+  /* #FAFAFB page canvas */
+  --background: oklch(0.982 0.0015 285);
+  --border: oklch(0.918 0.006 258);   /* #E7EAF0 */
+  --input: oklch(0.918 0.006 258);
+  --divider: oklch(0.938 0.005 258);
+
+  /* Layered elevation — small / medium / large, never harsh black */
+  --fom-sh-sm: 0 1px 2px rgba(17, 20, 28, 0.05);
+  --fom-sh-md: 0 1px 2px rgba(17, 20, 28, 0.05), 0 8px 20px -12px rgba(17, 20, 28, 0.22);
+  --fom-sh-lg: 0 2px 4px rgba(17, 20, 28, 0.05), 0 20px 44px -22px rgba(17, 20, 28, 0.28);
+  --fom-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- 1. Layered backgrounds ---- */
+[data-theme="light"] body { background: #fafafb; }
+[data-theme="light"] .section-alt,
+[data-theme="light"] [data-section-alt] { background: #f5f6f8; }
+
+/* ---- 2. Header: floating premium dock ---- */
+[data-theme="light"] [data-app-header] .glass-strong,
+[data-theme="light"] [data-app-header] .glass {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(150%) blur(14px);
+  border-color: #e7eaf0;
+  border-radius: 20px;
+  box-shadow: var(--fom-sh-md);
+}
+[data-theme="light"] [data-app-header] svg { color: #3d4351; }
+[data-theme="light"] [data-app-header] [data-brand-mark] {
+  filter: drop-shadow(0 4px 14px rgba(224, 108, 24, 0.35));
+}
+
+/* ---- 3. Hero: tighter, higher-contrast typography ---- */
+[data-theme="light"] [data-hero] h1,
+[data-theme="light"] section h1 { color: #0d1017; letter-spacing: -0.025em; }
+[data-theme="light"] h1 .bg-clip-text { text-shadow: none; }
+[data-theme="light"] h1 + p,
+[data-theme="light"] h1 ~ p.text-muted-foreground { color: #5b6272; }
+
+/* ---- 4. Hero search pill (intentional dark contrast element) ---- */
+[data-theme="light"] [data-hero-search],
+[data-theme="light"] section > div > div > button[aria-label="Open search"] {
+  border-radius: 999px !important;
+  border-color: rgba(17, 20, 28, 0.08) !important;
+  box-shadow: 0 10px 30px -16px rgba(17, 20, 28, 0.45) !important;
+}
+
+/* ---- 5. Trust feature chips: airy circular icons ---- */
+[data-theme="light"] .feature-card {
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 18px;
+  box-shadow: var(--fom-sh-sm);
+}
+[data-theme="light"] .feature-card > span:first-child {
+  height: 34px;
+  width: 34px;
+  border-radius: 999px;
+  background: #f2f4f7;
+}
+[data-theme="light"] .feature-card > span:last-child { color: #3d4351; }
+
+/* ---- 6. Section headings ---- */
+[data-theme="light"] .premium-divider { background: #eaedf3; }
+
+/* ---- 7. Product cards ---- */
+[data-theme="light"] .product-card-shell {
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 16px;
+  box-shadow: var(--fom-sh-md) !important;
+  transition:
+    box-shadow 220ms var(--fom-ease),
+    transform 220ms var(--fom-ease),
+    border-color 220ms var(--fom-ease);
+}
+[data-theme="light"] .product-card-shell:hover {
+  border-color: #dfe4ec !important;
+  box-shadow: var(--fom-sh-lg) !important;
+}
+[data-theme="light"] .product-card-shell h3 { color: #14171f; }
+[data-theme="light"] .product-card-shell .product-rating-text { color: #2c313c; }
+[data-theme="light"] .product-card-shell .fom-price-current { color: #14171f; font-weight: 800; }
+[data-theme="light"] .product-card-shell .fom-price-compare { color: #8b93a3; }
+/* Floating wishlist / quick-view buttons */
+[data-theme="light"] .product-card-shell button[aria-label*="ishlist"],
+[data-theme="light"] .product-card-shell button[aria-label*="Quick"] {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #e7eaf0;
+  color: #3d4351;
+  box-shadow: var(--fom-sh-sm);
+}
+
+/* ---- 8. Unified button system ---- */
+[data-theme="light"] .fom-cta-primary,
+[data-theme="light"] [data-add-to-cart] {
+  background: linear-gradient(180deg, #ff8038 0%, #ea5f12 100%);
+  color: #ffffff;
+  border: 1px solid rgba(196, 79, 6, 0.3);
+  border-radius: 999px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.3) inset,
+    0 10px 24px -12px rgba(214, 88, 14, 0.7);
+  transition: transform 200ms var(--fom-ease), box-shadow 200ms var(--fom-ease);
+}
+[data-theme="light"] [data-add-to-cart] { border-radius: 16px; min-height: 48px; }
+[data-theme="light"] .fom-cta-primary:hover,
+[data-theme="light"] [data-add-to-cart]:hover { transform: translateY(-1px); }
+[data-theme="light"] .fom-cta-primary:active,
+[data-theme="light"] [data-add-to-cart]:active { transform: scale(0.98); }
+[data-theme="light"] .fom-cta-secondary,
+[data-theme="light"] .fom-cta-explore {
+  border-radius: 999px;
+  box-shadow: var(--fom-sh-md);
+  transition: transform 200ms var(--fom-ease), box-shadow 200ms var(--fom-ease);
+}
+[data-theme="light"] .fom-cta-secondary:active,
+[data-theme="light"] .fom-cta-explore:active { transform: scale(0.98); }
+
+/* ---- 9. Bottom navigation ---- */
+[data-theme="light"] [data-app-bottom-nav] .nav-glass {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: saturate(160%) blur(16px);
+  border: 1px solid #e7eaf0 !important;
+  border-radius: 22px !important;
+  box-shadow: var(--fom-sh-lg) !important;
+}
+[data-theme="light"] [data-app-bottom-nav] a,
+[data-theme="light"] [data-app-bottom-nav] button { color: #454c5c; }
+[data-theme="light"] [data-app-bottom-nav] [data-active="true"],
+[data-theme="light"] [data-app-bottom-nav] .text-accent,
+[data-theme="light"] [data-app-bottom-nav] [aria-current="page"] { color: #e06c18; }
+
+/* ---- 10. Floating chat orb ---- */
+[data-theme="light"] .fom-chat-orb {
+  box-shadow:
+    0 2px 6px rgba(17, 20, 28, 0.12),
+    0 14px 30px -14px rgba(224, 108, 24, 0.6);
+}
+
+/* ---- 11/12. Soft shadows + hairline borders on shared surfaces ---- */
+[data-theme="light"] .card-premium,
+[data-theme="light"] .card-elevated,
+[data-theme="light"] .card-outline,
+[data-theme="light"] .glass,
+[data-theme="light"] .glass-strong { border-color: #e7eaf0; }
+[data-theme="light"] .card-premium,
+[data-theme="light"] .card-elevated { box-shadow: var(--fom-sh-md); }
+
+/* ---- 13. Typography ladder ---- */
+[data-theme="light"] h1, [data-theme="light"] h2 { font-weight: 700; letter-spacing: -0.02em; }
+[data-theme="light"] .text-muted-foreground { color: #5b6272; }
+[data-theme="light"] .font-mono.uppercase { letter-spacing: 0.22em; }
+
+/* ---- 14/16. Motion: smooth, cheap, reduced-motion safe ---- */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="light"] .product-card-shell,
+  [data-theme="light"] .fom-cta-primary,
+  [data-theme="light"] [data-add-to-cart] { transition: none !important; }
+}
+
+/* ---- 15. Accessibility: touch targets never below 44px ---- */
+[data-theme="light"] .fom-cta { min-height: 44px; }

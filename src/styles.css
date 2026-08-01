@@ -4758,3 +4758,186 @@ textarea.editor-deeplink-target {
   .fom-cta:active::after { animation: none; }
   .fom-cta:hover { transform: none; }
 }
+
+/* =====================================================================
+   LIGHT THEME PREMIUM REDESIGN v3.0  —  scoped to [data-theme="light"]
+   Presentation only. Dark and Grey themes are untouched.
+   Layered surfaces · soft elevation · generous rhythm · orange accents.
+   ===================================================================== */
+
+/* ---- 1. Page canvas: layered, never a flat white slab ---- */
+[data-theme="light"] body {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(120% 62% at 100% 0%, oklch(0.66 0.205 47 / 0.045), transparent 62%),
+    radial-gradient(95% 52% at 0% 100%, oklch(0.7 0.16 250 / 0.035), transparent 58%);
+}
+
+/* ---- 2. Product cards: white, luxurious, breathing ---- */
+[data-theme="light"] .product-card-shell {
+  background-color: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+[data-theme="light"] .product-card-shell:hover {
+  box-shadow: var(--shadow-float);
+  border-color: color-mix(in oklab, var(--accent) 26%, var(--border)) !important;
+}
+/* Media plate reads as a clean white studio surface */
+[data-theme="light"] .product-card-shell [data-adaptive-media],
+[data-theme="light"] .product-card-shell a > div:first-child {
+  background-color: color-mix(in oklab, var(--secondary) 82%, #ffffff);
+}
+/* Copy block: more air, tighter hierarchy */
+[data-theme="light"] .product-card-shell .product-copy {
+  padding: 16px;
+  gap: 8px;
+}
+@media (min-width: 640px) {
+  [data-theme="light"] .product-card-shell .product-copy { padding: 20px; gap: 10px; }
+}
+/* Typography ladder — titles dark, ratings readable, price orange */
+[data-theme="light"] .product-card-shell h3 {
+  color: var(--foreground);
+  font-weight: 600;
+  line-height: 1.35;
+}
+[data-theme="light"] .product-card-shell .product-rating-text,
+[data-theme="light"] .product-card-shell .text-white {
+  color: var(--foreground);
+}
+[data-theme="light"] .product-card-shell .text-muted-foreground { color: var(--muted-foreground); }
+
+/* Floating icon buttons (wishlist / quick view) become white glass pills */
+[data-theme="light"] .product-card-shell button[aria-label*="wishlist"],
+[data-theme="light"] .product-card-shell button[aria-label*="Quick view"] {
+  background-color: oklch(1 0 0 / 0.9) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 2px 10px oklch(0.24 0.02 262 / 0.12) !important;
+  color: var(--foreground);
+}
+
+/* Add-to-cart / quantity control keep orange fill, dark-on-orange label */
+[data-theme="light"] .product-card-shell button .text-white { color: #ffffff; }
+
+/* ---- 3. Cards & panels ---- */
+[data-theme="light"] .card-premium,
+[data-theme="light"] .card-elevated {
+  background: #ffffff;
+  border-color: var(--border);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="light"] .glass,
+[data-theme="light"] .glass-strong {
+  background: oklch(1 0 0 / 0.86);
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+}
+[data-theme="light"] .section-alt {
+  background: linear-gradient(180deg, #ffffff, oklch(0.99 0.001 258));
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+}
+[data-theme="light"] .premium-divider {
+  background: linear-gradient(90deg, transparent, var(--divider), transparent);
+}
+[data-theme="light"] hr { border-color: var(--divider); }
+
+/* ---- 4. Header: floating glass card ---- */
+[data-theme="light"] header .glass,
+[data-theme="light"] header.glass,
+[data-theme="light"] [data-site-header] {
+  background: oklch(1 0 0 / 0.92);
+  border-color: var(--divider);
+  box-shadow: 0 1px 0 var(--divider), 0 12px 30px -22px oklch(0.24 0.02 262 / 0.35);
+}
+
+/* ---- 5. Search: Apple-style pill with soft elevation ---- */
+[data-theme="light"] .input-glass,
+[data-theme="light"] input[type="search"],
+[data-theme="light"] form[role="search"] input {
+  background: #ffffff;
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+[data-theme="light"] .input-glass:focus,
+[data-theme="light"] input[type="search"]:focus,
+[data-theme="light"] form[role="search"] input:focus {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 14%, transparent), var(--shadow-card);
+}
+
+/* ---- 6. Chips & pills (category chips, filters, variants) ---- */
+[data-theme="light"] .chip,
+[data-theme="light"] .category-chip,
+[data-theme="light"] [data-chip] {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+[data-theme="light"] .chip:hover,
+[data-theme="light"] .category-chip:hover,
+[data-theme="light"] [data-chip]:hover { transform: translateY(-1px); border-color: color-mix(in oklab, var(--accent) 40%, var(--border)); }
+[data-theme="light"] .chip[data-active="true"],
+[data-theme="light"] .category-chip[aria-pressed="true"],
+[data-theme="light"] [data-chip][data-active="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: transparent;
+  box-shadow: var(--shadow-ember);
+}
+
+/* ---- 7. Accordions / FAQ cards ---- */
+[data-theme="light"] [data-slot="accordion-item"],
+[data-theme="light"] details.faq-card,
+[data-theme="light"] .faq-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 12px;
+}
+
+/* ---- 8. Bottom navigation & floating elements ---- */
+[data-theme="light"] .bottom-nav-light {
+  background: oklch(1 0 0 / 0.96);
+  border: 1px solid var(--divider);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.9),
+    0 -1px 0 var(--divider),
+    0 20px 46px -24px oklch(0.24 0.02 262 / 0.28);
+}
+[data-theme="light"] .fom-orb,
+[data-theme="light"] .scroll-top-btn {
+  box-shadow: var(--shadow-ember), 0 10px 26px -16px oklch(0.24 0.02 262 / 0.3);
+}
+
+/* ---- 9. Buttons: one premium language ---- */
+[data-theme="light"] .fom-cta-primary { box-shadow: var(--shadow-ember); }
+[data-theme="light"] .fom-cta-secondary {
+  background-color: #ffffff;
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+}
+[data-theme="light"] .fom-cta-explore {
+  background-color: oklch(1 0 0 / 0.9);
+  border-color: color-mix(in oklab, var(--accent) 30%, var(--border));
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---- 10. Motion: subtle, 150–220ms, GPU-friendly ---- */
+[data-theme="light"] .card-elevated,
+[data-theme="light"] .card-premium {
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="light"] .product-card-shell,
+  [data-theme="light"] .card-elevated,
+  [data-theme="light"] .card-premium { transition: none; }
+  [data-theme="light"] .product-card-shell:hover { transform: none; }
+}

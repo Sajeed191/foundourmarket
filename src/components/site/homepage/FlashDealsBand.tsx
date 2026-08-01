@@ -548,7 +548,7 @@ export function FlashDealsBand() {
         {/* Explore CTA — own full-width band, never clipped or overlaid.
             Uses the solid accent fill (not --gradient-ember, which is a faint
             10%-alpha glow and made the label unreadable on mobile). */}
-        <div className="relative z-[1] flex w-full justify-center pb-8">
+        <div className="fom-cta-row relative z-[1] pb-4">
           <PremiumCTALink
             to="/deals"
             variant="primary"

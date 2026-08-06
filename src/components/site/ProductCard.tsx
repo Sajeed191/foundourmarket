@@ -19,6 +19,7 @@ import { VariantSwatchStrip, type SwatchPreview } from "@/components/site/Varian
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { resizedStorageImage } from "@/lib/storage-image";
 import { formatSold } from "@/lib/format-sold";
+import { resolveProductRating } from "@/lib/product-rating";
 
 
 type ProductCardProps = {
@@ -366,6 +367,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
   const discount = discountPercent(price, originalPrice);
+  const resolvedRating = useMemo(() => resolveProductRating(product as never), [product]);
   const shippingFee = shippingFeeOf(product);
   const freeShipping = shippingFee <= 0;
   const assigned = useResolvedProductBadges(product.slug);
@@ -493,11 +495,13 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
 
         {/* Rating */}
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-          {product.rating > 0 ? (
+          {resolvedRating.hasReviews ? (
             <span className="inline-flex min-w-0 items-center gap-1.5">
               <Star className="size-[14px] sm:size-[18px] shrink-0 fill-accent text-accent" />
-              <span data-product-text className="product-typography product-rating-text text-[13px] sm:text-[17px] font-semibold tabular-nums text-white">{product.rating.toFixed(1)}</span>
-              <span data-product-text className="product-typography product-rating-text truncate text-[11px] sm:text-[14px] text-muted-foreground">({(product.reviews ?? 0).toLocaleString()})</span>
+              <span data-product-text className="product-typography product-rating-text text-[13px] sm:text-[17px] font-semibold tabular-nums text-white">{resolvedRating.rating.toFixed(1)}</span>
+              {resolvedRating.count > 0 && (
+                <span data-product-text className="product-typography product-rating-text truncate text-[11px] sm:text-[14px] text-muted-foreground">({resolvedRating.count.toLocaleString()})</span>
+              )}
             </span>
           ) : (
             <span data-product-text className="product-typography product-rating-text text-[11px] sm:text-[14px] font-medium text-accent">New Product</span>

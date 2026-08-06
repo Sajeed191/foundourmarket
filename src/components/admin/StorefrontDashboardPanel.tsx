@@ -219,7 +219,7 @@ export function StorefrontDashboardPanel({
                   </p>
                   <Link
                     to="/admin-shipments"
-                    search={{}}
+                    search={{ order: undefined, shipment: undefined, queue: undefined }}
                     onClick={onClose}
                     className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-accent hover:underline"
                   >

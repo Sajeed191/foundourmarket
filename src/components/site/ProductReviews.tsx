@@ -837,6 +837,11 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                 <BadgeCheck className="size-3.5" />
                 FoundOurMarket™ Initial Product Rating
               </div>
+              {totalReviewCount > 0 && (
+                <p className="text-[13px] text-muted-foreground">
+                  Based on {totalReviewCount.toLocaleString()} {totalReviewCount === 1 ? "customer" : "customers"}
+                </p>
+              )}
               <p className="text-[12.5px] text-muted-foreground leading-relaxed max-w-md">
                 This is our baseline quality rating. It updates automatically the moment verified customers start reviewing.
               </p>

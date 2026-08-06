@@ -250,8 +250,8 @@ export function ProductInlineRecommendation({
           {/* One-click action */}
           {targetSubroute ? (
             <Link
-              to="/admin-product/$slug/$"
-              params={{ slug: input.slug, _splat: targetSubroute }}
+              to={`/admin-product/$slug/${targetSubroute}` as "/admin-product/$slug"}
+              params={{ slug: input.slug }}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-medium text-accent hover:bg-accent/20"
             >
               {top.action} <ArrowRight className="size-3.5" />

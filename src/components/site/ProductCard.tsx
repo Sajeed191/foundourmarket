@@ -19,6 +19,7 @@ import { VariantSwatchStrip, type SwatchPreview } from "@/components/site/Varian
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { resizedStorageImage } from "@/lib/storage-image";
 import { formatSold } from "@/lib/format-sold";
+import { resolveProductRating } from "@/lib/product-rating";
 
 
 type ProductCardProps = {
@@ -366,6 +367,7 @@ function ProductCardImpl({ product, context = "default", forceBadge, priority = 
   const price = priceOf(product);
   const originalPrice = compareOf(product) ?? (product.discount ? price * (1 + product.discount / 100) : null);
   const discount = discountPercent(price, originalPrice);
+  const resolvedRating = useMemo(() => resolveProductRating(product as never), [product]);
   const shippingFee = shippingFeeOf(product);
   const freeShipping = shippingFee <= 0;
   const assigned = useResolvedProductBadges(product.slug);

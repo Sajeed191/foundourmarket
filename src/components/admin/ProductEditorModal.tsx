@@ -287,6 +287,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     rating: row?.rating != null ? String(row.rating) : "",
     reviews: row?.reviews != null ? String(row.reviews) : "",
     initial_rating: (row as any)?.initial_rating != null ? String((row as any).initial_rating) : "",
+    initial_review_count: (row as any)?.initial_review_count != null ? String((row as any).initial_review_count) : "",
     rating_source: (row as any)?.rating_source ?? "imported_supplier",
     status: row?.status ?? "published",
     bestseller: row?.bestseller ?? false,
@@ -601,6 +602,7 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
     const ratingNum = numOrNull(form.rating);
     const reviewsNum = numOrNull(form.reviews);
     const initialRatingNum = numOrNull(form.initial_rating);
+    const initialReviewCountNum = numOrNull(form.initial_review_count);
     const payload = {
       slug: finalSlug, name: form.name.trim(),
       tagline: form.tagline.trim() || null, category: effectiveCategory,
@@ -611,7 +613,9 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
       in_stock: form.in_stock, featured: form.featured, sku: autoSku,
       barcode: form.barcode.trim() || null, image_phash: draftPhash,
       rating: ratingNum ?? undefined, reviews: reviewsNum != null ? Math.round(reviewsNum) : undefined,
-      initial_rating: initialRatingNum ?? undefined, rating_source: form.rating_source,
+      initial_rating: initialRatingNum ?? undefined,
+      initial_review_count: initialReviewCountNum != null ? Math.round(initialReviewCountNum) : undefined,
+      rating_source: form.rating_source,
       stock_quantity: Number(form.stock_quantity) || 0, low_stock_threshold: Number(form.low_stock_threshold) || 0,
       sort_order: Number(form.sort_order) || 0,
       price_inr: priceInr, compare_price_inr: cmpInr, price_usd: priceUsd, compare_price_usd: cmpUsd,
@@ -1126,7 +1130,11 @@ export function ProductEditorModal({ row, categories, nextSort, onClose, onSaved
             </div>
             <EField label="Rating (0-5)" type="number" value={form.rating} onChange={(v) => set({ rating: v })} />
             <EField label="Reviews count" type="number" value={form.reviews} onChange={(v) => set({ reviews: v })} />
-            <EField label="Initial / seed rating" type="number" value={form.initial_rating} onChange={(v) => set({ initial_rating: v })} />
+            <EField label="Initial rating" type="number" value={form.initial_rating} onChange={(v) => set({ initial_rating: v })} />
+            <EField label="Initial customer / review count" type="number" value={form.initial_review_count} onChange={(v) => set({ initial_review_count: v })} />
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              Used as the initial displayed rating and customer count until real customer reviews are available. Once real reviews arrive they are blended with this baseline — no fake review records are ever created.
+            </p>
             <div>
               <label className="block text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1.5">Rating Source</label>
               <select value={form.rating_source} onChange={(e) => set({ rating_source: e.target.value })} className="filter-select w-full">

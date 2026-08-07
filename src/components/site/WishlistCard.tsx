@@ -10,6 +10,7 @@ import { useWishlist } from "@/lib/wishlist";
 
 import { useResolvedProductBadges, badgeAnimationClass } from "@/lib/use-product-badges";
 import { StarRating } from "@/components/site/StarRating";
+import { resolveProductRating } from "@/lib/product-rating";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export type WishlistCardProps = {
@@ -206,18 +207,21 @@ function WishlistCardImpl({
 
         {/* Rating */}
         <div className="flex flex-col justify-center min-w-0 mt-1.5 min-h-[30px]">
-          {product.rating > 0 ? (
-            <>
-              <StarRating rating={product.rating} count={product.reviews} showValue starClassName="size-3" textClassName="text-[10px]" />
-              <span data-product-text className="product-typography product-rating-text font-mono text-muted-foreground/70 text-[9px] mt-0.5">
-                {(product.reviews ?? 0).toLocaleString()} {product.reviews === 1 ? "Review" : "Reviews"}
+          {(() => {
+            const r = resolveProductRating(product as never);
+            return r.hasReviews ? (
+              <>
+                <StarRating rating={r.rating} count={r.count} showValue starClassName="size-3" textClassName="text-[10px]" />
+                <span data-product-text className="product-typography product-rating-text font-mono text-muted-foreground/70 text-[9px] mt-0.5">
+                  {r.count.toLocaleString()} {r.count === 1 ? "Review" : "Reviews"}
+                </span>
+              </>
+            ) : (
+              <span data-product-text className="product-typography product-rating-text font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
+                New Product
               </span>
-            </>
-          ) : (
-            <span data-product-text className="product-typography product-rating-text font-mono uppercase tracking-wider text-emerald-400/90 text-[9px]">
-              New Product
-            </span>
-          )}
+            );
+          })()}
         </div>
 
         {/* Variant summary */}

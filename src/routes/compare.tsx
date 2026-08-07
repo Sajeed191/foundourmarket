@@ -330,13 +330,18 @@ function ComparePage() {
                     </Link>
 
                     <div className="mt-2.5">
-                      <StarRating
-                        rating={p.rating}
-                        count={p.reviews}
-                        showValue={p.rating > 0}
-                        starClassName="size-3.5"
-                        textClassName="text-xs"
-                      />
+                      {(() => {
+                        const r = resolveProductRating(p as never);
+                        return (
+                          <StarRating
+                            rating={r.rating}
+                            count={r.count}
+                            showValue={r.rating > 0}
+                            starClassName="size-3.5"
+                            textClassName="text-xs"
+                          />
+                        );
+                      })()}
                     </div>
 
                     <div className="mt-3 flex items-baseline gap-2 flex-wrap">

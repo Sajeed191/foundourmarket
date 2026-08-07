@@ -57,6 +57,7 @@ import { formatSold } from "@/lib/format-sold";
 import { toast } from "sonner";
 import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
 import { useDraftPreviewOverlay, applyDraftOverlay } from "@/lib/pdp-preview-channel";
+import { resolveProductRating } from "@/lib/product-rating";
 
 
 export const Route = createFileRoute("/products/$slug")({
@@ -205,6 +206,8 @@ function ProductPage() {
   // product so the customer page itself is the preview (no second renderer).
   const draftOverlay = useDraftPreviewOverlay(slug);
   const product = applyDraftOverlay(liveProduct ?? loadedProduct, draftOverlay);
+  // Single source of truth for rating/count on every PDP surface.
+  const resolvedRating = useMemo(() => resolveProductRating(product as never), [product]);
 
   const loading = !product && liveLoading;
   const { categories: allCats } = useAllCategories();

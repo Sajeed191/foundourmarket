@@ -57,6 +57,7 @@ import { formatSold } from "@/lib/format-sold";
 import { toast } from "sonner";
 import { usePublishShoppingContext } from "@/lib/ai-shopping/shopping-context";
 import { useDraftPreviewOverlay, applyDraftOverlay } from "@/lib/pdp-preview-channel";
+import { resolveProductRating } from "@/lib/product-rating";
 
 
 export const Route = createFileRoute("/products/$slug")({
@@ -127,7 +128,8 @@ export const Route = createFileRoute("/products/$slug")({
       meta.push({ name: "twitter:image", content: previewImage });
       meta.push({ name: "twitter:image:alt", content: imageAlt });
     }
-    const hasRating = !!p && Number(p.reviews) > 0 && Number(p.rating) > 0;
+    const ld = resolveProductRating(p as never);
+    const hasRating = !!p && ld.count > 0 && ld.rating > 0;
     const productLd: Record<string, unknown> | null = p
       ? {
           "@context": "https://schema.org",
@@ -156,8 +158,8 @@ export const Route = createFileRoute("/products/$slug")({
             ? {
                 aggregateRating: {
                   "@type": "AggregateRating",
-                  ratingValue: Number(p.rating).toFixed(1),
-                  reviewCount: p.reviews,
+                  ratingValue: ld.rating.toFixed(1),
+                  reviewCount: ld.count,
                   bestRating: 5,
                   worstRating: 1,
                 },
@@ -205,6 +207,8 @@ function ProductPage() {
   // product so the customer page itself is the preview (no second renderer).
   const draftOverlay = useDraftPreviewOverlay(slug);
   const product = applyDraftOverlay(liveProduct ?? loadedProduct, draftOverlay);
+  // Single source of truth for rating/count on every PDP surface.
+  const resolvedRating = useMemo(() => resolveProductRating(product as never), [product]);
 
   const loading = !product && liveLoading;
   const { categories: allCats } = useAllCategories();
@@ -958,15 +962,15 @@ function ProductPage() {
             {/* Rating • Reviews • Sold */}
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
               <StarRating
-                rating={product.rating}
-                count={product.reviews}
+                rating={resolvedRating.rating}
+                count={resolvedRating.count}
                 showValue
                 starClassName="size-4"
                 textClassName="text-[13px] font-medium text-foreground"
               />
-              {product.reviews > 0 && (
+              {resolvedRating.count > 0 && (
                 <a href="#reviews" className="hover:text-foreground transition-colors">
-                  {product.reviews.toLocaleString()} {product.reviews === 1 ? "review" : "reviews"}
+                  {resolvedRating.count.toLocaleString()} {resolvedRating.count === 1 ? "review" : "reviews"}
                 </a>
               )}
               {socialProof && socialProof.sold > 0 && (
@@ -1308,8 +1312,8 @@ function ProductPage() {
             effectiveStock={effectiveStock}
             lowStockThreshold={product.lowStockThreshold}
             deliveryWindow={deliveryWindow}
-            rating={product.rating}
-            reviews={product.reviews}
+            rating={resolvedRating.rating}
+            reviews={resolvedRating.count}
           />
           <div className="flex items-center gap-2">
           <div className="flex flex-col justify-center leading-none min-w-0 pr-1">

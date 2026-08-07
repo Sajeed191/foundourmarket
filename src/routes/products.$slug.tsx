@@ -158,8 +158,8 @@ export const Route = createFileRoute("/products/$slug")({
             ? {
                 aggregateRating: {
                   "@type": "AggregateRating",
-                  ratingValue: Number(p.rating).toFixed(1),
-                  reviewCount: p.reviews,
+                  ratingValue: ld.rating.toFixed(1),
+                  reviewCount: ld.count,
                   bestRating: 5,
                   worstRating: 1,
                 },

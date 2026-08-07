@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, memo } from "react";
 import { X, Check, ShoppingBag, Scale, Plus, ChevronDown } from "lucide-react";
 import { StarRating } from "@/components/site/StarRating";
+import { resolveProductRating } from "@/lib/product-rating";
 import { useCompare } from "@/hooks/use-compare";
 import { useVisibleProducts } from "@/lib/product-availability";
 import { resolveImage, fetchProductsBySlugs, type Product } from "@/lib/products";
@@ -192,12 +193,13 @@ function ComparePage() {
 
   const ratingRows = useMemo<Row[]>(() => {
     if (!items.length) return [];
+    const resolved = items.map((p) => resolveProductRating(p as never));
     return [
       {
         label: "Rating",
-        values: items.map((p) => ((p.rating ?? 0) > 0 ? `${(p.rating ?? 0).toFixed(1)} / 5` : NA)),
+        values: resolved.map((r) => (r.rating > 0 ? `${r.rating.toFixed(1)} / 5` : NA)),
       },
-      { label: "Reviews", values: items.map((p) => `${p.reviews ?? 0} Reviews`) },
+      { label: "Reviews", values: resolved.map((r) => `${r.count} Reviews`) },
     ];
   }, [items]);
 

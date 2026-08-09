@@ -27,8 +27,19 @@ export type SafeRevealOpts = {
 };
 
 export function safeReveal(reduce: boolean | null | undefined, opts: SafeRevealOpts = {}) {
-  if (reduce) return { initial: false as const };
   const { y = 12, delay = 0, duration = 0.45 } = opts;
+  // CRITICAL: `animate` is ALWAYS a visible target, even under reduced motion.
+  // `useReducedMotion()` returns false during SSR/first paint and flips to true
+  // after hydration; if `animate` were conditional, the element would keep the
+  // hidden `initial` style with no target to animate to and stay invisible
+  // forever. Only `initial` is dropped when motion is reduced.
+  if (reduce) {
+    return {
+      initial: false as const,
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0 },
+    };
+  }
   return {
     initial: { opacity: 0, y },
     animate: { opacity: 1, y: 0 },

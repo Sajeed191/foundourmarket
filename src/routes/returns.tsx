@@ -327,7 +327,7 @@ function ReturnsPage() {
 
         {/* Policy explanation (always visible) */}
         <motion.section
-          initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           className="mt-10 rounded-3xl p-5 sm:p-7 ring-1 ring-white/10 backdrop-blur-xl"
           style={{ background: "rgba(255,255,255,0.03)" }}
         >

@@ -30,6 +30,7 @@ import { type Product, discountPercent } from "@/lib/products";
 import { isProductVisible } from "@/lib/product-availability";
 import { PolicyCrossLinks } from "@/components/site/PolicyLinks";
 import { useIsLowMotion } from "@/lib/motion-tier";
+import { safeReveal } from "@/lib/safe-reveal";
 const logoSrc = "/logo.webp";
 
 export const Route = createFileRoute("/account")({
@@ -949,10 +950,7 @@ function SheetOption({ icon: Icon, label, desc, tone = "default", onClick }: { i
 function SupportHubCard({ title, subtitle, children, lowMotion }: { title: string; subtitle: string; children: ReactNode; lowMotion: boolean }) {
   return (
     <motion.section
-      initial={lowMotion ? false : { opacity: 0, y: 6 }}
-      whileInView={lowMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.18, ease: "easeOut" }}
+      {...safeReveal(lowMotion, { y: 6, duration: 0.18 })}
       className="flex flex-col rounded-[20px] bg-white/[0.03] backdrop-blur-xl p-4 sm:p-[18px] ring-1 ring-white/[0.06]"
     >
       <h3 className="text-[16px] font-display font-semibold leading-tight tracking-tight">{title}</h3>

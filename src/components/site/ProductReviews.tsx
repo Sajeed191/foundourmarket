@@ -765,8 +765,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
           {hasReviews && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22 }}
               className="mb-10 grid gap-8 lg:grid-cols-[240px_1fr] pb-8 border-b border-border/60"
             >
@@ -801,8 +800,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                         <motion.span
                           className="fom-meter"
                           initial={{ width: 0 }}
-                          whileInView={{ width: `${pct}%` }}
-                          viewport={{ once: true }}
+                          animate={{ width: `${pct}%` }}
                           transition={{ duration: 0.55, delay: idx * 0.06, ease: [0.22, 1, 0.36, 1] }}
                         />
                       </span>

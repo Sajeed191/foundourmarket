@@ -587,8 +587,7 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <motion.section
       initial={reduce ? undefined : { opacity: 0, y: 16 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
+      animate={reduce ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: "easeOut" }}>
       {children}
     </motion.section>

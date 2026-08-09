@@ -493,8 +493,7 @@ function SellerAssistancePage() {
                 href="#seller-form"
                 onClick={() => setForm((f) => ({ ...f, issueType: a.title }))}
                 initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05, duration: 0.45, ease: "easeOut" }}
                 whileHover={{ y: -3 }}
                 whileTap={{ scale: 0.985 }}
@@ -527,8 +526,7 @@ function SellerAssistancePage() {
         <Section eyebrow="Trust & safety" title="Marketplace Protection">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.015] backdrop-blur-2xl p-6 sm:p-8 overflow-hidden"
           >
@@ -546,8 +544,7 @@ function SellerAssistancePage() {
                 <motion.div
                   key={p.label}
                   initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
                   className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/10 hover:border-orange-300/30 transition"
                 >
@@ -573,8 +570,7 @@ function SellerAssistancePage() {
                   onClick={() => handleChannel(c.id)}
                   disabled={loadingChannel === c.id}
                   initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
@@ -657,8 +653,7 @@ function SellerAssistancePage() {
         <Section eyebrow="Submit a request" title="Tell us what's going on" id="seller-form">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="relative rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-2xl p-6 sm:p-8 overflow-hidden"
           >
@@ -813,8 +808,7 @@ function SellerAssistancePage() {
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ y: -3 }}
                 className="group relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 overflow-hidden"

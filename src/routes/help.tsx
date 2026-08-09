@@ -331,9 +331,9 @@ function FaqSection({ query, cat, setCat }: { query: string; cat: Category | "Al
               <AnimatePresence initial={false}>
                 {isOpen && (
                   <motion.div
-                    initial={reduce ? undefined : { height: 0, opacity: 0 }}
-                    animate={reduce ? undefined : { height: "auto", opacity: 1 }}
-                    exit={reduce ? undefined : { height: 0, opacity: 0 }}
+                    initial={reduce ? false : { height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
                     transition={{ duration: 0.24, ease: "easeOut" }}
                     className="overflow-hidden">
                     <p className="px-4 sm:px-5 pb-4 text-sm text-white/60 leading-relaxed">{highlight(f.a, query)}</p>

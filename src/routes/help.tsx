@@ -10,6 +10,7 @@ import {
 import { loadCrisp, openCrispChat } from "@/lib/crisp";
 import { toast } from "sonner";
 import { useSupportSettings, resolveSupportStatus } from "@/lib/use-support-settings";
+import { safeReveal } from "@/lib/safe-reveal";
 
 export const Route = createFileRoute("/help")({
   head: () => ({

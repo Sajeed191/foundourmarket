@@ -585,10 +585,7 @@ function Feedback() {
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const reduce = useReducedMotion();
   return (
-    <motion.section
-      initial={reduce ? undefined : { opacity: 0, y: 16 }}
-      animate={reduce ? undefined : { opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: "easeOut" }}>
+    <motion.section {...safeReveal(reduce, { y: 16, delay, duration: 0.4 })}>
       {children}
     </motion.section>
   );

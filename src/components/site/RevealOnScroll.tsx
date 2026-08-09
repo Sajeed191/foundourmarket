@@ -49,7 +49,13 @@ export function RevealOnScroll({
       { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    // Safety net: some Android WebViews mis-report intersection. Never let
+    // content stay at opacity 0 forever.
+    const fallback = window.setTimeout(() => setShown(true), 1500);
+    return () => {
+      window.clearTimeout(fallback);
+      io.disconnect();
+    };
   }, []);
 
   const style: React.CSSProperties = {

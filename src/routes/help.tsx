@@ -10,6 +10,7 @@ import {
 import { loadCrisp, openCrispChat } from "@/lib/crisp";
 import { toast } from "sonner";
 import { useSupportSettings, resolveSupportStatus } from "@/lib/use-support-settings";
+import { safeReveal } from "@/lib/safe-reveal";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
@@ -331,9 +332,9 @@ function FaqSection({ query, cat, setCat }: { query: string; cat: Category | "Al
               <AnimatePresence initial={false}>
                 {isOpen && (
                   <motion.div
-                    initial={reduce ? undefined : { height: 0, opacity: 0 }}
-                    animate={reduce ? undefined : { height: "auto", opacity: 1 }}
-                    exit={reduce ? undefined : { height: 0, opacity: 0 }}
+                    initial={reduce ? false : { height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
                     transition={{ duration: 0.24, ease: "easeOut" }}
                     className="overflow-hidden">
                     <p className="px-4 sm:px-5 pb-4 text-sm text-white/60 leading-relaxed">{highlight(f.a, query)}</p>
@@ -585,11 +586,7 @@ function Feedback() {
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const reduce = useReducedMotion();
   return (
-    <motion.section
-      initial={reduce ? undefined : { opacity: 0, y: 16 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.4, delay, ease: "easeOut" }}>
+    <motion.section {...safeReveal(reduce, { y: 16, delay, duration: 0.4 })}>
       {children}
     </motion.section>
   );

@@ -44,12 +44,18 @@ export function WhyFoundOurMarket() {
   const [shown, setShown] = useState(reduced);
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced) {
+      setShown(true);
+      return;
+    }
     const el = ref.current;
     if (!el || typeof IntersectionObserver === "undefined") {
       setShown(true);
       return;
     }
+    // Safety net: some Android WebViews never fire the observer, which would
+    // leave these cards permanently at opacity 0 (looks like endless loading).
+    const fallback = window.setTimeout(() => setShown(true), 4000);
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -63,7 +69,10 @@ export function WhyFoundOurMarket() {
       { threshold: 0.1 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      window.clearTimeout(fallback);
+      io.disconnect();
+    };
   }, [reduced]);
 
   return (

@@ -506,7 +506,7 @@ function TrackPage() {
         {/* AI Shopping Intelligence */}
         {result?.found && !cancelled && recentSlugs.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             className="mt-2"
           >
             <RecommendationStrip
@@ -521,7 +521,7 @@ function TrackPage() {
 
         {/* Support */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           className="mt-10"
         >
           <div className="flex items-end justify-between mb-3 px-1">

@@ -903,8 +903,7 @@ function ReturnsPage() {
         {/* TRUST STRIP */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mt-8 grid grid-cols-3 gap-2"
         >
@@ -923,8 +922,7 @@ function ReturnsPage() {
         {/* SUPPORT CENTER */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mt-8"
         >

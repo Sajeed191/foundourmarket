@@ -1,4 +1,4 @@
-import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useInView, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { useEffect, useRef, type ReactNode } from "react";
 
 /**
@@ -28,6 +28,7 @@ export function MotionReveal({
   delay?: number;
   productCardFrame?: boolean;
 }) {
+  const reduce = useReducedMotion();
   if (productCardFrame) {
     return <div className={className} data-product-card-frame="">{children}</div>;
   }
@@ -35,9 +36,8 @@ export function MotionReveal({
   return (
     <motion.div
       variants={fadeUp}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-80px" }}
+      initial={reduce ? false : "hidden"}
+      animate="show"
       custom={delay}
       className={className}
       data-product-card-frame={productCardFrame ? "" : undefined}

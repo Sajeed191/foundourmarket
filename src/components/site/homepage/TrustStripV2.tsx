@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRevealOnce } from "@/lib/use-reveal-once";
 import { Truck, ShieldCheck, RotateCcw, Headphones, Lock, Globe2, BadgeCheck } from "lucide-react";
 
 const ITEMS = [
@@ -9,46 +9,8 @@ const ITEMS = [
   { icon: BadgeCheck, label: "Verified Suppliers" },
 ];
 
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return reduced;
-}
-
 export function TrustStripV2() {
-  const reduced = useReducedMotion();
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [shown, setShown] = useState(reduced);
-
-  useEffect(() => {
-    if (reduced) return;
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setShown(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setShown(true);
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { threshold: 0.1 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [reduced]);
+  const { ref, shown } = useRevealOnce<HTMLElement>({ threshold: 0.1 });
 
   return (
     <section ref={ref} className="px-4 sm:px-6 lg:px-10 pt-5 lg:pt-6 pb-8 lg:pb-10 max-w-7xl lg:max-w-[1480px] mx-auto">

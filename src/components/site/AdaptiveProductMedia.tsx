@@ -39,12 +39,25 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
   const [ready, setReady] = useState<boolean>(() => disablePaletteExtraction || (src ? getCachedPalette(src) != null : false));
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
+  // Reliability guard: the reveal below is gated on `onLoad` firing AND the
+  // palette resolving. If either never happens (permanent image error, a
+  // cached-decode race that swallows the load event, a rejected palette
+  // promise), the image would stay at opacity 0 behind an endless shimmer —
+  // the "stuck loading" symptom. This timer guarantees the media always
+  // becomes visible.
+  const [forceRevealed, setForceRevealed] = useState(false);
+
   useEffect(() => {
     setLoadedSrc(null);
+    setForceRevealed(false);
     const cached = disablePaletteExtraction ? null : src ? getCachedPalette(src) : null;
     setPalette(cached ?? FALLBACK_PALETTE);
     setReady(disablePaletteExtraction || cached != null);
+    if (typeof window === "undefined") return;
+    const t = window.setTimeout(() => setForceRevealed(true), 2500);
+    return () => window.clearTimeout(t);
   }, [disablePaletteExtraction, src]);
+
 
   // Reuse the already-decoded, on-screen bitmap for palette extraction — no
   // second decode for same-origin (bundled) images. Only cross-origin storage
@@ -84,11 +97,16 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         return;
       }
       let active = true;
-      void getImagePalette(src).then((p) => {
-        if (!active) return;
-        setPalette(p);
-        setReady(true);
-      });
+      void getImagePalette(src)
+        .then((p) => {
+          if (!active) return;
+          setPalette(p);
+          setReady(true);
+        })
+        .catch(() => {
+          // Palette extraction must never gate visibility.
+          if (active) setReady(true);
+        });
       return () => {
         active = false;
       };
@@ -102,7 +120,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
   // transition. These are compositor/paint animations that add GPU work per
   // card; skipping them removes texture churn while the layout stays identical.
   const gpuUnsafe = isGpuUnsafe();
-  const revealed = plain || gpuUnsafe || (ready && imgLoaded);
+  const revealed = plain || gpuUnsafe || forceRevealed || (ready && imgLoaded);
 
   if (plain) {
     return (

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode, type ComponentType } from "react";
 import { ArrowRight, type LucideProps } from "lucide-react";
+import { useRevealOnce } from "@/lib/use-reveal-once";
 
 export type DocSection = {
   id: string;
@@ -33,19 +34,7 @@ function useScrollProgress() {
 
 /* ---------- Section reveal on scroll ---------- */
 export function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (typeof IntersectionObserver === "undefined") { setShown(true); return; }
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } }),
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+  const { ref, shown } = useRevealOnce<HTMLDivElement>({ threshold: 0.12 });
   return (
     <div
       ref={ref}

@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useRevealOnce } from "@/lib/use-reveal-once";
 
 /**
  * Phase 4 polish primitive.
- * Fades + gently slides children upward (8px) the first time they cross the
+ * Fades + gently slides children upward the first time they cross the
  * viewport. Uses only opacity + transform (GPU-friendly), respects
- * `prefers-reduced-motion`, and unmounts the observer after firing so it never
- * costs anything for the rest of the page's lifetime.
+ * `prefers-reduced-motion`, and is backed by the shared `useRevealOnce`
+ * primitive so the content is GUARANTEED to become visible even when the
+ * IntersectionObserver never fires.
  */
 export function RevealOnScroll({
   children,
@@ -22,41 +23,7 @@ export function RevealOnScroll({
   distance?: number;
   duration?: number;
 }) {
-  const ref = useRef<HTMLElement | null>(null);
-  const [shown, setShown] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-      setShown(true);
-      return;
-    }
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setShown(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setShown(true);
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
-    );
-    io.observe(el);
-    // Safety net: some Android WebViews mis-report intersection. Never let
-    // content stay at opacity 0 forever.
-    const fallback = window.setTimeout(() => setShown(true), 1500);
-    return () => {
-      window.clearTimeout(fallback);
-      io.disconnect();
-    };
-  }, []);
+  const { ref, shown } = useRevealOnce<HTMLElement>();
 
   const style: React.CSSProperties = {
     opacity: shown ? 1 : 0,

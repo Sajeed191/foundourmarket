@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRevealOnce } from "@/lib/use-reveal-once";
 import { Globe2, ShieldCheck, Truck, Headphones } from "lucide-react";
 import { PremiumSectionHeading } from "@/components/site/PremiumSectionHeading";
 
@@ -25,55 +25,8 @@ const BENEFITS = [
   },
 ];
 
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return reduced;
-}
-
 export function WhyFoundOurMarket() {
-  const reduced = useReducedMotion();
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [shown, setShown] = useState(reduced);
-
-  useEffect(() => {
-    if (reduced) {
-      setShown(true);
-      return;
-    }
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setShown(true);
-      return;
-    }
-    // Safety net: some Android WebViews never fire the observer, which would
-    // leave these cards permanently at opacity 0 (looks like endless loading).
-    const fallback = window.setTimeout(() => setShown(true), 4000);
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setShown(true);
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { threshold: 0.1 },
-    );
-    io.observe(el);
-    return () => {
-      window.clearTimeout(fallback);
-      io.disconnect();
-    };
-  }, [reduced]);
+  const { ref, shown } = useRevealOnce<HTMLElement>({ threshold: 0.1 });
 
   return (
     <section ref={ref} className="px-4 sm:px-6 pt-9 pb-10 sm:pt-12 sm:pb-12 max-w-7xl mx-auto">

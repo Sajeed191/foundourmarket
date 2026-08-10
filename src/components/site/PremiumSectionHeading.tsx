@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
+import { useRevealOnce } from "@/lib/use-reveal-once";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -64,36 +65,7 @@ export function PremiumSectionHeading({
   void _href; void _hrefLabel; void _right; void _ghost; void _align;
   void _badge; void _icon; void _live; void _liveLabel; void _number;
 
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [shown, setShown] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    if (reduce) {
-      setShown(true);
-      return;
-    }
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setShown(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setShown(true);
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.1 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+  const { ref, shown } = useRevealOnce<HTMLDivElement>({ threshold: 0.1 });
 
   const reveal = (delay: number): React.CSSProperties => ({
     opacity: shown ? 1 : 0,

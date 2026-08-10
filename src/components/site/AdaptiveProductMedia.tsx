@@ -39,12 +39,25 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
   const [ready, setReady] = useState<boolean>(() => disablePaletteExtraction || (src ? getCachedPalette(src) != null : false));
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
+  // Reliability guard: the reveal below is gated on `onLoad` firing AND the
+  // palette resolving. If either never happens (permanent image error, a
+  // cached-decode race that swallows the load event, a rejected palette
+  // promise), the image would stay at opacity 0 behind an endless shimmer —
+  // the "stuck loading" symptom. This timer guarantees the media always
+  // becomes visible.
+  const [forceRevealed, setForceRevealed] = useState(false);
+
   useEffect(() => {
     setLoadedSrc(null);
+    setForceRevealed(false);
     const cached = disablePaletteExtraction ? null : src ? getCachedPalette(src) : null;
     setPalette(cached ?? FALLBACK_PALETTE);
     setReady(disablePaletteExtraction || cached != null);
+    if (typeof window === "undefined") return;
+    const t = window.setTimeout(() => setForceRevealed(true), 2500);
+    return () => window.clearTimeout(t);
   }, [disablePaletteExtraction, src]);
+
 
   // Reuse the already-decoded, on-screen bitmap for palette extraction — no
   // second decode for same-origin (bundled) images. Only cross-origin storage

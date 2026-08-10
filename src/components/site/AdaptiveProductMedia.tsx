@@ -97,11 +97,16 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
         return;
       }
       let active = true;
-      void getImagePalette(src).then((p) => {
-        if (!active) return;
-        setPalette(p);
-        setReady(true);
-      });
+      void getImagePalette(src)
+        .then((p) => {
+          if (!active) return;
+          setPalette(p);
+          setReady(true);
+        })
+        .catch(() => {
+          // Palette extraction must never gate visibility.
+          if (active) setReady(true);
+        });
       return () => {
         active = false;
       };
@@ -115,7 +120,7 @@ function AdaptiveProductMediaImpl({ src, alt, priority = false, plain = false, c
   // transition. These are compositor/paint animations that add GPU work per
   // card; skipping them removes texture churn while the layout stays identical.
   const gpuUnsafe = isGpuUnsafe();
-  const revealed = plain || gpuUnsafe || (ready && imgLoaded);
+  const revealed = plain || gpuUnsafe || forceRevealed || (ready && imgLoaded);
 
   if (plain) {
     return (

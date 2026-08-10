@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Search, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useRevealOnce } from "@/lib/use-reveal-once";
 
 const PLACEHOLDERS = [
   "Search 2,400+ curated products...",
@@ -21,51 +22,13 @@ function useRotatingPlaceholder(active: boolean) {
   return PLACEHOLDERS[idx];
 }
 
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return reduced;
-}
-
 export function HeroV2({ onOpenSearch }: { onOpenSearch: () => void }) {
   const { user } = useAuth();
   const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const rotating = useRotatingPlaceholder(!focused && !query);
-  const reduced = useReducedMotion();
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [shown, setShown] = useState(reduced);
-
-  useEffect(() => {
-    if (reduced) return;
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setShown(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setShown(true);
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { threshold: 0.1 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [reduced]);
+  const { ref, shown } = useRevealOnce<HTMLElement>({ threshold: 0.1 });
 
   const greeting = useMemo(() => {
     if (!user) return null;

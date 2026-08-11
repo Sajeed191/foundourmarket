@@ -208,7 +208,12 @@ export function useProducts() {
     let active = true;
     const sub = (p: Product[]) => { if (active) setProducts(p); };
     subscribers.add(sub);
-    loadProducts().then((p) => { if (active) { setProducts(p); setLoading(false); } });
+    // Reliability: a rejected catalog fetch (offline, DNS failure, backend
+    // down) must still end the loading state so surfaces render their real
+    // empty/error UI instead of an infinite skeleton.
+    loadProducts()
+      .then((p) => { if (active) { setProducts(p); setLoading(false); } })
+      .catch(() => { if (active) setLoading(false); });
     return () => { active = false; subscribers.delete(sub); };
   }, []);
   return { products, loading };
@@ -249,7 +254,11 @@ export function useProduct(slug: string) {
     // No full record cached (either missing or only a lean list entry) — fetch
     // the complete product so detail-only fields are present.
     setLoading(true);
-    fetchProduct(slug).then((p) => { if (active) { setProduct(p); setLoading(false); } });
+    fetchProduct(slug)
+      .then((p) => { if (active) { setProduct(p); setLoading(false); } })
+      // A failed detail fetch resolves to "not found" UI rather than an
+      // endless product-page skeleton.
+      .catch(() => { if (active) { setProduct(null); setLoading(false); } });
     return () => { active = false; productSubscribers.delete(patchSub); };
   }, [slug]);
   return { product, loading };

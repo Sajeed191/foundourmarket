@@ -421,22 +421,29 @@ export async function fetchProductImages(slug: string): Promise<ProductImage[]> 
 
 
 export async function fetchProductVariants(slug: string): Promise<ProductVariant[]> {
-  const { data } = await supabase
-    .from("product_variants_public")
-    .select("id,name,sku,size,color,color_hex,image_url,price_override,price_adjustment,compare_price,barcode,weight,stock_quantity,low_stock_threshold,sort_order")
-    .eq("product_slug", slug)
-    .order("sort_order", { ascending: true });
-  return (data ?? []).map((r: any) => ({
-    id: r.id, name: r.name, sku: r.sku ?? null,
-    size: r.size ?? null, color: r.color ?? null, colorHex: r.color_hex ?? null,
-    imageUrl: resolveImage(r.image_url) || null,
-    priceOverride: r.price_override != null ? Number(r.price_override) : null,
-    priceAdjustment: Number(r.price_adjustment ?? 0),
-    comparePrice: r.compare_price != null ? Number(r.compare_price) : null,
-    barcode: r.barcode ?? null, weight: r.weight != null ? Number(r.weight) : null,
-    stockQuantity: r.stock_quantity ?? 0, lowStockThreshold: r.low_stock_threshold ?? 5,
-    sortOrder: r.sort_order ?? 0,
-  }));
+  try {
+    const { data } = await supabase
+      .from("product_variants_public")
+      .select("id,name,sku,size,color,color_hex,image_url,price_override,price_adjustment,compare_price,barcode,weight,stock_quantity,low_stock_threshold,sort_order")
+      .eq("product_slug", slug)
+      .order("sort_order", { ascending: true });
+    return (data ?? []).map((r: any) => ({
+      id: r.id, name: r.name, sku: r.sku ?? null,
+      size: r.size ?? null, color: r.color ?? null, colorHex: r.color_hex ?? null,
+      imageUrl: resolveImage(r.image_url) || null,
+      priceOverride: r.price_override != null ? Number(r.price_override) : null,
+      priceAdjustment: Number(r.price_adjustment ?? 0),
+      comparePrice: r.compare_price != null ? Number(r.compare_price) : null,
+      barcode: r.barcode ?? null, weight: r.weight != null ? Number(r.weight) : null,
+      stockQuantity: r.stock_quantity ?? 0, lowStockThreshold: r.low_stock_threshold ?? 5,
+      sortOrder: r.sort_order ?? 0,
+    }));
+  } catch {
+    // Display-only read: a transport failure yields no variants rather than
+    // blocking the product page. Cart/checkout revalidation (fetchVariantsByIds)
+    // intentionally still surfaces its errors.
+    return [];
+  }
 }
 
 /**

@@ -66,12 +66,20 @@ export async function loadCategories(force = false): Promise<Category[]> {
   if (cache && !force) return cache;
   if (!inflight) {
     inflight = (async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select(CATEGORY_COLUMNS)
-        .eq("status", "published")
-        .eq("homepage_visible", true)
-        .order("sort_order", { ascending: true });
+      // Never let a network rejection poison the shared inflight promise:
+      // every later caller would inherit the rejection for the whole session
+      // and categories would stay "loading" forever.
+      let data: unknown = null;
+      try {
+        ({ data } = await supabase
+          .from("categories")
+          .select(CATEGORY_COLUMNS)
+          .eq("status", "published")
+          .eq("homepage_visible", true)
+          .order("sort_order", { ascending: true }));
+      } catch {
+        data = null;
+      }
       const list = (data as Category[] | null) ?? [];
       cache = list;
       categoriesLoadedAt = Date.now();
@@ -98,12 +106,14 @@ export function useCategories() {
       if (active) setCategories(c);
     };
     subscribers.add(sub);
-    loadCategories().then((c) => {
-      if (active) {
-        setCategories(c);
-        setLoading(false);
-      }
-    });
+    loadCategories()
+      .then((c) => {
+        if (active) {
+          setCategories(c);
+          setLoading(false);
+        }
+      })
+      .catch(() => { if (active) setLoading(false); });
     return () => {
       active = false;
       subscribers.delete(sub);
@@ -124,11 +134,16 @@ async function loadAllPublished(force = false): Promise<Category[]> {
   if (allCache && !force) return allCache;
   if (!allInflight) {
     allInflight = (async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select(CATEGORY_COLUMNS)
-        .eq("status", "published")
-        .order("sort_order", { ascending: true });
+      let data: unknown = null;
+      try {
+        ({ data } = await supabase
+          .from("categories")
+          .select(CATEGORY_COLUMNS)
+          .eq("status", "published")
+          .order("sort_order", { ascending: true }));
+      } catch {
+        data = null;
+      }
       const list = (data as Category[] | null) ?? [];
       allCache = list;
       allInflight = null;
@@ -148,9 +163,9 @@ export function useAllCategories() {
     bindRealtime();
     const sub = (c: Category[]) => { if (active) setCategories(c); };
     allSubscribers.add(sub);
-    loadAllPublished().then((c) => {
-      if (active) { setCategories(c); setLoading(false); }
-    });
+    loadAllPublished()
+      .then((c) => { if (active) { setCategories(c); setLoading(false); } })
+      .catch(() => { if (active) setLoading(false); });
     return () => { active = false; allSubscribers.delete(sub); };
   }, []);
   // Helpers derived once per render.
@@ -168,10 +183,15 @@ const adminSubscribers = new Set<(c: Category[]) => void>();
 /** Admin loader — ALL categories (incl. hidden/draft) so staff can toggle. */
 async function loadAdminCategories(force = false): Promise<Category[]> {
   if (adminCache && !force) return adminCache;
-  const { data } = await supabase
-    .from("categories")
-    .select(CATEGORY_COLUMNS)
-    .order("sort_order", { ascending: true });
+  let data: unknown = null;
+  try {
+    ({ data } = await supabase
+      .from("categories")
+      .select(CATEGORY_COLUMNS)
+      .order("sort_order", { ascending: true }));
+  } catch {
+    data = null;
+  }
   const list = (data as Category[] | null) ?? [];
   adminCache = list;
   adminSubscribers.forEach((s) => s(list));
@@ -187,7 +207,7 @@ export function useAdminCategories(enabled: boolean) {
     bindRealtime();
     const sub = (c: Category[]) => { if (active) setCategories(c); };
     adminSubscribers.add(sub);
-    loadAdminCategories().then((c) => { if (active) setCategories(c); });
+    loadAdminCategories().then((c) => { if (active) setCategories(c); }).catch(() => {});
     return () => { active = false; adminSubscribers.delete(sub); };
   }, [enabled]);
   return { categories };

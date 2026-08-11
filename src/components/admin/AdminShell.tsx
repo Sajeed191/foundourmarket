@@ -145,8 +145,23 @@ export function useAdminRoles() {
   const [roles, setRoles] = useState<Role[] | null>(null);
   useEffect(() => {
     if (!user) { setRoles(null); return; }
-    supabase.from("user_roles").select("role").eq("user_id", user.id)
-      .then(({ data }) => setRoles((data?.map((r) => r.role as Role)) ?? []));
+    let active = true;
+    // Reliability: a network/backend failure here must resolve to "no roles"
+    // instead of leaving the gate stuck on "Verifying access…" forever. A
+    // safety timeout covers a request that never settles at all.
+    const settle = (next: Role[]) => { if (active) setRoles(next); };
+    const timer = window.setTimeout(() => settle([]), 8000);
+    void (async () => {
+      try {
+        const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        settle((data?.map((r) => r.role as Role)) ?? []);
+      } catch {
+        settle([]);
+      } finally {
+        window.clearTimeout(timer);
+      }
+    })();
+    return () => { active = false; window.clearTimeout(timer); };
   }, [user]);
   return { user, loading, roles };
 }
@@ -220,6 +235,28 @@ export function AdminShell({
     }
     return "Admin";
   }, [path, activeTab]);
+
+  // Signed out: never spin. Auth has settled and there is no user, so show a
+  // usable sign-in prompt immediately.
+  if (!loading && !user) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center px-6">
+        <div className="text-center max-w-md">
+          <div className="size-14 mx-auto mb-5 grid place-items-center rounded-full border border-border bg-card">
+            <ShieldAlert className="size-5 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-display font-semibold mb-2">Sign in required</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            This area is for FoundOurMarket™ staff. Sign in to continue.
+          </p>
+          <Link to="/auth" className="inline-block text-xs uppercase tracking-widest text-accent hover:underline">Sign in</Link>
+          <div>
+            <Link to="/" className="inline-block mt-6 text-xs uppercase tracking-widest text-muted-foreground hover:underline">← Back to shop</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || roles === null) {
     return (

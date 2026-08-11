@@ -236,6 +236,28 @@ export function AdminShell({
     return "Admin";
   }, [path, activeTab]);
 
+  // Signed out: never spin. Auth has settled and there is no user, so show a
+  // usable sign-in prompt immediately.
+  if (!loading && !user) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center px-6">
+        <div className="text-center max-w-md">
+          <div className="size-14 mx-auto mb-5 grid place-items-center rounded-full border border-border bg-card">
+            <ShieldAlert className="size-5 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-display font-semibold mb-2">Sign in required</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            This area is for FoundOurMarket™ staff. Sign in to continue.
+          </p>
+          <Link to="/auth" className="inline-block text-xs uppercase tracking-widest text-accent hover:underline">Sign in</Link>
+          <div>
+            <Link to="/" className="inline-block mt-6 text-xs uppercase tracking-widest text-muted-foreground hover:underline">← Back to shop</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading || roles === null) {
     return (
       <div className="min-h-[60vh] grid place-items-center">

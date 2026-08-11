@@ -145,8 +145,23 @@ export function useAdminRoles() {
   const [roles, setRoles] = useState<Role[] | null>(null);
   useEffect(() => {
     if (!user) { setRoles(null); return; }
-    supabase.from("user_roles").select("role").eq("user_id", user.id)
-      .then(({ data }) => setRoles((data?.map((r) => r.role as Role)) ?? []));
+    let active = true;
+    // Reliability: a network/backend failure here must resolve to "no roles"
+    // instead of leaving the gate stuck on "Verifying access…" forever. A
+    // safety timeout covers a request that never settles at all.
+    const settle = (next: Role[]) => { if (active) setRoles(next); };
+    const timer = window.setTimeout(() => settle([]), 8000);
+    void (async () => {
+      try {
+        const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        settle((data?.map((r) => r.role as Role)) ?? []);
+      } catch {
+        settle([]);
+      } finally {
+        window.clearTimeout(timer);
+      }
+    })();
+    return () => { active = false; window.clearTimeout(timer); };
   }, [user]);
   return { user, loading, roles };
 }

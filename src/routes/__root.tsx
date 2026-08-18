@@ -33,6 +33,10 @@ import { registerServiceWorker } from "@/lib/pwa";
 import { logBuildVersion, BUILD_ID } from "@/lib/build-version";
 import { preloadCrisp } from "@/lib/crisp";
 import { trackPageView } from "@/lib/analytics";
+import {
+  META_PIXEL_BASE_SCRIPT,
+  META_PIXEL_NOSCRIPT_URL,
+} from "@/lib/meta-pixel";
 import { loadProducts, useProducts } from "@/lib/use-products";
 import { captureAttribution } from "@/lib/marketing-tracking";
 import { LayoutMetricsProvider } from "@/lib/layout-metrics";
@@ -626,6 +630,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        // Meta Pixel base code — placed synchronously in <head> so it fires
+        // before navigation and captures the initial PageView. The exact
+        // snippet matches the one provided in Events Manager.
+        children: META_PIXEL_BASE_SCRIPT,
+      },
+      {
         children: STARTUP_GUARD_SCRIPT,
       },
       {
@@ -793,6 +803,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
             </p>
           </div>
         </noscript>
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src={META_PIXEL_NOSCRIPT_URL}
+            alt=""
+          />
+        </noscript>
         {children}
         <Scripts />
       </body>
@@ -871,6 +890,7 @@ function IsolationRoot() {
     trackPageView(pathname);
     void captureAttribution();
     import("@/lib/ga4").then((m) => m.ga4PageView(pathname)).catch(() => {});
+    import("@/lib/meta-pixel").then((m) => m.metaPixelPageView(pathname)).catch(() => {});
   }, [pathname]);
   return (
     <QueryClientProvider client={queryClient}>
@@ -1013,6 +1033,7 @@ function AppRoot() {
     trackPageView(pathname);
     void captureAttribution();
     import("@/lib/ga4").then((m) => m.ga4PageView(pathname)).catch(() => {});
+    import("@/lib/meta-pixel").then((m) => m.metaPixelPageView(pathname)).catch(() => {});
   }, [pathname]);
   useEffect(() => {
     if (!oauthReturnPending || typeof window === "undefined") return;

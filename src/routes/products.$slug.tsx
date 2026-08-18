@@ -313,6 +313,13 @@ function ProductPage() {
         item_category: product.category ?? undefined,
         item_brand: product.brand ?? undefined,
       }, market === "india" ? "INR" : "USD")).catch(() => {});
+      import("@/lib/meta-pixel").then((m) => m.metaPixelViewItem({
+        item_id: product.sku || product.slug,
+        item_name: product.name,
+        price: priceOf(product),
+        item_category: product.category ?? undefined,
+        item_brand: product.brand ?? undefined,
+      }, market === "india" ? "INR" : "USD")).catch(() => {});
       fetchFBT(product.slug, 4).then((slugs) => {
         setFbtSlugs(slugs);
         if (slugs.length) fetchProductsBySlugs(slugs).then(setFbtProducts).catch(() => {});

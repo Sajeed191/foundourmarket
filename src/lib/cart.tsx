@@ -290,6 +290,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           item_category: product.category ?? undefined,
           item_brand: product.brand ?? undefined,
         }, market === "india" ? "INR" : "USD")).catch(() => {});
+        import("@/lib/meta-pixel").then((m) => m.metaPixelAddToCart({
+          item_id: product.sku || product.slug,
+          item_name: product.name,
+          price: priceOf(product),
+          quantity: qty,
+          item_category: product.category ?? undefined,
+          item_brand: product.brand ?? undefined,
+        }, market === "india" ? "INR" : "USD")).catch(() => {});
       }
     });
     if (user && cartId) {

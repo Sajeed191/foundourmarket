@@ -626,6 +626,18 @@ function CheckoutPage() {
       market === "india" ? "INR" : "USD",
       totalINR,
     )).catch(() => {});
+    import("@/lib/meta-pixel").then((m) => m.metaPixelBeginCheckout(
+      detailed.map((i) => ({
+        item_id: i.product.sku || i.product.slug,
+        item_name: i.product.name,
+        price: priceOf(i.product),
+        quantity: i.qty,
+        item_category: i.product.category ?? undefined,
+        item_brand: i.product.brand ?? undefined,
+      })),
+      market === "india" ? "INR" : "USD",
+      totalINR,
+    )).catch(() => {});
     import("@/lib/visitor").then((m) => {
       m.trackEvent("checkout_start", { value: totalINR, metadata: { pay_method: payMethod } });
       m.trackEvent("order_attempted", { value: totalINR, metadata: { pay_method: payMethod } });
@@ -644,6 +656,19 @@ function CheckoutPage() {
       import("@/lib/recommendations/performance").then((m) => m.attributeStage("purchase")).catch(() => {});
       if (placedOrderId) {
         import("@/lib/ga4").then((m) => m.ga4Purchase({
+          transaction_id: placedOrderId,
+          value: totalINR,
+          currency: market === "india" ? "INR" : "USD",
+          items: purchaseItemsRef.current.map((i) => ({
+            item_id: i.product.sku || i.product.slug,
+            item_name: i.product.name,
+            price: priceOf(i.product),
+            quantity: i.qty,
+            item_category: i.product.category ?? undefined,
+            item_brand: i.product.brand ?? undefined,
+          })),
+        })).catch(() => {});
+        import("@/lib/meta-pixel").then((m) => m.metaPixelPurchase({
           transaction_id: placedOrderId,
           value: totalINR,
           currency: market === "india" ? "INR" : "USD",

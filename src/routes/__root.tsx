@@ -890,6 +890,7 @@ function IsolationRoot() {
     trackPageView(pathname);
     void captureAttribution();
     import("@/lib/ga4").then((m) => m.ga4PageView(pathname)).catch(() => {});
+    import("@/lib/meta-pixel").then((m) => m.metaPixelPageView(pathname)).catch(() => {});
   }, [pathname]);
   return (
     <QueryClientProvider client={queryClient}>

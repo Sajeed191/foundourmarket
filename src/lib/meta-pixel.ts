@@ -18,38 +18,18 @@ function fbq(command: "track" | "trackCustom" | "init" | "consent", event: strin
   window.fbq(command, event, params);
 }
 
-let pixelLoaded = false;
+let pixelScriptInjected = false;
 
 /**
- * Inject the Meta Pixel base code lazily, off the critical path.
- * Safe to call repeatedly; only initializes once per session.
+ * Fallback script injector — the pixel base code is normally placed
+ * synchronously in <head>, but this lets downstream code trigger it safely
+ * if it ever needs to. Safe to call repeatedly; only runs once.
  */
 export function loadMetaPixel() {
-  if (typeof window === "undefined" || pixelLoaded) return;
-  pixelLoaded = true;
+  if (typeof window === "undefined" || pixelScriptInjected) return;
+  pixelScriptInjected = true;
 
-  const w = window as unknown as {
-    fbq?: (
-      command: "track" | "trackCustom" | "init" | "consent",
-      event: string,
-      params?: Record<string, unknown>,
-    ) => void;
-    _fbq?: unknown;
-  };
-
-  if (w.fbq) return;
-
-  const n = (
-    _command: "track" | "trackCustom" | "init" | "consent",
-    _event: string,
-    _params?: Record<string, unknown>,
-  ) => {
-    // The base code's queueing stub; after init it gets replaced by the real fbq.
-    // We mirror the standard loader below, so this is never actually invoked.
-  };
-
-  w.fbq = n as typeof w.fbq;
-  if (!w._fbq) w._fbq = n;
+  if (typeof window.fbq === "function") return;
 
   const script = document.createElement("script");
   script.async = true;

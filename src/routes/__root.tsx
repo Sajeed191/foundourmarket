@@ -630,6 +630,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        // Meta Pixel base code — placed synchronously in <head> so it fires
+        // before navigation and captures the initial PageView. The exact
+        // snippet matches the one provided in Events Manager.
+        children: META_PIXEL_BASE_SCRIPT,
+      },
+      {
         children: STARTUP_GUARD_SCRIPT,
       },
       {

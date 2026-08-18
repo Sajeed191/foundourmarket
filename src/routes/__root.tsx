@@ -33,6 +33,10 @@ import { registerServiceWorker } from "@/lib/pwa";
 import { logBuildVersion, BUILD_ID } from "@/lib/build-version";
 import { preloadCrisp } from "@/lib/crisp";
 import { trackPageView } from "@/lib/analytics";
+import {
+  META_PIXEL_BASE_SCRIPT,
+  META_PIXEL_NOSCRIPT_URL,
+} from "@/lib/meta-pixel";
 import { loadProducts, useProducts } from "@/lib/use-products";
 import { captureAttribution } from "@/lib/marketing-tracking";
 import { LayoutMetricsProvider } from "@/lib/layout-metrics";

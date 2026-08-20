@@ -1125,7 +1125,7 @@ function CheckoutPage() {
               style={{ bottom: "var(--product-dock-bottom)" }}
             >
               <div ref={stickyBarRef} className="pointer-events-auto rounded-2xl border border-white/12 p-2.5"
-                style={{ background: "color-mix(in oklab, var(--color-background) 82%, transparent)", backdropFilter: "blur(28px) saturate(160%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
+                style={{ background: "color-mix(in oklab, var(--color-background) 96%, var(--color-accent) 2%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
                 {orderBlockedReason && !busy && (
                   <p className="flex items-center gap-1.5 text-[11px] text-amber-400/90 px-1.5 pb-2 pt-0.5">
                     <XCircle className="size-3.5 shrink-0" /> {orderBlockedReason}

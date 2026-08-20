@@ -1190,8 +1190,9 @@ function ProductPage() {
                   className="mt-8 overflow-hidden rounded-2xl border border-white/10"
                   style={{
                     background: "linear-gradient(135deg, oklch(1 0 0 / 0.05), oklch(1 0 0 / 0.015))",
-                    backdropFilter: "blur(20px) saturate(140%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(140%)",
+                    // Cheaper radius: large blur radii cost roughly O(r) per frame.
+                    backdropFilter: "blur(10px) saturate(140%)",
+                    WebkitBackdropFilter: "blur(10px) saturate(140%)",
                   }}
                 >
                   <button
@@ -1326,7 +1327,7 @@ function ProductPage() {
       {/* Sticky mobile purchase dock v6.2 — intel line + Price + Add + Primary CTA. */}
       {showPurchaseDock && (
       <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 ease-out will-change-transform" style={{ bottom: "var(--product-dock-bottom)", transform: navHidden ? "translateY(calc(var(--product-dock-bottom) - var(--mobile-safe-bottom)))" : "translateY(0)", transition: "transform 200ms ease-out" }}>
-        <div className="flex h-full flex-col justify-center gap-1.5 rounded-[24px] border border-white/10 px-3 py-1.5" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
+        <div className="flex h-full flex-col justify-center gap-1.5 rounded-[24px] border border-white/10 px-3 py-1.5" style={{ background: "color-mix(in oklab, var(--color-background) 92%, oklch(1 0 0 / 0.06))", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
           <PDPStickyIntel
             missingVariant={missingVariant}
             isOOS={isOOS}

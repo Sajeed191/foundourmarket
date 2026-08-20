@@ -6,7 +6,7 @@ import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
 import { newsletterVerifyTemplate } from '@/lib/email-templates/newsletter-verify'
 
-const SENDER_DOMAIN = 'mail.foundourmarket.com'
+const SENDER_DOMAIN = 'sends.foundourmarket.com'
 const FROM_DOMAIN = 'foundourmarket.com'
 const PUBLIC_BASE = 'https://foundourmarket.com'
 

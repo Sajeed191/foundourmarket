@@ -13,7 +13,7 @@ export interface SenderIdentity {
  * Default sender for ALL customer-facing communications.
  *
  * IMPORTANT (deliverability): the From-address domain MUST match the verified
- * sending domain (`mail.foundourmarket.com`) so that SPF, DKIM and DMARC
+ * sending domain (`sends.foundourmarket.com`) so that SPF, DKIM and DMARC
  * all align. Sending From the root `foundourmarket.com` while signing with the
  * delegated subdomain triggers the provider's `sender_domain_mismatch` rejection
  * and forces every message through the Gmail backup (which lands in Spam).
@@ -22,7 +22,7 @@ export interface SenderIdentity {
  * every reply is routed to the human mailbox via REPLY_TO below.
  */
 export const PRIMARY_SENDER: SenderIdentity = {
-  email: 'support@mail.foundourmarket.com',
+  email: 'support@sends.foundourmarket.com',
   name: 'FoundOurMarket Support',
 }
 

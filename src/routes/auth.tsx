@@ -52,7 +52,16 @@ const BENEFITS = [
   { icon: ShieldCheck, label: "Safer account recovery" },
 ];
 
-const oauthRedirectUri = () => window.location.origin;
+// Canonical OAuth return URL. On production (apex or www) we always return to
+// https://foundourmarket.com/auth/callback so the redirect URI is stable and
+// never varies with the browser origin. Previews/dev keep their own origin.
+const CANONICAL_ORIGIN = "https://foundourmarket.com";
+
+const oauthRedirectUri = () => {
+  const { hostname, origin } = window.location;
+  const isProd = hostname === "foundourmarket.com" || hostname === "www.foundourmarket.com";
+  return `${isProd ? CANONICAL_ORIGIN : origin}/auth/callback`;
+};
 
 function AuthPage() {
   const [mode, setMode] = useState<"oauth" | "email">("oauth");

@@ -760,7 +760,7 @@ function DeferredShell({
 
   return (
     <Suspense fallback={null}>
-      <IsolatedBoundary name="RegionSelectModal"><RegionSelectModal /></IsolatedBoundary>
+      <IsolatedBoundary name="RegionSelectModal"><RegionModalMount /></IsolatedBoundary>
       {!isAuthRoute && <IsolatedBoundary name="AdminMobileBar"><AdminMobileBar /></IsolatedBoundary>}
       
       {!isAuthRoute && <IsolatedBoundary name="AdminOverlayIndicator"><AdminOverlayIndicator /></IsolatedBoundary>}

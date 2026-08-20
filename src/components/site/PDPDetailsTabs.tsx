@@ -9,7 +9,7 @@
  * single IntersectionObserver; animations are transform/opacity only and are
  * disabled under prefers-reduced-motion.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   BatteryCharging,
   Check,

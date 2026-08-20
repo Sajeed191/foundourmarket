@@ -229,8 +229,10 @@ function WishlistButtonImpl({ slug, name }: { slug: string; name: string }) {
     <button
       onClick={onClick}
       aria-label={saved ? `Remove ${name} from wishlist` : `Add ${name} to wishlist`}
-      style={{ backgroundColor: "rgba(20,20,20,0.55)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 2px 10px rgba(0,0,0,0.30)" }}
-      className={`absolute right-3 top-3 z-10 grid h-[40px] w-[40px] place-items-center rounded-full text-white transition-colors ${saved ? "text-accent" : "hover:text-accent"} ${justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
+      /* Blur is desktop-only (md:backdrop-blur-[10px]) — on phones the opaque
+         fill gives the same look without a per-card framebuffer readback layer. */
+      style={{ backgroundColor: "rgba(20,20,20,0.72)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 2px 10px rgba(0,0,0,0.30)" }}
+      className={`absolute right-3 top-3 z-10 grid h-[40px] w-[40px] place-items-center rounded-full text-white transition-colors md:backdrop-blur-[10px] ${saved ? "text-accent" : "hover:text-accent"} ${justSaved ? "animate-[save-pulse_0.6s_ease-out]" : ""}`}
     >
       <Heart className={`size-[18px] ${saved ? "fill-accent" : ""}`} />
     </button>

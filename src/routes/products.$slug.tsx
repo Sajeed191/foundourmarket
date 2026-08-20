@@ -17,10 +17,18 @@ import { useBuyNow } from "@/lib/use-buy-now";
 import { useLayoutMetrics } from "@/lib/layout-metrics";
 import { useRecentlyViewed } from "@/hooks/use-recently-viewed";
 
-import { ProductReviews } from "@/components/site/ProductReviews";
-import { PDPFaqAndQuestions } from "@/components/site/PDPFaqAndQuestions";
+// Below-the-fold sections are code-split so the initial PDP bundle only
+// carries the primary product experience.
+const ProductReviews = lazy(() =>
+  import("@/components/site/ProductReviews").then((m) => ({ default: m.ProductReviews })),
+);
+const PDPFaqAndQuestions = lazy(() =>
+  import("@/components/site/PDPFaqAndQuestions").then((m) => ({ default: m.PDPFaqAndQuestions })),
+);
 import { StarRating } from "@/components/site/StarRating";
-import { PDPCompareSection } from "@/components/site/PDPCompareSection";
+const PDPCompareSection = lazy(() =>
+  import("@/components/site/PDPCompareSection").then((m) => ({ default: m.PDPCompareSection })),
+);
 import { SavingsBadge } from "@/components/site/SavingsBadge";
 import { PDPStickyIntel } from "@/components/site/PDPStickyIntel";
 import { useWishlist } from "@/lib/wishlist";
@@ -1288,7 +1296,11 @@ function ProductPage() {
         </LazyMount>
       )}
 
-      <PDPCompareSection currentProduct={product} />
+      <LazyMount minHeight={200} rootMargin="500px">
+        <Suspense fallback={null}>
+          <PDPCompareSection currentProduct={product} />
+        </Suspense>
+      </LazyMount>
 
 
 

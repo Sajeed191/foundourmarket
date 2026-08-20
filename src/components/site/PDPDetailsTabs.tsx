@@ -9,7 +9,7 @@
  * single IntersectionObserver; animations are transform/opacity only and are
  * disabled under prefers-reduced-motion.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   BatteryCharging,
   Check,
@@ -315,6 +315,84 @@ export function PDPDetailsTabsSkeleton() {
   );
 }
 
+/**
+ * Description expand/collapse — fully isolated so a tap only re-renders this
+ * subtree. The content height is measured ONCE per description (into state)
+ * instead of being read from the DOM during render, which removes the forced
+ * synchronous layout that made the first tap feel laggy on mobile.
+ */
+const DescriptionPanel = memo(function DescriptionPanel({
+  description,
+}: {
+  description?: string | null;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [fullHeight, setFullHeight] = useState<number | null>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [description]);
+
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setFullHeight(el.scrollHeight));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
+  }, [description]);
+
+  const overflows = fullHeight != null && fullHeight > COLLAPSED_DESC_PX + 24;
+  const toggle = useCallback(() => setExpanded((v) => !v), []);
+
+  return (
+    <>
+      <div
+        className="pdp-desc-clip relative mx-auto max-w-[68ch] overflow-hidden text-[15px] leading-[1.75]"
+        style={{
+          maxHeight:
+            !overflows || expanded ? `${(fullHeight ?? 4000) + 40}px` : `${COLLAPSED_DESC_PX}px`,
+        }}
+      >
+        <div ref={innerRef}>
+          {/* collapsible={false}: this card owns the only expand control. */}
+          <ProductDescription description={description} collapsible={false} />
+        </div>
+        {overflows && !expanded && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent"
+          />
+        )}
+      </div>
+      {overflows && (
+        <div className="mt-5 flex justify-center">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={expanded}
+            className="group inline-flex min-h-[44px] items-center gap-2 rounded-full border border-accent/25 bg-accent/[0.07] px-5 text-[11px] font-medium uppercase tracking-[0.18em] text-accent transition-colors duration-200 hover:border-accent/50 hover:bg-accent/[0.12] active:bg-accent/[0.16]"
+          >
+            {expanded ? "Show less" : "Show more"}
+            <ChevronDown
+              className={cn("size-3.5 transition-transform duration-200", expanded && "rotate-180")}
+            />
+          </button>
+        </div>
+      )}
+    </>
+  );
+});
+
 export function PDPDetailsTabs({
   description,
   features,
@@ -375,30 +453,8 @@ export function PDPDetailsTabs({
   }, [groups.length, hasDescription, featureList.length, hasWarranty, boxItems.length]);
 
   const [active, setActive] = useState<string>("");
-  // Single source of truth for the description expand/collapse control.
-  const [expanded, setExpanded] = useState(false);
-  const [overflows, setOverflows] = useState(false);
-  const descRef = useRef<HTMLDivElement>(null);
   const current = tabs.some((t) => t.id === active) ? active : (tabs[0]?.id ?? "");
 
-  // Reset whenever the product description changes (async loads, navigation).
-  useEffect(() => {
-    setExpanded(false);
-  }, [description]);
-
-  // Only offer the control when the text actually overflows the clamp.
-  useEffect(() => {
-    const el = descRef.current;
-    if (!el) {
-      setOverflows(false);
-      return;
-    }
-    const measure = () => setOverflows(el.scrollHeight > COLLAPSED_DESC_PX + 24);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [description, current]);
 
 
   // Sliding orange indicator behind the active pill.
@@ -544,42 +600,7 @@ export function PDPDetailsTabs({
         {current === "description" && (
           <Reveal observe={observe}>
             <DetailCard title="About this product" subtitle="Everything you need to know">
-              <div
-                className="relative mx-auto max-w-[68ch] overflow-hidden text-[15px] leading-[1.75] transition-[max-height,opacity] duration-500 ease-out"
-                style={{
-                  maxHeight: !overflows || expanded ? `${(descRef.current?.scrollHeight ?? 4000) + 40}px` : `${COLLAPSED_DESC_PX}px`,
-                }}
-              >
-                <div ref={descRef}>
-                  {/* collapsible={false}: this card owns the only expand control. */}
-                  <ProductDescription description={description} collapsible={false} />
-                </div>
-                {overflows && !expanded && (
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent"
-                  />
-                )}
-              </div>
-              {overflows && (
-                <div className="mt-5 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setExpanded((v) => !v)}
-                    aria-expanded={expanded}
-                    className="group inline-flex min-h-[44px] items-center gap-2 rounded-full border border-accent/25 bg-accent/[0.07] px-5 text-[11px] font-medium uppercase tracking-[0.18em] text-accent transition-all duration-300 hover:border-accent/50 hover:bg-accent/[0.12]"
-                  >
-                    {expanded ? "Show less" : "Show more"}
-                    <ChevronDown
-                      className={cn(
-                        "size-3.5 transition-transform duration-300",
-                        expanded && "rotate-180",
-                      )}
-                    />
-                  </button>
-                </div>
-              )}
-
+              <DescriptionPanel description={description} />
             </DetailCard>
           </Reveal>
         )}

@@ -5832,3 +5832,16 @@ textarea.editor-deeplink-target {
   [data-theme="light"] button:active,
   [data-theme="light"] a[role="button"]:active { transform: none; }
 }
+
+/* PDP description expand/collapse: short, clip-only transition. Layout of the
+   text never changes (width is fixed), so this only animates the clip box.
+   Disabled entirely under reduced motion so the toggle is instant. */
+.pdp-desc-clip {
+  transition: max-height 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  contain: paint;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pdp-desc-clip {
+    transition: none;
+  }
+}

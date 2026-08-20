@@ -71,7 +71,7 @@ const triggerClass =
   "inline-flex h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-[11px] font-bold uppercase tracking-widest text-foreground transition-all duration-200 hover:border-accent/40 active:scale-[0.97] data-[state=open]:border-accent/60 data-[state=open]:bg-accent/10 data-[state=active]:border-accent/50";
 
 const contentClass =
-  "min-w-52 rounded-2xl border border-border bg-popover/95 p-1.5 shadow-2xl backdrop-blur-xl";
+  "min-w-52 rounded-2xl border border-border bg-popover/95 p-1.5 shadow-2xl md:backdrop-blur-xl";
 
 const itemClass =
   "flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-xs font-medium transition-colors data-[highlighted]:bg-accent/10 data-[highlighted]:text-accent";

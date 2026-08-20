@@ -55,7 +55,7 @@ export function CarouselViewAllCard({
         aria-label={title}
         className={cn(
           "group relative flex h-full min-h-full w-full flex-col items-center justify-center gap-3 overflow-hidden",
-          "rounded-[22px] border border-accent/20 bg-card/40 p-4 text-center backdrop-blur-xl",
+          "rounded-[22px] border border-accent/20 bg-card/40 p-4 text-center md:backdrop-blur-xl",
           "shadow-[var(--shadow-ember)] transition-[transform,border-color,box-shadow] duration-200 ease-out",
           "hover:border-accent/45 active:scale-[0.98]",
         )}

@@ -115,7 +115,7 @@ export function LightMobileDrawer({
       {/* Soft blurred backdrop */}
       <div
         style={{ opacity: visible ? 1 : 0, transition: "opacity 0.3s ease" }}
-        className="absolute inset-0 bg-foreground/30 backdrop-blur-[6px]"
+        className="absolute inset-0 bg-foreground/30 md:backdrop-blur-[6px]"
         onClick={onClose}
       />
       <aside

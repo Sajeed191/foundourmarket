@@ -130,7 +130,7 @@ export function QuickViewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md gap-0 overflow-hidden rounded-[24px] border-white/10 bg-card/80 p-0 backdrop-blur-2xl">
+      <DialogContent className="max-w-md gap-0 overflow-hidden rounded-[24px] border-white/10 bg-card/80 p-0 md:backdrop-blur-2xl">
         <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
           <ProductImage
             key={previewImage}

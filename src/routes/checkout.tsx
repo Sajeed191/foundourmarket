@@ -1189,7 +1189,7 @@ function CheckoutPage() {
       <AnimatePresence>
         {(stage === "processing" || stage === "verifying" || stage === "failed") && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 grid place-items-center bg-black/70 backdrop-blur-md px-6">
+            className="fixed inset-0 z-50 grid place-items-center bg-black/70 md:backdrop-blur-md px-6">
             <motion.div initial={{ scale: 0.94, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, opacity: 0 }}
               className="glass-strong border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center">
               {stage === "failed" ? (

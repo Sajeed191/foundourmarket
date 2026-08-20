@@ -155,7 +155,7 @@ function CategoryPage() {
           <h1 className="text-3xl sm:text-5xl font-display font-semibold tracking-tight capitalize">{cat?.name ?? slug}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {subs.length > 0 && (
-              <span className="rounded-full border border-accent/30 bg-background/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+              <span className="rounded-full border border-accent/30 bg-background/40 px-3 py-1 text-xs text-muted-foreground md:backdrop-blur">
                 {subs.length} {subs.length === 1 ? "Subcategory" : "Subcategories"}
               </span>
             )}

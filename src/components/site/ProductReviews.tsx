@@ -848,7 +848,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
 
           {/* ── Single smart action card ─────────────────────────────────── */}
           {expanded && (
-          <div className="mb-8 rounded-3xl border border-white/10 bg-card/50 backdrop-blur-xl p-5 sm:p-7 relative overflow-hidden">
+          <div className="mb-8 rounded-3xl border border-white/10 bg-card/50 md:backdrop-blur-xl p-5 sm:p-7 relative overflow-hidden">
             <div className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
 
             {/* CASE 1 — Guest */}
@@ -907,7 +907,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
 
           {/* Review highlights */}
           {expanded && highlights.length > 0 && (
-            <div className="mb-8 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-5">
+            <div className="mb-8 rounded-2xl border border-white/10 bg-card/40 md:backdrop-blur-xl p-5">
               <p className="mb-3 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Customers love</p>
               <div className="flex flex-wrap gap-2">
                 {highlights.map((h) => (
@@ -1062,7 +1062,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
                         className={cn(
-                          "group rounded-[20px] border bg-card/60 backdrop-blur-xl p-4 sm:p-5 transition-colors hover:border-white/15",
+                          "group rounded-[20px] border bg-card/60 md:backdrop-blur-xl p-4 sm:p-5 transition-colors hover:border-white/15",
                           r.pinned || r.featured ? "border-accent/40" : "border-white/10",
                           r.status !== "published" && "opacity-70",
                         )}
@@ -1187,7 +1187,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                                           <>
                                             <video src={m.url} className="size-full object-cover" muted playsInline preload="metadata" />
                                             <span className="absolute inset-0 grid place-items-center bg-black/30">
-                                              <span className="grid size-8 place-items-center rounded-full bg-black/60 backdrop-blur-sm">
+                                              <span className="grid size-8 place-items-center rounded-full bg-black/60 md:backdrop-blur-sm">
                                                 <Play className="size-3.5 text-white fill-white" />
                                               </span>
                                             </span>
@@ -1251,7 +1251,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                                 {moreOpenId === r.id && (
                                   <>
                                     <div className="fixed inset-0 z-10" onClick={() => setMoreOpenId(null)} />
-                                    <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-white/10 bg-popover/95 backdrop-blur-xl p-1 shadow-2xl">
+                                    <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-white/10 bg-popover/95 md:backdrop-blur-xl p-1 shadow-2xl">
                                       {isOwn && r.status !== "deleted" && (
                                         <button
                                           onClick={() => {
@@ -1317,7 +1317,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
                                 </button>
                                 {modOpenId === r.id && (
                                   <div
-                                    className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-background/80 backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.6)]"
+                                    className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-background/80 md:backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.6)]"
                                     role="menu"
                                     aria-label="Review moderation"
                                   >
@@ -1809,7 +1809,7 @@ function SmartActions({
 function StatCard({ icon, value, label, highlight }: { icon: React.ReactNode; value: string; label: string; highlight?: boolean }) {
   return (
     <div className={cn(
-      "rounded-2xl border p-4 backdrop-blur-xl",
+      "rounded-2xl border p-4 md:backdrop-blur-xl",
       highlight ? "border-accent/30 bg-accent/[0.08]" : "border-white/10 bg-card/40",
     )}>
       <span className={cn("inline-grid size-8 place-items-center rounded-full mb-2", highlight ? "bg-accent/15 text-accent" : "bg-white/5 text-muted-foreground")}>{icon}</span>
@@ -1890,7 +1890,7 @@ function EmptyState({ canWrite, onWrite, filtered, onReset }: { canWrite: boolea
     );
   }
   return (
-    <div className="relative grid place-items-center overflow-hidden rounded-3xl border border-white/10 bg-card/40 backdrop-blur-xl py-20 px-6 text-center">
+    <div className="relative grid place-items-center overflow-hidden rounded-3xl border border-white/10 bg-card/40 md:backdrop-blur-xl py-20 px-6 text-center">
       <div className="pointer-events-none absolute inset-0 opacity-50" style={{ background: "var(--gradient-ember-soft)" }} />
       <div className="relative max-w-sm">
         <div className="flex items-center justify-center gap-1.5" aria-hidden>
@@ -2305,7 +2305,7 @@ function ReviewMediaViewer({ list, index, onIndex, onClose }: { list: ReviewMedi
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-[var(--z-modal-overlay)] flex flex-col bg-black/95 backdrop-blur-md"
+        className="fixed inset-0 z-[var(--z-modal-overlay)] flex flex-col bg-black/95 md:backdrop-blur-md"
         role="dialog"
         aria-label="Review media viewer"
       >

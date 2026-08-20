@@ -348,7 +348,7 @@ export function LiveChat() {
       {/* Long-press quick actions menu */}
       {menuOpen && !open && (
         <div
-          className="fixed inset-0 z-[65] flex items-end justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-[65] flex items-end justify-center bg-black/50 md:backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setMenuOpen(false)}
           role="dialog"
           aria-modal="true"
@@ -356,7 +356,7 @@ export function LiveChat() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 backdrop-blur-xl p-5 shadow-2xl animate-in slide-in-from-bottom duration-300"
+            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 md:backdrop-blur-xl p-5 shadow-2xl animate-in slide-in-from-bottom duration-300"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--mobile-nav-clearance, 0px) + 1.25rem)" }}
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/15" aria-hidden />
@@ -416,7 +416,7 @@ export function LiveChat() {
 
       {open && (
         <div
-          className="fixed inset-0 z-[70] flex flex-col bg-background/95 backdrop-blur-xl animate-chat-slide-up"
+          className="fixed inset-0 z-[70] flex flex-col bg-background/95 md:backdrop-blur-xl animate-chat-slide-up"
           role="dialog"
           aria-modal="true"
           aria-label="FoundOurMarket Support"
@@ -426,7 +426,7 @@ export function LiveChat() {
 
           {/* Header */}
           <header
-            className="relative z-10 border-b border-border/60 bg-card/70 backdrop-blur-xl"
+            className="relative z-10 border-b border-border/60 bg-card/70 md:backdrop-blur-xl"
             style={{ paddingTop: "env(safe-area-inset-top)" }}
           >
             <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
@@ -465,7 +465,7 @@ export function LiveChat() {
                   align="end"
                   sideOffset={8}
                   collisionPadding={12}
-                  className="z-[90] w-52 rounded-2xl border-border/60 bg-popover/95 p-1.5 backdrop-blur-xl shadow-[var(--shadow-float)]"
+                  className="z-[90] w-52 rounded-2xl border-border/60 bg-popover/95 p-1.5 md:backdrop-blur-xl shadow-[var(--shadow-float)]"
                   style={{
                     marginBottom: "env(safe-area-inset-bottom)",
                     marginRight: "env(safe-area-inset-right)",
@@ -539,7 +539,7 @@ export function LiveChat() {
 
           {/* Composer */}
           <div
-            className="relative z-10 border-t border-border/60 bg-card/70 px-3 pt-2.5 backdrop-blur-xl"
+            className="relative z-10 border-t border-border/60 bg-card/70 px-3 pt-2.5 md:backdrop-blur-xl"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
           >
             <div className="mx-auto flex max-w-lg items-end gap-2">
@@ -648,7 +648,7 @@ function Welcome({
       )}
 
       {/* Smart assistant block */}
-      <div className="rounded-3xl border border-border/60 bg-card/60 p-4 backdrop-blur-xl">
+      <div className="rounded-3xl border border-border/60 bg-card/60 p-4 md:backdrop-blur-xl">
         <p className="mb-3 flex items-center gap-2 text-xs font-medium text-foreground">
           <Zap className="h-3.5 w-3.5 text-primary" /> Ask anything — instant answers
         </p>
@@ -673,7 +673,7 @@ function Welcome({
             key={label}
             type="button"
             onClick={() => onQuick(prompt)}
-            className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/60 p-3 text-left backdrop-blur-xl transition-all hover:border-primary/50 hover:bg-card active:scale-95"
+            className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/60 p-3 text-left md:backdrop-blur-xl transition-all hover:border-primary/50 hover:bg-card active:scale-95"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
               <Icon className="h-5 w-5" />
@@ -715,7 +715,7 @@ function OrderCard({
   ];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-[var(--shadow-card)] animate-chat-bubble-in">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/70 md:backdrop-blur-xl shadow-[var(--shadow-card)] animate-chat-bubble-in">
       <div className="flex items-center gap-3 p-3">
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-secondary/60">
           {item?.image ? (
@@ -763,7 +763,7 @@ function OrderCard({
 function HandoffBanner({ order, customerName }: { order: ChatOrder; customerName: string }) {
   const meta = stageMeta(orderStage(order));
   return (
-    <div className="relative z-10 border-b border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 backdrop-blur-xl">
+    <div className="relative z-10 border-b border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 md:backdrop-blur-xl">
       <div className="mx-auto flex max-w-lg items-center gap-3">
         <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 animate-pulse" />
         <div className="min-w-0 text-[11px] leading-tight text-foreground/90">
@@ -785,7 +785,7 @@ function OrderUpdateToast({ order, stage, onDismiss }: { order: ChatOrder; stage
   }, [onDismiss]);
   return (
     <div className="relative z-10 px-4 pt-2">
-      <div className="mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 backdrop-blur-xl animate-scale-in">
+      <div className="mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 md:backdrop-blur-xl animate-scale-in">
         <Truck className="h-4 w-4 shrink-0 text-primary" />
         <div className="min-w-0 flex-1 text-[11px] leading-tight">
           <p className="font-semibold text-foreground">Order Updated · #{orderNumber(order.id)}</p>
@@ -807,7 +807,7 @@ function MessageBubble({ msg }: { msg: Msg }) {
         className={
           isUser
             ? "max-w-[80%] rounded-[22px] rounded-br-md bg-gradient-to-br from-primary to-primary/85 px-4 py-2.5 text-sm text-primary-foreground shadow-[var(--shadow-ember)]"
-            : "max-w-[80%] rounded-[22px] rounded-bl-md border border-border/60 bg-card/80 px-4 py-2.5 text-sm text-foreground backdrop-blur-xl shadow-[var(--shadow-card)]"
+            : "max-w-[80%] rounded-[22px] rounded-bl-md border border-border/60 bg-card/80 px-4 py-2.5 text-sm text-foreground md:backdrop-blur-xl shadow-[var(--shadow-card)]"
         }
       >
         <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
@@ -820,7 +820,7 @@ function MessageBubble({ msg }: { msg: Msg }) {
 function TypingIndicator() {
   return (
     <div className="flex justify-start animate-chat-bubble-in">
-      <div className="flex items-center gap-1.5 rounded-[22px] rounded-bl-md border border-border/60 bg-card/80 px-4 py-3 backdrop-blur-xl">
+      <div className="flex items-center gap-1.5 rounded-[22px] rounded-bl-md border border-border/60 bg-card/80 px-4 py-3 md:backdrop-blur-xl">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
@@ -847,7 +847,7 @@ function EmojiButton({ onPick }: { onPick: (e: string) => void }) {
         <Smile className="h-5 w-5" />
       </button>
       {open && (
-        <div className="absolute bottom-12 left-0 z-30 grid grid-cols-6 gap-1 rounded-2xl border border-border/60 bg-popover/95 p-2 backdrop-blur-xl shadow-[var(--shadow-float)] animate-scale-in">
+        <div className="absolute bottom-12 left-0 z-30 grid grid-cols-6 gap-1 rounded-2xl border border-border/60 bg-popover/95 p-2 md:backdrop-blur-xl shadow-[var(--shadow-float)] animate-scale-in">
           {EMOJIS.map((e) => (
             <button
               key={e}
@@ -1171,7 +1171,7 @@ function FixedOrb({
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onTap(); }
         }}
         onContextMenu={(e) => e.preventDefault()}
-        className={`fom-chat-orb group relative grid place-items-center overflow-hidden size-14 md:size-[60px] lg:size-16 min-w-11 min-h-11 rounded-full bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_10px_30px_-12px_color-mix(in_oklab,var(--color-primary)_70%,transparent),0_2px_10px_-4px_color-mix(in_oklab,var(--color-foreground)_28%,transparent)] ring-2 ${ring.color} border border-border/40 backdrop-blur-xl transition-[transform,box-shadow] duration-200 ease-out hover:scale-[1.06] active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background select-none motion-reduce:transition-none motion-reduce:hover:scale-100`}
+        className={`fom-chat-orb group relative grid place-items-center overflow-hidden size-14 md:size-[60px] lg:size-16 min-w-11 min-h-11 rounded-full bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground shadow-[0_10px_30px_-12px_color-mix(in_oklab,var(--color-primary)_70%,transparent),0_2px_10px_-4px_color-mix(in_oklab,var(--color-foreground)_28%,transparent)] ring-2 ${ring.color} border border-border/40 md:backdrop-blur-xl transition-[transform,box-shadow] duration-200 ease-out hover:scale-[1.06] active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background select-none motion-reduce:transition-none motion-reduce:hover:scale-100`}
       >
         {/* Glass sheen */}
         <span aria-hidden className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-b from-background/25 to-transparent opacity-60" />
@@ -1201,7 +1201,7 @@ function FixedOrb({
         <button
           type="button"
           onClick={onDismissGreeting}
-          className="absolute -top-3 right-[calc(100%+8px)] -translate-y-full whitespace-nowrap rounded-2xl border border-white/10 bg-card/95 px-3 py-2 text-[12px] font-medium text-foreground shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-1 duration-300"
+          className="absolute -top-3 right-[calc(100%+8px)] -translate-y-full whitespace-nowrap rounded-2xl border border-white/10 bg-card/95 px-3 py-2 text-[12px] font-medium text-foreground shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] md:backdrop-blur-xl animate-in fade-in slide-in-from-bottom-1 duration-300"
           aria-label="Dismiss greeting"
         >
           Need help?

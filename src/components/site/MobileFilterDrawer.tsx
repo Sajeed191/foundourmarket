@@ -463,7 +463,7 @@ export const MobileFilterDrawer = memo(function MobileFilterDrawer({
       <div
         onClick={onClose}
         aria-hidden="true"
-        className={`absolute inset-0 bg-black/[0.65] backdrop-blur-[10px] transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-black/[0.65] md:backdrop-blur-[10px] transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0"}`}
       />
       {/* Full-screen bottom-sheet */}
       <div

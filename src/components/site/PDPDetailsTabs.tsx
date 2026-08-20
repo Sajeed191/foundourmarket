@@ -515,7 +515,7 @@ export function PDPDetailsTabs({
 
       {/* Floating glass tab pills with a sliding gradient indicator. */}
       <div className="sticky top-[var(--app-header-height,0px)] z-20 -mx-4 sm:mx-0">
-        <div className="border-b border-white/[0.05] bg-background/70 backdrop-blur-2xl">
+        <div className="border-b border-white/[0.05] bg-background/70 md:backdrop-blur-2xl">
           <div
             ref={listRef}
             role="tablist"
@@ -547,7 +547,7 @@ export function PDPDetailsTabs({
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/50",
                     isActive
                       ? "text-accent-foreground"
-                      : "border border-white/[0.09] bg-white/[0.028] text-muted-foreground/90 backdrop-blur-xl hover:text-foreground",
+                      : "border border-white/[0.09] bg-white/[0.028] text-muted-foreground/90 md:backdrop-blur-xl hover:text-foreground",
 
                   )}
                 >
@@ -623,7 +623,7 @@ export function PDPDetailsTabs({
                   {compact ? (
                     <span
                       title={body || undefined}
-                      className="pdp-card-tap inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-4 text-[13.5px] font-medium text-foreground backdrop-blur-xl transition-colors duration-[260ms] hover:border-accent/25"
+                      className="pdp-card-tap inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-4 text-[13.5px] font-medium text-foreground md:backdrop-blur-xl transition-colors duration-[260ms] hover:border-accent/25"
                     >
                       <Check className="size-3.5 shrink-0 text-accent" strokeWidth={2.75} />
                       {short}

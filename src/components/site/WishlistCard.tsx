@@ -155,7 +155,7 @@ function WishlistCardImpl({
 
           {/* Out of stock veil */}
           {!product.inStock && (
-            <div className="absolute inset-0 grid place-items-center bg-black/55 backdrop-blur-[1px]">
+            <div className="absolute inset-0 grid place-items-center bg-black/55 md:backdrop-blur-[1px]">
               <span className="rounded-full bg-black/70 border border-white/20 text-white/90 font-bold font-mono uppercase tracking-widest text-[10px] px-3 py-1.5">
                 Sold Out
               </span>
@@ -170,7 +170,7 @@ function WishlistCardImpl({
                 toggle(product.slug);
               }}
               aria-label="Remove from wishlist"
-               className="size-8 grid place-items-center rounded-full bg-accent/25 border border-accent text-accent backdrop-blur-xl shadow-lg shadow-black/30 transition-colors duration-300 hover:brightness-125"
+               className="size-8 grid place-items-center rounded-full bg-accent/25 border border-accent text-accent md:backdrop-blur-xl shadow-lg shadow-black/30 transition-colors duration-300 hover:brightness-125"
             >
               <Heart className="size-3 fill-accent" />
             </button>
@@ -180,7 +180,7 @@ function WishlistCardImpl({
                 onQuickView();
               }}
               aria-label="Quick view"
-              className="size-8 grid place-items-center rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-xl shadow-lg shadow-black/30 transition-colors duration-300 hover:bg-accent/25 hover:border-accent hover:text-accent"
+              className="size-8 grid place-items-center rounded-full bg-black/40 border border-white/20 text-white md:backdrop-blur-xl shadow-lg shadow-black/30 transition-colors duration-300 hover:bg-accent/25 hover:border-accent hover:text-accent"
             >
               <Eye className="size-3.5" />
             </button>
@@ -274,7 +274,7 @@ function WishlistCardImpl({
             <button
               onClick={handleBuyNow}
               aria-label={`Buy ${product.name} now`}
-              className="relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-colors duration-300 hover:brightness-110"
+              className="relative shrink-0 grid place-items-center size-10 rounded-xl bg-gradient-to-br from-accent to-[oklch(0.68_0.18_42)] text-black md:backdrop-blur-xl border border-white/20 shadow-[var(--shadow-ember)] transition-colors duration-300 hover:brightness-110"
             >
               <Zap className="size-4" strokeWidth={2.5} />
               {cartQty > 0 && (

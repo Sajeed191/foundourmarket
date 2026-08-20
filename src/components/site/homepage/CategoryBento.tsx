@@ -55,7 +55,7 @@ export function CategoryBento({
         {isAdmin && (
           <button
             onClick={onEdit}
-            className="absolute right-0 top-0 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-background/70 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-accent backdrop-blur-md hover:bg-accent/15"
+            className="absolute right-0 top-0 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-background/70 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-accent md:backdrop-blur-md hover:bg-accent/15"
           >
             Edit
           </button>

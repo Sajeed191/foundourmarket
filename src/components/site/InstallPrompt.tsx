@@ -69,7 +69,7 @@ export function InstallPrompt() {
           role="dialog"
           aria-label="Install FoundOurMarket app"
         >
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card/95 p-3 pl-4 shadow-2xl backdrop-blur-xl md:p-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card/95 p-3 pl-4 shadow-2xl md:backdrop-blur-xl md:p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
               <Download className="h-5 w-5" />
             </div>

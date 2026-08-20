@@ -301,18 +301,18 @@ export function ImageLightbox({
         <button
           onClick={onClose}
           aria-label="Close gallery"
-          className="pointer-events-auto grid size-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-md transition-transform active:scale-90"
+          className="pointer-events-auto grid size-10 place-items-center rounded-full bg-white/10 text-white md:backdrop-blur-md transition-transform active:scale-90"
         >
           <X className="size-5" />
         </button>
-        <span className="pointer-events-none rounded-full bg-black/40 px-3 py-1 text-[12px] font-medium tabular-nums text-white/90 backdrop-blur-md">
+        <span className="pointer-events-none rounded-full bg-black/40 px-3 py-1 text-[12px] font-medium tabular-nums text-white/90 md:backdrop-blur-md">
           {index + 1} / {count}
         </span>
         {onShare ? (
           <button
             onClick={onShare}
             aria-label="Share"
-            className="pointer-events-auto grid size-10 place-items-center rounded-full bg-white/10 text-white backdrop-blur-md transition-transform active:scale-90"
+            className="pointer-events-auto grid size-10 place-items-center rounded-full bg-white/10 text-white md:backdrop-blur-md transition-transform active:scale-90"
           >
             <Share2 className="size-5" />
           </button>

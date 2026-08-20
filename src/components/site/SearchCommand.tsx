@@ -222,13 +222,13 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   // which previously mispositioned this overlay and leaked the page behind it).
   return createPortal(
     <div className="fixed inset-0 z-[var(--z-modal-overlay)]">
-      <div className="absolute inset-0 bg-background/85 backdrop-blur-xl animate-fade-in" onClick={onClose} />
+      <div className="absolute inset-0 bg-background/85 md:backdrop-blur-xl animate-fade-in" onClick={onClose} />
       <div className="absolute inset-0 flex flex-col overflow-hidden bg-background animate-search-rise sm:animate-search-drop sm:inset-x-auto sm:left-1/2 sm:top-[6vh] sm:bottom-auto sm:max-h-[88vh] sm:w-[90%] sm:max-w-2xl sm:-translate-x-1/2 sm:rounded-[24px] sm:border sm:border-accent/20 sm:bg-transparent sm:glass-strong sm:shadow-[0_30px_90px_-20px_oklch(0.74_0.19_49/0.35),var(--shadow-float)]">
         {/* Full-screen immersive surface on mobile; floating command panel on larger screens */}
         {/* Sticky premium search bar */}
         <form
           onSubmit={(e) => { e.preventDefault(); if (items[active]) activate(items[active]); else if (q.trim()) go(q); }}
-          className="sticky top-0 z-10 p-3 sm:p-4 border-b border-white/8 bg-background/40 backdrop-blur-xl"
+          className="sticky top-0 z-10 p-3 sm:p-4 border-b border-white/8 bg-background/40 md:backdrop-blur-xl"
         >
           <div className={`relative flex items-center rounded-full transition-all duration-300 ${q ? "ring-2 ring-accent/50 shadow-[0_0_0_4px_oklch(0.74_0.19_49/0.10),0_0_34px_-6px_oklch(0.74_0.19_49/0.55)]" : "ring-1 ring-white/12"} bg-white/[0.04]`}>
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 size-[22px] text-accent" />

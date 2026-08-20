@@ -520,7 +520,7 @@ function StickyCompareBar({
       }`}
     >
       <div
-        className={`pointer-events-auto mx-auto max-w-[420px] flex items-center justify-between gap-3 rounded-full bg-black/75 backdrop-blur-xl pl-5 pr-2 h-12 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.6)] transition-transform duration-150 ease-out ${
+        className={`pointer-events-auto mx-auto max-w-[420px] flex items-center justify-between gap-3 rounded-full bg-black/75 md:backdrop-blur-xl pl-5 pr-2 h-12 shadow-[0_8px_28px_-14px_rgba(0,0,0,0.6)] transition-transform duration-150 ease-out ${
           visible ? "translate-y-0" : "translate-y-3"
         }`}
       >

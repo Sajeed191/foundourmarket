@@ -19,7 +19,7 @@ export function AiSourceBadge({ source }: { source: AiSource }) {
   const { Icon } = meta;
   return (
     <div
-      className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-card/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground backdrop-blur-xl"
+      className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-card/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground md:backdrop-blur-xl"
       role="note"
       aria-label={`Recommendation source: ${meta.label}`}
     >
@@ -47,7 +47,7 @@ export function AiCompareBlock({
 
   return (
     <section
-      className="mt-3 overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl"
+      className="mt-3 overflow-hidden rounded-2xl border border-border/60 bg-card/60 md:backdrop-blur-xl"
       aria-label="Compare at a glance"
     >
       <header className="flex items-center gap-1.5 border-b border-border/50 px-3 py-2">

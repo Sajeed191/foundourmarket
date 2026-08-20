@@ -312,7 +312,7 @@ export function AiShoppingAssistant() {
 
   return (
     <div
-      className={`fixed inset-0 z-[72] flex flex-col bg-background/95 backdrop-blur-xl ${reducedMotion ? "" : "animate-chat-slide-up"}`}
+      className={`fixed inset-0 z-[72] flex flex-col bg-background/95 md:backdrop-blur-xl ${reducedMotion ? "" : "animate-chat-slide-up"}`}
       role="dialog"
       aria-modal="true"
       aria-label="FoundOurMarket AI Shopping Assistant"
@@ -324,7 +324,7 @@ export function AiShoppingAssistant() {
       />
 
       <header
-        className="relative z-10 border-b border-border/60 bg-card/70 backdrop-blur-xl"
+        className="relative z-10 border-b border-border/60 bg-card/70 md:backdrop-blur-xl"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
@@ -360,7 +360,7 @@ export function AiShoppingAssistant() {
           <button
             type="button"
             onClick={switchToSupport}
-            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border/60 bg-card/60 px-3 py-2 text-[11px] font-medium text-foreground/90 backdrop-blur-xl transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-border/60 bg-card/60 px-3 py-2 text-[11px] font-medium text-foreground/90 md:backdrop-blur-xl transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
           >
             <Headset className="h-3.5 w-3.5" aria-hidden /> Support
           </button>
@@ -406,7 +406,7 @@ export function AiShoppingAssistant() {
 
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 border-t border-border/60 bg-card/70 px-3 pt-2.5 backdrop-blur-xl"
+        className="relative z-10 border-t border-border/60 bg-card/70 px-3 pt-2.5 md:backdrop-blur-xl"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
       >
         <div className="mx-auto flex max-w-lg items-end gap-2">
@@ -473,7 +473,7 @@ function Welcome({ onQuick }: { onQuick: (s: string) => void }) {
             key={s}
             type="button"
             onClick={() => onQuick(s)}
-            className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-left text-sm text-foreground/90 backdrop-blur-xl transition-all hover:border-primary/50 hover:bg-card active:scale-[0.99]"
+            className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-left text-sm text-foreground/90 md:backdrop-blur-xl transition-all hover:border-primary/50 hover:bg-card active:scale-[0.99]"
           >
             <span className="min-w-0 flex-1 truncate">{s}</span>
             <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
@@ -587,7 +587,7 @@ function SuggestionChips({ chips, onPick }: { chips: string[]; onPick: (c: strin
           key={c}
           type="button"
           onClick={() => onPick(c)}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-[12px] font-medium text-foreground/90 backdrop-blur-xl transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-[12px] font-medium text-foreground/90 md:backdrop-blur-xl transition-colors hover:border-primary/50 hover:bg-card active:scale-95"
         >
           <Sparkles className="h-3 w-3 text-primary" aria-hidden />
           {c}
@@ -609,7 +609,7 @@ function ThreadsDrawer({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[74] flex bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[74] flex bg-black/60 md:backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -617,7 +617,7 @@ function ThreadsDrawer({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-[86%] max-w-sm flex-col border-r border-border/60 bg-card/95 backdrop-blur-2xl shadow-2xl animate-in slide-in-from-left duration-300"
+        className="flex h-full w-[86%] max-w-sm flex-col border-r border-border/60 bg-card/95 md:backdrop-blur-2xl shadow-2xl animate-in slide-in-from-left duration-300"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">

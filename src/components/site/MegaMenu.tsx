@@ -178,7 +178,7 @@ export function MegaMenu() {
                   : "opacity-0 translate-y-1 scale-[0.98] pointer-events-none"
               }`}
             >
-              <div className="flex w-[680px] overflow-hidden rounded-2xl glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float),0_0_70px_-22px_oklch(0.74_0.19_49/0.5)] backdrop-blur-2xl">
+              <div className="flex w-[680px] overflow-hidden rounded-2xl glass-strong ring-1 ring-white/12 shadow-[var(--shadow-float),0_0_70px_-22px_oklch(0.74_0.19_49/0.5)] md:backdrop-blur-2xl">
                 {/* LEFT — cinematic category showcase (35%) */}
                 <div className="relative w-[35%] shrink-0 overflow-hidden">
                   {img ? (

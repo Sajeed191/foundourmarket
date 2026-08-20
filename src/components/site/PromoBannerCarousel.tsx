@@ -112,7 +112,7 @@ export function PromoBannerCarousel({
         <div className={`relative max-w-7xl mx-auto rounded-3xl overflow-hidden border border-dashed border-accent/30 bg-card ${aspectClassName} grid place-items-center`}>
           <button
             onClick={() => setEditing(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-background/70 px-4 py-2 text-[11px] font-mono uppercase tracking-widest text-accent backdrop-blur-md hover:bg-accent/15"
+            className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-background/70 px-4 py-2 text-[11px] font-mono uppercase tracking-widest text-accent md:backdrop-blur-md hover:bg-accent/15"
           >
             <Pencil className="size-3.5" /> Add a banner
           </button>
@@ -221,7 +221,7 @@ export function PromoBannerCarousel({
             <button
               onClick={() => setEditing(true)}
               aria-label="Edit banners"
-              className="grid size-8 place-items-center rounded-full border border-accent/40 bg-background/70 text-accent backdrop-blur-md transition-all hover:bg-accent/15"
+              className="grid size-8 place-items-center rounded-full border border-accent/40 bg-background/70 text-accent md:backdrop-blur-md transition-all hover:bg-accent/15"
             >
               <Pencil className="size-3.5" />
             </button>

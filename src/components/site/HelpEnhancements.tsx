@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { BrandName } from "@/components/site/BrandName";
 
-const card = "rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl";
+const card = "rounded-2xl border border-white/10 bg-white/[0.03] md:backdrop-blur-xl";
 
 /* ---------------- Section 1 — Trust header mini cards ---------------- */
 const TRUST_STATS = [
@@ -226,7 +226,7 @@ export function StripeTrustSection() {
 /* ---------------- Section 8 — Dispute prevention ---------------- */
 export function DisputePrevention({ onResolve }: { onResolve: () => void }) {
   return (
-    <div className="rounded-2xl border border-orange-400/25 bg-gradient-to-br from-orange-500/[0.1] to-transparent backdrop-blur-xl p-5 sm:p-6">
+    <div className="rounded-2xl border border-orange-400/25 bg-gradient-to-br from-orange-500/[0.1] to-transparent md:backdrop-blur-xl p-5 sm:p-6">
       <div className="flex items-start gap-4">
         <div className="size-11 rounded-2xl grid place-items-center bg-orange-500/15 border border-orange-400/30 shrink-0">
           <ShieldCheck className="size-5 text-orange-300" />

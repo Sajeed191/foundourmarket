@@ -14,7 +14,6 @@ import {
   Check,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { completeOAuthReturn, hasOAuthReturnParams } from "@/lib/oauth-return";
@@ -183,17 +182,22 @@ function AuthPage() {
       const dest = safeInternalPath(redirect);
       if (dest) localStorage.setItem("post_auth_redirect", dest);
     }
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: oauthRedirectUri(),
-      extraParams: { prompt: "select_account" },
+    // Native Supabase Auth Google OAuth (PKCE). No third-party broker is
+    // involved: Google returns to Supabase Auth, which redirects back to
+    // https://foundourmarket.com/auth/callback in production.
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: oauthRedirectUri(),
+        queryParams: { prompt: "select_account" },
+      },
     });
-    if (result.error) {
+    if (error) {
       setError("Couldn't connect to Google. Please try again.");
       setGoogleBusy(false);
       return;
     }
-    if (result.redirected) return;
-    window.location.assign(resolveDest());
+    // Browser is navigating to Google; nothing else to do.
   };
 
   return (

@@ -1309,12 +1309,16 @@ function ProductPage() {
       <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="reviews">
         <div data-product-reviews className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
           <PdpSectionHeading title="Customer Reviews" subtitle="Real feedback from real shoppers" />
+          <Suspense fallback={null}>
           <ProductReviews productSlug={product.slug} productRating={product.rating} productReviewCount={product.reviews} onAggregateChange={invalidateProducts} />
+          </Suspense>
         </div>
       </LazyMount>
       <LazyMount minHeight={160} rootMargin="400px" className="scroll-mt-24" id="questions">
         <div data-product-questions className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
-          <PDPFaqAndQuestions productSlug={product.slug} />
+          <Suspense fallback={null}>
+            <PDPFaqAndQuestions productSlug={product.slug} />
+          </Suspense>
         </div>
       </LazyMount>
 

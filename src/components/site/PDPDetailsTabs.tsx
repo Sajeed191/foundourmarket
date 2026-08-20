@@ -13,6 +13,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   BatteryCharging,
   Check,
+  ChevronDown,
+
   Cpu,
   Info,
   Monitor,
@@ -29,6 +31,10 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProductDescription } from "@/components/site/ProductDescription";
+
+/** Collapsed height of the description block, in px. */
+const COLLAPSED_DESC_PX = 224;
+
 
 type SpecEntry = [string, string];
 type SpecGroup = { group: string; entries: SpecEntry[] };
@@ -369,8 +375,31 @@ export function PDPDetailsTabs({
   }, [groups.length, hasDescription, featureList.length, hasWarranty, boxItems.length]);
 
   const [active, setActive] = useState<string>("");
+  // Single source of truth for the description expand/collapse control.
   const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
   const current = tabs.some((t) => t.id === active) ? active : (tabs[0]?.id ?? "");
+
+  // Reset whenever the product description changes (async loads, navigation).
+  useEffect(() => {
+    setExpanded(false);
+  }, [description]);
+
+  // Only offer the control when the text actually overflows the clamp.
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) {
+      setOverflows(false);
+      return;
+    }
+    const measure = () => setOverflows(el.scrollHeight > COLLAPSED_DESC_PX + 24);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [description, current]);
+
 
   // Sliding orange indicator behind the active pill.
   const listRef = useRef<HTMLDivElement>(null);
@@ -516,26 +545,41 @@ export function PDPDetailsTabs({
           <Reveal observe={observe}>
             <DetailCard title="About this product" subtitle="Everything you need to know">
               <div
-                className={cn(
-                  "relative mx-auto max-w-[68ch] text-[15px] leading-[1.75]",
-                  !expanded && "max-h-[14rem] overflow-hidden",
-                )}
+                className="relative mx-auto max-w-[68ch] overflow-hidden text-[15px] leading-[1.75] transition-[max-height,opacity] duration-500 ease-out"
+                style={{
+                  maxHeight: !overflows || expanded ? `${(descRef.current?.scrollHeight ?? 4000) + 40}px` : `${COLLAPSED_DESC_PX}px`,
+                }}
               >
-                <ProductDescription description={description} />
-                {!expanded && (
+                <div ref={descRef}>
+                  {/* collapsible={false}: this card owns the only expand control. */}
+                  <ProductDescription description={description} collapsible={false} />
+                </div>
+                {overflows && !expanded && (
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent"
                   />
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => !v)}
-                className="mt-3 min-h-[44px] text-[12px] font-medium uppercase tracking-[0.16em] text-accent transition-opacity duration-[260ms] hover:opacity-80"
-              >
-                {expanded ? "Show less" : "Show more"}
-              </button>
+              {overflows && (
+                <div className="mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setExpanded((v) => !v)}
+                    aria-expanded={expanded}
+                    className="group inline-flex min-h-[44px] items-center gap-2 rounded-full border border-accent/25 bg-accent/[0.07] px-5 text-[11px] font-medium uppercase tracking-[0.18em] text-accent transition-all duration-300 hover:border-accent/50 hover:bg-accent/[0.12]"
+                  >
+                    {expanded ? "Show less" : "Show more"}
+                    <ChevronDown
+                      className={cn(
+                        "size-3.5 transition-transform duration-300",
+                        expanded && "rotate-180",
+                      )}
+                    />
+                  </button>
+                </div>
+              )}
+
             </DetailCard>
           </Reveal>
         )}

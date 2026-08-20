@@ -369,8 +369,31 @@ export function PDPDetailsTabs({
   }, [groups.length, hasDescription, featureList.length, hasWarranty, boxItems.length]);
 
   const [active, setActive] = useState<string>("");
+  // Single source of truth for the description expand/collapse control.
   const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
   const current = tabs.some((t) => t.id === active) ? active : (tabs[0]?.id ?? "");
+
+  // Reset whenever the product description changes (async loads, navigation).
+  useEffect(() => {
+    setExpanded(false);
+  }, [description]);
+
+  // Only offer the control when the text actually overflows the clamp.
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) {
+      setOverflows(false);
+      return;
+    }
+    const measure = () => setOverflows(el.scrollHeight > COLLAPSED_DESC_PX + 24);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [description, current]);
+
 
   // Sliding orange indicator behind the active pill.
   const listRef = useRef<HTMLDivElement>(null);

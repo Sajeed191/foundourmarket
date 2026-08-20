@@ -13,6 +13,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   BatteryCharging,
   Check,
+  ChevronDown,
+
   Cpu,
   Info,
   Monitor,

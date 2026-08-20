@@ -93,7 +93,7 @@ function EmailQueuePage() {
   return (
     <AdminShell
       title="Email queue"
-      subtitle="mail.foundourmarket.com · queue health & send logs"
+      subtitle="sends.foundourmarket.com · queue health & send logs"
       allow={["admin", "super_admin", "manager"]}
       actions={
         <div className="flex items-center gap-2">

@@ -410,10 +410,10 @@ function SectionHeader({ eyebrow, title, icon: Icon, href, hrefLabel = "View All
 
       {editing && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" onClick={() => !saving && setEditing(false)}>
-          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-background/70 md:backdrop-blur-sm" />
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative z-10 w-full max-w-sm rounded-3xl border border-accent/25 bg-background/95 p-5 backdrop-blur-2xl shadow-[0_30px_80px_-20px_oklch(0.74_0.19_49/0.5)]"
+            className="relative z-10 w-full max-w-sm rounded-3xl border border-accent/25 bg-background/95 p-5 md:backdrop-blur-2xl shadow-[0_30px_80px_-20px_oklch(0.74_0.19_49/0.5)]"
           >
             <p className="mb-4 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.25em] text-accent">
               <Pencil className="size-3" /> Edit section

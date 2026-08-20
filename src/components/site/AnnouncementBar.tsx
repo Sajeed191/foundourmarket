@@ -129,7 +129,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
       <div
         role="region"
         aria-label="Announcements"
-        className="relative h-9 overflow-hidden border-b border-accent/15 bg-background/80 backdrop-blur-md"
+        className="relative h-9 overflow-hidden border-b border-accent/15 bg-background/80 md:backdrop-blur-md"
       >
         <div aria-hidden className="absolute inset-0 opacity-40 pointer-events-none" style={{ background: gradient }} />
         <div className="relative h-full max-w-7xl mx-auto px-4 flex items-center justify-center">
@@ -155,7 +155,7 @@ export function AnnouncementBar({ page = "home" }: { page?: string }) {
               aria-label="Edit announcements"
               className={cn(
                 "grid size-6 place-items-center rounded-full",
-                "border border-accent/40 bg-background/70 text-accent backdrop-blur-md transition-all hover:bg-accent/15",
+                "border border-accent/40 bg-background/70 text-accent md:backdrop-blur-md transition-all hover:bg-accent/15",
               )}
             >
               <Pencil className="size-3" />

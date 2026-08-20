@@ -44,7 +44,7 @@ function ProcessTimeline() {
   return (
     <motion.section {...reveal()} className="mt-12">
       <SectionHeader eyebrow="How returns work" title="A 5-step return process" subtitle="Transparent at every stage — you always know what happens next." />
-      <div className="relative rounded-3xl p-5 sm:p-7 ring-1 ring-white/10 backdrop-blur-xl" style={{ background: cardBg }}>
+      <div className="relative rounded-3xl p-5 sm:p-7 ring-1 ring-white/10 md:backdrop-blur-xl" style={{ background: cardBg }}>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 sm:gap-3">
           {STEPS.map((s, i) => (
             <div key={s.title} className="relative flex sm:flex-col items-start sm:items-center gap-3 sm:text-center">
@@ -81,7 +81,7 @@ function RefundTracker() {
   return (
     <motion.section {...reveal()} className="mt-12">
       <SectionHeader eyebrow="Live tracking" title="Refund status tracker" subtitle="Follow your refund through every stage — no guessing, no waiting in the dark." />
-      <div className="rounded-3xl p-5 sm:p-7 ring-1 ring-white/10 backdrop-blur-xl" style={{ background: cardBg }}>
+      <div className="rounded-3xl p-5 sm:p-7 ring-1 ring-white/10 md:backdrop-blur-xl" style={{ background: cardBg }}>
         <div className="flex items-center justify-between mb-5">
           <p className="text-xs text-white/50">Demo timeline</p>
           <div className="flex gap-1">
@@ -133,7 +133,7 @@ function ReturnWindows() {
       <SectionHeader eyebrow="Eligibility" title="Return window by category" subtitle="Different products, different rules — here's exactly how long you have." />
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
         {WINDOWS.map((w) => (
-          <div key={w.cat} className="rounded-2xl p-4 ring-1 ring-white/10 backdrop-blur-md hover:ring-accent/40 transition" style={{ background: cardBg }}>
+          <div key={w.cat} className="rounded-2xl p-4 ring-1 ring-white/10 md:backdrop-blur-md hover:ring-accent/40 transition" style={{ background: cardBg }}>
             <w.icon className="size-4 text-accent mb-2" />
             <p className="text-xs font-semibold text-white leading-tight">{w.cat}</p>
             <p className="text-sm font-display font-semibold text-accent mt-1">{w.window}</p>
@@ -158,7 +158,7 @@ function TrustMetrics() {
     <motion.section {...reveal()} className="mt-12">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         {METRICS.map((m) => (
-          <div key={m.label} className="relative overflow-hidden rounded-2xl p-5 text-center ring-1 ring-white/10 backdrop-blur-xl" style={{ background: "linear-gradient(135deg, rgba(255,122,0,0.07), rgba(255,255,255,0.03))" }}>
+          <div key={m.label} className="relative overflow-hidden rounded-2xl p-5 text-center ring-1 ring-white/10 md:backdrop-blur-xl" style={{ background: "linear-gradient(135deg, rgba(255,122,0,0.07), rgba(255,255,255,0.03))" }}>
             <div aria-hidden className="absolute -top-10 -right-10 size-24 rounded-full blur-2xl opacity-40" style={{ background: "radial-gradient(circle,#FF7A00,transparent 70%)" }} />
             <m.icon className="size-5 text-accent mx-auto mb-2" />
             <p className="text-2xl font-display font-semibold text-white">{m.value}</p>
@@ -180,7 +180,7 @@ function ReasonSelector() {
   return (
     <motion.section {...reveal()} className="mt-12">
       <SectionHeader eyebrow="Start a return" title="Why are you returning?" subtitle="Tell us the reason — it helps us improve and speeds up your approval." />
-      <div className="rounded-3xl p-5 sm:p-7 ring-1 ring-white/10 backdrop-blur-xl" style={{ background: cardBg }}>
+      <div className="rounded-3xl p-5 sm:p-7 ring-1 ring-white/10 md:backdrop-blur-xl" style={{ background: cardBg }}>
         <div className="flex flex-wrap gap-2">
           {REASONS.map((r) => {
             const on = sel === r;
@@ -237,7 +237,7 @@ function ProtectionPillars() {
       <SectionHeader eyebrow="Peace of mind" title="You're fully protected" subtitle="Every order is backed by buyer protection, easy exchanges and warranty support." />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {PILLARS.map((p) => (
-          <div key={p.title} className="relative overflow-hidden rounded-3xl p-5 sm:p-6 ring-1 ring-white/10 backdrop-blur-xl" style={{ background: cardBg }}>
+          <div key={p.title} className="relative overflow-hidden rounded-3xl p-5 sm:p-6 ring-1 ring-white/10 md:backdrop-blur-xl" style={{ background: cardBg }}>
             <div aria-hidden className="absolute -top-16 -right-16 size-40 rounded-full blur-3xl opacity-20" style={{ background: "radial-gradient(circle,#FF7A00,transparent 70%)" }} />
             <div className="relative">
               <div className="size-11 grid place-items-center rounded-2xl ring-1 ring-accent/30 bg-accent/10 mb-3">
@@ -279,7 +279,7 @@ function FAQ() {
         {FAQS.map((f, i) => {
           const on = open === i;
           return (
-            <div key={f.q} className="rounded-2xl ring-1 ring-white/10 backdrop-blur-xl overflow-hidden" style={{ background: cardBg }}>
+            <div key={f.q} className="rounded-2xl ring-1 ring-white/10 md:backdrop-blur-xl overflow-hidden" style={{ background: cardBg }}>
               <button onClick={() => setOpen(on ? null : i)} className="w-full flex items-center justify-between gap-3 p-4 text-left">
                 <span className="text-sm font-medium text-white">{f.q}</span>
                 <ChevronDown className={`size-4 text-accent shrink-0 transition-transform duration-300 ${on ? "rotate-180" : ""}`} />

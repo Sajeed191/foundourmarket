@@ -1125,7 +1125,7 @@ function CheckoutPage() {
               style={{ bottom: "var(--product-dock-bottom)" }}
             >
               <div ref={stickyBarRef} className="pointer-events-auto rounded-2xl border border-white/12 p-2.5"
-                style={{ background: "color-mix(in oklab, var(--color-background) 82%, transparent)", backdropFilter: "blur(28px) saturate(160%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
+                style={{ background: "color-mix(in oklab, var(--color-background) 96%, var(--color-accent) 2%)", boxShadow: "0 16px 40px -16px color-mix(in oklab, var(--color-accent) 45%, transparent)" }}>
                 {orderBlockedReason && !busy && (
                   <p className="flex items-center gap-1.5 text-[11px] text-amber-400/90 px-1.5 pb-2 pt-0.5">
                     <XCircle className="size-3.5 shrink-0" /> {orderBlockedReason}
@@ -1189,7 +1189,7 @@ function CheckoutPage() {
       <AnimatePresence>
         {(stage === "processing" || stage === "verifying" || stage === "failed") && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 grid place-items-center bg-black/70 backdrop-blur-md px-6">
+            className="fixed inset-0 z-50 grid place-items-center bg-black/70 md:backdrop-blur-md px-6">
             <motion.div initial={{ scale: 0.94, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, opacity: 0 }}
               className="glass-strong border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center">
               {stage === "failed" ? (

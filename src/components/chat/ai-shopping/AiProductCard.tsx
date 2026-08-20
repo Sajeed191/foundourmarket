@@ -93,7 +93,7 @@ export function AiProductCard({ product }: { product: AiProductRef }) {
     );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl transition-all hover:border-primary/50">
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/70 md:backdrop-blur-xl transition-all hover:border-primary/50">
       <Link
         to="/products/$slug"
         params={{ slug: product.slug }}

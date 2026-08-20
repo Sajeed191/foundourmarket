@@ -17,7 +17,7 @@ export function CompareTray() {
 
   return (
     <div data-floating-control className="fixed left-1/2 z-[var(--z-floating-controls)] w-[min(94vw,720px)] -translate-x-1/2 bottom-[var(--floating-bottom-offset)] md:bottom-4">
-      <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-3 flex items-center gap-3">
+      <div className="bg-card/95 md:backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-3 flex items-center gap-3">
         <div className="hidden sm:flex items-center gap-2 px-2 text-muted-foreground shrink-0">
           <Scale className="size-4" />
           <span className="text-[10px] font-mono uppercase tracking-widest">Compare</span>

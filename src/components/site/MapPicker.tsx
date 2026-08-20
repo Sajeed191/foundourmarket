@@ -381,7 +381,7 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
     >
       {/* Top bar — back, title, search */}
       <div
-        className="relative z-[2200] shrink-0 border-b border-border bg-card/95 px-3 pb-3 backdrop-blur"
+        className="relative z-[2200] shrink-0 border-b border-border bg-card/95 px-3 pb-3 md:backdrop-blur"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
         <div className="flex items-center gap-2">
@@ -461,7 +461,7 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
         {/* Detecting banner */}
         {locating && (
           <div className="pointer-events-none absolute left-1/2 top-4 z-[1200] -translate-x-1/2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg md:backdrop-blur">
               <Loader2 className="size-3.5 animate-spin text-accent" />
               Detecting your location…
             </span>
@@ -470,7 +470,7 @@ export default function MapPicker({ initial, lowEnd, onConfirm, onCancel }: Prop
 
         {/* Draggable bottom sheet */}
         <div
-          className={`absolute inset-x-0 bottom-0 z-[1300] flex flex-col rounded-t-3xl border-t border-border bg-card ${lowEnd ? "" : "backdrop-blur shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.5)]"}`}
+          className={`absolute inset-x-0 bottom-0 z-[1300] flex flex-col rounded-t-3xl border-t border-border bg-card ${lowEnd ? "" : "md:backdrop-blur shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.5)]"}`}
           style={{
             height: `${snap}%`,
             transition: dragging ? "none" : "height 0.2s ease",

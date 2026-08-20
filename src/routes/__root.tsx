@@ -470,6 +470,20 @@ const RegionSelectModal = lazyWithRetry(() =>
   import("@/components/site/RegionSelectModal").then((m) => ({ default: m.RegionSelectModal })),
 );
 
+/**
+ * Region picker gate. The modal chunk (dialog + framer-motion) is only
+ * downloaded and mounted once the region engine actually asks for a decision
+ * (`needsSelection` or the lightweight `softConfirm`), so first paint and
+ * interactivity never pay for region UI that most visitors never see.
+ * Region detection, locking and INR/USD pricing logic are untouched — this
+ * only defers the presentation layer.
+ */
+function RegionModalMount() {
+  const { needsSelection, softConfirm, loading, isAdmin } = useRegion();
+  if (loading || isAdmin || (!needsSelection && !softConfirm)) return null;
+  return <RegionSelectModal />;
+}
+
 
 function NotFoundComponent() {
   return (
@@ -760,7 +774,7 @@ function DeferredShell({
 
   return (
     <Suspense fallback={null}>
-      <IsolatedBoundary name="RegionSelectModal"><RegionSelectModal /></IsolatedBoundary>
+      <IsolatedBoundary name="RegionSelectModal"><RegionModalMount /></IsolatedBoundary>
       {!isAuthRoute && <IsolatedBoundary name="AdminMobileBar"><AdminMobileBar /></IsolatedBoundary>}
       
       {!isAuthRoute && <IsolatedBoundary name="AdminOverlayIndicator"><AdminOverlayIndicator /></IsolatedBoundary>}

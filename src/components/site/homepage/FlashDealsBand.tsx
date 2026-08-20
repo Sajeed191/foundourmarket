@@ -194,7 +194,7 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
       to="/products/$slug"
       params={{ slug: p.slug }}
       aria-label={`${p.name} — flash deal${off > 0 ? `, ${off}% off` : ""}`}
-      className="fd-card fd-card-hero group relative flex min-h-[236px] w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-3.5 overflow-visible rounded-[26px] border border-white/[0.09] bg-card/50 p-4 backdrop-blur-2xl transition-[transform,border-color,box-shadow] duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-0.5 hover:border-white/[0.15] shadow-[0_12px_30px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.06),inset_0_-24px_38px_-30px_rgba(0,0,0,0.85)] sm:min-h-[250px] sm:w-[540px] sm:gap-4 sm:p-5 lg:min-h-[270px] lg:w-full lg:max-w-none lg:gap-6 lg:rounded-[28px] lg:p-6"
+      className="fd-card fd-card-hero group relative flex min-h-[236px] w-[calc(100vw-32px)] max-w-[560px] shrink-0 snap-center items-center gap-3.5 overflow-visible rounded-[26px] border border-white/[0.09] bg-card/50 p-4 md:backdrop-blur-2xl transition-[transform,border-color,box-shadow] duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.99] motion-safe:animate-fade-in motion-safe:hover:-translate-y-0.5 hover:border-white/[0.15] shadow-[0_12px_30px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.06),inset_0_-24px_38px_-30px_rgba(0,0,0,0.85)] sm:min-h-[250px] sm:w-[540px] sm:gap-4 sm:p-5 lg:min-h-[270px] lg:w-full lg:max-w-none lg:gap-6 lg:rounded-[28px] lg:p-6"
     >
       {/* Near-invisible warm radial depth */}
       <div
@@ -215,7 +215,7 @@ function HeroDeal({ item, index }: { item: FlashItem; index: number }) {
       <div className="flex min-w-0 flex-1 flex-col justify-center text-left">
         {/* Dedicated badge row — fixed rhythm, wraps gracefully, never overlaps the title */}
         <div className="flex min-h-[28px] flex-wrap items-center gap-2">
-          <span className="fd-chip fd-chip-editorial inline-flex h-[22px] items-center whitespace-nowrap rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-2 text-[9px] font-semibold uppercase leading-none tracking-[0.16em] text-[hsl(35_45%_78%)] backdrop-blur-md">
+          <span className="fd-chip fd-chip-editorial inline-flex h-[22px] items-center whitespace-nowrap rounded-full border border-[hsl(30_35%_60%/0.24)] bg-[hsl(30_30%_55%/0.08)] px-2 text-[9px] font-semibold uppercase leading-none tracking-[0.16em] text-[hsl(35_45%_78%)] md:backdrop-blur-md">
             {badge}
           </span>
           {stock && (
@@ -285,7 +285,7 @@ function MiniDeal({ item, index, fluid = false }: { item: FlashItem; index: numb
       params={{ slug: p.slug }}
       aria-label={p.name}
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
-      className={`fd-card fd-card-mini group relative flex shrink-0 snap-start flex-col overflow-visible rounded-[20px] border border-white/[0.07] bg-card/45 p-2 backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_12px_26px_-24px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.05)] ${fluid ? "w-full" : "w-[162px] sm:w-[168px] lg:w-full"}`}
+      className={`fd-card fd-card-mini group relative flex shrink-0 snap-start flex-col overflow-visible rounded-[20px] border border-white/[0.07] bg-card/45 p-2 md:backdrop-blur-md transition-[transform,border-color,box-shadow] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-safe:animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.985] motion-safe:hover:-translate-y-1 hover:border-accent/25 shadow-[0_12px_26px_-24px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.05)] ${fluid ? "w-full" : "w-[162px] sm:w-[168px] lg:w-full"}`}
     >
 
       <DealFrame src={p.image} alt={p.name} variant="mini" radius={18} />
@@ -419,7 +419,7 @@ export function FlashDealsBand() {
         <h2 id="flash-deals-heading" className="sr-only">
           Flash Deals
         </h2>
-        <div className="rounded-[26px] border border-white/[0.08] bg-card/40 px-6 py-12 text-center backdrop-blur-2xl shadow-[0_12px_30px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+        <div className="rounded-[26px] border border-white/[0.08] bg-card/40 px-6 py-12 text-center md:backdrop-blur-2xl shadow-[0_12px_30px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
           <p className="font-display text-[17px] font-semibold tracking-tight text-foreground/90 sm:text-[19px]">
             No Flash Deals available today
           </p>

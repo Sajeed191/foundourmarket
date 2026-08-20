@@ -256,7 +256,7 @@ export function LoadMoreSection({
         ].join(" ")}
       >
         {toast && (
-          <div className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-accent/40 bg-background/85 px-4 py-2 text-[12px] font-medium text-foreground shadow-[0_10px_30px_-10px_hsl(24_95%_53%/0.5)] backdrop-blur-md">
+          <div className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-accent/40 bg-background/85 px-4 py-2 text-[12px] font-medium text-foreground shadow-[0_10px_30px_-10px_hsl(24_95%_53%/0.5)] md:backdrop-blur-md">
             <Sparkles className="size-3.5 text-accent" aria-hidden />
             <span>{toast.n} new products loaded</span>
           </div>

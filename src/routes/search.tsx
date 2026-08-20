@@ -1131,7 +1131,7 @@ function SearchPage() {
       {/* Sticky mini search — appears on scroll for quick searching without scrolling back up */}
       <div
         data-search-sticky
-        className={`fixed inset-x-0 top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl transition-all duration-300 ${
+        className={`fixed inset-x-0 top-0 z-40 border-b border-border bg-background/90 md:backdrop-blur-xl transition-all duration-300 ${
           scrolled ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
         }`}
       >
@@ -1172,7 +1172,7 @@ function SearchPage() {
             className="relative w-full max-w-2xl"
             role="search"
           >
-            <div className="group relative flex items-center rounded-full bg-white/[0.05] ring-1 ring-white/10 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_10px_40px_-24px_rgba(0,0,0,0.7)] focus-within:ring-accent/50 focus-within:bg-white/[0.07] transition-all duration-200">
+            <div className="group relative flex items-center rounded-full bg-white/[0.05] ring-1 ring-white/10 md:backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_10px_40px_-24px_rgba(0,0,0,0.7)] focus-within:ring-accent/50 focus-within:bg-white/[0.07] transition-all duration-200">
               <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground" />
               <input
                 value={query}
@@ -1199,7 +1199,7 @@ function SearchPage() {
       <div
         className={`sticky top-0 z-30 -mx-4 sm:mx-0 mb-5 transition-transform duration-300 will-change-transform ${barHidden ? "-translate-y-[130%]" : "translate-y-0"}`}
       >
-        <div className="relative px-4 py-3 sm:p-4 bg-[oklch(0.16_0.008_260/0.75)] sm:rounded-3xl border-b sm:border border-white/[0.06] backdrop-blur-2xl shadow-[0_20px_60px_-30px_rgba(0,0,0,0.6)]">
+        <div className="relative px-4 py-3 sm:p-4 bg-[oklch(0.16_0.008_260/0.75)] sm:rounded-3xl border-b sm:border border-white/[0.06] md:backdrop-blur-2xl shadow-[0_20px_60px_-30px_rgba(0,0,0,0.6)]">
           {/* Subtle ambient orange edge glow */}
           <div
             aria-hidden
@@ -1282,7 +1282,7 @@ function SearchPage() {
                     </span>
                   </button>
                 </DrawerTrigger>
-                <DrawerContent className="border-white/10 bg-background/80 backdrop-blur-2xl">
+                <DrawerContent className="border-white/10 bg-background/80 md:backdrop-blur-2xl">
                   <div className="mx-auto w-full max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
                     <div className="flex items-center gap-2 px-2 pt-1 pb-4">
                       <ArrowUpDown className="size-4 text-accent" />

@@ -851,7 +851,7 @@ function ProductPage() {
                 <button
                   onClick={handleShare}
                   aria-label="Share"
-                  className="size-11 grid place-items-center rounded-full bg-black/35 backdrop-blur-md border border-white/10 text-white/85 hover:text-accent transition-all active:scale-90"
+                  className="size-11 grid place-items-center rounded-full bg-black/35 md:backdrop-blur-md border border-white/10 text-white/85 hover:text-accent transition-all active:scale-90"
                 >
                   <Share2 className="size-[18px]" />
                 </button>
@@ -860,7 +860,7 @@ function ProductPage() {
 
               {/* Sold-out chip */}
               {isOOS && (
-                <span className="absolute top-16 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-white/90">
+                <span className="absolute top-16 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/60 md:backdrop-blur px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-white/90">
                   <span className="size-1.5 rounded-full bg-accent animate-pulse" />
                   Sold out
                 </span>
@@ -868,7 +868,7 @@ function ProductPage() {
 
               {/* Image indicator — dots + "1/N" counter */}
               {galleryMedia.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md px-3 py-1.5">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-black/40 md:backdrop-blur-md px-3 py-1.5">
                   <div className="flex items-center gap-1.5">
                     {galleryMedia.slice(0, 6).map((m, i) => (
                       <button
@@ -1190,8 +1190,9 @@ function ProductPage() {
                   className="mt-8 overflow-hidden rounded-2xl border border-white/10"
                   style={{
                     background: "linear-gradient(135deg, oklch(1 0 0 / 0.05), oklch(1 0 0 / 0.015))",
-                    backdropFilter: "blur(20px) saturate(140%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(140%)",
+                    // Cheaper radius: large blur radii cost roughly O(r) per frame.
+                    backdropFilter: "blur(10px) saturate(140%)",
+                    WebkitBackdropFilter: "blur(10px) saturate(140%)",
                   }}
                 >
                   <button
@@ -1326,7 +1327,7 @@ function ProductPage() {
       {/* Sticky mobile purchase dock v6.2 — intel line + Price + Add + Primary CTA. */}
       {showPurchaseDock && (
       <div ref={layoutMetrics.setCtaElement} data-app-cta data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 duration-300 ease-out will-change-transform" style={{ bottom: "var(--product-dock-bottom)", transform: navHidden ? "translateY(calc(var(--product-dock-bottom) - var(--mobile-safe-bottom)))" : "translateY(0)", transition: "transform 200ms ease-out" }}>
-        <div className="flex h-full flex-col justify-center gap-1.5 rounded-[24px] border border-white/10 px-3 py-1.5" style={{ background: "linear-gradient(135deg, oklch(1 0 0 / 0.07), oklch(1 0 0 / 0.02))", backdropFilter: "blur(32px) saturate(160%)", WebkitBackdropFilter: "blur(32px) saturate(160%)", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
+        <div className="flex h-full flex-col justify-center gap-1.5 rounded-[24px] border border-white/10 px-3 py-1.5" style={{ background: "color-mix(in oklab, var(--color-background) 92%, oklch(1 0 0 / 0.06))", boxShadow: "0 24px 60px -18px oklch(0 0 0 / 0.9)" }}>
           <PDPStickyIntel
             missingVariant={missingVariant}
             isOOS={isOOS}
@@ -1461,7 +1462,7 @@ function WishlistHeartButton({ active, onToggle }: { active: boolean; onToggle: 
       onClick={handleClick}
       aria-label={active ? "Remove from wishlist" : "Add to wishlist"}
       aria-pressed={active}
-      className={`relative size-11 grid place-items-center rounded-full backdrop-blur-md border transition-colors duration-200 active:scale-90 overflow-visible ${
+      className={`relative size-11 grid place-items-center rounded-full md:backdrop-blur-md border transition-colors duration-200 active:scale-90 overflow-visible ${
         active ? "bg-accent/15 border-accent/40 text-accent" : "bg-black/35 border-white/10 text-white/85 hover:text-accent"
       }`}
     >
@@ -1573,7 +1574,7 @@ function ProductPageSkeleton() {
     <div data-product-related className="min-h-[30rem]" />
     <div aria-hidden className="sm:hidden h-[var(--product-page-bottom-clearance)]" />
     <div data-product-cta data-floating-control className="sm:hidden fixed inset-x-0 z-[var(--z-floating-controls)] h-[var(--product-dock-height)] px-3" style={{ bottom: "var(--product-dock-bottom)" }}>
-      <div className="flex h-full items-center gap-2.5 rounded-[24px] border border-white/10 bg-white/[0.04] px-3 backdrop-blur-2xl">
+      <div className="flex h-full items-center gap-2.5 rounded-[24px] border border-white/10 bg-white/[0.04] px-3 md:backdrop-blur-2xl">
         <div className="size-12 shrink-0 rounded-full bg-white/[0.05] animate-pulse" />
         <div className="size-12 shrink-0 rounded-xl bg-white/[0.05] animate-pulse" />
         <div className="h-8 w-16 shrink-0 rounded-lg bg-white/[0.05] animate-pulse" />

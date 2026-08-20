@@ -43,7 +43,7 @@ export function CommunicationHub() {
 
   return (
     <div
-      className="fixed inset-0 z-[75] flex items-end justify-center bg-black/55 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[75] flex items-end justify-center bg-black/55 md:backdrop-blur-sm animate-in fade-in duration-200"
       onClick={() => setOpen(false)}
       role="dialog"
       aria-modal="true"
@@ -51,7 +51,7 @@ export function CommunicationHub() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 backdrop-blur-2xl shadow-2xl animate-in slide-in-from-bottom duration-300"
+        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-card/95 md:backdrop-blur-2xl shadow-2xl animate-in slide-in-from-bottom duration-300"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)" }}
       >
         {/* grabber */}

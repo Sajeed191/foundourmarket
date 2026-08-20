@@ -1652,7 +1652,7 @@ export function ProductQA({
 
       {/* Controls */}
       {items.length > 0 && (
-        <div className={`${hideHeader ? "" : "sticky top-16 z-20"} -mx-4 sm:mx-0 mb-5 px-4 sm:px-0 py-2 ${hideHeader ? "" : "bg-background/85 backdrop-blur-xl"}`}>
+        <div className={`${hideHeader ? "" : "sticky top-16 z-20"} -mx-4 sm:mx-0 mb-5 px-4 sm:px-0 py-2 ${hideHeader ? "" : "bg-background/85 md:backdrop-blur-xl"}`}>
           <div className="flex gap-2 flex-wrap">
             {externalSearch === undefined && (
               <div className="relative flex-1 min-w-[220px]">

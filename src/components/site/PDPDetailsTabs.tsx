@@ -30,6 +30,10 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProductDescription } from "@/components/site/ProductDescription";
 
+/** Collapsed height of the description block, in px. */
+const COLLAPSED_DESC_PX = 224;
+
+
 type SpecEntry = [string, string];
 type SpecGroup = { group: string; entries: SpecEntry[] };
 

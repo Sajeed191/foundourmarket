@@ -28,10 +28,14 @@ const FETCH_TIMEOUT_MS = 8000;
 const ANALYSIS_LONG_EDGE = 512; // downsample cap for pixel work
 
 export async function fetchImageBytes(url: string): Promise<Uint8Array> {
+  // SSRF guard: never let a caller-supplied URL reach internal networks.
+  const guard = assertSafeImageUrl(url);
+  if (!guard.ok) throw new Error("Image URL is not an allowed media source.");
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(guard.url.toString(), { signal: controller.signal, redirect: "error" });
     if (!res.ok) throw new Error(`Image fetch ${res.status}`);
     const cl = Number(res.headers.get("content-length") ?? "0");
     if (cl && cl > MAX_BYTES) throw new Error("Image exceeds 12MB safety cap.");

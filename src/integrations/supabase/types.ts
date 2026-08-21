@@ -7802,6 +7802,10 @@ export type Database = {
         Args: { _object_name: string }
         Returns: boolean
       }
+      storage_upload_ext_allowed: {
+        Args: { _kind: string; _name: string }
+        Returns: boolean
+      }
       submit_review: {
         Args: {
           p_body?: string

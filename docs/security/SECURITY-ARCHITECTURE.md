@@ -157,3 +157,30 @@ Informational findings `user_roles_missing_select_scope`,
 `realtime_admin_wildcard_topics_broad`, and
 `realtime_anon_read_only_catalog_topics` remain correct by design and were not
 modified.
+
+## 13. Hardening v9.0 additions
+
+### 13.1 Stored-file trust boundary (`customer_upload_type_bypass`)
+The v9.0 audit proved every customer-writable bucket accepted arbitrary file
+types: a scriptable SVG uploaded with a customer session was served back as
+`image/svg+xml` from the storage origin, and HTML/oversized payloads were
+accepted too. `accept=""` and `validateReviewFile()` are UX only.
+
+Remediation — the database is now the boundary:
+- `public.storage_upload_ext_allowed(name, kind)` (IMMUTABLE, fixed
+  `search_path`) holds the allow-list: `image`, `image_video`, `image_doc`.
+- The storage INSERT/UPDATE policies for `avatars`, `review-media`,
+  `return-photos`, and `support-attachments` call it alongside the existing
+  `auth.uid() = foldername[1]` ownership check.
+- Scriptable extensions (svg, html, xml, js, …) are rejected with HTTP 400;
+  double extensions resolve to the last segment. Existing objects are
+  untouched.
+
+### 13.2 Function search_path
+`enqueue_email`, `read_email_batch`, `delete_email`, and `move_to_dlq` now pin
+`search_path = public, pgmq`. They remain `service_role`-only.
+
+### 13.3 Regression tests
+- `src/lib/security/zero-trust-v9.test.ts` — upload allow-list table, anon
+  read denial on review/Q&A tables (which is what bounds the `reviews:%`
+  realtime topic), anon bucket writes, private-bucket exposure.

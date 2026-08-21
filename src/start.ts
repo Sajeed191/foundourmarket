@@ -79,23 +79,15 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/lovable/")) {
     return next();
   }
-  const res = await next();
-  const headers = (res as { headers?: Headers }).headers;
-  if (!headers || typeof headers.set !== "function") return res;
-  const ct = headers.get("content-type") ?? "";
-  if (!ct.includes("text/html")) return res;
-
-  headers.set(
-    "Content-Security-Policy",
-    "frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://*.lovableproject.com",
-  );
-  headers.set(
-    "Permissions-Policy",
-    "geolocation=(), microphone=(), camera=(), payment=(self), usb=(), magnetometer=(), gyroscope=(), interest-cohort=()",
-  );
-  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  headers.set("X-Content-Type-Options", "nosniff");
-  return res;
+  setResponseHeaders({
+    "content-security-policy":
+      "frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://*.lovableproject.com",
+    "permissions-policy":
+      "geolocation=(), microphone=(), camera=(), payment=(self), usb=(), magnetometer=(), gyroscope=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+  });
+  return next();
 });
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {

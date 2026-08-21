@@ -129,8 +129,10 @@ export const trackOrder = createServerFn({ method: "POST" })
     }
 
     if (!order) {
-      console.warn("[trackOrder] email mismatch", { rawId, email: supplied });
-      return { found: false as const, reason: "email_mismatch" as const };
+      // Deliberately identical to the "no such order" response: distinguishing
+      // the two would confirm an order id exists to an unauthenticated caller.
+      console.warn("[trackOrder] email mismatch", { rawId });
+      return { found: false as const, reason: "not_found" as const };
     }
 
 

@@ -13,6 +13,8 @@
  * not produce false failures.
  */
 
+export {};
+
 let failed = 0;
 function assert(cond: boolean, label: string) {
   if (cond) console.log(`  ✓ ${label}`);

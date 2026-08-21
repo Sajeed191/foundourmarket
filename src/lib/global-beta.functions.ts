@@ -43,8 +43,13 @@ export const placeDemoOrder = createServerFn({ method: "POST" })
     };
 
     // Region is resolved server-side; demo checkout only applies to non-India.
+    // India has a live payment gateway, so a demo (unpaid) order there would be
+    // a payment bypass — fail closed instead of coercing the region.
     const resolution = await resolveRegion(supabase, userId);
-    const region = resolution.region === "india" ? "international" : resolution.region;
+    if (resolution.region === "india") {
+      throw new Error("Demo checkout is not available in your region.");
+    }
+    const region = resolution.region;
 
     const priced = await repriceFromDb(supabase, region, data.items, null);
     if (priced.totals.total < 1) {

@@ -12,6 +12,7 @@
  */
 
 import { imageSize } from "image-size";
+import { assertSafeImageUrl } from "@/lib/security/safe-fetch.server";
 import {
   INTELLIGENCE_VERSION,
   resolveCategoryFraming,

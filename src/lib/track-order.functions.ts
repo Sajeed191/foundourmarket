@@ -44,6 +44,21 @@ type OrderRow = {
 export const trackOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => schema.parse(input))
   .handler(async ({ data }) => {
+    // Service-role client is loaded lazily so this client-imported module never
+    // pulls the server-only Supabase client into a browser bundle.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Guest order lookup is an unauthenticated PII surface: throttle per caller
+    // so an order-id + email pair cannot be brute-forced.
+    const ip =
+      (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim() ||
+      getRequestHeader("x-real-ip") ||
+      "unknown";
+    const gate = consumeRateLimit(`track-order:${ip}`, 10, 60_000);
+    if (!gate.allowed) {
+      return { found: false as const, reason: "rate_limited" as const };
+    }
+
     // Normalize the supplied identifier: drop a leading "#" (shown in the UI),
     // trim, and lowercase. Customers usually paste the SHORT id (#abc12345) that
     // we display on the success screen / emails — i.e. the first 8 chars of the

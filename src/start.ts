@@ -67,6 +67,37 @@ const canonicalHostMiddleware = createMiddleware().server(async ({ next, request
   return next();
 });
 
+/**
+ * Baseline browser security headers. Intentionally narrow: only
+ * clickjacking + powerful-feature lockdown, which cannot break existing
+ * scripts/styles (no script-src / default-src, so third-party pixels,
+ * Razorpay and Crisp keep working). Framing stays allowed for the Lovable
+ * editor preview hosts.
+ */
+const securityHeadersMiddleware = createMiddleware().server(async ({ next, request }) => {
+  const url = new URL(request.url);
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/lovable/")) {
+    return next();
+  }
+  const res = await next();
+  const headers = (res as { headers?: Headers }).headers;
+  if (!headers || typeof headers.set !== "function") return res;
+  const ct = headers.get("content-type") ?? "";
+  if (!ct.includes("text/html")) return res;
+
+  headers.set(
+    "Content-Security-Policy",
+    "frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://*.lovableproject.com",
+  );
+  headers.set(
+    "Permissions-Policy",
+    "geolocation=(), microphone=(), camera=(), payment=(self), usb=(), magnetometer=(), gyroscope=(), interest-cohort=()",
+  );
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("X-Content-Type-Options", "nosniff");
+  return res;
+});
+
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   if (new URL(request.url).pathname.startsWith("/lovable/")) {
     return next();

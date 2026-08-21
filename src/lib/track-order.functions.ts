@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { buildTrackingUrl, courierLabel } from "@/lib/courier";
+import { consumeRateLimit } from "@/lib/security/server-rate-limit";
 
 const schema = z.object({
   orderId: z.string().trim().min(6).max(64),

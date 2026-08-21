@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { resolveIndianPincode } from "./pincode-lookup.server";
+
+/** Lazy service-role client: keeps the server-only module out of client bundles. */
+async function admin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
 
 /**
  * Cart server functions.
@@ -18,7 +23,7 @@ const lineSchema = z.object({
 async function subtotalFromDb(items: { slug: string; qty: number }[]) {
   const slugs = items.map((i) => i.slug);
   if (!slugs.length) return { subtotal: 0, bySlug: new Map<string, any>() };
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await (await admin())
     .from("products")
     .select("slug,price")
     .in("slug", slugs);
@@ -48,7 +53,7 @@ export const applyCoupon = createServerFn({ method: "POST" })
     const { subtotal } = await subtotalFromDb(data.items);
     const code = data.code.toUpperCase();
 
-    const { data: promo } = await supabaseAdmin
+    const { data: promo } = await (await admin())
       .from("promo_codes")
       .select("code,kind,value,min_subtotal,max_uses,uses,active,expires_at")
       .ilike("code", code)
@@ -97,7 +102,7 @@ export const validateCartInventory = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const slugs = data.items.map((i) => i.slug);
-    const { data: rows, error } = await supabaseAdmin
+    const { data: rows, error } = await (await admin())
       .from("products")
       .select("slug,stock_quantity,reserved_quantity,low_stock_threshold,in_stock")
       .in("slug", slugs);

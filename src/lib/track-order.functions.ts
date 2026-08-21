@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { buildTrackingUrl, courierLabel } from "@/lib/courier";
+import { consumeRateLimit } from "@/lib/security/server-rate-limit";
 
 const schema = z.object({
   orderId: z.string().trim().min(6).max(64),
@@ -43,6 +44,21 @@ type OrderRow = {
 export const trackOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => schema.parse(input))
   .handler(async ({ data }) => {
+    // Service-role client is loaded lazily so this client-imported module never
+    // pulls the server-only Supabase client into a browser bundle.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Guest order lookup is an unauthenticated PII surface: throttle per caller
+    // so an order-id + email pair cannot be brute-forced.
+    const ip =
+      (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim() ||
+      getRequestHeader("x-real-ip") ||
+      "unknown";
+    const gate = consumeRateLimit(`track-order:${ip}`, 10, 60_000);
+    if (!gate.allowed) {
+      return { found: false as const, reason: "rate_limited" as const };
+    }
+
     // Normalize the supplied identifier: drop a leading "#" (shown in the UI),
     // trim, and lowercase. Customers usually paste the SHORT id (#abc12345) that
     // we display on the success screen / emails — i.e. the first 8 chars of the
@@ -83,7 +99,7 @@ export const trackOrder = createServerFn({ method: "POST" })
     console.log("[trackOrder] lookup", {
       rawId,
       mode: isUuid ? "uuid" : "short",
-      email: supplied,
+      
       candidates: candidates.length,
     });
 
@@ -113,8 +129,10 @@ export const trackOrder = createServerFn({ method: "POST" })
     }
 
     if (!order) {
-      console.warn("[trackOrder] email mismatch", { rawId, email: supplied });
-      return { found: false as const, reason: "email_mismatch" as const };
+      // Deliberately identical to the "no such order" response: distinguishing
+      // the two would confirm an order id exists to an unauthenticated caller.
+      console.warn("[trackOrder] email mismatch", { rawId });
+      return { found: false as const, reason: "not_found" as const };
     }
 
 
@@ -184,6 +202,16 @@ export const trackOrder = createServerFn({ method: "POST" })
       };
     }
 
-    return { found: true as const, order, items: items ?? [], shipment, events };
+    // Data minimisation: never ship internal identifiers (account id) or the
+    // stored contact email back to a guest tracking client.
+    const { user_id: _userId, contact_email: _contactEmail, ...safeOrder } = order;
+
+    return {
+      found: true as const,
+      order: safeOrder,
+      items: items ?? [],
+      shipment,
+      events,
+    };
   });
 

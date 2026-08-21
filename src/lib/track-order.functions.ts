@@ -202,6 +202,16 @@ export const trackOrder = createServerFn({ method: "POST" })
       };
     }
 
-    return { found: true as const, order, items: items ?? [], shipment, events };
+    // Data minimisation: never ship internal identifiers (account id) or the
+    // stored contact email back to a guest tracking client.
+    const { user_id: _userId, contact_email: _contactEmail, ...safeOrder } = order;
+
+    return {
+      found: true as const,
+      order: safeOrder,
+      items: items ?? [],
+      shipment,
+      events,
+    };
   });
 

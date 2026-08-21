@@ -99,7 +99,7 @@ export const trackOrder = createServerFn({ method: "POST" })
     console.log("[trackOrder] lookup", {
       rawId,
       mode: isUuid ? "uuid" : "short",
-      email: supplied,
+      
       candidates: candidates.length,
     });
 

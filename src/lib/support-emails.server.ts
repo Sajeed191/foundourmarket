@@ -39,7 +39,7 @@ async function enqueue(opts: {
   recipient: string
   fromUser: string
   props: Record<string, unknown>
-  unsub?: { oneClickUrl: string; pageUrl: string } | null
+  unsub?: { token: string; oneClickUrl: string; pageUrl: string } | null
   /** When set, mirror the send into email_logs for Customer-360 timeline visibility. */
   timelineUserId?: string | null
   /** Subject shown on the timeline row (defaults to the rendered subject). */

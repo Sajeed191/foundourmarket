@@ -184,11 +184,15 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 .filter((id: string | null): id is string => Boolean(id))
             )
           )
-          const failedAttemptsByMessageId = new Map<string, number>()
+          // Failures are counted per message id WITH their timestamps, so the
+          // retry budget only covers attempts made for the CURRENT enqueue.
+          // Message ids are deterministic (order + event), so counting lifetime
+          // failures would permanently dead-letter every later re-send.
+          const failuresByMessageId = new Map<string, number[]>()
           if (messageIds.length > 0) {
             const { data: failedRows, error: failedRowsError } = await supabase
               .from('email_send_log')
-              .select('message_id')
+              .select('message_id, created_at')
               .in('message_id', messageIds)
               .eq('status', 'failed')
 
@@ -202,10 +206,10 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               for (const row of failedRows ?? []) {
                 const messageId = row?.message_id
                 if (typeof messageId !== 'string' || !messageId) continue
-                failedAttemptsByMessageId.set(
-                  messageId,
-                  (failedAttemptsByMessageId.get(messageId) ?? 0) + 1
-                )
+                const ts = row?.created_at ? new Date(row.created_at as string).getTime() : 0
+                const list = failuresByMessageId.get(messageId) ?? []
+                list.push(Number.isFinite(ts) ? ts : 0)
+                failuresByMessageId.set(messageId, list)
               }
             }
           }
@@ -213,9 +217,17 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           for (let i = 0; i < messages.length; i++) {
             const msg = messages[i]
             const payload = msg.message
+            const enqueuedAtMs = (() => {
+              const raw = payload?.queued_at ?? msg.enqueued_at
+              const t = raw ? new Date(raw).getTime() : NaN
+              return Number.isFinite(t) ? t : 0
+            })()
             const failedAttempts =
               payload?.message_id && typeof payload.message_id === 'string'
-                ? (failedAttemptsByMessageId.get(payload.message_id) ?? 0)
+                ? (failuresByMessageId.get(payload.message_id) ?? []).filter(
+                    // 5s slack absorbs clock skew between enqueue and logging.
+                    (t) => t >= enqueuedAtMs - 5000
+                  ).length
                 : msg.read_ct ?? 0
 
             // Drop expired messages (TTL exceeded).
@@ -273,7 +285,13 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               typeof payload.unsubscribe_token === 'string' && payload.unsubscribe_token
                 ? (payload.unsubscribe_token as string)
                 : null
-            if (!unsubscribeToken && typeof payload.to === 'string') {
+            // Only transactional sends require a token — auth emails must keep
+            // their existing (token-free) behaviour untouched.
+            if (
+              !unsubscribeToken &&
+              queue === 'transactional_emails' &&
+              typeof payload.to === 'string'
+            ) {
               unsubscribeToken = await ensureUnsubscribeToken(supabase, payload.to)
             }
 
@@ -382,7 +400,9 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 error_message: errorMsg.slice(0, 1000),
               })
               if (payload?.message_id && typeof payload.message_id === 'string') {
-                failedAttemptsByMessageId.set(payload.message_id, failedAttempts + 1)
+                const list = failuresByMessageId.get(payload.message_id) ?? []
+                list.push(Date.now())
+                failuresByMessageId.set(payload.message_id, list)
               }
 
               // Non-429 errors: message stays invisible until VT expires, then retried

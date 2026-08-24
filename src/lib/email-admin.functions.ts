@@ -581,3 +581,38 @@ export const getEmailDiagnostics = createServerFn({ method: "POST" })
       recentSuppressions,
     };
   });
+
+/**
+ * Admin — safely re-trigger ONE dead-lettered email.
+ *
+ * Exactly-once by construction: `email_dlq_replay` archives the DLQ copy in the
+ * same transaction as the re-enqueue, refuses anything already logged as
+ * `sent`, and the queue processor's own duplicate guard blocks a second send.
+ */
+export const replayDeadLetterEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ messageId: z.string().trim().min(1).max(200) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context as { userId: string };
+    await assertEmailStaff(userId);
+
+    const { data: res, error } = await supabaseAdmin.rpc("email_dlq_replay", {
+      p_message_id: data.messageId,
+    });
+    if (error) throw new Error(error.message);
+
+    const out = (res ?? {}) as { replayed?: boolean; reason?: string; queue?: string };
+
+    await supabaseAdmin.from("admin_activity_logs").insert({
+      action: "email_dlq_replay",
+      entity_type: "email",
+      entity_id: data.messageId,
+      metadata: { replayed: !!out.replayed, reason: out.reason ?? null, queue: out.queue ?? null } as never,
+    });
+
+    return {
+      replayed: !!out.replayed,
+      reason: out.reason ?? null,
+      queue: out.queue ?? null,
+    };
+  });

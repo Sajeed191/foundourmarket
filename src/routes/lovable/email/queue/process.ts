@@ -35,6 +35,44 @@ function getRetryAfterSeconds(error: unknown): number {
   return 60
 }
 
+// The Lovable email API rejects transactional sends without an
+// `unsubscribe_token` (400 missing_unsubscribe). Producers attach one, but this
+// is the last-line guarantee: mint/reuse the recipient's stable token here so a
+// message queued by an older producer can never fail for that reason.
+async function ensureUnsubscribeToken(
+  supabase: SupabaseClient<any, any>,
+  email: string
+): Promise<string | null> {
+  const normalized = (email || '').trim().toLowerCase()
+  if (!normalized) return null
+  const { data: existing } = await supabase
+    .from('email_unsubscribe_tokens')
+    .select('token')
+    .eq('email', normalized)
+    .maybeSingle()
+  if (existing?.token) return existing.token as string
+
+  const bytes = new Uint8Array(24)
+  crypto.getRandomValues(bytes)
+  const token = btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+
+  const { error } = await supabase
+    .from('email_unsubscribe_tokens')
+    .insert({ email: normalized, token })
+  if (error) {
+    const { data: retry } = await supabase
+      .from('email_unsubscribe_tokens')
+      .select('token')
+      .eq('email', normalized)
+      .maybeSingle()
+    return (retry?.token as string | undefined) ?? null
+  }
+  return token
+}
+
 async function moveToDlq(
   supabase: SupabaseClient<any, any>,
   queue: string,
@@ -221,6 +259,14 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
             }
 
+            let unsubscribeToken =
+              typeof payload.unsubscribe_token === 'string' && payload.unsubscribe_token
+                ? (payload.unsubscribe_token as string)
+                : null
+            if (!unsubscribeToken && typeof payload.to === 'string') {
+              unsubscribeToken = await ensureUnsubscribeToken(supabase, payload.to)
+            }
+
             try {
               await sendLovableEmail(
                 {
@@ -234,7 +280,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   purpose: payload.purpose,
                   label: payload.label,
                   idempotency_key: payload.idempotency_key,
-                  unsubscribe_token: payload.unsubscribe_token,
+                  unsubscribe_token: unsubscribeToken ?? undefined,
                   message_id: payload.message_id,
                 },
                 { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }

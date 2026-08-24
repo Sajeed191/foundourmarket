@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
+import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const STAFF_ROLES = ["admin", "super_admin", "manager"];
 
@@ -146,6 +147,7 @@ export const createPlacementTest = createServerFn({ method: "POST" })
         recipient_email: recipient,
         status: "pending",
       });
+      const unsub = await buildUnsubscribeLinks(recipient);
       const { error: enqErr } = await supabaseAdmin.rpc("enqueue_email", {
         queue_name: "transactional_emails",
         payload: {
@@ -161,6 +163,15 @@ export const createPlacementTest = createServerFn({ method: "POST" })
           label: "inbox-placement-test",
           idempotency_key: messageId,
           queued_at: new Date().toISOString(),
+          ...(unsub
+            ? {
+                unsubscribe_token: unsub.token,
+                headers: {
+                  "List-Unsubscribe": `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
+                  "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                },
+              }
+            : {}),
         },
       });
       if (enqErr) {

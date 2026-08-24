@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server'
 import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
 import { newsletterVerifyTemplate } from '@/lib/email-templates/newsletter-verify'
+import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const SENDER_DOMAIN = 'sends.foundourmarket.com'
 const FROM_DOMAIN = 'foundourmarket.com'
@@ -45,6 +46,8 @@ export async function enqueueNewsletterVerifyEmail(
     return { ok: false, reason: 'render_failed' }
   }
 
+  const unsub = await buildUnsubscribeLinks(email)
+
   try {
     const { error } = await supabaseAdmin.rpc('enqueue_email', {
       queue_name: 'transactional_emails',
@@ -65,6 +68,15 @@ export async function enqueueNewsletterVerifyEmail(
         label: 'newsletter-verify',
         idempotency_key: messageId,
         queued_at: new Date().toISOString(),
+        ...(unsub
+          ? {
+              unsubscribe_token: unsub.token,
+              headers: {
+                'List-Unsubscribe': `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
+            }
+          : {}),
       },
     })
     if (error) {

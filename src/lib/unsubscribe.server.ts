@@ -48,6 +48,11 @@ export async function getOrCreateUnsubscribeToken(
 }
 
 export interface UnsubscribeLinks {
+  /**
+   * Raw token. REQUIRED by the Lovable email API on every transactional
+   * send (`unsubscribe_token`); also used to build the links below.
+   */
+  token: string
   /** Friendly browser-facing page the footer link points to. */
   pageUrl: string
   /** RFC 8058 one-click POST endpoint for the List-Unsubscribe header. */
@@ -65,6 +70,7 @@ export async function buildUnsubscribeLinks(
   if (!token) return null
   const q = encodeURIComponent(token)
   return {
+    token,
     pageUrl: `${PUBLIC_BASE}/unsubscribe?token=${q}`,
     oneClickUrl: `${PUBLIC_BASE}/email/unsubscribe?token=${q}`,
   }

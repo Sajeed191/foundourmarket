@@ -27,12 +27,60 @@ function isForbidden(error: unknown): boolean {
   return error instanceof Error && error.message.includes('403')
 }
 
+// A 409 means the provider already registered this exact send (idempotency key
+// reuse). Retrying can never succeed and only burns the retry budget, so the
+// message goes straight to the DLQ with an explicit reason.
+function isConflict(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'status' in error) {
+    return (error as { status: number }).status === 409
+  }
+  return error instanceof Error && error.message.includes('409')
+}
+
 // Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
 function getRetryAfterSeconds(error: unknown): number {
   if (error && typeof error === 'object' && 'retryAfterSeconds' in error) {
     return (error as { retryAfterSeconds: number | null }).retryAfterSeconds ?? 60
   }
   return 60
+}
+
+// The Lovable email API rejects transactional sends without an
+// `unsubscribe_token` (400 missing_unsubscribe). Producers attach one, but this
+// is the last-line guarantee: mint/reuse the recipient's stable token here so a
+// message queued by an older producer can never fail for that reason.
+async function ensureUnsubscribeToken(
+  supabase: SupabaseClient<any, any>,
+  email: string
+): Promise<string | null> {
+  const normalized = (email || '').trim().toLowerCase()
+  if (!normalized) return null
+  const { data: existing } = await supabase
+    .from('email_unsubscribe_tokens')
+    .select('token')
+    .eq('email', normalized)
+    .maybeSingle()
+  if (existing?.token) return existing.token as string
+
+  const bytes = new Uint8Array(24)
+  crypto.getRandomValues(bytes)
+  const token = btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+
+  const { error } = await supabase
+    .from('email_unsubscribe_tokens')
+    .insert({ email: normalized, token })
+  if (error) {
+    const { data: retry } = await supabase
+      .from('email_unsubscribe_tokens')
+      .select('token')
+      .eq('email', normalized)
+      .maybeSingle()
+    return (retry?.token as string | undefined) ?? null
+  }
+  return token
 }
 
 async function moveToDlq(
@@ -221,6 +269,14 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
             }
 
+            let unsubscribeToken =
+              typeof payload.unsubscribe_token === 'string' && payload.unsubscribe_token
+                ? (payload.unsubscribe_token as string)
+                : null
+            if (!unsubscribeToken && typeof payload.to === 'string') {
+              unsubscribeToken = await ensureUnsubscribeToken(supabase, payload.to)
+            }
+
             try {
               await sendLovableEmail(
                 {
@@ -233,8 +289,17 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   text: payload.text,
                   purpose: payload.purpose,
                   label: payload.label,
-                  idempotency_key: payload.idempotency_key,
-                  unsubscribe_token: payload.unsubscribe_token,
+                  // The provider rejects a re-send under an id that already
+                  // failed (409). Dedup for the FIRST attempt still uses the
+                  // stable key; genuine retries get an attempt-scoped key so
+                  // transient failures can actually be retried. Duplicate
+                  // protection for retries comes from the "already sent"
+                  // guard above, which is keyed on message_id.
+                  idempotency_key:
+                    failedAttempts > 0
+                      ? `${payload.idempotency_key}:r${failedAttempts}`
+                      : payload.idempotency_key,
+                  unsubscribe_token: unsubscribeToken ?? undefined,
                   message_id: payload.message_id,
                 },
                 { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
@@ -293,6 +358,16 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
 
               // 403s are permanent configuration or authorization failures for this
               // message, so move straight to DLQ and stop processing the rest of the batch.
+              if (isConflict(error)) {
+                await moveToDlq(
+                  supabase,
+                  queue,
+                  msg,
+                  `Duplicate send rejected by provider (409): ${errorMsg}`.slice(0, 1000)
+                )
+                continue
+              }
+
               if (isForbidden(error)) {
                 await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
                 return Response.json({ processed: totalProcessed, stopped: 'forbidden' })

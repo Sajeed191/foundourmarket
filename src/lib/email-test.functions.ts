@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
 import { TestEmail } from "@/lib/email-templates/test-email";
+import { buildUnsubscribeLinks } from "@/lib/unsubscribe.server";
 
 const STAFF_ROLES = ["admin", "super_admin", "manager"];
 const SITE_NAME = "FoundOurMarket";
@@ -72,6 +73,7 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       status: "pending",
     });
 
+    const unsub = await buildUnsubscribeLinks(recipient);
     const { error: enqueueError } = await supabaseAdmin.rpc("enqueue_email", {
       queue_name: "transactional_emails",
       payload: {
@@ -87,6 +89,15 @@ export const sendTestEmail = createServerFn({ method: "POST" })
         label: "test-email",
         idempotency_key: messageId,
         queued_at: new Date().toISOString(),
+        ...(unsub
+          ? {
+              unsubscribe_token: unsub.token,
+              headers: {
+                "List-Unsubscribe": `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+              },
+            }
+          : {}),
       },
     });
 

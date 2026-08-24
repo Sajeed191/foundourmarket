@@ -193,6 +193,7 @@ export async function fireLifecycleEvent(opts: {
       if (suppressed) {
         await supabaseAdmin.from('email_logs').update({ status: 'suppressed' }).eq('user_id', customerId).eq('template', event).eq('status', 'pending')
       } else {
+        const unsub = await buildUnsubscribeLinks(email)
         const { error: enqErr } = await supabaseAdmin.rpc('enqueue_email', {
           queue_name: 'transactional_emails',
           payload: {
@@ -208,6 +209,15 @@ export async function fireLifecycleEvent(opts: {
             label: event,
             idempotency_key: messageId,
             queued_at: nowIso,
+            ...(unsub
+              ? {
+                  unsubscribe_token: unsub.token,
+                  headers: {
+                    'List-Unsubscribe': `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
+                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                  },
+                }
+              : {}),
           },
         })
         if (enqErr) throw new Error(enqErr.message)

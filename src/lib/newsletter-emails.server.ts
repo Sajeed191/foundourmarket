@@ -45,6 +45,8 @@ export async function enqueueNewsletterVerifyEmail(
     return { ok: false, reason: 'render_failed' }
   }
 
+  const unsub = await buildUnsubscribeLinks(email)
+
   try {
     const { error } = await supabaseAdmin.rpc('enqueue_email', {
       queue_name: 'transactional_emails',
@@ -65,6 +67,15 @@ export async function enqueueNewsletterVerifyEmail(
         label: 'newsletter-verify',
         idempotency_key: messageId,
         queued_at: new Date().toISOString(),
+        ...(unsub
+          ? {
+              unsubscribe_token: unsub.token,
+              headers: {
+                'List-Unsubscribe': `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              },
+            }
+          : {}),
       },
     })
     if (error) {

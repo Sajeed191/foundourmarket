@@ -72,6 +72,7 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       status: "pending",
     });
 
+    const unsub = await buildUnsubscribeLinks(recipient);
     const { error: enqueueError } = await supabaseAdmin.rpc("enqueue_email", {
       queue_name: "transactional_emails",
       payload: {
@@ -87,6 +88,15 @@ export const sendTestEmail = createServerFn({ method: "POST" })
         label: "test-email",
         idempotency_key: messageId,
         queued_at: new Date().toISOString(),
+        ...(unsub
+          ? {
+              unsubscribe_token: unsub.token,
+              headers: {
+                "List-Unsubscribe": `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+              },
+            }
+          : {}),
       },
     });
 

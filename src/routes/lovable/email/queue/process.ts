@@ -27,6 +27,16 @@ function isForbidden(error: unknown): boolean {
   return error instanceof Error && error.message.includes('403')
 }
 
+// A 409 means the provider already registered this exact send (idempotency key
+// reuse). Retrying can never succeed and only burns the retry budget, so the
+// message goes straight to the DLQ with an explicit reason.
+function isConflict(error: unknown): boolean {
+  if (error && typeof error === 'object' && 'status' in error) {
+    return (error as { status: number }).status === 409
+  }
+  return error instanceof Error && error.message.includes('409')
+}
+
 // Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
 function getRetryAfterSeconds(error: unknown): number {
   if (error && typeof error === 'object' && 'retryAfterSeconds' in error) {
@@ -339,6 +349,16 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
 
               // 403s are permanent configuration or authorization failures for this
               // message, so move straight to DLQ and stop processing the rest of the batch.
+              if (isConflict(error)) {
+                await moveToDlq(
+                  supabase,
+                  queue,
+                  msg,
+                  `Duplicate send rejected by provider (409): ${errorMsg}`.slice(0, 1000)
+                )
+                continue
+              }
+
               if (isForbidden(error)) {
                 await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
                 return Response.json({ processed: totalProcessed, stopped: 'forbidden' })

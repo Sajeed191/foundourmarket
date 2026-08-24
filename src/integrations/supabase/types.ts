@@ -7405,6 +7405,7 @@ export type Database = {
         Args: { _entity_id: string; _entity_type: string }
         Returns: undefined
       }
+      email_dlq_replay: { Args: { p_message_id: string }; Returns: Json }
       email_queue_dispatch: { Args: never; Returns: undefined }
       email_queue_status: { Args: never; Returns: Json }
       enqueue_email: {

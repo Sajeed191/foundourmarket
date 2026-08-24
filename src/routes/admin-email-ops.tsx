@@ -6,7 +6,8 @@ import {
   AlertTriangle, Loader2, RefreshCw, ShieldBan, RotateCcw, Mail, Ban,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { getEmailOps } from "@/lib/email-admin.functions";
+import { toast } from "sonner";
+import { getEmailOps, replayDeadLetterEmail } from "@/lib/email-admin.functions";
 
 export const Route = createFileRoute("/admin-email-ops")({
   head: () => ({ meta: [{ title: "Email operations — Admin" }] }),
@@ -49,7 +50,10 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 
 function EmailOpsPage() {
   const fetchOps = useServerFn(getEmailOps);
+  const replay = useServerFn(replayDeadLetterEmail);
   const [range, setRange] = useState<"24h" | "7d" | "30d">("7d");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [done, setDone] = useState<Record<string, string>>({});
 
   const { data, isLoading, isFetching, refetch, isError, error } = useQuery({
     queryKey: ["email-ops", range],
@@ -60,6 +64,27 @@ function EmailOpsPage() {
   const ss = data?.suppressionStats;
   const failed = data?.failed ?? [];
   const suppressed = data?.suppressed ?? [];
+
+  async function onReplay(messageId: string) {
+    setBusyId(messageId);
+    try {
+      const res: any = await replay({ data: { messageId } });
+      const label = res?.replayed
+        ? "Re-queued — sending shortly"
+        : res?.reason === "already_sent"
+          ? "Already delivered"
+          : res?.reason === "not_found"
+            ? "Nothing left to resend"
+            : "Could not resend";
+      setDone((d) => ({ ...d, [messageId]: label }));
+      toast[res?.replayed ? "success" : "info"](label);
+      if (res?.replayed) setTimeout(() => refetch(), 8000);
+    } catch (e: any) {
+      toast.error(String(e?.message ?? "Could not resend"));
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   return (
     <AdminShell
@@ -132,6 +157,25 @@ function EmailOpsPage() {
                     </p>
                   </div>
                   <StatusBadge value={l.status} />
+                  {l.message_id && l.status === "dlq" && (
+                    done[l.message_id] ? (
+                      <span className="text-[10px] font-mono text-muted-foreground shrink-0">{done[l.message_id]}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onReplay(l.message_id)}
+                        disabled={busyId === l.message_id}
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border/60 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider hover:bg-white/5 disabled:opacity-50"
+                      >
+                        {busyId === l.message_id ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <RotateCcw className="size-3" />
+                        )}
+                        Resend once
+                      </button>
+                    )
+                  )}
                   <p className="text-[10px] font-mono text-muted-foreground shrink-0 hidden sm:block">
                     {new Date(l.created_at).toLocaleString()}
                   </p>

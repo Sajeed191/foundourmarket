@@ -114,6 +114,7 @@ async function enqueue(opts: {
         queued_at: new Date().toISOString(),
         ...(opts.unsub
           ? {
+              unsubscribe_token: opts.unsub.token,
               headers: {
                 'List-Unsubscribe': `<${opts.unsub.oneClickUrl}>, <${opts.unsub.pageUrl}>`,
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

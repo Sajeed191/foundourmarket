@@ -156,6 +156,7 @@ export async function enqueueReturnEmail(
         queued_at: new Date().toISOString(),
         ...(unsub
           ? {
+              unsubscribe_token: unsub.token,
               headers: {
                 'List-Unsubscribe': `<${unsub.oneClickUrl}>, <${unsub.pageUrl}>`,
                 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

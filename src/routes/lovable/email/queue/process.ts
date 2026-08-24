@@ -289,7 +289,16 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   text: payload.text,
                   purpose: payload.purpose,
                   label: payload.label,
-                  idempotency_key: payload.idempotency_key,
+                  // The provider rejects a re-send under an id that already
+                  // failed (409). Dedup for the FIRST attempt still uses the
+                  // stable key; genuine retries get an attempt-scoped key so
+                  // transient failures can actually be retried. Duplicate
+                  // protection for retries comes from the "already sent"
+                  // guard above, which is keyed on message_id.
+                  idempotency_key:
+                    failedAttempts > 0
+                      ? `${payload.idempotency_key}:r${failedAttempts}`
+                      : payload.idempotency_key,
                   unsubscribe_token: unsubscribeToken ?? undefined,
                   message_id: payload.message_id,
                 },

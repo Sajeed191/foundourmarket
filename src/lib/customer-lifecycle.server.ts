@@ -9,6 +9,7 @@ import { TEMPLATES } from '@/lib/email-templates/registry'
 import type { LifecycleEmailProps } from '@/lib/email-templates/lifecycle-emails'
 import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
+import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const SITE_NAME = 'FoundOurMarket'
 const SENDER_DOMAIN = 'sends.foundourmarket.com'

@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
+import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const STAFF_ROLES = ["admin", "super_admin", "manager"];
 

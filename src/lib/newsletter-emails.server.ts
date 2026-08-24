@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server'
 import { PRIMARY_FROM } from '@/lib/email-sender-policy'
 import { enforceSender } from '@/lib/email-sender-policy.server'
 import { newsletterVerifyTemplate } from '@/lib/email-templates/newsletter-verify'
+import { buildUnsubscribeLinks } from '@/lib/unsubscribe.server'
 
 const SENDER_DOMAIN = 'sends.foundourmarket.com'
 const FROM_DOMAIN = 'foundourmarket.com'

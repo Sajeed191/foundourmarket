@@ -153,7 +153,6 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as ApiMaintenanceStorageCleanupRouteImport } from './routes/api/maintenance-storage-cleanup'
 import { Route as ApiAiShoppingRouteImport } from './routes/api/ai-shopping'
 import { Route as AdminProductSlugRouteImport } from './routes/admin-product.$slug'
 import { Route as AdminCustomersCustomerIdRouteImport } from './routes/admin-customers.$customerId'
@@ -929,12 +928,6 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
-const ApiMaintenanceStorageCleanupRoute =
-  ApiMaintenanceStorageCleanupRouteImport.update({
-    id: '/api/maintenance-storage-cleanup',
-    path: '/api/maintenance-storage-cleanup',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiAiShoppingRoute = ApiAiShoppingRouteImport.update({
   id: '/api/ai-shopping',
   path: '/api/ai-shopping',
@@ -1311,7 +1304,6 @@ export interface FileRoutesByFullPath {
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/admin-product/$slug': typeof AdminProductSlugRouteWithChildren
   '/api/ai-shopping': typeof ApiAiShoppingRoute
-  '/api/maintenance-storage-cleanup': typeof ApiMaintenanceStorageCleanupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -1500,7 +1492,6 @@ export interface FileRoutesByTo {
   '/account/support': typeof AccountSupportRoute
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/api/ai-shopping': typeof ApiAiShoppingRoute
-  '/api/maintenance-storage-cleanup': typeof ApiMaintenanceStorageCleanupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -1691,7 +1682,6 @@ export interface FileRoutesById {
   '/admin-customers/$customerId': typeof AdminCustomersCustomerIdRoute
   '/admin-product/$slug': typeof AdminProductSlugRouteWithChildren
   '/api/ai-shopping': typeof ApiAiShoppingRoute
-  '/api/maintenance-storage-cleanup': typeof ApiMaintenanceStorageCleanupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -1883,7 +1873,6 @@ export interface FileRouteTypes {
     | '/admin-customers/$customerId'
     | '/admin-product/$slug'
     | '/api/ai-shopping'
-    | '/api/maintenance-storage-cleanup'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -2072,7 +2061,6 @@ export interface FileRouteTypes {
     | '/account/support'
     | '/admin-customers/$customerId'
     | '/api/ai-shopping'
-    | '/api/maintenance-storage-cleanup'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -2262,7 +2250,6 @@ export interface FileRouteTypes {
     | '/admin-customers/$customerId'
     | '/admin-product/$slug'
     | '/api/ai-shopping'
-    | '/api/maintenance-storage-cleanup'
     | '/auth/callback'
     | '/blog/$slug'
     | '/category/$slug'
@@ -2452,7 +2439,6 @@ export interface RootRouteChildren {
   AccountSupportRoute: typeof AccountSupportRoute
   AdminProductSlugRoute: typeof AdminProductSlugRouteWithChildren
   ApiAiShoppingRoute: typeof ApiAiShoppingRoute
-  ApiMaintenanceStorageCleanupRoute: typeof ApiMaintenanceStorageCleanupRoute
   CategorySlugRoute: typeof CategorySlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   NewsletterVerifiedRoute: typeof NewsletterVerifiedRoute
@@ -3496,13 +3482,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/api/maintenance-storage-cleanup': {
-      id: '/api/maintenance-storage-cleanup'
-      path: '/api/maintenance-storage-cleanup'
-      fullPath: '/api/maintenance-storage-cleanup'
-      preLoaderRoute: typeof ApiMaintenanceStorageCleanupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/ai-shopping': {
       id: '/api/ai-shopping'
       path: '/api/ai-shopping'
@@ -4022,7 +4001,6 @@ const rootRouteChildren: RootRouteChildren = {
   AccountSupportRoute: AccountSupportRoute,
   AdminProductSlugRoute: AdminProductSlugRouteWithChildren,
   ApiAiShoppingRoute: ApiAiShoppingRoute,
-  ApiMaintenanceStorageCleanupRoute: ApiMaintenanceStorageCleanupRoute,
   CategorySlugRoute: CategorySlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   NewsletterVerifiedRoute: NewsletterVerifiedRoute,

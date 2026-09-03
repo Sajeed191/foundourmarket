@@ -2151,63 +2151,71 @@ html[data-android="true"] [aria-hidden="true"][class*="drop-shadow"] {
    identity is preserved across every theme.
    ===================================================================== */
 
-/* ---------- LIGHT (Premium Luxury v3.0) ----------
-   Layered surface system: #F7F8FA page, pure-white cards, #FCFCFD secondary
-   surfaces, #E8ECF1 dividers, #DDE3EA borders, whisper-soft elevation.
-   Text ladder: #111111 / #5F6675 / #9098A8. */
+/* ---------- LIGHT (Premium Warm Ivory v5.0) ----------
+   Warm Ivory + FoundOurMarket Orange + Deep Navy.
+   Page #FCFBF8, white cards, #FFF9F1 secondary, #FFF4E5 cream,
+   borders #E8DED0 / dividers #EEE8DF, text ladder #20242D / #4B5563 / #6B7280. */
 [data-theme="light"] {
-  /* #F7F8FA — page canvas (cards float above it) */
-  --background: oklch(0.976 0.0025 258);
-  /* #111111 */
-  --foreground: oklch(0.181 0 0);
+  /* #FCFBF8 — warm ivory page canvas */
+  --background: oklch(0.988 0.0041 91);
+  /* #20242D — deep navy ink */
+  --foreground: oklch(0.26 0.018 266);
 
-  /* Pure white cards */
+  /* Pure white primary cards */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.181 0 0);
+  --card-foreground: oklch(0.26 0.018 266);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.181 0 0);
+  --popover-foreground: oklch(0.26 0.018 266);
 
-  --primary: oklch(0.66 0.205 47);
-  --primary-foreground: oklch(0.99 0 0);
+  /* FoundOurMarket orange (#F28A16 family, deepened just enough that white
+     text on a filled CTA stays readable) */
+  --primary: oklch(0.685 0.185 55);
+  --primary-foreground: oklch(1 0 0);
 
-  /* #FCFCFD — secondary surface */
-  --secondary: oklch(0.99 0.001 258);
-  /* #5F6675 — secondary text */
-  --secondary-foreground: oklch(0.476 0.021 265);
+  /* #FFF9F1 — secondary warm surface */
+  --secondary: oklch(0.9846 0.0124 75);
+  /* #4B5563 — secondary slate text */
+  --secondary-foreground: oklch(0.446 0.026 257);
 
-  --muted: oklch(0.99 0.001 258);
-  /* #9098A8 is reserved for .text-muted-hint; body muted text is a touch
-     darker so it clears WCAG AA on white. */
-  --muted-foreground: oklch(0.476 0.021 265);
+  --muted: oklch(0.9846 0.0124 75);
+  /* #4B5563 — readable secondary text (never washed out) */
+  --muted-foreground: oklch(0.446 0.026 257);
 
-  --accent: oklch(0.66 0.205 47);
-  --accent-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.685 0.185 55);
+  --accent-foreground: oklch(1 0 0);
 
   --destructive: oklch(0.577 0.215 27);
   --destructive-foreground: oklch(0.99 0 0);
 
-  /* #DDE3EA borders, #E8ECF1 dividers */
-  --border: oklch(0.898 0.009 250);
-  --divider: oklch(0.933 0.006 255);
-  --input: oklch(0.898 0.009 250);
-  --ring: oklch(0.66 0.205 47);
+  /* #E8DED0 borders, #EEE8DF dividers */
+  --border: oklch(0.905 0.022 76);
+  --divider: oklch(0.933 0.014 78);
+  --input: oklch(0.905 0.022 76);
+  --ring: oklch(0.685 0.185 55);
 
-  /* Hero — whisper-soft ember halo, never a flat slab */
+  /* Brand helpers used by the light refinement layer below */
+  --brand-orange: oklch(0.731 0.167 60);
+  --brand-orange-ink: oklch(0.53 0.145 55);
+  --surface-cream: oklch(0.9717 0.0231 76);
+  --text-meta: oklch(0.551 0.023 264);
+
+  /* Hero — whisper-soft ember halo over ivory, never a flat slab */
   --gradient-hero:
-    radial-gradient(120% 80% at 18% -10%, oklch(0.66 0.205 47 / 0.07), transparent 55%),
-    radial-gradient(110% 75% at 92% 0%, oklch(0.7 0.16 250 / 0.05), transparent 50%),
-    linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.976 0.0025 258) 100%);
+    radial-gradient(120% 80% at 18% -10%, oklch(0.731 0.167 60 / 0.08), transparent 55%),
+    radial-gradient(110% 75% at 92% 0%, oklch(0.9717 0.0231 76 / 0.9), transparent 55%),
+    linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.988 0.0041 91) 100%);
   --hero-top: oklch(1 0 0);
 
-  /* Very soft, floating shadows — depth without weight */
-  --shadow-ember: 0 10px 32px -14px oklch(0.66 0.205 47 / 0.3), 0 3px 10px -6px oklch(0.66 0.205 47 / 0.2);
-  --shadow-card: 0 1px 2px oklch(0.24 0.02 262 / 0.04), 0 10px 30px -18px oklch(0.24 0.02 262 / 0.16);
-  --shadow-float: 0 1px 2px oklch(0.24 0.02 262 / 0.04), 0 24px 58px -28px oklch(0.24 0.02 262 / 0.2), 0 8px 18px -14px oklch(0.24 0.02 262 / 0.1);
-  --shadow-soft: 0 1px 2px oklch(0.24 0.02 262 / 0.035), 0 6px 18px -14px oklch(0.24 0.02 262 / 0.1);
-  --shadow-glow: 0 0 0 1px oklch(0.66 0.205 47 / 0.2), 0 12px 34px -12px oklch(0.66 0.205 47 / 0.26);
+  /* Refined warm-neutral elevation — depth without glow */
+  --shadow-ember: 0 8px 24px -14px oklch(0.55 0.15 55 / 0.28), 0 2px 8px -6px oklch(0.55 0.15 55 / 0.18);
+  --shadow-card: 0 1px 2px oklch(0.26 0.018 266 / 0.05), 0 8px 24px -18px oklch(0.26 0.018 266 / 0.16);
+  --shadow-float: 0 1px 2px oklch(0.26 0.018 266 / 0.05), 0 20px 48px -26px oklch(0.26 0.018 266 / 0.2), 0 6px 16px -12px oklch(0.26 0.018 266 / 0.1);
+  --shadow-soft: 0 1px 2px oklch(0.26 0.018 266 / 0.04), 0 6px 16px -14px oklch(0.26 0.018 266 / 0.1);
+  --shadow-glow: 0 0 0 1px oklch(0.731 0.167 60 / 0.22), 0 10px 28px -14px oklch(0.55 0.15 55 / 0.22);
   color-scheme: light;
 }
+
 
 
 /* ---------- GREY (Premium Neutral) ----------
@@ -5844,4 +5852,403 @@ textarea.editor-deeplink-target {
   .pdp-desc-clip {
     transition: none;
   }
+}
+
+/* =====================================================================
+   FoundOurMarket™ — LIGHT THEME v5.0 · WARM IVORY (LIGHT ONLY)
+   Warm Ivory + FoundOurMarket Orange + Deep Navy.
+   Scoped strictly to [data-theme="light"] — Dark and Grey are untouched.
+   Presentation only: no layout, DOM, routing or logic changes.
+   This layer intentionally comes last: it re-tunes the shared light
+   helper variables used by the earlier light passes, so the whole light
+   theme resolves to one consistent warm palette instead of mixed greys.
+   ===================================================================== */
+
+[data-theme="light"] {
+  /* Canvas & surfaces */
+  --background: oklch(0.988 0.0041 91);      /* #FCFBF8 warm ivory */
+  --fom-l-canvas: #fcfbf8;
+  --fom-l-surface: #ffffff;
+  --fom-l-surface-2: #fff9f1;
+  --fom-l-cream: #fff4e5;
+  --fom-l-tint: #fbf6ee;
+
+  /* Lines */
+  --border: oklch(0.905 0.022 76);           /* #E8DED0 */
+  --input: oklch(0.905 0.022 76);
+  --divider: oklch(0.933 0.014 78);          /* #EEE8DF */
+  --fom-l-hairline: #e8ded0;
+  --fom-l-line: #eee8df;
+  --fom-l-line-strong: #ddd0bd;
+
+  /* Ink ladder — deep navy → slate → muted (still readable) */
+  --fom-l-ink: #20242d;
+  --fom-l-ink-strong: #171a21;
+  --fom-l-ink-soft: #4b5563;
+  --fom-l-ink-meta: #4b5563;
+  --fom-l-ink-quiet: #6b7280;
+
+  /* Brand orange */
+  --fom-l-ember: #e07c0e;      /* filled CTA base (readable with white text) */
+  --fom-l-ember-2: #f28a16;    /* FoundOurMarket orange */
+  --fom-l-ember-ink: #a85a06;  /* orange text on cream */
+  --fom-l-focus: 0 0 0 3px rgba(242, 138, 22, 0.24);
+
+  /* Semantic support tones */
+  --fom-l-success-bg: #eaf7ef;
+  --fom-l-success-line: #c8e6d5;
+  --fom-l-success-ink: #12764a;
+
+  /* Refined warm-neutral elevation (no glow) */
+  --fom-sh-sm: 0 1px 2px rgba(32, 36, 45, 0.05);
+  --fom-sh-md: 0 1px 2px rgba(32, 36, 45, 0.05), 0 8px 20px -14px rgba(32, 36, 45, 0.18);
+  --fom-sh-lg: 0 2px 4px rgba(32, 36, 45, 0.05), 0 18px 40px -22px rgba(32, 36, 45, 0.22);
+  --fom-sh-card: var(--fom-sh-md);
+  --fom-sh-card-hover: var(--fom-sh-lg);
+  --fom-sh-float: 0 2px 6px rgba(32, 36, 45, 0.06), 0 22px 48px -24px rgba(32, 36, 45, 0.24);
+}
+
+/* ---- 1. Page canvas: warm ivory, quiet ambient warmth, no noise ---- */
+[data-theme="light"] body {
+  background-color: var(--fom-l-canvas);
+  background-image:
+    radial-gradient(110% 55% at 100% 0%, rgba(242, 138, 22, 0.05), rgba(242, 138, 22, 0) 60%),
+    radial-gradient(90% 45% at 0% 100%, rgba(232, 222, 208, 0.4), rgba(232, 222, 208, 0) 60%);
+  background-attachment: fixed;
+}
+[data-theme="light"] body::before { content: none; }
+[data-theme="light"] .section-alt,
+[data-theme="light"] [data-section-alt] {
+  background: var(--fom-l-surface-2);
+  border-top: 1px solid var(--fom-l-line);
+  border-bottom: 1px solid var(--fom-l-line);
+}
+[data-theme="light"] main > section + section::before,
+[data-theme="light"] main > div > section + section::before {
+  background: linear-gradient(90deg, transparent, rgba(32, 36, 45, 0.07), transparent);
+}
+
+/* ---- 2. Header: one coherent white navigation component ---- */
+[data-theme="light"] [data-app-header] .glass-strong,
+[data-theme="light"] [data-app-header] .glass,
+[data-theme="light"] [data-site-header] {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  border-radius: 26px;
+  box-shadow: 0 1px 2px rgba(32, 36, 45, 0.04), 0 10px 26px -20px rgba(32, 36, 45, 0.28) !important;
+}
+[data-theme="light"] [data-app-header] svg { color: var(--fom-l-ink); }
+[data-theme="light"] [data-app-header] [data-brand-mark] { filter: none; }
+
+/* ---- 3. Cards, panels & popovers ---- */
+[data-theme="light"] .card-premium,
+[data-theme="light"] .card-elevated,
+[data-theme="light"] .card-outline,
+[data-theme="light"] .glass,
+[data-theme="light"] .glass-strong,
+[data-theme="light"] [data-slot="card"],
+[data-theme="light"] .product-card-glass {
+  background: #ffffff !important;
+  border-color: var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-card) !important;
+}
+[data-theme="light"] .card-outline { background: var(--fom-l-surface-2) !important; }
+[data-theme="light"] .bg-muted,
+[data-theme="light"] .bg-muted\/50,
+[data-theme="light"] .bg-muted\/40,
+[data-theme="light"] .bg-secondary {
+  background: var(--fom-l-tint) !important;
+  border-color: var(--fom-l-line) !important;
+}
+[data-theme="light"] [data-slot="dropdown-menu-content"],
+[data-theme="light"] [data-slot="select-content"],
+[data-theme="light"] [data-slot="popover-content"],
+[data-theme="light"] [data-slot="dialog-content"],
+[data-theme="light"] [data-slot="sheet-content"],
+[data-theme="light"] [data-sonner-toast] {
+  background: #ffffff !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-float) !important;
+}
+[data-theme="light"] .icon-tile {
+  background: linear-gradient(180deg, var(--fom-l-cream), var(--fom-l-surface-2));
+  border: 1px solid var(--fom-l-hairline);
+  box-shadow: none;
+}
+
+/* ---- 4. Typography ladder: navy → slate → readable muted ---- */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] dt,
+[data-theme="light"] .font-display { color: var(--fom-l-ink-strong); }
+[data-theme="light"] .text-muted-foreground,
+[data-theme="light"] .text-muted-foreground\/80,
+[data-theme="light"] .text-muted-foreground\/70,
+[data-theme="light"] .text-muted-foreground\/60,
+[data-theme="light"] .text-muted-foreground\/50 { color: var(--fom-l-ink-meta) !important; }
+[data-theme="light"] .font-mono.uppercase.tracking-\[0\.3em\],
+[data-theme="light"] .font-mono.uppercase.tracking-widest { color: var(--fom-l-ink-quiet) !important; }
+[data-theme="light"] .font-mono.uppercase { letter-spacing: 0.16em; }
+[data-theme="light"] :not(.on-media) > svg.text-muted-foreground { color: var(--fom-l-ink-soft) !important; }
+/* Genuinely disabled controls — and only those — read as disabled */
+[data-theme="light"] :disabled,
+[data-theme="light"] [aria-disabled="true"],
+[data-theme="light"] [data-disabled] { opacity: 0.5; }
+
+/* ---- 5. Search pill: warm ivory instead of charcoal ---- */
+[data-theme="light"] .fom-search-pill,
+[data-theme="light"] [data-search-pill],
+[data-theme="light"] button[aria-label="Open search"] {
+  background: #ffffff !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-md) !important;
+}
+[data-theme="light"] button[aria-label="Open search"] > span:nth-child(2) { color: var(--fom-l-ink-soft) !important; }
+[data-theme="light"] button[aria-label="Open search"] svg { color: var(--fom-l-ink) !important; }
+[data-theme="light"] button[aria-label="Open search"] > span:last-child {
+  background: linear-gradient(180deg, var(--fom-l-ember-2), var(--fom-l-ember)) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px -10px rgba(224, 124, 14, 0.6) !important;
+}
+
+/* ---- 6. Product cards ---- */
+[data-theme="light"] .product-card-shell {
+  background: #ffffff !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  border-radius: 22px !important;
+  box-shadow: var(--fom-sh-card) !important;
+}
+[data-theme="light"] .product-card-shell:hover {
+  border-color: color-mix(in oklab, var(--fom-l-ember-2) 30%, var(--fom-l-hairline)) !important;
+  box-shadow: var(--fom-sh-card-hover) !important;
+}
+[data-theme="light"] .product-card-shell img { background: linear-gradient(180deg, #ffffff, #fffaf3); }
+[data-theme="light"] .product-card-shell [data-product-media] {
+  background: linear-gradient(180deg, #ffffff, #fffaf3) !important;
+  border-bottom: 1px solid var(--fom-l-line);
+}
+[data-theme="light"] .product-card-shell h3 { color: var(--fom-l-ink-strong); }
+[data-theme="light"] .product-card-shell .product-rating-text { color: var(--fom-l-ink); }
+
+/* ---- 7. Price hierarchy: strongest anchor on the page ---- */
+[data-theme="light"] .fom-price-current {
+  color: var(--fom-l-ember-ink) !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+[data-theme="light"] .fom-price-compare {
+  color: var(--fom-l-ink-quiet) !important;
+  text-decoration-color: #b9b0a2;
+  font-weight: 400;
+}
+/* Discount pill → soft cream + deep orange ink */
+[data-theme="light"] [data-discount-pill],
+[data-theme="light"] [class*="bg-accent/1"],
+[data-theme="light"] [class*="bg-accent/2"] {
+  background: var(--fom-l-cream) !important;
+  border-color: #f4dcb8 !important;
+  color: var(--fom-l-ember-ink) !important;
+}
+[data-theme="light"] .text-accent { color: var(--fom-l-ember-ink) !important; }
+/* Savings → soft green */
+[data-theme="light"] [data-savings],
+[data-theme="light"] [class*="bg-emerald-500/1"],
+[data-theme="light"] [class*="bg-emerald-500/2"],
+[data-theme="light"] [class*="bg-green-500/1"] {
+  background: var(--fom-l-success-bg) !important;
+  border-color: var(--fom-l-success-line) !important;
+}
+[data-theme="light"] [class*="text-emerald-2"],
+[data-theme="light"] [class*="text-emerald-3"],
+[data-theme="light"] [class*="text-emerald-4"],
+[data-theme="light"] [class*="text-green-4"] { color: var(--fom-l-success-ink) !important; }
+
+/* ---- 8. Chips: informative, never disabled-looking ---- */
+[data-theme="light"] .chip,
+[data-theme="light"] .category-chip,
+[data-theme="light"] [data-chip],
+[data-theme="light"] .fd-chip {
+  background: #ffffff !important;
+  border-color: var(--fom-l-hairline) !important;
+  color: var(--fom-l-ink) !important;
+  box-shadow: var(--fom-sh-sm);
+}
+[data-theme="light"] .fd-chip-editorial,
+[data-theme="light"] .fd-chip[class*="amber"],
+[data-theme="light"] .fd-chip[class*="orange"],
+[data-theme="light"] [class*="bg-amber-500/1"],
+[data-theme="light"] [class*="bg-amber-500/2"],
+[data-theme="light"] [class*="bg-orange-500/1"] {
+  background: var(--fom-l-cream) !important;
+  border-color: #f4dcb8 !important;
+  color: var(--fom-l-ember-ink) !important;
+}
+[data-theme="light"] [class*="text-amber-2"],
+[data-theme="light"] [class*="text-amber-3"],
+[data-theme="light"] [class*="text-amber-4"],
+[data-theme="light"] [class*="text-orange-3"] { color: var(--fom-l-ember-ink) !important; }
+[data-theme="light"] .fom-trust-chip {
+  background: var(--fom-l-success-bg);
+  border-color: var(--fom-l-success-line);
+  color: var(--fom-l-success-ink);
+}
+[data-theme="light"] .chip[data-active="true"],
+[data-theme="light"] .category-chip[aria-pressed="true"],
+[data-theme="light"] [data-chip][data-active="true"] {
+  background: linear-gradient(180deg, var(--fom-l-ember-2), var(--fom-l-ember)) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 18px -10px rgba(224, 124, 14, 0.55) !important;
+}
+/* HOT DEAL / marketing badges: refined coral, compact, white text */
+[data-theme="light"] [data-product-badge] {
+  box-shadow: 0 1px 2px rgba(32, 36, 45, 0.12), 0 5px 12px -8px rgba(32, 36, 45, 0.2) !important;
+  letter-spacing: 0.04em;
+}
+
+/* ---- 9. Buttons ---- */
+[data-theme="light"] .bg-accent,
+[data-theme="light"] [data-add-to-cart],
+[data-theme="light"] [data-buy-now],
+[data-theme="light"] button[data-variant="primary"],
+[data-theme="light"] .fom-cta-primary {
+  background: linear-gradient(180deg, var(--fom-l-ember-2) 0%, var(--fom-l-ember) 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24) inset, 0 8px 20px -12px rgba(224, 124, 14, 0.6) !important;
+}
+[data-theme="light"] .fom-cta-secondary,
+[data-theme="light"] .fom-cta-explore {
+  background: #ffffff !important;
+  color: var(--fom-l-ink) !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-sm) !important;
+}
+[data-theme="light"] .fom-cta-secondary:hover,
+[data-theme="light"] .fom-cta-explore:hover {
+  border-color: color-mix(in oklab, var(--fom-l-ember-2) 45%, var(--fom-l-hairline)) !important;
+  box-shadow: var(--fom-sh-md) !important;
+}
+[data-theme="light"] button.border,
+[data-theme="light"] a.border { border-color: var(--fom-l-line-strong) !important; }
+[data-theme="light"] [data-slot="button"][data-variant="outline"],
+[data-theme="light"] [data-slot="button"][data-variant="ghost"]:hover {
+  background: #ffffff;
+  border-color: var(--fom-l-line-strong);
+  color: var(--fom-l-ink-strong);
+  box-shadow: var(--fom-sh-sm);
+}
+
+/* ---- 10. Size / option selectors ---- */
+[data-theme="light"] [data-variant-option],
+[data-theme="light"] [data-size-option] {
+  background: #ffffff;
+  border: 1px solid var(--fom-l-hairline);
+  color: var(--fom-l-ink);
+}
+[data-theme="light"] [data-variant-option][aria-pressed="true"],
+[data-theme="light"] [data-variant-option][data-selected="true"],
+[data-theme="light"] [data-size-option][aria-pressed="true"],
+[data-theme="light"] [data-size-option][data-selected="true"] {
+  background: var(--fom-l-cream);
+  border-color: color-mix(in oklab, var(--fom-l-ember-2) 55%, #ffffff);
+  color: var(--fom-l-ember-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fom-l-ember-2) 30%, transparent);
+}
+
+/* ---- 11. Tabs / segmented controls ---- */
+[data-theme="light"] [role="tablist"] {
+  background: var(--fom-l-surface-2);
+  border: 1px solid var(--fom-l-hairline);
+}
+[data-theme="light"] [role="tab"] { color: var(--fom-l-ink-soft); }
+[data-theme="light"] [role="tab"][aria-selected="true"],
+[data-theme="light"] [role="tab"][data-state="active"] {
+  background: linear-gradient(180deg, var(--fom-l-ember-2), var(--fom-l-ember)) !important;
+  box-shadow: 0 6px 14px -9px rgba(224, 124, 14, 0.6);
+}
+
+/* ---- 12. Forms ---- */
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] textarea,
+[data-theme="light"] select,
+[data-theme="light"] [data-slot="select-trigger"] {
+  background: #ffffff !important;
+  border: 1px solid var(--fom-l-line-strong) !important;
+  color: var(--fom-l-ink-strong) !important;
+  box-shadow: 0 1px 2px rgba(32, 36, 45, 0.04);
+}
+[data-theme="light"] :not(.on-media) *::placeholder { color: var(--fom-l-ink-quiet); opacity: 1; }
+[data-theme="light"] input:focus-visible,
+[data-theme="light"] textarea:focus-visible,
+[data-theme="light"] select:focus-visible,
+[data-theme="light"] [data-slot="select-trigger"]:focus-visible {
+  border-color: var(--fom-l-ember-2) !important;
+  box-shadow: var(--fom-l-focus) !important;
+}
+[data-theme="light"] [data-slot="checkbox"][data-state="checked"],
+[data-theme="light"] [data-slot="switch"][data-state="checked"] {
+  background: var(--fom-l-ember) !important;
+  border-color: var(--fom-l-ember) !important;
+}
+
+/* ---- 13. Bottom navigation: compact premium white dock ---- */
+[data-theme="light"] [data-app-bottom-nav] .nav-glass,
+[data-theme="light"] .bottom-nav-light,
+[data-theme="light"] .bottom-nav-solid {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  box-shadow: 0 1px 2px rgba(32, 36, 45, 0.04), 0 12px 28px -18px rgba(32, 36, 45, 0.26) !important;
+}
+[data-theme="light"] [data-app-bottom-nav] a,
+[data-theme="light"] [data-app-bottom-nav] button,
+[data-theme="light"] .bottom-nav-light a,
+[data-theme="light"] .bottom-nav-solid a { color: var(--fom-l-ink); }
+[data-theme="light"] [data-app-bottom-nav] [data-active="true"],
+[data-theme="light"] [data-app-bottom-nav] [aria-current="page"],
+[data-theme="light"] [data-app-bottom-nav] .text-accent,
+[data-theme="light"] .bottom-nav-light a[data-status="active"],
+[data-theme="light"] .bottom-nav-light a[aria-current="page"],
+[data-theme="light"] .bottom-nav-solid a[aria-current="page"] { color: var(--fom-l-ember-ink) !important; }
+
+/* ---- 14. Floating controls: soft, never glowing ---- */
+[data-theme="light"] .fom-orb,
+[data-theme="light"] .fom-chat-orb,
+[data-theme="light"] .scroll-top-btn {
+  box-shadow: 0 2px 6px rgba(32, 36, 45, 0.1), 0 12px 26px -16px rgba(224, 124, 14, 0.45) !important;
+}
+
+/* ---- 15. Admin surfaces: readable ivory control panels ---- */
+[data-theme="light"] [data-admin-toolbar],
+[data-theme="light"] [data-admin-bar],
+[data-theme="light"] [data-admin-panel] {
+  background: linear-gradient(180deg, #ffffff, var(--fom-l-surface-2)) !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  color: var(--fom-l-ink) !important;
+  box-shadow: var(--fom-sh-float) !important;
+  backdrop-filter: none !important;
+}
+[data-theme="light"] [data-admin-toolbar] svg,
+[data-theme="light"] [data-admin-bar] svg,
+[data-theme="light"] [data-admin-panel] svg { color: var(--fom-l-ink); }
+[data-theme="light"] [data-admin-toolbar] [data-active="true"],
+[data-theme="light"] [data-admin-bar] [data-active="true"] {
+  background: var(--fom-l-cream) !important;
+  color: var(--fom-l-ember-ink) !important;
+  border-color: color-mix(in oklab, var(--fom-l-ember-2) 45%, #ffffff) !important;
+}
+
+/* ---- 16. Focus & selection ---- */
+[data-theme="light"] a:focus-visible,
+[data-theme="light"] button:focus-visible {
+  outline: 2px solid var(--fom-l-ember-2);
+  outline-offset: 2px;
+}
+[data-theme="light"] ::selection {
+  background: rgba(242, 138, 22, 0.26);
+  color: var(--fom-l-ink-strong);
 }

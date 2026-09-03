@@ -2151,63 +2151,71 @@ html[data-android="true"] [aria-hidden="true"][class*="drop-shadow"] {
    identity is preserved across every theme.
    ===================================================================== */
 
-/* ---------- LIGHT (Premium Luxury v3.0) ----------
-   Layered surface system: #F7F8FA page, pure-white cards, #FCFCFD secondary
-   surfaces, #E8ECF1 dividers, #DDE3EA borders, whisper-soft elevation.
-   Text ladder: #111111 / #5F6675 / #9098A8. */
+/* ---------- LIGHT (Premium Warm Ivory v5.0) ----------
+   Warm Ivory + FoundOurMarket Orange + Deep Navy.
+   Page #FCFBF8, white cards, #FFF9F1 secondary, #FFF4E5 cream,
+   borders #E8DED0 / dividers #EEE8DF, text ladder #20242D / #4B5563 / #6B7280. */
 [data-theme="light"] {
-  /* #F7F8FA — page canvas (cards float above it) */
-  --background: oklch(0.976 0.0025 258);
-  /* #111111 */
-  --foreground: oklch(0.181 0 0);
+  /* #FCFBF8 — warm ivory page canvas */
+  --background: oklch(0.988 0.0041 91);
+  /* #20242D — deep navy ink */
+  --foreground: oklch(0.26 0.018 266);
 
-  /* Pure white cards */
+  /* Pure white primary cards */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.181 0 0);
+  --card-foreground: oklch(0.26 0.018 266);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.181 0 0);
+  --popover-foreground: oklch(0.26 0.018 266);
 
-  --primary: oklch(0.66 0.205 47);
-  --primary-foreground: oklch(0.99 0 0);
+  /* FoundOurMarket orange (#F28A16 family, deepened just enough that white
+     text on a filled CTA stays readable) */
+  --primary: oklch(0.685 0.185 55);
+  --primary-foreground: oklch(1 0 0);
 
-  /* #FCFCFD — secondary surface */
-  --secondary: oklch(0.99 0.001 258);
-  /* #5F6675 — secondary text */
-  --secondary-foreground: oklch(0.476 0.021 265);
+  /* #FFF9F1 — secondary warm surface */
+  --secondary: oklch(0.9846 0.0124 75);
+  /* #4B5563 — secondary slate text */
+  --secondary-foreground: oklch(0.446 0.026 257);
 
-  --muted: oklch(0.99 0.001 258);
-  /* #9098A8 is reserved for .text-muted-hint; body muted text is a touch
-     darker so it clears WCAG AA on white. */
-  --muted-foreground: oklch(0.476 0.021 265);
+  --muted: oklch(0.9846 0.0124 75);
+  /* #4B5563 — readable secondary text (never washed out) */
+  --muted-foreground: oklch(0.446 0.026 257);
 
-  --accent: oklch(0.66 0.205 47);
-  --accent-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.685 0.185 55);
+  --accent-foreground: oklch(1 0 0);
 
   --destructive: oklch(0.577 0.215 27);
   --destructive-foreground: oklch(0.99 0 0);
 
-  /* #DDE3EA borders, #E8ECF1 dividers */
-  --border: oklch(0.898 0.009 250);
-  --divider: oklch(0.933 0.006 255);
-  --input: oklch(0.898 0.009 250);
-  --ring: oklch(0.66 0.205 47);
+  /* #E8DED0 borders, #EEE8DF dividers */
+  --border: oklch(0.905 0.022 76);
+  --divider: oklch(0.933 0.014 78);
+  --input: oklch(0.905 0.022 76);
+  --ring: oklch(0.685 0.185 55);
 
-  /* Hero — whisper-soft ember halo, never a flat slab */
+  /* Brand helpers used by the light refinement layer below */
+  --brand-orange: oklch(0.731 0.167 60);
+  --brand-orange-ink: oklch(0.53 0.145 55);
+  --surface-cream: oklch(0.9717 0.0231 76);
+  --text-meta: oklch(0.551 0.023 264);
+
+  /* Hero — whisper-soft ember halo over ivory, never a flat slab */
   --gradient-hero:
-    radial-gradient(120% 80% at 18% -10%, oklch(0.66 0.205 47 / 0.07), transparent 55%),
-    radial-gradient(110% 75% at 92% 0%, oklch(0.7 0.16 250 / 0.05), transparent 50%),
-    linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.976 0.0025 258) 100%);
+    radial-gradient(120% 80% at 18% -10%, oklch(0.731 0.167 60 / 0.08), transparent 55%),
+    radial-gradient(110% 75% at 92% 0%, oklch(0.9717 0.0231 76 / 0.9), transparent 55%),
+    linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.988 0.0041 91) 100%);
   --hero-top: oklch(1 0 0);
 
-  /* Very soft, floating shadows — depth without weight */
-  --shadow-ember: 0 10px 32px -14px oklch(0.66 0.205 47 / 0.3), 0 3px 10px -6px oklch(0.66 0.205 47 / 0.2);
-  --shadow-card: 0 1px 2px oklch(0.24 0.02 262 / 0.04), 0 10px 30px -18px oklch(0.24 0.02 262 / 0.16);
-  --shadow-float: 0 1px 2px oklch(0.24 0.02 262 / 0.04), 0 24px 58px -28px oklch(0.24 0.02 262 / 0.2), 0 8px 18px -14px oklch(0.24 0.02 262 / 0.1);
-  --shadow-soft: 0 1px 2px oklch(0.24 0.02 262 / 0.035), 0 6px 18px -14px oklch(0.24 0.02 262 / 0.1);
-  --shadow-glow: 0 0 0 1px oklch(0.66 0.205 47 / 0.2), 0 12px 34px -12px oklch(0.66 0.205 47 / 0.26);
+  /* Refined warm-neutral elevation — depth without glow */
+  --shadow-ember: 0 8px 24px -14px oklch(0.55 0.15 55 / 0.28), 0 2px 8px -6px oklch(0.55 0.15 55 / 0.18);
+  --shadow-card: 0 1px 2px oklch(0.26 0.018 266 / 0.05), 0 8px 24px -18px oklch(0.26 0.018 266 / 0.16);
+  --shadow-float: 0 1px 2px oklch(0.26 0.018 266 / 0.05), 0 20px 48px -26px oklch(0.26 0.018 266 / 0.2), 0 6px 16px -12px oklch(0.26 0.018 266 / 0.1);
+  --shadow-soft: 0 1px 2px oklch(0.26 0.018 266 / 0.04), 0 6px 16px -14px oklch(0.26 0.018 266 / 0.1);
+  --shadow-glow: 0 0 0 1px oklch(0.731 0.167 60 / 0.22), 0 10px 28px -14px oklch(0.55 0.15 55 / 0.22);
   color-scheme: light;
 }
+
 
 
 /* ---------- GREY (Premium Neutral) ----------

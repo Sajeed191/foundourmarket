@@ -6252,3 +6252,23 @@ textarea.editor-deeplink-target {
   background: rgba(242, 138, 22, 0.26);
   color: var(--fom-l-ink-strong);
 }
+
+/* ---- 17. Translucent overlay surfaces become solid on light ---- */
+[data-theme="light"] .bg-background\/80,
+[data-theme="light"] .bg-background\/85,
+[data-theme="light"] .bg-background\/90,
+[data-theme="light"] .bg-background\/95,
+[data-theme="light"] .bg-card\/40,
+[data-theme="light"] .bg-card\/50,
+[data-theme="light"] .bg-card\/60,
+[data-theme="light"] .bg-card\/70,
+[data-theme="light"] .bg-card\/80,
+[data-theme="light"] .bg-card\/90,
+[data-theme="light"] .bg-popover\/90 {
+  background-color: #ffffff !important;
+  border-color: var(--fom-l-hairline) !important;
+}
+[data-theme="light"] .bg-black\/20,
+[data-theme="light"] .bg-black\/25,
+[data-theme="light"] .bg-black\/30,
+[data-theme="light"] .bg-black\/40 { background-color: var(--fom-l-surface-2) !important; }

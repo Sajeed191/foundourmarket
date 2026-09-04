@@ -6272,3 +6272,27 @@ textarea.editor-deeplink-target {
 [data-theme="light"] .bg-black\/25,
 [data-theme="light"] .bg-black\/30,
 [data-theme="light"] .bg-black\/40 { background-color: var(--fom-l-surface-2) !important; }
+
+/* ---- 18. Flash deal cards + faint metadata text ---- */
+[data-theme="light"] .fd-card,
+[data-theme="light"] .fd-card-hero,
+[data-theme="light"] .fd-card-mini {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-card) !important;
+}
+[data-theme="light"] .fd-chip-editorial {
+  background-color: var(--fom-l-cream) !important;
+  border-color: #f4dcb8 !important;
+  color: var(--fom-l-ember-ink) !important;
+}
+/* Supporting metadata stays muted but never looks disabled */
+[data-theme="light"] [class*="text-muted-foreground/"],
+[data-theme="light"] [class*="text-foreground/4"],
+[data-theme="light"] [class*="text-foreground/5"],
+[data-theme="light"] [class*="text-foreground/6"] {
+  color: var(--fom-l-ink-quiet) !important;
+}
+[data-theme="light"] [class*="text-muted-foreground/"] svg,
+[data-theme="light"] [class*="text-muted-foreground/"] * { color: inherit; }

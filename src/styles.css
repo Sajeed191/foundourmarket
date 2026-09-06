@@ -6296,3 +6296,25 @@ textarea.editor-deeplink-target {
 }
 [data-theme="light"] [class*="text-muted-foreground/"] svg,
 [data-theme="light"] [class*="text-muted-foreground/"] * { color: inherit; }
+
+/* ---- 19. Light theme: opaque glass fallbacks stay warm white, never grey ----
+   The GPU/perf degradation layers replace blurred surfaces with
+   `background-color: color-mix(..., black)`, which reads as dull grey on the
+   ivory light canvas. Re-point those fallbacks at the warm surface tokens.
+   Dark + grey themes are untouched. */
+html[data-theme="light"] .glass,
+html[data-theme="light"] .glass-strong,
+html[data-theme="light"] [class*="backdrop-blur"],
+html[data-theme="light"] [style*="backdropFilter"],
+html[data-theme="light"] [style*="backdrop-filter"] {
+  background-color: #ffffff !important;
+}
+html[data-theme="light"] .fd-card,
+html[data-theme="light"] .fd-card-hero,
+html[data-theme="light"] .fd-card-mini,
+html[data-theme="light"] [data-radix-popper-content-wrapper] [class*="backdrop-blur"] {
+  background-color: #ffffff !important;
+}
+html[data-theme="light"] .fd-chip-editorial {
+  background-color: var(--fom-l-cream) !important;
+}

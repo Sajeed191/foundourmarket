@@ -91,7 +91,7 @@ export function PDPStickyIntel({
     current.tone === "warn"
       ? "text-accent"
       : current.tone === "accent"
-        ? "text-emerald-300/90"
+        ? "text-emerald-600 dark:text-emerald-300/90"
         : "text-foreground/70";
 
   return (

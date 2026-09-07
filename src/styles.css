@@ -6318,3 +6318,67 @@ html[data-theme="light"] [data-radix-popper-content-wrapper] [class*="backdrop-b
 html[data-theme="light"] .fd-chip-editorial {
   background-color: var(--fom-l-cream) !important;
 }
+
+/* ---- 20. PDP purchase visibility — light theme only -------------------
+   These selectors are deliberately scoped to the purchase UI so secondary
+   information stays elegant without inheriting translucent dark-theme ink. */
+html[data-theme="light"] [data-pdp-compare-price] {
+  color: #5b6068 !important;
+  -webkit-text-fill-color: #5b6068 !important;
+  opacity: 1 !important;
+  text-decoration-color: #5b6068 !important;
+  text-decoration-thickness: 1px;
+}
+
+html[data-theme="light"] [data-pdp-stock-chip],
+html[data-theme="light"] [data-pdp-delivery-chip],
+html[data-theme="light"] [data-pdp-free-delivery-chip] {
+  opacity: 1 !important;
+}
+
+html[data-theme="light"] [data-pdp-delivery-chip] {
+  background: #f7f7f5 !important;
+  border-color: #e6ded2 !important;
+  color: #4b5563 !important;
+}
+html[data-theme="light"] [data-pdp-delivery-chip] svg {
+  color: #6b7280 !important;
+}
+html[data-theme="light"] [data-pdp-free-delivery-chip] {
+  background: #fff4e5 !important;
+  border-color: #f1d7b5 !important;
+  color: #a85a06 !important;
+}
+html[data-theme="light"] [data-pdp-stock-chip] {
+  background: var(--fom-l-success-bg) !important;
+  border-color: var(--fom-l-success-line) !important;
+  color: var(--fom-l-success-ink) !important;
+}
+
+html[data-theme="light"] [data-pdp-add-to-cart]:not(:disabled) {
+  background: #ffffff !important;
+  border: 1px solid #d9d1c5 !important;
+  color: #20242d !important;
+  opacity: 1 !important;
+  box-shadow: var(--fom-sh-sm) !important;
+}
+html[data-theme="light"] [data-pdp-add-to-cart]:not(:disabled) svg {
+  color: #4b5563 !important;
+  opacity: 1 !important;
+}
+html[data-theme="light"] [data-pdp-add-to-cart]:not(:disabled):hover {
+  border-color: color-mix(in oklab, var(--fom-l-ember-2) 48%, #d9d1c5) !important;
+  background: #fff9f1 !important;
+}
+
+html[data-theme="light"] [data-pdp-delivery-panel] {
+  background: #ffffff !important;
+  border-color: #e6ded2 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-theme="light"] [data-pdp-delivery-panel] button,
+html[data-theme="light"] [data-pdp-delivery-panel] p,
+html[data-theme="light"] [data-pdp-delivery-panel] svg {
+  opacity: 1;
+}

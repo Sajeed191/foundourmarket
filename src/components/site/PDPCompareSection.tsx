@@ -292,7 +292,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
           Similar Products
         </h2>
-        <p className="mt-3 text-[13px] text-white/55 leading-relaxed">
+        <p className="mt-3 text-[13px] text-muted-foreground leading-relaxed">
           No similar products are available at the moment. Explore more products in this category.
         </p>
         {currentProduct.category && (
@@ -322,7 +322,7 @@ export function PDPCompareSection({ currentProduct }: { currentProduct: Product 
         <h2 id="pdp-ymal-heading" className="text-[20px] sm:text-[22px] font-semibold tracking-tight text-foreground leading-tight">
           Similar Products
         </h2>
-        <p className="mt-2 text-[13px] text-white/55 leading-relaxed">
+        <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
           Curated alternatives you may prefer.
         </p>
       </div>
@@ -663,7 +663,7 @@ function RailItemImpl({
             </span>
           </div>
           {/* Row 2 — savings slot, always reserved */}
-          <div className="mt-1.5 h-[14px] text-[12px] font-medium text-emerald-300/85 tabular-nums leading-none">
+          <div className="mt-1.5 h-[14px] text-[12px] font-medium text-emerald-700 dark:text-emerald-300/85 tabular-nums leading-none">
             {savings > 0 ? `Save ${format(savings)}` : "\u00A0"}
           </div>
         </div>
@@ -671,12 +671,12 @@ function RailItemImpl({
         {/* Free delivery — quiet 12px */}
         <div className="mt-2.5 h-[14px] text-[12px] font-medium tabular-nums leading-none">
           {freeDelivery && !pinned ? (
-            <span className="text-emerald-300/80">Free delivery</span>
+            <span className="text-emerald-700 dark:text-emerald-300/80">Free delivery</span>
           ) : null}
         </div>
 
         {/* Recommendation — 11px, single short line */}
-        <div className="mt-1.5 h-[13px] text-[11px] font-medium tracking-wide text-white/55 leading-none">
+        <div className="mt-1.5 h-[13px] text-[11px] font-medium tracking-wide text-muted-foreground leading-none">
           {!pinned && recommendation ? recommendation : null}
         </div>
 
@@ -899,7 +899,7 @@ function QuickPreviewSheet({
               type="button"
               disabled={!inStock || adding}
               onClick={handleAdd}
-              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/15 bg-transparent px-4 h-[44px] text-[12.5px] font-medium text-foreground/90 transition-colors duration-150 ease-out hover:border-white/30 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-transparent px-4 h-[44px] text-[12.5px] font-medium text-foreground/90 transition-colors duration-150 ease-out hover:border-accent/50 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             >
               {adding ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Add to Cart"}
             </button>

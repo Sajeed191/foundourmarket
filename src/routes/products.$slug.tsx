@@ -1019,7 +1019,7 @@ function ProductPage() {
                     </span>
                     {originalPrice && originalPrice > effectivePrice && (
                       <>
-                        <span className="fom-price-compare text-[15px] line-through text-muted-foreground/60">
+                        <span data-pdp-compare-price className="fom-price-compare text-[15px] line-through text-muted-foreground/60">
                           {format(originalPrice)}
                         </span>
                         {discountPct && (
@@ -1055,6 +1055,7 @@ function ProductPage() {
             >
               {/* Stock chip — always first, tone-aware */}
               <span
+                data-pdp-stock-chip
                 role="listitem"
                 className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium whitespace-nowrap ${
                   stockBadge.tone === "ok"
@@ -1083,14 +1084,14 @@ function ProductPage() {
 
               {/* Ships / delivery estimate — real data only */}
               {!isOOS && deliveryWindow && (
-                <span role="listitem" className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
+                <span data-pdp-delivery-chip role="listitem" className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
                   <Truck className="size-3.5" strokeWidth={2} />
                   {deliveryWindow}
                 </span>
               )}
               {/* Free delivery — only when shipping is actually free */}
               {unitShipping <= 0 && (
-                <span role="listitem" className="shrink-0 inline-flex items-center rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
+                <span data-pdp-free-delivery-chip role="listitem" className="shrink-0 inline-flex items-center rounded-full border border-border bg-white/[0.03] px-3 py-1.5 text-[12px] font-medium text-foreground/85 whitespace-nowrap">
                   Free Delivery
                 </span>
               )}
@@ -1138,6 +1139,7 @@ function ProductPage() {
                   </div>
                 ) : (
                   <button
+                    data-pdp-add-to-cart
                     key="add"
                     onClick={handleAdd}
                     disabled={isOOS || addState !== "idle"}
@@ -1187,6 +1189,7 @@ function ProductPage() {
               const HeaderIcon = headerRow.icon;
               return (
                 <div
+                  data-pdp-delivery-panel
                   className="mt-8 overflow-hidden rounded-2xl border border-white/10"
                   style={{
                     background: "linear-gradient(135deg, oklch(1 0 0 / 0.05), oklch(1 0 0 / 0.015))",

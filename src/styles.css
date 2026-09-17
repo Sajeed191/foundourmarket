@@ -6587,22 +6587,57 @@ html[data-theme="grey"] .account-ambient-decor {
   display: none;
 }
 
-/* ---- Light theme only — flash-deal progress indicator matches dark theme ----
-   Undo the light-theme button gradient that leaks onto the dot via .bg-accent,
-   and give the track a visible warm neutral background. */
-html[data-theme="light"] .fd-progress-dot,
-html[data-theme="grey"] .fd-progress-dot {
-  background: var(--fom-l-ink-soft) !important;
+/* ---- Light theme only — flash-deal slider indicator: compact charcoal track ----
+   The generic [role="tablist"] light rules wrap this indicator in a pale outlined
+   pill. Scope it out of that treatment and give it a premium dark-charcoal track
+   with a dark-orange brand pill for the active slide. Dark theme untouched. */
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"],
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] {
+  width: fit-content !important;
+  margin-inline: auto !important;
+  background: oklch(0.23 0.008 260) !important;
+  border: 1px solid oklch(0.32 0.01 260) !important;
+  border-radius: 999px !important;
+  padding: 6px 9px !important;
+  gap: 6px !important;
+  box-shadow: 0 8px 18px -12px oklch(0 0 0 / 0.4) !important;
+}
+
+/* Buttons: strip the light-theme active-tab orange gradient box entirely. */
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"],
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] {
+  background: transparent !important;
   background-image: none !important;
-  color: inherit !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Segments sit directly on the charcoal track. */
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot),
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot) {
   box-shadow: none !important;
   border: 0 !important;
 }
 
-html[data-theme="light"] span:has(> .fd-progress-dot),
-html[data-theme="grey"] span:has(> .fd-progress-dot) {
-  background: transparent !important;
-  box-shadow: none !important;
+/* Inactive slides: subtle gray/charcoal dots (direct segment span only). */
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)),
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)) {
+  background: oklch(0.72 0.006 260 / 0.55) !important;
+}
+
+/* Active slide: the fill window is a slightly lighter charcoal recess. */
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot),
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot) {
+  background: oklch(0.34 0.01 260) !important;
+}
+
+/* Active indicator: dark-orange brand pill filling the autoplay window. */
+html[data-theme="light"] .fd-progress-dot,
+html[data-theme="grey"] .fd-progress-dot {
+  background: linear-gradient(180deg, var(--fom-l-ember-2), var(--fom-l-ember)) !important;
+  background-image: linear-gradient(180deg, var(--fom-l-ember-2), var(--fom-l-ember)) !important;
+  box-shadow: 0 1px 4px -1px oklch(0.55 0.16 45 / 0.5) !important;
+  border: 0 !important;
 }
 
 /* ── Sign-in screen: light-theme visibility ───────────────────────── */
@@ -6787,7 +6822,7 @@ html[data-theme="light"] body {
 /* Generic accent utilities are commonly used for badges, icon tiles and
    indicators. Keep those compact treatments quiet instead of promoting every
    accent-bearing element to a glossy primary CTA. */
-html[data-theme="light"] .bg-accent {
+html[data-theme="light"] .bg-accent:not(.fd-progress-dot) {
   background: color-mix(in oklab, var(--fom-l-ember-2) 8%, var(--fom-l-surface)) !important;
   background-image: none !important;
   color: var(--fom-l-ember-ink) !important;

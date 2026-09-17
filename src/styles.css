@@ -6813,7 +6813,10 @@ html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]):hove
 /* Light theme header: mirror the established dark navigation language while
    keeping the rest of the light page untouched. */
 html[data-theme="light"] [data-app-header] nav {
-  background: linear-gradient(180deg, oklch(0.16 0.008 260 / 0.98), oklch(0.105 0.006 260 / 0.98)) !important;
+  --fom-nav-dark-top: oklch(0.16 0.008 260 / 0.98);
+  --fom-nav-dark-bottom: oklch(0.105 0.006 260 / 0.98);
+  background-color: var(--fom-nav-dark-bottom) !important;
+  background-image: linear-gradient(180deg, var(--fom-nav-dark-top), var(--fom-nav-dark-bottom)) !important;
   border-color: oklch(1 0 0 / 0.1) !important;
   border-radius: 26px !important;
   box-shadow: 0 10px 40px -18px oklch(0 0 0 / 0.7) !important;

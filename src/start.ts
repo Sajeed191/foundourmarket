@@ -80,7 +80,7 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/lovable/")) {
     return next();
   }
-  setResponseHeaders({
+  setResponseHeaders(new Headers({
     "content-security-policy":
       "base-uri 'self'; object-src 'none'; form-action 'self' https://api.razorpay.com; frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://*.lovableproject.com; upgrade-insecure-requests",
     "strict-transport-security": "max-age=31536000; includeSubDomains",
@@ -89,7 +89,7 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
     "referrer-policy": "strict-origin-when-cross-origin",
     "x-content-type-options": "nosniff",
     "x-permitted-cross-domain-policies": "none",
-  });
+  }));
   return next();
 });
 

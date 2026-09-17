@@ -386,6 +386,18 @@ export const Route = createFileRoute("/api/ai-shopping")({
           verifyVisitorToken,
         } = await import("@/lib/security/ai-abuse-guard.server");
 
+        // Sign-in required: the assistant spends paid AI credits, so only
+        // authenticated shoppers may reach the gateway. Abuse/rate guards
+        // below still apply on top of this.
+        const authed = await requireSignedInUser(request);
+        if (!authed.ok) {
+          logSecurityEvent("ai_shopping_unauthenticated", { endpoint: "ai-shopping" });
+          return new Response(
+            JSON.stringify({ error: "Please sign in to chat with the shopping assistant." }),
+            { status: 401, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } },
+          );
+        }
+
         const caller = callerKey(request, "ai-shopping");
         const raw = await request.text().catch(() => "");
         if (raw.length > MAX_BODY_BYTES) {

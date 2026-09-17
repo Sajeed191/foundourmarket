@@ -10,6 +10,7 @@ import { summarizeShoppingContext, type ShoppingContext } from "@/lib/ai-shoppin
 import type { AiExplanation, AiSource, AiCompare } from "@/lib/ai-shopping/types";
 import { callerKey, tooManyRequests } from "@/lib/security/server-rate-limit";
 import { logSecurityEvent } from "@/lib/security/audit";
+import { requireSignedInUser } from "@/lib/security/require-user.server";
 
 
 type ChatMessage = {

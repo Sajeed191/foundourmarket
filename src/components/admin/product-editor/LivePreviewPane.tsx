@@ -93,6 +93,7 @@ export function LivePreviewPane({
             key={src}
             src={src}
             title="Live product details preview"
+            referrerPolicy="same-origin"
             className="h-full w-full border-0 bg-background"
           />
         </div>

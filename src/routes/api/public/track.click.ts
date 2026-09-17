@@ -50,7 +50,6 @@ export const Route = createFileRoute("/api/public/track/click")({
         const url = new URL(request.url);
         const token = url.searchParams.get("t");
         const messageId = url.searchParams.get("m");
-        const email = url.searchParams.get("e");
 
         if (!token || token.length > 128) return redirect(SAFE_FALLBACK);
 
@@ -75,7 +74,7 @@ export const Route = createFileRoute("/api/public/track/click")({
             campaign_id: link.campaign_id,
             link_id: link.id,
             event_type: "click",
-            recipient_email: email ? email.slice(0, 320) : null,
+            recipient_email: null,
             message_id: messageId ? messageId.slice(0, 200) : null,
             utm: link.utm ?? {},
             user_agent: (request.headers.get("user-agent") ?? "").slice(0, 400),
@@ -89,8 +88,8 @@ export const Route = createFileRoute("/api/public/track/click")({
             return redirect(target);
           }
           return redirect(SAFE_FALLBACK);
-        } catch (err) {
-          console.error("track/click failed", err);
+        } catch {
+          console.error("track/click failed");
           return redirect(SAFE_FALLBACK);
         }
       },

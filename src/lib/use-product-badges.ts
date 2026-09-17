@@ -888,17 +888,21 @@ function badgeEventAllowed(kind: "click" | "impression", slug: string): boolean 
 export function trackBadgeClick(badgeTypeId: string, slug: string) {
   if (typeof window === "undefined") return;
   if (!isValidRef(badgeTypeId, slug) || !badgeEventAllowed("click", slug)) return;
-  void supabase
-    .from("badge_events")
-    .insert({ badge_type_id: badgeTypeId, product_slug: slug, event_type: "click" } as never);
+  void supabase.rpc("record_badge_event", {
+    _badge_type_id: badgeTypeId,
+    _product_slug: slug,
+    _event_type: "click",
+  } as never);
 }
 
 export function trackBadgeImpression(badgeTypeId: string, slug: string) {
   if (typeof window === "undefined") return;
   if (!isValidRef(badgeTypeId, slug) || !badgeEventAllowed("impression", slug)) return;
-  void supabase
-    .from("badge_events")
-    .insert({ badge_type_id: badgeTypeId, product_slug: slug, event_type: "impression" } as never);
+  void supabase.rpc("record_badge_event", {
+    _badge_type_id: badgeTypeId,
+    _product_slug: slug,
+    _event_type: "impression",
+  } as never);
 }
 
 // ---- Analytics dashboard data ----

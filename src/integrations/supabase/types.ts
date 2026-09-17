@@ -7602,6 +7602,14 @@ export type Database = {
         Args: { _slug: string }
         Returns: undefined
       }
+      record_badge_event: {
+        Args: {
+          _badge_type_id: string
+          _event_type: string
+          _product_slug: string
+        }
+        Returns: undefined
+      }
       refresh_review_vote_counts: {
         Args: { _review_id: string }
         Returns: undefined

@@ -7,6 +7,9 @@ import {
   parseScan,
   processCourierScan,
 } from "@/lib/courier-webhook.server";
+import { callerKey, consumeRateLimit, tooManyRequests } from "@/lib/security/server-rate-limit";
+
+const MAX_WEBHOOK_BYTES = 1024 * 1024;
 
 /**
  * Unified courier webhook receiver. Configure each courier to POST to:
@@ -21,8 +24,17 @@ export const Route = createFileRoute("/api/public/webhooks/$courier")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
+        const rate = consumeRateLimit(callerKey(request, "courier-webhook"), 180, 60_000);
+        if (!rate.allowed) return tooManyRequests(rate, "Too many webhook requests");
+        const declaredLength = Number(request.headers.get("content-length") || "0");
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_WEBHOOK_BYTES) {
+          return new Response("Payload too large", { status: 413 });
+        }
         const spec = detectCourier(params.courier);
         const rawBody = await request.text();
+        if (Buffer.byteLength(rawBody, "utf8") > MAX_WEBHOOK_BYTES) {
+          return new Response("Payload too large", { status: 413 });
+        }
         const signature =
           request.headers.get("x-courier-signature") ??
           request.headers.get("x-webhook-signature") ??
@@ -33,14 +45,12 @@ export const Route = createFileRoute("/api/public/webhooks/$courier")({
         try { payload = JSON.parse(rawBody); } catch { /* keep null */ }
 
         if (!spec) {
-          await supabaseAdmin.from("courier_webhook_events").insert({
-            courier: params.courier, signature_valid: false, status: "rejected",
-            payload: payload as never, error: "unsupported_courier",
-          });
           return new Response("Unsupported courier", { status: 404 });
         }
 
         const valid = verifyCourierSignature(spec.key, rawBody, signature);
+        if (!valid) return new Response("Invalid signature", { status: 401 });
+
         const scan = parseScan(payload);
         const externalId = scan.eventId;
 
@@ -50,15 +60,18 @@ export const Route = createFileRoute("/api/public/webhooks/$courier")({
           .insert({
             courier: spec.key,
             external_event_id: externalId,
-            signature_valid: valid,
-            status: valid ? "received" : "rejected",
+            signature_valid: true,
+            status: "received",
             tracking_number: scan.trackingNumber,
-            payload: payload as never,
+            payload: {
+              event_id: scan.eventId,
+              status_code: scan.statusCode,
+              occurred_at: scan.occurredAt,
+            } as never,
           })
           .select("id")
           .maybeSingle();
 
-        if (!valid) return new Response("Invalid signature", { status: 401 });
         if (isReplay(tsHeader)) {
           if (logRow?.id) await supabaseAdmin.from("courier_webhook_events")
             .update({ status: "replay_rejected" }).eq("id", logRow.id);
@@ -78,10 +91,12 @@ export const Route = createFileRoute("/api/public/webhooks/$courier")({
           // 200 so couriers don't retry forever on business-logic outcomes.
           return Response.json(result);
         } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e);
           if (logRow?.id) await supabaseAdmin.from("courier_webhook_events")
-            .update({ status: "error", error: msg }).eq("id", logRow.id);
-          console.error("[courier webhook] handler error", msg);
+            .update({ status: "error", error: "event_processing_failed" }).eq("id", logRow.id);
+          console.error("[courier webhook] handler error", {
+            courier: spec.key,
+            name: e instanceof Error ? e.name : "UnknownError",
+          });
           return new Response("ok", { status: 200 });
         }
       },

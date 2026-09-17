@@ -73,7 +73,12 @@ function Tag({ t }: { t: string }) {
 
 function exportPdf(title: string, rows: Record<string, unknown>[]) {
   const headers = rows.length ? Object.keys(rows[0]) : [];
-  const esc = (v: unknown) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const esc = (v: unknown) => String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
   const html = `<html><head><title>${title}</title><style>
     body{font-family:system-ui,sans-serif;padding:24px;color:#111}
     h1{font-size:18px;margin-bottom:4px} .meta{color:#666;font-size:11px;margin-bottom:16px}
@@ -86,7 +91,7 @@ function exportPdf(title: string, rows: Record<string, unknown>[]) {
   <table><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
   <tbody>${rows.map((r) => `<tr>${headers.map((h) => `<td>${esc(r[h])}</td>`).join("")}</tr>`).join("")}</tbody></table>
   <script>window.onload=()=>{window.print()}</script></body></html>`;
-  const w = window.open("", "_blank");
+  const w = window.open("", "_blank", "noopener,noreferrer");
   if (w) { w.document.write(html); w.document.close(); }
 }
 

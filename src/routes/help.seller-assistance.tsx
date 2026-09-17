@@ -905,6 +905,7 @@ function SellerAssistancePage() {
                 key={scheduleOpen ? "open" : "closed"}
                 src={CALENDLY_EMBED_URL}
                 title="Schedule a call with FoundOurMarket"
+                referrerPolicy="strict-origin-when-cross-origin"
                 onLoad={() => {
                   if (calendlyTimeoutRef.current) clearTimeout(calendlyTimeoutRef.current);
                   setCalendlyStatus((s) => {

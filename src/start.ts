@@ -82,11 +82,13 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
   }
   setResponseHeaders({
     "content-security-policy":
-      "frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://*.lovableproject.com",
+      "base-uri 'self'; object-src 'none'; form-action 'self' https://api.razorpay.com; frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://*.lovableproject.com; upgrade-insecure-requests",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
     "permissions-policy":
       "geolocation=(), microphone=(), camera=(), payment=(self), usb=(), magnetometer=(), gyroscope=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "x-content-type-options": "nosniff",
+    "x-permitted-cross-domain-policies": "none",
   });
   return next();
 });
@@ -101,7 +103,9 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    console.error(error);
+    console.error("[server] unhandled request failure", {
+      name: error instanceof Error ? error.name : "UnknownError",
+    });
     return new Response(renderErrorPage(), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },

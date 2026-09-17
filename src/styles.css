@@ -6810,6 +6810,44 @@ html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]):hove
   html[data-theme="grey"] [data-app-header] a[href="/"] > span:first-child { width: 30px; height: 30px; }
 }
 
+/* Light theme header: mirror the established dark navigation language while
+   keeping the rest of the light page untouched. */
+html[data-theme="light"] [data-app-header] nav {
+  background: linear-gradient(180deg, oklch(0.16 0.008 260 / 0.98), oklch(0.105 0.006 260 / 0.98)) !important;
+  border-color: oklch(1 0 0 / 0.1) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 10px 40px -18px oklch(0 0 0 / 0.7) !important;
+}
+html[data-theme="light"] [data-app-header] a[href="/"] {
+  color: oklch(0.98 0.003 90) !important;
+}
+html[data-theme="light"] [data-app-header] a[href="/"] > span:first-child {
+  background: oklch(0.08 0.004 260 / 0.9) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 0 24px -4px var(--color-accent), inset 0 1px 0 oklch(1 0 0 / 0.1) !important;
+  --tw-ring-color: oklch(0.69 0.185 55 / 0.4) !important;
+}
+html[data-theme="light"] [data-app-header] a[href="/"] > span:first-child > span[aria-hidden] {
+  display: block !important;
+}
+html[data-theme="light"] [data-app-header] a[href="/"] .font-display {
+  color: oklch(0.98 0.003 90) !important;
+}
+html[data-theme="light"] [data-app-header] button[aria-label],
+html[data-theme="light"] [data-app-header] a[aria-label]:not([href="/cart"]) {
+  color: oklch(0.78 0.012 260) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+html[data-theme="light"] [data-app-header] button[aria-label]:hover,
+html[data-theme="light"] [data-app-header] a[aria-label]:not([href="/cart"]):hover {
+  color: oklch(0.98 0.003 90) !important;
+  background: oklch(1 0 0 / 0.06) !important;
+}
+html[data-theme="light"] [data-app-header] nav span[aria-hidden].w-px {
+  background: linear-gradient(to bottom, transparent, oklch(1 0 0 / 0.15), transparent) !important;
+}
+
 /* ══ LIGHT THEME v7 — restrained FoundOurMarket accent language ═══════
    Orange is an accent, not a surface. This final light-only layer corrects
    legacy utility leakage without changing dark/grey themes or interaction. */

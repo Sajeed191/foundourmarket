@@ -6619,9 +6619,9 @@ html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] span:ha
   border: 0 !important;
 }
 
-/* Inactive slides: subtle gray/charcoal dots. */
-html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] span:not(:has(> .fd-progress-dot)),
-html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] span:not(:has(> .fd-progress-dot)) {
+/* Inactive slides: subtle gray/charcoal dots (direct segment span only). */
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)),
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)) {
   background: oklch(0.72 0.006 260 / 0.55) !important;
 }
 

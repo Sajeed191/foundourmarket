@@ -519,7 +519,7 @@ export function FlashDealsBand() {
                     {isActive && (
                       <span
                         key={`${i}-${cycle}`}
-                        className={`block h-full w-full rounded-full bg-accent shadow-[0_0_12px_-2px_var(--accent)] ${
+                        className={`fd-progress-dot block h-full w-full rounded-full bg-accent shadow-[0_0_12px_-2px_var(--accent)] ${
                           autoplayable ? "fd-progress-fill" : ""
                         }`}
                         style={autoplayable ? { animationDuration: `${autoplayMs}ms` } : undefined}

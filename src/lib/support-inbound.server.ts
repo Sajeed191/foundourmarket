@@ -240,8 +240,9 @@ async function storeAttachments(
     return false
   }
   for (const att of attachments) {
-    const type = (att.contentType || '').toLowerCase().split(';')[0].trim()
-    if (!ALLOWED_TYPES.includes(type)) continue
+    const suppliedType = (att.contentType || '').toLowerCase().split(';')[0].trim()
+    if (!ALLOWED_TYPES.includes(suppliedType)) continue
+    const type = suppliedType === 'image/jpg' ? 'image/jpeg' : suppliedType
     if (!att.contentBase64) continue
     let buf: Buffer
     try {

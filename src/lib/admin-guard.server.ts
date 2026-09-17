@@ -104,16 +104,13 @@ export async function requireStaff(
 }
 
 /** Loosely-typed admin RPC caller (svc_* wrappers aren't in generated types).
- *  Bound lazily inside the call so importing this module never touches the
+ *  Resolved lazily inside the call so importing this module never touches the
  *  service-role client before runtime env vars are injected. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const adminRpc = ((
-  fn: string,
-  args?: Record<string, unknown>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<{ data: any; error: { message: string } | null }> =>
-  supabaseAdmin.rpc(fn, args as never) as never) as (
+type LooseRpc = (
   fn: string,
   args?: Record<string, unknown>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) => Promise<{ data: any; error: { message: string } | null }>;
+
+export const adminRpc: LooseRpc = (fn, args) =>
+  (supabaseAdmin.rpc as unknown as LooseRpc)(fn, args);

@@ -15,6 +15,7 @@ import { AiProductCard } from "./ai-shopping/AiProductCard";
 import { AiCompareBlock, AiSourceBadge } from "./ai-shopping/AiExplainBlocks";
 import { getShoppingContext } from "@/lib/ai-shopping/shopping-context";
 import { recordAiEvent } from "@/lib/ai-shopping/analytics";
+import { supabase } from "@/integrations/supabase/client";
 
 const SUGGESTIONS = [
   "Show me lightweight running shoes under ₹3,000",

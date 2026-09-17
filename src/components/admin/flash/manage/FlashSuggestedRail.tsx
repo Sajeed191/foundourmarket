@@ -67,7 +67,7 @@ export function FlashSuggestedRail({
                   className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-accent/40 px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest text-accent transition hover:bg-accent/10">
                   <Plus className="size-3" /> Add deal
                 </button>
-                <Link to="/products/$slug" params={{ slug: r.product.slug }} target="_blank"
+                <Link to="/products/$slug" params={{ slug: r.product.slug }} target="_blank" rel="noopener noreferrer"
                   aria-label={`Preview ${r.product.name}`}
                   className="grid size-11 place-items-center rounded-full border border-white/10 transition hover:bg-white/5">
                   <Eye className="size-3.5" />

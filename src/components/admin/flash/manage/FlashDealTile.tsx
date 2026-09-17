@@ -261,7 +261,7 @@ export const FlashDealTile = memo(function FlashDealTile({
 
         {deal && (
           <div className="flex flex-wrap items-center gap-1">
-            <Link to="/products/$slug" params={{ slug: p.slug }} target="_blank"
+            <Link to="/products/$slug" params={{ slug: p.slug }} target="_blank" rel="noopener noreferrer"
               aria-label={`Preview ${p.name} on the storefront`} className={btn}>
               <Eye className="size-3.5" />
             </Link>

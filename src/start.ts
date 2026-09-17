@@ -2,6 +2,7 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 import { setResponseHeaders } from "@tanstack/react-start/server";
 
 import { renderErrorPage } from "./lib/error-page";
+import { isRequestAbort } from "./lib/request-errors";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 const CANONICAL_HOST = "foundourmarket.com";
@@ -100,6 +101,9 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   try {
     return await next();
   } catch (error) {
+    if (isRequestAbort(error) || request.signal.aborted) {
+      return new Response(null, { status: 499 });
+    }
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }

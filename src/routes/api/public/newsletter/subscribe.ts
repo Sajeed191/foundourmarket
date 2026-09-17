@@ -339,10 +339,7 @@ export const Route = createFileRoute("/api/public/newsletter/subscribe")({
         const doubleOptIn = settings.double_opt_in_enabled;
         const ttlHours = Math.max(1, Math.min(168, settings.verification_ttl_hours || 24));
         const verificationToken = doubleOptIn
-          ? createHash("sha256")
-              .update(`${email}::${Date.now()}::${Math.random()}::${salt}`)
-              .digest("base64url")
-              .slice(0, 48)
+          ? Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url")
           : null;
         const verificationExpiresAt = doubleOptIn
           ? new Date(Date.now() + ttlHours * 3600 * 1000).toISOString()

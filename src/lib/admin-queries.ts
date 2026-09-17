@@ -61,7 +61,11 @@ export function bucketByDay<T extends { created_at: string; total?: number }>(ro
 export function toCSV(rows: Record<string, unknown>[]): string {
   if (!rows.length) return "";
   const headers = Object.keys(rows[0]);
-  const escape = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const escape = (v: unknown) => {
+    const s = String(v ?? "");
+    const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    return `"${safe.replace(/"/g, '""')}"`;
+  };
   return [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))].join("\n");
 }
 

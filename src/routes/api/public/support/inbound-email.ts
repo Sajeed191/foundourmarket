@@ -7,6 +7,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
+import { callerKey, consumeRateLimit, tooManyRequests } from '@/lib/security/server-rate-limit'
 
 const MAX_REQUEST_BYTES = 15 * 1024 * 1024
 
@@ -41,6 +42,8 @@ export const Route = createFileRoute('/api/public/support/inbound-email')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const rate = consumeRateLimit(callerKey(request, 'support-inbound'), 120, 60_000)
+        if (!rate.allowed) return tooManyRequests(rate, 'Too many webhook requests')
         const declaredLength = Number(request.headers.get('content-length') || '0')
         if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BYTES) {
           return new Response(JSON.stringify({ ok: false, error: 'payload_too_large' }), {

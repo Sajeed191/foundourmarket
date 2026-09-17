@@ -2,6 +2,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyWebhookSignature } from "@/lib/razorpay.server";
 import { enqueueOrderEmail } from "@/lib/order-emails.server";
+import { callerKey, consumeRateLimit, tooManyRequests } from "@/lib/security/server-rate-limit";
+
+const MAX_WEBHOOK_BYTES = 1024 * 1024;
+
+function auditPayload(event: string, payload: any) {
+  const payment = payload?.payload?.payment?.entity;
+  const refund = payload?.payload?.refund?.entity;
+  const order = payload?.payload?.order?.entity;
+  const token = payload?.payload?.token?.entity;
+  return {
+    event,
+    payment_id: payment?.id ?? null,
+    order_id: payment?.order_id ?? order?.id ?? null,
+    refund_id: refund?.id ?? null,
+    token_id: token?.id ?? null,
+  };
+}
 
 /**
  * Razorpay webhook receiver. Configure this URL in the Razorpay dashboard:
@@ -14,8 +31,17 @@ export const Route = createFileRoute("/api/public/razorpay-webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const rate = consumeRateLimit(callerKey(request, "razorpay-webhook"), 300, 60_000);
+        if (!rate.allowed) return tooManyRequests(rate, "Too many webhook requests");
+        const declaredLength = Number(request.headers.get("content-length") || "0");
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_WEBHOOK_BYTES) {
+          return new Response("Payload too large", { status: 413 });
+        }
         const signature = request.headers.get("x-razorpay-signature") ?? "";
         const rawBody = await request.text();
+        if (Buffer.byteLength(rawBody, "utf8") > MAX_WEBHOOK_BYTES) {
+          return new Response("Payload too large", { status: 413 });
+        }
 
         const valid = verifyWebhookSignature(rawBody, signature);
 
@@ -27,22 +53,23 @@ export const Route = createFileRoute("/api/public/razorpay-webhook")({
         }
         const event: string = payload?.event ?? "unknown";
 
-        // Always log the event (even invalid ones, for audit)
+        if (!valid) {
+          return new Response("Invalid signature", { status: 401 });
+        }
+
+        // Persist only identifiers required for operational audit, never the
+        // provider's full payment payload (which may contain customer PII).
         const { data: logRow } = await supabaseAdmin
           .from("webhook_logs")
           .insert({
             provider: "razorpay",
             event,
-            payload,
-            signature_valid: valid,
-            status: valid ? "received" : "rejected",
+            payload: auditPayload(event, payload),
+            signature_valid: true,
+            status: "received",
           })
           .select("id")
           .single();
-
-        if (!valid) {
-          return new Response("Invalid signature", { status: 401 });
-        }
 
         try {
           await handleEvent(event, payload);
@@ -56,10 +83,13 @@ export const Route = createFileRoute("/api/public/razorpay-webhook")({
           if (logRow?.id) {
             await supabaseAdmin
               .from("webhook_logs")
-              .update({ status: "error", error: String(e?.message ?? e) })
+              .update({ status: "error", error: "event_processing_failed" })
               .eq("id", logRow.id);
           }
-          console.error("razorpay webhook handler error", e);
+          console.error("razorpay webhook handler error", {
+            event,
+            name: e instanceof Error ? e.name : "UnknownError",
+          });
           // Return 200 so Razorpay doesn't retry forever on logic errors we logged
           return new Response("ok", { status: 200 });
         }

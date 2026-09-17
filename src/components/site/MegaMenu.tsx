@@ -148,26 +148,28 @@ export function MegaMenu() {
         Shop
       </Link>
 
-      {MENU.map((cat) => {
+  {MENU.map((cat, i) => {
         const Icon = cat.icon;
         const isOpen = active === cat.slug;
         const img = imageFor(cat.slug);
+        const collapsed = i >= visible;
         return (
           <div
             key={cat.slug}
-            className="relative"
+            ref={(el) => { itemRefs.current[i] = el; }}
+            className={collapsed ? "hidden" : "relative"}
             onMouseEnter={() => open(cat.slug)}
             onMouseLeave={scheduleClose}
           >
             <Link
               to="/category/$slug"
               params={{ slug: cat.slug }}
-              className={`flex items-center gap-1.5 px-3 lg:px-3.5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap ${
+              activeProps={{ className: "nav-link-active text-foreground bg-white/5" }}
+              className={`nav-link-desktop flex items-center gap-1.5 px-3 lg:px-3.5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                 isOpen ? "text-foreground bg-white/5" : "hover:text-foreground hover:bg-white/5"
               }`}
             >
-              <span className="hidden lg:inline">{cat.name.split(" & ")[0].split(" ")[0]}</span>
-              <span className="lg:hidden">{cat.name.split(" ")[0]}</span>
+              <span>{shortLabel(cat.name)}</span>
               <ChevronDown
                 className={`size-3 transition-transform duration-200 ${isOpen ? "rotate-180 text-accent" : "opacity-60"}`}
               />

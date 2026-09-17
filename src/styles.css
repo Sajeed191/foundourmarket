@@ -4745,13 +4745,11 @@ textarea.editor-deeplink-target {
 }
 
 /* =====================================================================
-   HERO SHOP NOW — premium treatment, ALL THEMES.
-   Depth: gradient, sheen sweep, glow. Dark gets a deeper amber glow so
-   the button floats on the dark canvas.
+   HERO SHOP NOW — premium treatment, light & grey themes ONLY.
+   Dark theme keeps its original button. Depth: gradient, sheen, glow.
    ===================================================================== */
 [data-theme="light"] a.hero-shop-now,
-[data-theme="grey"] a.hero-shop-now,
-[data-theme="dark"] a.hero-shop-now {
+[data-theme="grey"] a.hero-shop-now {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -4770,8 +4768,7 @@ textarea.editor-deeplink-target {
 }
 /* Sheen sweep on hover */
 [data-theme="light"] a.hero-shop-now::before,
-[data-theme="grey"] a.hero-shop-now::before,
-[data-theme="dark"] a.hero-shop-now::before {
+[data-theme="grey"] a.hero-shop-now::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -4782,11 +4779,9 @@ textarea.editor-deeplink-target {
   pointer-events: none;
 }
 [data-theme="light"] a.hero-shop-now > *,
-[data-theme="grey"] a.hero-shop-now > *,
-[data-theme="dark"] a.hero-shop-now > * { position: relative; z-index: 2; }
+[data-theme="grey"] a.hero-shop-now > * { position: relative; z-index: 2; }
 [data-theme="light"] a.hero-shop-now:hover,
-[data-theme="grey"] a.hero-shop-now:hover,
-[data-theme="dark"] a.hero-shop-now:hover {
+[data-theme="grey"] a.hero-shop-now:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow:
     0 20px 44px -14px color-mix(in oklab, var(--accent) 92%, transparent),
@@ -4795,11 +4790,9 @@ textarea.editor-deeplink-target {
     inset 0 -2px 6px color-mix(in oklab, black 14%, transparent);
 }
 [data-theme="light"] a.hero-shop-now:hover::before,
-[data-theme="grey"] a.hero-shop-now:hover::before,
-[data-theme="dark"] a.hero-shop-now:hover::before { transform: translateX(130%); }
+[data-theme="grey"] a.hero-shop-now:hover::before { transform: translateX(130%); }
 [data-theme="light"] a.hero-shop-now:active,
-[data-theme="grey"] a.hero-shop-now:active,
-[data-theme="dark"] a.hero-shop-now:active {
+[data-theme="grey"] a.hero-shop-now:active {
   transform: translateY(0) scale(0.98);
   box-shadow:
     0 8px 20px -12px color-mix(in oklab, var(--accent) 70%, transparent),
@@ -4820,38 +4813,13 @@ textarea.editor-deeplink-target {
     inset 0 1px 0 color-mix(in oklab, white 34%, transparent),
     inset 0 -2px 6px color-mix(in oklab, black 12%, transparent);
 }
-/* Dark theme: deeper, warmer glow and a hairline ember edge so the button
-   reads as a lit surface against the dark navy canvas */
-[data-theme="dark"] a.hero-shop-now {
-  background-image:
-    radial-gradient(120% 140% at 15% 0%, color-mix(in oklab, white 30%, transparent), transparent 52%),
-    linear-gradient(135deg, color-mix(in oklab, var(--accent) 92%, white 8%) 0%, color-mix(in oklab, var(--accent) 70%, black) 100%);
-  border-color: color-mix(in oklab, var(--accent) 70%, white 30%);
-  box-shadow:
-    0 18px 46px -16px color-mix(in oklab, var(--accent) 90%, transparent),
-    0 6px 18px -8px color-mix(in oklab, var(--accent) 65%, transparent),
-    0 0 0 1px color-mix(in oklab, var(--accent) 22%, transparent),
-    inset 0 1px 0 color-mix(in oklab, white 42%, transparent),
-    inset 0 -2px 6px color-mix(in oklab, black 22%, transparent);
-}
-[data-theme="dark"] a.hero-shop-now:hover {
-  box-shadow:
-    0 24px 58px -16px color-mix(in oklab, var(--accent) 100%, transparent),
-    0 8px 22px -8px color-mix(in oklab, var(--accent) 72%, transparent),
-    0 0 0 1px color-mix(in oklab, var(--accent) 30%, transparent),
-    inset 0 1px 0 color-mix(in oklab, white 46%, transparent),
-    inset 0 -2px 6px color-mix(in oklab, black 22%, transparent);
-}
 @media (prefers-reduced-motion: reduce) {
   [data-theme="light"] a.hero-shop-now,
-  [data-theme="grey"] a.hero-shop-now,
-  [data-theme="dark"] a.hero-shop-now { transition: none; }
+  [data-theme="grey"] a.hero-shop-now { transition: none; }
   [data-theme="light"] a.hero-shop-now:hover,
-  [data-theme="grey"] a.hero-shop-now:hover,
-  [data-theme="dark"] a.hero-shop-now:hover { transform: none; }
+  [data-theme="grey"] a.hero-shop-now:hover { transform: none; }
   [data-theme="light"] a.hero-shop-now::before,
-  [data-theme="grey"] a.hero-shop-now::before,
-  [data-theme="dark"] a.hero-shop-now::before { transition: none; }
+  [data-theme="grey"] a.hero-shop-now::before { transition: none; }
 }
 
 /* Explore — filled glass */

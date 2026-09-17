@@ -74,7 +74,11 @@ async function fetchAudit(): Promise<AuditRow[]> {
 
 function toCSV(rows: Subscriber[]): string {
   const headers = ["email", "status", "source", "source_page", "device", "country", "subscribed_at", "unsubscribed_at", "created_at"];
-  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const esc = (v: unknown) => {
+    const s = String(v ?? "");
+    const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    return `"${safe.replace(/"/g, '""')}"`;
+  };
   return [
     headers.join(","),
     ...rows.map((r) => headers.map((h) => esc((r as unknown as Record<string, unknown>)[h])).join(",")),

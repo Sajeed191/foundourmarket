@@ -924,7 +924,10 @@ export async function searchFinancialAudit(input: {
   if (q) {
     if (UUID.test(q)) orderQ = orderQ.eq("id", q);
     else if (q.includes("@")) orderQ = orderQ.eq("contact_email", q);
-    else orderQ = orderQ.or(`razorpay_order_id.eq.${q},razorpay_payment_id.eq.${q}`);
+    else {
+      const safeQ = q.replace(/[,()"\\]/g, "").replace(/[\u0000-\u001f]/g, "");
+      if (safeQ) orderQ = orderQ.or(`razorpay_order_id.eq.${safeQ},razorpay_payment_id.eq.${safeQ}`);
+    }
   }
 
   const { data: orderRows } = await orderQ;

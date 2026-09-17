@@ -721,8 +721,11 @@ export async function buildFinanceWorkspace(windowDays: number): Promise<Finance
 
 // ───────────────────────────────────────────────────────── universal search
 
+/** Strip PostgREST filter metacharacters so a search term cannot alter query structure. */
+const sanitizeFilterTerm = (v: string) => v.replace(/[,()"\\]/g, " ").replace(/[\u0000-\u001f]/g, "").trim();
+
 export async function workspaceSearch(q: string): Promise<SearchHit[]> {
-  const term = q.trim();
+  const term = sanitizeFilterTerm(q);
   if (term.length < 2) return [];
   const like = `%${term}%`;
   const hits: SearchHit[] = [];

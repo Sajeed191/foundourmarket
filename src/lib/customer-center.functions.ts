@@ -369,6 +369,18 @@ export const createCustomerTicketFn = createServerFn({ method: "POST" })
       input.customerId,
     );
 
+    // Ownership: an attached order must belong to the selected customer.
+    if (input.orderId) {
+      const { data: ord } = await supabaseAdmin
+        .from("orders")
+        .select("id,user_id")
+        .eq("id", input.orderId)
+        .maybeSingle();
+      if (!ord || ord.user_id !== input.customerId) {
+        throw new Error("Selected order does not belong to this customer.");
+      }
+    }
+
     const nowIso = new Date().toISOString();
     const { data: ticket, error } = await supabaseAdmin
       .from("support_tickets")

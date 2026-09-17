@@ -258,8 +258,13 @@ export const getOrderEmailDelivery = createServerFn({ method: "POST" })
       orderQuery = orderQuery.gte("created_at", new Date(Date.now() - ms).toISOString());
     }
     if (data.search) {
-      const term = data.search.trim();
-      orderQuery = orderQuery.or(`id.eq.${term},contact_email.ilike.%${term}%`);
+      const term = data.search.trim().replace(/[,()"\\]/g, " ").replace(/[\u0000-\u001f]/g, "").trim();
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (term) {
+        orderQuery = UUID_RE.test(term)
+          ? orderQuery.eq("id", term)
+          : orderQuery.ilike("contact_email", `%${term}%`);
+      }
     }
 
     const { data: orders, error } = await orderQuery;

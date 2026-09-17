@@ -644,8 +644,11 @@ export async function buildFinanceOps(windowDays: number): Promise<FinanceOps> {
 
 /* ------------------------------------------------------- finance search */
 
+/** Strip PostgREST filter metacharacters so a search term cannot alter query structure. */
+const sanitizeFilterTerm = (v: string) => v.replace(/[,()"\\]/g, " ").replace(/[\u0000-\u001f]/g, "").trim();
+
 export async function searchFinance(q: string): Promise<FinanceSearchHit[]> {
-  const term = q.trim();
+  const term = sanitizeFilterTerm(q);
   if (term.length < 2) return [];
   const like = `%${term}%`;
   const hits: FinanceSearchHit[] = [];

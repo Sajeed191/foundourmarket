@@ -7264,3 +7264,24 @@ html[data-theme="dark"] [data-app-header] nav.glass-strong {
     color: oklch(0.24 0.014 70);
   }
 }
+
+/* Specificity guards: the utility classes on the links and an older generic
+   light-theme button rule would otherwise win over the desktop nav v2 rules. */
+@media (min-width: 768px) {
+  html[data-theme="light"] [data-app-header] .nav-link-active,
+  html[data-theme="grey"] [data-app-header] .nav-link-active {
+    color: var(--accent) !important;
+  }
+  html[data-theme="light"] [data-app-header] button[aria-label="More categories"],
+  html[data-theme="grey"] [data-app-header] button[aria-label="More categories"] {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  html[data-theme="light"] [data-app-header] button[aria-label="More categories"]:hover,
+  html[data-theme="grey"] [data-app-header] button[aria-label="More categories"]:hover,
+  html[data-theme="light"] [data-app-header] button[aria-label="More categories"][data-state="open"],
+  html[data-theme="grey"] [data-app-header] button[aria-label="More categories"][data-state="open"] {
+    background: oklch(0.955 0.004 75) !important;
+  }
+}

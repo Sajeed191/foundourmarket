@@ -6753,3 +6753,16 @@ html[data-theme="grey"] [data-app-header] button[aria-label]:hover,
 html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]):hover {
   background: #EDEAE4 !important;
 }
+/* Very small screens: keep the wordmark whole */
+@media (max-width: 360px) {
+  html[data-theme="light"] [data-app-header] a[href="/"] > span:last-child > span:first-child,
+  html[data-theme="grey"] [data-app-header] a[href="/"] > span:last-child > span:first-child {
+    font-size: 13.5px;
+  }
+  html[data-theme="light"] [data-app-header] a[href="/"] .font-mono,
+  html[data-theme="grey"] [data-app-header] a[href="/"] .font-mono { font-size: 7.5px; letter-spacing: 0.12em; }
+  html[data-theme="light"] [data-app-header] nav > div,
+  html[data-theme="grey"] [data-app-header] nav > div { padding-left: 0.5rem; padding-right: 0.5rem; gap: 0.25rem; }
+  html[data-theme="light"] [data-app-header] a[href="/"] > span:first-child,
+  html[data-theme="grey"] [data-app-header] a[href="/"] > span:first-child { width: 32px; height: 32px; }
+}

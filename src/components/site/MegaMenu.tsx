@@ -234,10 +234,37 @@ export function MegaMenu() {
         );
       })}
 
+      {/* Lower-priority categories collapse here instead of overflowing. */}
+      <div ref={moreRef} className={hidden.length ? "relative" : "hidden"}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="More categories"
+              className="nav-link-desktop flex items-center gap-1.5 px-3 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            >
+              More
+              <MoreHorizontal className="size-3.5 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-56">
+            {hidden.map((cat) => (
+              <DropdownMenuItem key={cat.slug} asChild>
+                <Link to="/category/$slug" params={{ slug: cat.slug }}>
+                  <cat.icon className="size-4 opacity-70" />
+                  <span className="truncate">{cat.name}</span>
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <Link
+        ref={dealsRef}
         to="/deals"
-        activeProps={{ className: "text-foreground bg-white/5" }}
-        className="px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap"
+        activeProps={{ className: "nav-link-active text-foreground bg-white/5" }}
+        className="nav-link-desktop px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
       >
         Deals
       </Link>

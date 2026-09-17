@@ -6842,11 +6842,7 @@ html[data-theme="grey"] [data-app-header] button[aria-label]:hover,
 html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]):hover {
   background: #EDEAE4 !important;
 }
-/* Hamburger + notification bell blend into the nav bar: same surface as the
-   bar itself, only a quiet tint on hover for affordance. Light + grey only. */
-html[data-theme="light"] [data-app-header] button[aria-label="Open menu"],
-html[data-theme="light"] [data-app-header] button[aria-label="Close menu"],
-html[data-theme="light"] [data-app-header] a[aria-label="Notifications"][href],
+/* Grey theme: hamburger + bell keep blending into the nav bar (transparent). */
 html[data-theme="grey"] [data-app-header] button[aria-label="Open menu"],
 html[data-theme="grey"] [data-app-header] button[aria-label="Close menu"],
 html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"][href] {
@@ -6855,13 +6851,32 @@ html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"][href] {
   border: 1px solid transparent !important;
   box-shadow: none !important;
 }
-html[data-theme="light"] [data-app-header] button[aria-label="Open menu"]:hover,
-html[data-theme="light"] [data-app-header] button[aria-label="Close menu"]:hover,
-html[data-theme="light"] [data-app-header] a[aria-label="Notifications"][href]:hover,
 html[data-theme="grey"] [data-app-header] button[aria-label="Open menu"]:hover,
 html[data-theme="grey"] [data-app-header] button[aria-label="Close menu"]:hover,
 html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"][href]:hover {
   background: #F4F2EE !important;
+}
+/* Light theme: hamburger + bell get a refined warm-neutral treatment —
+   soft ivory pill, hairline border, charcoal icon, deeper tint on hover. */
+html[data-theme="light"] [data-app-header] button[aria-label="Open menu"],
+html[data-theme="light"] [data-app-header] button[aria-label="Close menu"],
+html[data-theme="light"] [data-app-header] a[aria-label="Notifications"][href] {
+  background: #F5F3EF !important;
+  background-image: none !important;
+  border: 1px solid oklch(0.9 0.005 75) !important;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.7) !important;
+  color: #20242D !important;
+}
+html[data-theme="light"] [data-app-header] button[aria-label="Open menu"] svg,
+html[data-theme="light"] [data-app-header] button[aria-label="Close menu"] svg,
+html[data-theme="light"] [data-app-header] a[aria-label="Notifications"][href] svg {
+  color: #20242D !important;
+}
+html[data-theme="light"] [data-app-header] button[aria-label="Open menu"]:hover,
+html[data-theme="light"] [data-app-header] button[aria-label="Close menu"]:hover,
+html[data-theme="light"] [data-app-header] a[aria-label="Notifications"][href]:hover {
+  background: #EDEAE4 !important;
+  border-color: oklch(0.86 0.008 75) !important;
 }
 /* Very small screens: keep the wordmark whole */
 @media (max-width: 360px) {

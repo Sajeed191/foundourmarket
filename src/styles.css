@@ -7285,3 +7285,21 @@ html[data-theme="dark"] [data-app-header] nav.glass-strong {
     background: oklch(0.955 0.004 75) !important;
   }
 }
+
+/* Wishlist / notification icons rest on the nav surface; tint only on hover. */
+@media (min-width: 768px) {
+  html[data-theme="light"] [data-app-header] a[aria-label="Wishlist"],
+  html[data-theme="grey"] [data-app-header] a[aria-label="Wishlist"],
+  html[data-theme="light"] [data-app-header] a[aria-label="Admin"],
+  html[data-theme="grey"] [data-app-header] a[aria-label="Admin"] {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  html[data-theme="light"] [data-app-header] a[aria-label="Wishlist"]:hover,
+  html[data-theme="grey"] [data-app-header] a[aria-label="Wishlist"]:hover,
+  html[data-theme="light"] [data-app-header] a[aria-label="Admin"]:hover,
+  html[data-theme="grey"] [data-app-header] a[aria-label="Admin"]:hover {
+    background: oklch(0.955 0.004 75) !important;
+  }
+}

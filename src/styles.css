@@ -6846,10 +6846,10 @@ html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]):hove
    bar itself, only a quiet tint on hover for affordance. Light + grey only. */
 html[data-theme="light"] [data-app-header] button[aria-label="Open menu"],
 html[data-theme="light"] [data-app-header] button[aria-label="Close menu"],
-html[data-theme="light"] [data-app-header] a[aria-label="Notifications"],
+html[data-theme="light"] [data-app-header] a[aria-label="Notifications"][href],
 html[data-theme="grey"] [data-app-header] button[aria-label="Open menu"],
 html[data-theme="grey"] [data-app-header] button[aria-label="Close menu"],
-html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"] {
+html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"][href] {
   background: transparent !important;
   background-image: none !important;
   border: 1px solid transparent !important;
@@ -6857,10 +6857,10 @@ html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"] {
 }
 html[data-theme="light"] [data-app-header] button[aria-label="Open menu"]:hover,
 html[data-theme="light"] [data-app-header] button[aria-label="Close menu"]:hover,
-html[data-theme="light"] [data-app-header] a[aria-label="Notifications"]:hover,
+html[data-theme="light"] [data-app-header] a[aria-label="Notifications"][href]:hover,
 html[data-theme="grey"] [data-app-header] button[aria-label="Open menu"]:hover,
 html[data-theme="grey"] [data-app-header] button[aria-label="Close menu"]:hover,
-html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"]:hover {
+html[data-theme="grey"] [data-app-header] a[aria-label="Notifications"][href]:hover {
   background: #F4F2EE !important;
 }
 /* Very small screens: keep the wordmark whole */

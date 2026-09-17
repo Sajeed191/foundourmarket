@@ -1,55 +1,49 @@
-# Flash Deals Management System v4.0 — Enterprise Control Center
+# PDP light-theme text visibility audit and fix
 
-Extends the existing system only. No changes to `flash_deals`, `product_badges`, `useFlashDeals()`, the rotation engine, Site Rules, RLS, or any storefront contract.
+## Scope
 
-## Where it lives
+Fix only the FoundOurMarket™ Product Detail Page in the light theme. Preserve the dark theme, logo, layout, routes, product logic, checkout, authentication, navigation, and all existing features.
 
-A new dedicated admin page under Merchandising, replacing the current `admin-flash-deals` CRUD screen (the old route keeps working and redirects into the new command center).
+## Root causes found
 
-## Phase 1 — Foundation & Dashboard (Freeze 1)
+- The PDP defines its own dark palette on `[data-product-page]`, after the global light palette, so upper-page semantic text and surfaces can resolve to dark-theme values in light mode.
+- Product Details cards use dark-oriented translucent gradients and very faint mixed text colors; specification labels and dividers become weak on the warm ivory theme.
+- Reviews, FAQ, Q&A, and compare surfaces contain unscoped `white/*` text, borders, rings, and backgrounds intended for dark mode. Existing light glass fallbacks turn some of those surfaces white, leaving supporting text or controls nearly white-on-white.
+- Collapsed description and answer blocks place gradient scrims over visible text. The description currently avoids duplicate controls, but its visible final lines are still washed out.
+- Reveal elements begin at opacity zero and rely on delayed animation recovery, which can temporarily make specification content appear absent.
 
-- New route `admin-merchandising-flash-deals` with an AdminShell page shell and tabbed sections: Overview, Timeline, Deals, Rotation, Preview.
-- Realtime dashboard cards: Active, Scheduled, Expired, Eligible Products, Avg Discount, Est. Revenue, Views, CTR, Purchases, Conversion.
-- Reads from existing tables only (`flash_deals`, `flash_deal_events`, `product_badges`, `products`). Memoized aggregation, one subscription per table.
-- Legacy route redirect.
+## Implementation
 
-## Phase 2 — Deal Creation & Discount Builder (Freeze 2)
+1. **Create one PDP light-theme boundary**
+   - Keep the existing `data-product-page` marker and add a page-level light-only semantic override for primary, secondary, helper, border, card, input, and accent roles.
+   - Scope all new rules to `html[data-theme="light"]` and PDP markers only; do not alter root or dark-theme tokens.
 
-- Smart Product Picker: instant client-side search over name / SKU / brand / category / vendor with thumbnail, price, stock, existing badges; blocks products that already hold a promotional badge (Single Promotional Badge policy).
-- 4-step creation flow: Product → Discount → Time → Preview → Publish.
-- Visual Discount Builder: slider + direct input showing regular price, flash price, savings, percentage, margin impact, with over-threshold warning.
-- Campaign selector (Weekend Sale, Mega Sale, Festival Offer, Midnight Drop, etc.) driving the storefront campaign label already rendered by `FlashDealsBand`.
+2. **Repair Product Details and specifications**
+   - Give Product Details cards solid warm-white light surfaces and warm borders.
+   - Set specification labels to readable secondary slate and values to primary ink.
+   - Strengthen subtitles, counts, warranty copy, feature text, dividers, and inactive tabs without flattening hierarchy.
+   - Remove light-theme ambient/noise treatments that reduce legibility while leaving dark presentation unchanged.
 
-## Phase 3 — Live Preview & Hero Ordering (Freeze 3)
+3. **Fix description collapse behavior**
+   - Replace the overlay fade with clean height clipping in the PDP-owned description panel.
+   - Keep exactly one Show More/Show Less control and preserve the measured, low-cost expansion behavior.
+   - Ensure expanded content has no mask, ghost layer, or clipped text.
 
-- Split-screen live preview rendering the real `FlashDealsBand` component at desktop, tablet and mobile widths — no duplicate renderer, no screenshots.
-- Drag-and-drop hero ordering that writes to the existing `priority` column; pin / lock hero; randomize; unpinned items keep rotating fairly through the existing seeded engine.
+4. **Repair reviews, FAQ, questions, recommendations, and compare text**
+   - Add narrow PDP section markers where necessary.
+   - Within those light-only scopes, convert unscoped dark glass surfaces to warm-white surfaces, borders/rings to warm neutral lines, and supporting text to the readable ink ladder.
+   - Preserve white text on genuine media overlays and orange primary buttons by explicitly excluding/marking those contexts.
+   - Cover review summaries, cards, metadata, empty states, forms, FAQ answers, Q&A cards/answers, supporting copy, recommendation headings/product cards, and compare labels/values.
 
-## Phase 4 — Rotation Visualization & Controls (Freeze 4)
+5. **Purchase, delivery, sticky bar, and support controls**
+   - Retain the previously corrected compare price, stock/delivery chips, and Add to Cart hierarchy.
+   - Add light-only readability rules for sticky purchase helper text and relevant floating support text/icons without changing behavior or positioning.
 
-- Explain panel: current rotation, next rotation, previous rotation, rotation seed, window boundaries, manual nonce, plus a plain-language reason per product ("ranked 3rd after seeded rotation").
-- Controls: Reshuffle Now, Preview Next Rotation, Reset Rotation, Lock/Unlock Hero, Restore Automatic Rotation — all bumping the existing nonce and writing to the existing audit log.
+## Validation
 
-## Phase 5 — Timeline, Health, Insights & Warnings (Freeze 5)
-
-- Calendar timeline grouped Today / Tomorrow / This Week / Upcoming / Expired, with drag to move and resize a deal window, conflict highlighting and priority badges.
-- Deal Health Score per deal (stock, discount, time remaining, views, clicks, conversion, badge status, priority) with exactly one plain-language recommendation, following the project AI UX rule (traffic-light status, one-click action).
-- Per-deal performance insights with trend chart from `flash_deal_events`.
-- Visual warnings: expired, inactive, out of stock, badge missing, price conflict, priority conflict, hidden by rules.
-- Recommendation shortlist built only from existing signals (selling fast, high stock, high margin, never featured, recently viewed, recently updated).
-
-## Phase 6 — Bulk, Filters, Notifications, Audit, A11y (Freeze 6)
-
-- Bulk actions: assign/remove badge, schedule/unschedule, discount, activate/deactivate, duplicate campaign, delete, export/import CSV.
-- Smart filters: category, brand, vendor, campaign, discount %, stock, priority, status, badge, published/scheduled/expired.
-- Admin notifications on expiry, low stock, empty homepage, conflicts, oversized discount — via the existing notification surface.
-- Audit timeline (who/when/before/after/reason) with restore, using existing `flash_deal_audit_log` + admin activity logging.
-- Keyboard shortcuts (search, undo, redo, publish, reshuffle), focus states, reduced-motion, screen-reader labels, 44px mobile targets, bottom sheets on mobile, virtualized deal list.
-
-## Technical notes
-
-- Automatic expiry behaviour (keep or drop badge on expiry) becomes an admin-configurable setting stored in existing settings/site-rules storage; no new business logic in the rotation engine.
-- All writes go through existing tables and RLS; any new column (e.g. campaign label, hero lock, expiry policy) is added additively via migration and defaulted so current storefront behaviour is unchanged.
-- Realtime subscriptions are scoped per tab and torn down on unmount.
-
-Approve and I'll start with Phase 1.
+- Check one real PDP from top to bottom in light mode at 320, 360, 375, 390, 412, and desktop widths.
+- Exercise Product Details tabs, description Show More/Show Less, FAQ accordion, long-answer expansion, reviews, and sticky purchase states.
+- Verify no horizontal overflow, clipping, overlap, transparent/washed text, duplicate expand controls, or dark overlays while scrolling.
+- Measure representative primary, secondary, helper, specification, empty-state, and CTA color contrast in the rendered page.
+- Repeat a desktop/mobile dark-theme visual comparison to confirm no dark-theme selectors or computed colors changed.
+- Run the focused TypeScript check and inspect browser console output for regressions.

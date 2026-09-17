@@ -6382,3 +6382,21 @@ html[data-theme="light"] [data-pdp-delivery-panel] p,
 html[data-theme="light"] [data-pdp-delivery-panel] svg {
   opacity: 1;
 }
+
+/* ============================================================
+   Account ambient background — theme-aware
+   Dark keeps the cinematic navy wash + orbs; light/grey stay clean.
+   ============================================================ */
+.account-ambient-wash {
+  background: radial-gradient(120% 80% at 50% -10%, oklch(0.17 0.02 265 / 0.9), transparent 60%);
+}
+
+html[data-theme="light"] .account-ambient-wash,
+html[data-theme="grey"] .account-ambient-wash {
+  background: var(--color-background);
+}
+
+html[data-theme="light"] .account-ambient-decor,
+html[data-theme="grey"] .account-ambient-decor {
+  display: none;
+}

@@ -135,7 +135,7 @@ export function MegaMenu() {
   };
 
   return (
-    <div className="hidden md:flex flex-1 justify-center items-center gap-1.5 lg:gap-2.5 text-[13px] lg:text-[14px] font-medium text-muted-foreground">
+    <div className="hidden md:flex flex-1 min-w-0 overflow-hidden justify-center items-center gap-1.5 lg:gap-2.5 text-[13px] lg:text-[14px] font-medium text-muted-foreground [mask-image:linear-gradient(to_right,transparent,black_2.5rem,black_calc(100%-2.5rem),transparent)]">
       <Link
         to="/"
         activeOptions={{ exact: true }}

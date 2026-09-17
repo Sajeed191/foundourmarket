@@ -6623,3 +6623,17 @@ html[data-theme="light"] .auth-shell [class~="text-white/35"],
 html[data-theme="grey"] .auth-shell [class~="text-white/55"],
 html[data-theme="grey"] .auth-shell [class~="text-white/45"],
 html[data-theme="grey"] .auth-shell [class~="text-white/35"] { color: var(--fom-l-ink-soft); }
+
+/* ── Cart floating checkout dock: light-theme visibility ──────────── */
+html[data-theme="light"] [data-cart-dock],
+html[data-theme="grey"] [data-cart-dock] {
+  background: #FFFFFF !important;
+  border-color: var(--fom-l-line-strong) !important;
+  box-shadow: 0 16px 38px -24px oklch(0 0 0 / 0.28), 0 2px 10px -6px oklch(0 0 0 / 0.12) !important;
+}
+html[data-theme="light"] [data-cart-dock] > span[aria-hidden],
+html[data-theme="grey"] [data-cart-dock] > span[aria-hidden] { display: none; }
+html[data-theme="light"] [data-cart-dock] p,
+html[data-theme="grey"] [data-cart-dock] p { color: var(--fom-l-ink-soft) !important; }
+html[data-theme="light"] [data-cart-dock] .fom-price-current,
+html[data-theme="grey"] [data-cart-dock] .fom-price-current { color: var(--fom-l-ember) !important; }

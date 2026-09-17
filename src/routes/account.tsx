@@ -362,18 +362,18 @@ function AccountPage() {
   return (
     <div>
       {/* Cinematic ambient background system — layered orbs, bloom & grid */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        {/* base navy depth wash */}
-        <div className="absolute inset-0" style={{ background: "radial-gradient(120% 80% at 50% -10%, oklch(0.17 0.02 265 / 0.9), transparent 60%)" }} />
+      <div aria-hidden className="account-ambient pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        {/* base depth wash (theme-aware, see .account-ambient-wash) */}
+        <div className="account-ambient-wash absolute inset-0" />
         {/* top ember bloom */}
-        <div className="absolute top-[-22%] left-1/2 -translate-x-1/2 w-[120%] h-[60vh] opacity-50 animate-glow" style={{ background: "var(--gradient-ember-soft)", filter: "blur(120px)" }} />
+        <div className="account-ambient-decor absolute top-[-22%] left-1/2 -translate-x-1/2 w-[120%] h-[60vh] opacity-50 animate-glow" style={{ background: "var(--gradient-ember-soft)", filter: "blur(120px)" }} />
         {/* drifting warm orb */}
-        <div className="absolute top-[30%] -right-[10%] size-[460px] rounded-full opacity-40 animate-orb" style={{ background: "var(--gradient-ember)", filter: "blur(110px)" }} />
+        <div className="account-ambient-decor absolute top-[30%] -right-[10%] size-[460px] rounded-full opacity-40 animate-orb" style={{ background: "var(--gradient-ember)", filter: "blur(110px)" }} />
         {/* drifting violet orb for depth */}
-        <div className="absolute bottom-[-10%] -left-[8%] size-[420px] rounded-full opacity-35 animate-orb" style={{ background: "var(--gradient-violet)", filter: "blur(120px)", animationDelay: "-8s" }} />
+        <div className="account-ambient-decor absolute bottom-[-10%] -left-[8%] size-[420px] rounded-full opacity-35 animate-orb" style={{ background: "var(--gradient-violet)", filter: "blur(120px)", animationDelay: "-8s" }} />
         {/* ultra-subtle grid texture, vignetted */}
         <div
-          className="absolute inset-0 opacity-[0.025]"
+          className="account-ambient-decor absolute inset-0 opacity-[0.025]"
           style={{
             backgroundImage:
               "linear-gradient(oklch(1 0 0 / 0.6) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.6) 1px, transparent 1px)",

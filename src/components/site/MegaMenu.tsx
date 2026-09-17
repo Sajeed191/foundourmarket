@@ -189,18 +189,28 @@ export function MegaMenu() {
     };
 
     compute();
+    // Retry until the items have a real laid-out width (webfont swap, first paint).
+    let tries = 0;
+    const retry = () => {
+      if (widths.current || tries++ > 20) return;
+      compute();
+      requestAnimationFrame(retry);
+    };
+    requestAnimationFrame(retry);
+
     const ro = new ResizeObserver(compute);
     ro.observe(wrap);
-    return () => ro.disconnect();
-  }, []);
-
-  // Re-measure after fonts settle so the first paint width is not stale.
-  useEffect(() => {
-    const t = setTimeout(() => {
+    // Fonts finish loading after first paint; widths measured before that are
+    // stale, so re-measure once from a fully visible state.
+    const refresh = () => {
       widths.current = null;
-      window.dispatchEvent(new Event("resize"));
-    }, 400);
-    return () => clearTimeout(t);
+      setVisible(MENU.length);
+      requestAnimationFrame(() => requestAnimationFrame(compute));
+    };
+    if (typeof document !== "undefined" && "fonts" in document) {
+      (document as Document & { fonts: FontFaceSet }).fonts.ready.then(refresh);
+    }
+    return () => ro.disconnect();
   }, []);
 
   const hidden = MENU.slice(visible);

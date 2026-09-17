@@ -512,8 +512,8 @@ export function FlashDealsBand() {
                   className="grid h-4 place-items-center"
                 >
                   <span
-                    className={`block h-[3px] overflow-hidden rounded-full transition-[width,background-color] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                      isActive ? "w-10 bg-white/[0.18]" : "w-1.5 bg-white/[0.16]"
+                    className={`block h-[4px] overflow-hidden rounded-full transition-[width,background-color] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                      isActive ? "w-10 bg-foreground/20" : "w-2 bg-foreground/25"
                     }`}
                   >
                     {isActive && (

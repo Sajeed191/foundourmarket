@@ -22,7 +22,8 @@ export type SecurityEvent =
   | "invalid_visitor_token"
   | "payload_too_large"
   | "tool_limit_reached"
-  | "cooldown_active";
+  | "cooldown_active"
+  | "ai_shopping_unauthenticated";
 
 /** Console-level audit sink; intentionally minimal and PII-free. */
 export function logSecurityEvent(

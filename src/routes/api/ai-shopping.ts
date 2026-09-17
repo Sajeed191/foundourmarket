@@ -10,6 +10,7 @@ import { summarizeShoppingContext, type ShoppingContext } from "@/lib/ai-shoppin
 import type { AiExplanation, AiSource, AiCompare } from "@/lib/ai-shopping/types";
 import { callerKey, tooManyRequests } from "@/lib/security/server-rate-limit";
 import { logSecurityEvent } from "@/lib/security/audit";
+import { requireSignedInUser } from "@/lib/security/require-user.server";
 
 
 type ChatMessage = {
@@ -385,6 +386,18 @@ export const Route = createFileRoute("/api/ai-shopping")({
           promptFingerprint,
           verifyVisitorToken,
         } = await import("@/lib/security/ai-abuse-guard.server");
+
+        // Sign-in required: the assistant spends paid AI credits, so only
+        // authenticated shoppers may reach the gateway. Abuse/rate guards
+        // below still apply on top of this.
+        const authed = await requireSignedInUser(request);
+        if (!authed.ok) {
+          logSecurityEvent("ai_shopping_unauthenticated", { endpoint: "ai-shopping" });
+          return new Response(
+            JSON.stringify({ error: "Please sign in to chat with the shopping assistant." }),
+            { status: 401, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } },
+          );
+        }
 
         const caller = callerKey(request, "ai-shopping");
         const raw = await request.text().catch(() => "");

@@ -6383,6 +6383,192 @@ html[data-theme="light"] [data-pdp-delivery-panel] svg {
   opacity: 1;
 }
 
+/* ---- 21. PDP text clarity — light theme only -----------------------
+   The product route owns a dark palette for the cinematic dark theme. Restore
+   the warm-light semantic ladder at the PDP boundary so every Tailwind
+   semantic text utility resolves correctly without touching dark mode. */
+html[data-theme="light"] [data-product-page] {
+  --background: var(--fom-l-canvas);
+  --foreground: var(--fom-l-ink);
+  --card: var(--fom-l-surface);
+  --card-foreground: var(--fom-l-ink);
+  --popover: var(--fom-l-surface);
+  --popover-foreground: var(--fom-l-ink);
+  --secondary: var(--fom-l-surface-2);
+  --secondary-foreground: var(--fom-l-ink);
+  --muted: var(--fom-l-tint);
+  --muted-foreground: var(--fom-l-ink-soft);
+  --primary: var(--fom-l-ember);
+  --primary-foreground: #ffffff;
+  --accent: var(--fom-l-ember-2);
+  --accent-foreground: #ffffff;
+  --border: var(--fom-l-hairline);
+  --input: var(--fom-l-line-strong);
+  color: var(--fom-l-ink);
+}
+
+/* Product Details: remove dark ambient layers and give copy a stable,
+   high-contrast warm-white reading surface. */
+html[data-theme="light"] [data-product-page] .pdp-details-stage::before,
+html[data-theme="light"] [data-product-page] .pdp-details-stage::after,
+html[data-theme="light"] [data-product-page] .pdp-card::before {
+  content: none;
+}
+html[data-theme="light"] [data-product-page] .pdp-card,
+html[data-theme="light"] [data-product-page] .pdp-card-alt {
+  background: var(--fom-l-surface) !important;
+  border-color: var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-card) !important;
+}
+html[data-theme="light"] [data-product-page] .pdp-spec-label {
+  color: var(--fom-l-ink-soft);
+  opacity: 1;
+}
+html[data-theme="light"] [data-product-page] .pdp-spec-value {
+  color: var(--fom-l-ink-strong);
+  opacity: 1;
+}
+html[data-theme="light"] [data-product-page] .pdp-row-divider {
+  background: linear-gradient(90deg, transparent, var(--fom-l-line-strong) 18%, var(--fom-l-hairline) 50%, var(--fom-l-line-strong) 82%, transparent);
+}
+html[data-theme="light"] [data-product-page] .pdp-reveal {
+  opacity: 1;
+  transform: none;
+  animation: none;
+  will-change: auto;
+}
+html[data-theme="light"] [data-product-page] .pdp-desc-clip {
+  contain: layout paint;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+html[data-theme="light"] [data-product-page] .pdp-desc-clip p,
+html[data-theme="light"] [data-product-page] .pdp-desc-clip li,
+html[data-theme="light"] [data-product-page] .pdp-desc-clip dd {
+  color: var(--fom-l-ink-soft) !important;
+  opacity: 1 !important;
+}
+html[data-theme="light"] [data-product-page] .pdp-desc-clip h3,
+html[data-theme="light"] [data-product-page] .pdp-desc-clip dt {
+  color: var(--fom-l-ink-strong) !important;
+  opacity: 1 !important;
+}
+html[data-theme="light"] [data-product-page] [role="tablist"] {
+  background: var(--fom-l-surface-2) !important;
+  border-color: var(--fom-l-hairline) !important;
+  backdrop-filter: none !important;
+}
+html[data-theme="light"] [data-product-page] [role="tab"]:not([aria-selected="true"]) {
+  background: var(--fom-l-surface) !important;
+  border-color: var(--fom-l-hairline) !important;
+  color: var(--fom-l-ink-soft) !important;
+  backdrop-filter: none !important;
+}
+
+/* Below-the-fold PDP sections live outside the upper product container, so
+   their own markers receive the same readable ink hierarchy. */
+html[data-theme="light"] [data-pdp-compare],
+html[data-theme="light"] [data-pdp-recommendations],
+html[data-theme="light"] [data-product-reviews],
+html[data-theme="light"] [data-product-questions] {
+  color: var(--fom-l-ink);
+}
+html[data-theme="light"] [data-pdp-compare] [class*="text-white/"],
+html[data-theme="light"] [data-pdp-reviews-content] [class*="text-foreground/"],
+html[data-theme="light"] [data-pdp-faq-content] [class*="text-foreground/"] {
+  color: var(--fom-l-ink-soft) !important;
+}
+html[data-theme="light"] [data-pdp-compare] h2,
+html[data-theme="light"] [data-pdp-compare] h3,
+html[data-theme="light"] [data-pdp-reviews-content] h2,
+html[data-theme="light"] [data-pdp-reviews-content] h3,
+html[data-theme="light"] [data-pdp-faq-content] h2,
+html[data-theme="light"] [data-pdp-faq-content] h3,
+html[data-theme="light"] [data-pdp-recommendations] h2 {
+  color: var(--fom-l-ink-strong) !important;
+}
+html[data-theme="light"] [data-pdp-compare] .text-muted-foreground,
+html[data-theme="light"] [data-pdp-reviews-content] .text-muted-foreground,
+html[data-theme="light"] [data-pdp-faq-content] .text-muted-foreground,
+html[data-theme="light"] [data-pdp-recommendations] .text-muted-foreground {
+  color: var(--fom-l-ink-soft) !important;
+  opacity: 1 !important;
+}
+
+/* Dark glass utilities embedded in reviews, FAQ/Q&A and comparison cards are
+   presentation-only. On light they become quiet warm surfaces with visible
+   boundaries; media overlays and primary orange controls keep their own fills. */
+html[data-theme="light"] [data-pdp-compare] [class*="bg-white/"],
+html[data-theme="light"] [data-pdp-reviews-content] [class*="bg-white/"],
+html[data-theme="light"] [data-pdp-faq-content] [class*="bg-white/"] {
+  background-color: var(--fom-l-surface-2) !important;
+}
+html[data-theme="light"] [data-pdp-compare] [class*="border-white/"],
+html[data-theme="light"] [data-pdp-reviews-content] [class*="border-white/"],
+html[data-theme="light"] [data-pdp-faq-content] [class*="border-white/"] {
+  border-color: var(--fom-l-hairline) !important;
+}
+html[data-theme="light"] [data-pdp-compare] [class*="ring-white/"],
+html[data-theme="light"] [data-pdp-reviews-content] [class*="ring-white/"],
+html[data-theme="light"] [data-pdp-faq-content] [class*="ring-white/"] {
+  --tw-ring-color: var(--fom-l-hairline) !important;
+}
+html[data-theme="light"] [data-pdp-compare] [class*="bg-card/"],
+html[data-theme="light"] [data-pdp-reviews-content] [class*="bg-card/"],
+html[data-theme="light"] [data-pdp-faq-content] [class*="bg-card/"] {
+  background-color: var(--fom-l-surface) !important;
+  backdrop-filter: none !important;
+}
+
+/* Preserve deliberate white-on-dark media controls after the light surface
+   normalization above. */
+html[data-theme="light"] [data-pdp-reviews-content] [class*="bg-black/"] [class*="text-white"],
+html[data-theme="light"] [data-pdp-reviews-content].bg-black\/95 [class*="text-white"],
+html[data-theme="light"] [data-pdp-reviews-content] [class*="bg-black/"][class*="text-white"] {
+  color: #ffffff !important;
+}
+
+/* FAQ answers and Q&A bodies must never inherit a faded or disabled state. */
+html[data-theme="light"] [data-pdp-faq-content] li p,
+html[data-theme="light"] [data-pdp-faq-content] li [class*="leading-relaxed"],
+html[data-theme="light"] [data-pdp-faq-content] [class*="whitespace-pre-wrap"] {
+  color: var(--fom-l-ink-soft);
+  opacity: 1;
+}
+html[data-theme="light"] [data-pdp-faq-content] li [class*="font-semibold"],
+html[data-theme="light"] [data-pdp-faq-content] li [class*="font-medium"] {
+  color: var(--fom-l-ink-strong);
+}
+html[data-theme="light"] [data-pdp-faq-content] [class*="bg-gradient-to-b"][class*="to-transparent"] {
+  background-image: none !important;
+  background-color: var(--fom-l-surface) !important;
+}
+
+/* Review copy, metadata and empty states keep a three-step hierarchy. */
+html[data-theme="light"] [data-pdp-reviews-content] [class*="text-foreground/85"],
+html[data-theme="light"] [data-pdp-reviews-content] [class*="text-foreground/90"] {
+  color: var(--fom-l-ink) !important;
+  opacity: 1;
+}
+html[data-theme="light"] [data-pdp-reviews-content] [class*="opacity-70"]:not([data-disabled]) {
+  opacity: 0.82;
+}
+html[data-theme="light"] [data-pdp-reviews-content] input,
+html[data-theme="light"] [data-pdp-reviews-content] textarea,
+html[data-theme="light"] [data-pdp-faq-content] input,
+html[data-theme="light"] [data-pdp-faq-content] textarea,
+html[data-theme="light"] [data-pdp-faq-content] select {
+  color: var(--fom-l-ink-strong) !important;
+  background: var(--fom-l-surface) !important;
+  border-color: var(--fom-l-line-strong) !important;
+}
+
+/* Sticky purchase helper line: readable but subordinate on ivory. */
+html[data-theme="light"] [data-product-cta] [aria-live="polite"] > span {
+  color: var(--fom-l-ink-soft) !important;
+  opacity: 1;
+}
+
 /* ============================================================
    Account ambient background — theme-aware
    Dark keeps the cinematic navy wash + orbs; light/grey stay clean.

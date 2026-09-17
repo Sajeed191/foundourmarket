@@ -93,7 +93,7 @@ export function PDPFaqAndQuestions({ productSlug }: { productSlug: string }) {
   );
 
   return (
-    <section className="max-w-7xl mx-auto pt-2 pb-16">
+    <section data-pdp-faq-content className="max-w-7xl mx-auto pt-2 pb-16">
       {/* Unified premium header — the ONLY heading in this section */}
       <div className="mb-5 sm:mb-6">
         <h2 className="text-[24px] sm:text-[28px] font-display font-semibold tracking-tight text-foreground">

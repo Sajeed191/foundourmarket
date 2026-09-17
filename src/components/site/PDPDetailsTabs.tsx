@@ -367,12 +367,6 @@ const DescriptionPanel = memo(function DescriptionPanel({
           {/* collapsible={false}: this card owns the only expand control. */}
           <ProductDescription description={description} collapsible={false} />
         </div>
-        {overflows && !expanded && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent"
-          />
-        )}
       </div>
       {overflows && (
         <div className="mt-5 flex justify-center">

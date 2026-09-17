@@ -753,7 +753,7 @@ export function ProductReviews({ productSlug, onAggregateChange, productRating, 
   const visible = sorted.slice(0, visibleCount);
 
   return (
-    <section className="max-w-7xl mx-auto pt-2 pb-14 sm:pb-20">
+    <section data-pdp-reviews-content className="max-w-7xl mx-auto pt-2 pb-14 sm:pb-20">
       {/* Trust Score removed: opaque numeric scores reduced buyer confidence. */}
 
 

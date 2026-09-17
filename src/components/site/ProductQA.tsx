@@ -1123,12 +1123,6 @@ function CollapsibleAnswerBody({ body }: { body: string }) {
         >
           {body}
         </p>
-        {overflow && !expanded && (
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background/90 to-transparent"
-          />
-        )}
       </div>
       {overflow && (
         <button

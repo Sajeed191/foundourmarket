@@ -7249,3 +7249,18 @@ html[data-theme="dark"] [data-app-header] nav.glass-strong {
     background: oklch(0.9 0.005 75);
   }
 }
+
+/* "More" trigger keeps the same quiet treatment as the other nav items. */
+@media (min-width: 768px) {
+  html[data-theme="light"] [data-app-header] button[aria-label="More categories"],
+  html[data-theme="grey"] [data-app-header] button[aria-label="More categories"] {
+    background: transparent;
+  }
+  html[data-theme="light"] [data-app-header] button[aria-label="More categories"]:hover,
+  html[data-theme="grey"] [data-app-header] button[aria-label="More categories"]:hover,
+  html[data-theme="light"] [data-app-header] button[aria-label="More categories"][data-state="open"],
+  html[data-theme="grey"] [data-app-header] button[aria-label="More categories"][data-state="open"] {
+    background: oklch(0.955 0.004 75);
+    color: oklch(0.24 0.014 70);
+  }
+}

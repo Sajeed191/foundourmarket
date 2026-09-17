@@ -157,8 +157,8 @@ export function MegaMenu() {
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
-    const GAP = 10;
-    const MORE_W = 96;
+    const GAP = 8;
+    const MORE_W = 84;
 
     const measure = () => {
       if (widths.current) return true;

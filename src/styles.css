@@ -6592,14 +6592,17 @@ html[data-theme="grey"] .account-ambient-decor {
    and give the track a visible warm neutral background. */
 html[data-theme="light"] .fd-progress-dot,
 html[data-theme="grey"] .fd-progress-dot {
-  background: var(--color-accent) !important;
+  background: var(--fom-l-ink-soft) !important;
+  background-image: none !important;
   color: inherit !important;
-  box-shadow: 0 0 12px -2px var(--color-accent) !important;
+  box-shadow: none !important;
+  border: 0 !important;
 }
 
 html[data-theme="light"] span:has(> .fd-progress-dot),
 html[data-theme="grey"] span:has(> .fd-progress-dot) {
-  background: var(--fom-l-hairline) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* ── Sign-in screen: light-theme visibility ───────────────────────── */

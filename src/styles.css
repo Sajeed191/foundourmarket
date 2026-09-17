@@ -6713,9 +6713,9 @@ html[data-theme="grey"] [data-cart-dock] .fom-price-current { color: var(--fom-l
 /* ══ LIGHT HEADER v6 — compact premium marketplace nav (light only) ══ */
 html[data-theme="light"] [data-app-header],
 html[data-theme="grey"] [data-app-header] {
-  padding-left: max(0.625rem, var(--mobile-safe-left));
-  padding-right: max(0.625rem, var(--mobile-safe-left));
-  padding-top: calc(var(--mobile-safe-top) + 0.35rem);
+  padding-left: max(0.75rem, var(--mobile-safe-left));
+  padding-right: max(0.75rem, var(--mobile-safe-left));
+  padding-top: calc(var(--mobile-safe-top) + 0.6rem);
 }
 html[data-theme="light"] [data-app-header] nav,
 html[data-theme="grey"] [data-app-header] nav {

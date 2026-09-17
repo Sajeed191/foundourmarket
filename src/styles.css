@@ -6597,3 +6597,29 @@ html[data-theme="grey"] .account-ambient-decor {
 [data-theme="light"] .fd-progress-dot.fd-progress-fill {
   background: var(--fom-l-ink-strong) !important;
 }
+
+/* ── Sign-in screen: light-theme visibility ───────────────────────── */
+html[data-theme="light"] .auth-shell,
+html[data-theme="grey"] .auth-shell {
+  background: var(--fom-l-canvas) !important;
+}
+html[data-theme="light"] .auth-orbs,
+html[data-theme="grey"] .auth-orbs { opacity: 0.35; }
+html[data-theme="light"] .auth-shell [class~="text-white"],
+html[data-theme="grey"] .auth-shell [class~="text-white"] { color: var(--fom-l-ink-strong); }
+html[data-theme="light"] .auth-shell h1,
+html[data-theme="grey"] .auth-shell h1 { color: var(--fom-l-ink-strong); }
+html[data-theme="light"] .auth-shell [class*="text-white/"],
+html[data-theme="grey"] .auth-shell [class*="text-white/"] { color: var(--fom-l-ink-soft); }
+html[data-theme="light"] .auth-shell a[class*="text-white/"],
+html[data-theme="grey"] .auth-shell a[class*="text-white/"] { color: var(--fom-l-ink-soft); }
+html[data-theme="light"] .auth-shell svg[class*="text-white/"],
+html[data-theme="grey"] .auth-shell svg[class*="text-white/"] { color: var(--fom-l-ink-soft); }
+html[data-theme="light"] .auth-shell [class*="font-mono"][style*="FF9F43"],
+html[data-theme="grey"] .auth-shell [class*="font-mono"][style*="FF9F43"] { color: var(--fom-l-ember) !important; }
+html[data-theme="light"] .auth-shell [class~="text-white/55"],
+html[data-theme="light"] .auth-shell [class~="text-white/45"],
+html[data-theme="light"] .auth-shell [class~="text-white/35"],
+html[data-theme="grey"] .auth-shell [class~="text-white/55"],
+html[data-theme="grey"] .auth-shell [class~="text-white/45"],
+html[data-theme="grey"] .auth-shell [class~="text-white/35"] { color: var(--fom-l-ink-soft); }

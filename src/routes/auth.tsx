@@ -202,11 +202,11 @@ function AuthPage() {
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center px-5 py-6 sm:py-10 overflow-hidden"
+      className="auth-shell relative min-h-screen flex items-center justify-center px-5 py-6 sm:py-10 overflow-hidden"
       style={{ background: "#050816" }}
     >
       {/* Ambient orbs */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+      <div aria-hidden className="auth-orbs pointer-events-none fixed inset-0 -z-10">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.22 }}

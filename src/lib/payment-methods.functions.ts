@@ -69,7 +69,7 @@ export const listSavedPaymentMethods = createServerFn({ method: "GET" })
     const { supabase } = context as Ctx;
     const { data, error } = await supabase
       .from("saved_payment_methods")
-      .select("*")
+      .select("id,provider,payment_type,brand,last4,expiry_month,expiry_year,upi_vpa,is_default,created_at,updated_at")
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) throw new Error("Could not load payment methods.");

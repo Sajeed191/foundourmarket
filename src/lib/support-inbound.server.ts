@@ -226,18 +226,34 @@ async function storeAttachments(
 ): Promise<string[]> {
   if (!attachments?.length) return []
   const stored: string[] = []
+  const extensionForType: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'application/pdf': 'pdf',
+  }
+  const hasExpectedSignature = (buf: Buffer, type: string) => {
+    if (type === 'image/jpeg') return buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff
+    if (type === 'image/png') return buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+    if (type === 'image/webp') return buf.length >= 12 && buf.subarray(0, 4).toString('ascii') === 'RIFF' && buf.subarray(8, 12).toString('ascii') === 'WEBP'
+    if (type === 'application/pdf') return buf.length >= 5 && buf.subarray(0, 5).toString('ascii') === '%PDF-'
+    return false
+  }
   for (const att of attachments) {
     const type = (att.contentType || '').toLowerCase().split(';')[0].trim()
     if (!ALLOWED_TYPES.includes(type)) continue
     if (!att.contentBase64) continue
     let buf: Buffer
     try {
-      buf = Buffer.from(att.contentBase64, 'base64')
+      const normalized = att.contentBase64.replace(/\s/g, '')
+      if (!normalized || normalized.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(normalized)) continue
+      buf = Buffer.from(normalized, 'base64')
     } catch {
       continue
     }
-    if (buf.byteLength === 0 || buf.byteLength > MAX_BYTES) continue
-    const ext = att.filename?.split('.').pop()?.toLowerCase() || (type === 'application/pdf' ? 'pdf' : 'png')
+    if (buf.byteLength === 0 || buf.byteLength > MAX_BYTES || !hasExpectedSignature(buf, type)) continue
+    const ext = extensionForType[type]
+    if (!ext) continue
     const path = `inbound/${ticketId}/${crypto.randomUUID()}.${ext}`
     const { error } = await supabaseAdmin.storage
       .from('support-attachments')

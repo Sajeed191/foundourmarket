@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 /**
  * Email open tracking pixel.
  *
- * Embedded in campaign emails as <img src=".../api/public/track/open?c=<campaignId>&m=<messageId>&e=<email>">.
+ * Embedded in campaign emails with opaque campaign/message identifiers only.
  * Logs a real `open` event into `campaign_events` and always returns a
  * transparent 1x1 GIF (never blocks rendering, never leaks data).
  */
@@ -38,7 +38,6 @@ export const Route = createFileRoute("/api/public/track/open")({
           const url = new URL(request.url);
           const campaignId = url.searchParams.get("c");
           const messageId = url.searchParams.get("m");
-          const email = url.searchParams.get("e");
 
           if (campaignId && UUID_RE.test(campaignId)) {
             const ip =
@@ -52,14 +51,14 @@ export const Route = createFileRoute("/api/public/track/open")({
             await supabaseAdmin.from("campaign_events").insert({
               campaign_id: campaignId,
               event_type: "open",
-              recipient_email: email ? email.slice(0, 320) : null,
+              recipient_email: null,
               message_id: messageId ? messageId.slice(0, 200) : null,
               user_agent: (request.headers.get("user-agent") ?? "").slice(0, 400),
               ip_hash: ipHash,
             });
           }
-        } catch (err) {
-          console.error("track/open failed", err);
+        } catch {
+          console.error("track/open failed");
         }
         return pixelResponse();
       },

@@ -8,6 +8,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 
+const MAX_REQUEST_BYTES = 15 * 1024 * 1024
+
 const attachmentSchema = z.object({
   filename: z.string().max(500).optional(),
   contentType: z.string().max(200).optional(),
@@ -39,6 +41,13 @@ export const Route = createFileRoute('/api/public/support/inbound-email')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const declaredLength = Number(request.headers.get('content-length') || '0')
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BYTES) {
+          return new Response(JSON.stringify({ ok: false, error: 'payload_too_large' }), {
+            status: 413,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
         const secret = process.env.SUPPORT_INBOUND_SECRET
         if (!secret) {
           return new Response(JSON.stringify({ ok: false, error: 'inbound_not_configured' }), {
@@ -59,7 +68,14 @@ export const Route = createFileRoute('/api/public/support/inbound-email')({
 
         let payload: unknown
         try {
-          payload = await request.json()
+          const rawBody = await request.text()
+          if (Buffer.byteLength(rawBody, 'utf8') > MAX_REQUEST_BYTES) {
+            return new Response(JSON.stringify({ ok: false, error: 'payload_too_large' }), {
+              status: 413,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          }
+          payload = JSON.parse(rawBody)
         } catch {
           return new Response(JSON.stringify({ ok: false, error: 'invalid_json' }), {
             status: 400,
@@ -69,7 +85,7 @@ export const Route = createFileRoute('/api/public/support/inbound-email')({
 
         const parsed = emailSchema.safeParse(payload)
         if (!parsed.success) {
-          return new Response(JSON.stringify({ ok: false, error: 'invalid_payload', issues: parsed.error.issues.slice(0, 5) }), {
+          return new Response(JSON.stringify({ ok: false, error: 'invalid_payload' }), {
             status: 400,
             headers: { 'Content-Type': 'application/json' },
           })

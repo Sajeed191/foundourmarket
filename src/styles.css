@@ -6586,3 +6586,14 @@ html[data-theme="light"] .account-ambient-decor,
 html[data-theme="grey"] .account-ambient-decor {
   display: none;
 }
+
+/* ---- Light theme only — flash-deal progress dots stay neutral (no orange) ----
+   Dark theme keeps the warm accent fill + glow; light renders a quiet ink bar. */
+[data-theme="light"] .fd-progress-dot {
+  background: var(--fom-l-ink-soft) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="light"] .fd-progress-dot.fd-progress-fill {
+  background: var(--fom-l-ink-strong) !important;
+}

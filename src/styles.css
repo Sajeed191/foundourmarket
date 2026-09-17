@@ -6737,3 +6737,19 @@ html[data-theme="grey"] [data-app-header] nav span[aria-hidden].w-px {
   background: var(--fom-l-hairline) !important;
   height: 1.25rem;
 }
+/* Secondary header controls: neutral, not accent-tinted */
+html[data-theme="light"] [data-app-header] button[aria-label],
+html[data-theme="light"] [data-app-header] a[aria-label]:not([href="/cart"]),
+html[data-theme="grey"] [data-app-header] button[aria-label],
+html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]) {
+  background: #F4F2EE !important;
+  background-image: none !important;
+  border: 1px solid var(--fom-l-hairline) !important;
+  box-shadow: none !important;
+}
+html[data-theme="light"] [data-app-header] button[aria-label]:hover,
+html[data-theme="light"] [data-app-header] a[aria-label]:not([href="/cart"]):hover,
+html[data-theme="grey"] [data-app-header] button[aria-label]:hover,
+html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]):hover {
+  background: #EDEAE4 !important;
+}

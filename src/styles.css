@@ -6989,7 +6989,7 @@ html[data-theme="light"] body {
 /* Generic accent utilities are commonly used for badges, icon tiles and
    indicators. Keep those compact treatments quiet instead of promoting every
    accent-bearing element to a glossy primary CTA. */
-html[data-theme="light"] .bg-accent:not(.fd-progress-dot):not(.hero-shop-now) {
+html[data-theme="light"] .bg-accent:not(.fd-progress-dot):not(.hero-shop-now):not([href="/cart"]) {
   background: color-mix(in oklab, var(--fom-l-ember-2) 8%, var(--fom-l-surface)) !important;
   background-image: none !important;
   color: var(--fom-l-ember-ink) !important;

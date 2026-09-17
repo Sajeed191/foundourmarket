@@ -114,6 +114,11 @@ const MENU: MainCat[] = [
   },
 ];
 
+/** Concise desktop label, e.g. "Beauty & Personal Care" -> "Beauty". */
+function shortLabel(name: string) {
+  return name.split(" & ")[0].split(" ")[0];
+}
+
 /** Premium desktop mega-menu. Desktop-only; mobile uses the existing drawer. */
 export function MegaMenu() {
   const [active, setActive] = useState<string | null>(null);

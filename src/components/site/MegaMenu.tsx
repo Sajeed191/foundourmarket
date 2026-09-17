@@ -1,10 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ChevronDown, Smartphone, Home as HomeIcon, Gem, HeartPulse,
-  Car, Tent, PawPrint, Baby, ArrowRight, type LucideIcon,
+  Car, Tent, PawPrint, Baby, ArrowRight, MoreHorizontal, type LucideIcon,
 } from "lucide-react";
 import { useAllCategories } from "@/lib/use-categories";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Sub = { name: string; main: string; sub: string };
 type MainCat = {

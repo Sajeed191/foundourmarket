@@ -137,13 +137,80 @@ export function MegaMenu() {
     closeTimer.current = setTimeout(() => setActive(null), 160);
   };
 
+  // --- Overflow control -----------------------------------------------------
+  // Categories are measured once at their natural width, then the largest
+  // prefix that fits the available track is shown; the rest collapse into the
+  // "More" menu so the header can never overflow or clip the right-side actions.
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const shopRef = useRef<HTMLAnchorElement | null>(null);
+  const dealsRef = useRef<HTMLAnchorElement | null>(null);
+  const moreRef = useRef<HTMLDivElement | null>(null);
+  const widths = useRef<number[] | null>(null);
+  const [visible, setVisible] = useState(MENU.length);
+
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const GAP = 10;
+    const MORE_W = 96;
+
+    const measure = () => {
+      if (widths.current) return true;
+      const ws = itemRefs.current.map((el) => el?.offsetWidth ?? 0);
+      if (ws.length !== MENU.length || ws.some((w) => w === 0)) return false;
+      widths.current = ws;
+      return true;
+    };
+
+    const compute = () => {
+      if (!measure()) return;
+      const track = wrap.clientWidth;
+      if (!track) return;
+      const fixed =
+        (shopRef.current?.offsetWidth ?? 0) + (dealsRef.current?.offsetWidth ?? 0) + GAP * 3;
+      let used = fixed;
+      let fit = 0;
+      const ws = widths.current!;
+      for (let i = 0; i < ws.length; i++) {
+        const next = used + ws[i] + GAP;
+        // Reserve room for the "More" trigger whenever items remain.
+        const reserve = i === ws.length - 1 ? 0 : MORE_W;
+        if (next + reserve > track) break;
+        used = next;
+        fit++;
+      }
+      setVisible(Math.max(fit, 0));
+    };
+
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, []);
+
+  // Re-measure after fonts settle so the first paint width is not stale.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      widths.current = null;
+      window.dispatchEvent(new Event("resize"));
+    }, 400);
+    return () => clearTimeout(t);
+  }, []);
+
+  const hidden = MENU.slice(visible);
+
   return (
-    <div className="hidden md:flex flex-1 min-w-0 overflow-hidden justify-center items-center gap-1.5 lg:gap-2.5 text-[13px] lg:text-[14px] font-medium text-muted-foreground [mask-image:linear-gradient(to_right,transparent,black_2.5rem,black_calc(100%-2.5rem),transparent)]">
+    <div
+      ref={wrapRef}
+      className="hidden md:flex flex-1 min-w-0 justify-center items-center gap-1.5 lg:gap-2.5 text-[13px] lg:text-[14px] font-medium text-muted-foreground"
+    >
       <Link
+        ref={shopRef}
         to="/"
         activeOptions={{ exact: true }}
-        activeProps={{ className: "text-foreground bg-white/5" }}
-        className="px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap"
+        activeProps={{ className: "nav-link-active text-foreground bg-white/5" }}
+        className="nav-link-desktop px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
       >
         Shop
       </Link>

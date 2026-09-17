@@ -4744,6 +4744,84 @@ textarea.editor-deeplink-target {
   box-shadow: 0 2px 10px -6px color-mix(in oklab, var(--fom-ink) 35%, transparent);
 }
 
+/* =====================================================================
+   HERO SHOP NOW — premium treatment, light & grey themes ONLY.
+   Dark theme keeps its original button. Depth: gradient, sheen, glow.
+   ===================================================================== */
+[data-theme="light"] a.hero-shop-now,
+[data-theme="grey"] a.hero-shop-now {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-image:
+    radial-gradient(120% 140% at 15% 0%, color-mix(in oklab, white 26%, transparent), transparent 52%),
+    linear-gradient(135deg, var(--accent) 0%, color-mix(in oklab, var(--accent) 78%, black) 100%);
+  border: 1px solid color-mix(in oklab, var(--accent) 88%, black 12%);
+  box-shadow:
+    0 14px 34px -14px color-mix(in oklab, var(--accent) 80%, transparent),
+    0 3px 10px -5px color-mix(in oklab, var(--accent) 50%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 32%, transparent),
+    inset 0 -2px 6px color-mix(in oklab, black 14%, transparent);
+  transition:
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms ease-out;
+}
+/* Sheen sweep on hover */
+[data-theme="light"] a.hero-shop-now::before,
+[data-theme="grey"] a.hero-shop-now::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(115deg, transparent 32%, color-mix(in oklab, white 36%, transparent) 50%, transparent 68%);
+  transform: translateX(-130%);
+  transition: transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+[data-theme="light"] a.hero-shop-now > *,
+[data-theme="grey"] a.hero-shop-now > * { position: relative; z-index: 2; }
+[data-theme="light"] a.hero-shop-now:hover,
+[data-theme="grey"] a.hero-shop-now:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 20px 44px -14px color-mix(in oklab, var(--accent) 92%, transparent),
+    0 4px 12px -5px color-mix(in oklab, var(--accent) 55%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 36%, transparent),
+    inset 0 -2px 6px color-mix(in oklab, black 14%, transparent);
+}
+[data-theme="light"] a.hero-shop-now:hover::before,
+[data-theme="grey"] a.hero-shop-now:hover::before { transform: translateX(130%); }
+[data-theme="light"] a.hero-shop-now:active,
+[data-theme="grey"] a.hero-shop-now:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    0 8px 20px -12px color-mix(in oklab, var(--accent) 70%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 24%, transparent);
+}
+/* Grey theme: slightly softer depth to sit on its neutral-grey canvas */
+[data-theme="grey"] a.hero-shop-now {
+  box-shadow:
+    0 10px 26px -14px color-mix(in oklab, var(--accent) 68%, transparent),
+    0 2px 8px -5px color-mix(in oklab, var(--fom-ink, #22242d) 30%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 30%, transparent),
+    inset 0 -2px 6px color-mix(in oklab, black 12%, transparent);
+}
+[data-theme="grey"] a.hero-shop-now:hover {
+  box-shadow:
+    0 16px 36px -14px color-mix(in oklab, var(--accent) 82%, transparent),
+    0 3px 10px -5px color-mix(in oklab, var(--fom-ink, #22242d) 30%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 34%, transparent),
+    inset 0 -2px 6px color-mix(in oklab, black 12%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="light"] a.hero-shop-now,
+  [data-theme="grey"] a.hero-shop-now { transition: none; }
+  [data-theme="light"] a.hero-shop-now:hover,
+  [data-theme="grey"] a.hero-shop-now:hover { transform: none; }
+  [data-theme="light"] a.hero-shop-now::before,
+  [data-theme="grey"] a.hero-shop-now::before { transition: none; }
+}
+
 /* Explore — filled glass */
 .fom-cta-explore {
   color: var(--foreground);
@@ -6911,7 +6989,7 @@ html[data-theme="light"] body {
 /* Generic accent utilities are commonly used for badges, icon tiles and
    indicators. Keep those compact treatments quiet instead of promoting every
    accent-bearing element to a glossy primary CTA. */
-html[data-theme="light"] .bg-accent:not(.fd-progress-dot) {
+html[data-theme="light"] .bg-accent:not(.fd-progress-dot):not(.hero-shop-now) {
   background: color-mix(in oklab, var(--fom-l-ember-2) 8%, var(--fom-l-surface)) !important;
   background-image: none !important;
   color: var(--fom-l-ember-ink) !important;
@@ -6938,6 +7016,36 @@ html[data-theme="light"] :is(button, a)[data-buy-now] svg,
 html[data-theme="light"] :is(button, a)[data-checkout-action] svg,
 html[data-theme="light"] [data-app-header] a[href="/cart"] svg {
   color: #ffffff !important;
+}
+
+/* Hero "Shop Now" — premium gradient, sheen sweep and glow.
+   Light & grey themes only; dark keeps its original button. */
+html[data-theme="light"] a.hero-shop-now,
+[data-theme="grey"] a.hero-shop-now {
+  background:
+    radial-gradient(120% 140% at 15% 0%, rgba(255, 255, 255, 0.26), transparent 52%),
+    linear-gradient(135deg, var(--accent) 0%, color-mix(in oklab, var(--accent) 78%, black) 100%) !important;
+  color: #ffffff !important;
+  border-color: color-mix(in oklab, var(--accent) 88%, black 12%) !important;
+  box-shadow:
+    0 14px 34px -14px color-mix(in oklab, var(--accent) 80%, transparent),
+    0 3px 10px -5px color-mix(in oklab, var(--accent) 50%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.14) !important;
+}
+html[data-theme="light"] a.hero-shop-now:hover,
+[data-theme="grey"] a.hero-shop-now:hover {
+  box-shadow:
+    0 20px 44px -14px color-mix(in oklab, var(--accent) 92%, transparent),
+    0 4px 12px -5px color-mix(in oklab, var(--accent) 55%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.14) !important;
+}
+html[data-theme="light"] a.hero-shop-now:active,
+[data-theme="grey"] a.hero-shop-now:active {
+  box-shadow:
+    0 8px 20px -12px color-mix(in oklab, var(--accent) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
 }
 
 /* Add to Cart remains the deliberate light secondary action on the PDP. */

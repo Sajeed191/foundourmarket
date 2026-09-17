@@ -401,7 +401,7 @@ function CommandCenter({ r, slug }: { r: Record<string, any>; slug: string }) {
             <ActionBtn icon={<Send className="size-3.5" />} label="Publish" busy={busy === "Publish"} onClick={() => setStatusAction("published", "Publish")} />
           )}
           <ActionBtn icon={<Archive className="size-3.5" />} label="Archive" busy={busy === "Archive"} onClick={() => setStatusAction("archived", "Archive")} />
-          <Link to="/products/$slug" params={{ slug }} target="_blank"
+          <Link to="/products/$slug" params={{ slug }} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3.5 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-white/20">
             <ExternalLink className="size-3.5" /> View Storefront
           </Link>

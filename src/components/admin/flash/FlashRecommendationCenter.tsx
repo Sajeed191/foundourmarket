@@ -79,7 +79,7 @@ export function FlashRecommendationCenter({
                 </ul>
 
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Link to="/products/$slug" params={{ slug: r.product.slug }} target="_blank"
+                  <Link to="/products/$slug" params={{ slug: r.product.slug }} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 min-h-11 text-[10px] font-mono uppercase tracking-widest hover:bg-white/5">
                     <Eye className="size-3" /> Preview
                   </Link>

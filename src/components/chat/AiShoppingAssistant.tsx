@@ -172,12 +172,23 @@ export function AiShoppingAssistant() {
         { page: shoppingContext.page, route: shoppingContext.route ?? null },
         { chars: trimmed.length },
       );
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        throw new Error("Please sign in to chat with the shopping assistant.");
+      }
       const res = await fetch("/api/ai-shopping", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ messages: payload, context: shoppingContext }),
         signal: ac.signal,
       });
+      if (res.status === 401) {
+        throw new Error("Please sign in to chat with the shopping assistant.");
+      }
       if (!res.ok || !res.body) {
         const errText = await res.text().catch(() => "");
         throw new Error(errText || `Request failed (${res.status})`);

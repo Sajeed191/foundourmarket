@@ -6689,13 +6689,19 @@ html[data-theme="grey"] [data-app-header] {
 }
 html[data-theme="light"] [data-app-header] nav,
 html[data-theme="grey"] [data-app-header] nav {
-  background: #FFFFFF !important;
-  background-image: none !important;
+  /* Match the light-theme bottom nav surface: same white gradient, hairline
+     border and soft elevation — never a dark/black bar in light theme. */
+  background: linear-gradient(180deg, oklch(1 0 0), oklch(0.988 0.002 258)) !important;
+  background-image: linear-gradient(180deg, oklch(1 0 0), oklch(0.988 0.002 258)) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   border: 1px solid var(--fom-l-hairline) !important;
   border-radius: 18px !important;
-  box-shadow: 0 1px 2px rgba(32, 36, 45, 0.05), 0 8px 22px -18px rgba(32, 36, 45, 0.35) !important;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.85),
+    0 1px 2px oklch(0.24 0.02 262 / 0.04),
+    0 16px 40px -20px oklch(0.24 0.02 262 / 0.22),
+    0 5px 14px -10px oklch(0.24 0.02 262 / 0.12) !important;
   --tw-ring-shadow: 0 0 #0000 !important;
 }
 html[data-theme="light"] [data-app-header][data-scroll-mode] nav,
@@ -6810,47 +6816,10 @@ html[data-theme="grey"] [data-app-header] a[aria-label]:not([href="/cart"]):hove
   html[data-theme="grey"] [data-app-header] a[href="/"] > span:first-child { width: 30px; height: 30px; }
 }
 
-/* Light theme header: mirror the established dark navigation language while
-   keeping the rest of the light page untouched. */
-html[data-theme="light"] body [data-app-header] nav.glass-strong {
-  --fom-nav-dark-top: oklch(0.235 0.012 255 / 0.99);
-  --fom-nav-dark-bottom: oklch(0.165 0.009 255 / 0.99);
-  background-color: oklch(0.165 0.009 255) !important;
-  background-image: linear-gradient(180deg, var(--fom-nav-dark-top), var(--fom-nav-dark-bottom)) !important;
-  border-color: oklch(0.69 0.185 55 / 0.22) !important;
-  border-radius: 26px !important;
-  box-shadow: 0 12px 30px -18px oklch(0.12 0.01 255 / 0.75), inset 0 1px 0 oklch(1 0 0 / 0.08) !important;
-}
-html[data-theme="light"] [data-app-header] a[href="/"] {
-  color: oklch(0.98 0.003 90) !important;
-}
-html[data-theme="light"] [data-app-header] a[href="/"] > span:first-child {
-  background: oklch(0.115 0.008 255 / 0.92) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 0 18px -7px var(--color-accent), inset 0 1px 0 oklch(1 0 0 / 0.12) !important;
-  --tw-ring-color: oklch(0.69 0.185 55 / 0.4) !important;
-}
-html[data-theme="light"] [data-app-header] a[href="/"] > span:first-child > span[aria-hidden] {
-  display: block !important;
-}
-html[data-theme="light"] [data-app-header] a[href="/"] .font-display {
-  color: oklch(0.98 0.003 90) !important;
-}
-html[data-theme="light"] [data-app-header] button[aria-label],
-html[data-theme="light"] [data-app-header] a[aria-label]:not([href="/cart"]) {
-  color: oklch(0.9 0.008 90) !important;
-  background: oklch(1 0 0 / 0.055) !important;
-  border-color: oklch(1 0 0 / 0.09) !important;
-}
-html[data-theme="light"] [data-app-header] button[aria-label]:hover,
-html[data-theme="light"] [data-app-header] a[aria-label]:not([href="/cart"]):hover {
-  color: oklch(0.98 0.003 90) !important;
-  background: oklch(0.69 0.185 55 / 0.16) !important;
-  border-color: oklch(0.69 0.185 55 / 0.28) !important;
-}
-html[data-theme="light"] [data-app-header] nav span[aria-hidden].w-px {
-  background: linear-gradient(to bottom, transparent, oklch(1 0 0 / 0.15), transparent) !important;
-}
+/* Light theme header: keep the WHITE surface shared with the light bottom nav.
+   The previous dark-charcoal mirror of the dark navigation is intentionally
+   removed — light theme uses white nav surfaces only. Dark theme is untouched. */
+
 
 /* ══ LIGHT THEME v7 — restrained FoundOurMarket accent language ═══════
    Orange is an accent, not a surface. This final light-only layer corrects

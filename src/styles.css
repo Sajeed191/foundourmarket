@@ -6587,22 +6587,34 @@ html[data-theme="grey"] .account-ambient-decor {
   display: none;
 }
 
-/* ---- Flash-deal slider indicator: compact charcoal track ----
-   The generic [role="tablist"] light rules wrap this indicator in a pale outlined
-   pill. Scope it out of that treatment and give it a premium dark-charcoal track
-   with a dark-orange brand pill for the active slide in every theme. */
+/* ---- Flash-deal slider indicator: theme-matched compact track ---- */
 html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"],
 html[data-theme="dark"] [role="tablist"][aria-label="Flash deal slides"],
 html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] {
   display: flex !important;
   width: fit-content !important;
   margin-inline: auto !important;
-  background: oklch(0.23 0.008 260) !important;
-  border: 1px solid oklch(0.32 0.01 260) !important;
   border-radius: 999px !important;
   padding: 6px 9px !important;
   gap: 6px !important;
-  box-shadow: 0 8px 18px -12px oklch(0 0 0 / 0.4) !important;
+}
+
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] {
+  background: oklch(1 0 0) !important;
+  border: 1px solid oklch(0.88 0.01 80) !important;
+  box-shadow: 0 8px 18px -12px oklch(0.25 0.01 65 / 0.28) !important;
+}
+
+html[data-theme="dark"] [role="tablist"][aria-label="Flash deal slides"] {
+  background: oklch(0.18 0.008 260) !important;
+  border: 1px solid oklch(0.32 0.012 260) !important;
+  box-shadow: 0 8px 20px -12px oklch(0 0 0 / 0.72) !important;
+}
+
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] {
+  background: oklch(0.91 0.005 265) !important;
+  border: 1px solid oklch(0.79 0.008 265) !important;
+  box-shadow: 0 8px 18px -12px oklch(0.22 0.008 265 / 0.3) !important;
 }
 
 /* Buttons: strip the light-theme active-tab orange gradient box entirely. */
@@ -6623,27 +6635,38 @@ html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] span:ha
   border: 0 !important;
 }
 
-/* Inactive slides: subtle gray/charcoal dots (direct segment span only). */
-html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)),
-html[data-theme="dark"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)),
-html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)) {
-  background: oklch(0.72 0.006 260 / 0.55) !important;
+/* Inactive slides retain clear but quiet contrast against each theme. */
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)) {
+  background: oklch(0.6 0.008 265 / 0.62) !important;
 }
 
-/* Active slide: the fill window is a slightly lighter charcoal recess. */
-html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot),
-html[data-theme="dark"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot),
-html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot) {
+html[data-theme="dark"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)) {
+  background: oklch(0.64 0.008 260 / 0.58) !important;
+}
+
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] [role="tab"] > span:not(:has(> .fd-progress-dot)) {
+  background: oklch(0.5 0.01 265 / 0.58) !important;
+}
+
+html[data-theme="light"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot) {
+  background: oklch(0.91 0.018 70) !important;
+}
+
+html[data-theme="dark"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot) {
   background: oklch(0.34 0.01 260) !important;
 }
 
-/* Active indicator: dark-orange brand pill filling the autoplay window. */
+html[data-theme="grey"] [role="tablist"][aria-label="Flash deal slides"] span:has(> .fd-progress-dot) {
+  background: oklch(0.8 0.012 265) !important;
+}
+
+/* The active bar uses each theme's own brand-accent token. */
 html[data-theme="light"] .fd-progress-dot,
 html[data-theme="dark"] .fd-progress-dot,
 html[data-theme="grey"] .fd-progress-dot {
-  background: linear-gradient(180deg, var(--fom-l-ember-2), var(--fom-l-ember)) !important;
-  background-image: linear-gradient(180deg, var(--fom-l-ember-2), var(--fom-l-ember)) !important;
-  box-shadow: 0 1px 4px -1px oklch(0.55 0.16 45 / 0.5) !important;
+  background: var(--accent) !important;
+  background-image: none !important;
+  box-shadow: 0 1px 4px -1px color-mix(in oklch, var(--accent) 58%, transparent) !important;
   border: 0 !important;
 }
 

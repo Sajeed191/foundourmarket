@@ -6715,7 +6715,14 @@ html[data-theme="light"] [data-app-header],
 html[data-theme="grey"] [data-app-header] {
   padding-left: max(0.75rem, var(--mobile-safe-left));
   padding-right: max(0.75rem, var(--mobile-safe-left));
-  padding-top: calc(var(--mobile-safe-top) + 0.6rem);
+  /* Same outer rhythm as the dark nav: 0.4rem below sm, 0.6rem from sm up */
+  padding-top: calc(var(--mobile-safe-top) + 0.4rem);
+}
+@media (min-width: 640px) {
+  html[data-theme="light"] [data-app-header],
+  html[data-theme="grey"] [data-app-header] {
+    padding-top: calc(var(--mobile-safe-top) + 0.6rem);
+  }
 }
 html[data-theme="light"] [data-app-header] nav,
 html[data-theme="grey"] [data-app-header] nav {

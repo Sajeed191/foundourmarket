@@ -6880,3 +6880,40 @@ html[data-theme="light"] button[aria-label="Open search"] > span:last-child {
 html[data-theme="light"] ::selection {
   background: color-mix(in oklab, var(--fom-l-ember-2) 14%, transparent);
 }
+
+/* Large cinematic blooms belong to the dark presentation. Light pages keep
+   their actual canvas visible instead of carrying oversized colored halos. */
+html[data-theme="light"] .orb,
+html[data-theme="light"] [aria-hidden].pointer-events-none [class*="blur"][style*="--gradient-ember"],
+html[data-theme="light"] [aria-hidden].pointer-events-none [class*="blur"][style*="radial-gradient(circle, oklch(0.74"],
+html[data-theme="light"] [aria-hidden].pointer-events-none [class*="blur"][style*="radial-gradient(circle, oklch(0.78"] {
+  display: none !important;
+}
+
+/* Category tiles stay neutral; orange survives only in the compact icon and
+   label, never as a card-sized glow or orange perimeter. */
+html[data-theme="light"] #categories a {
+  border-color: var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-card) !important;
+}
+html[data-theme="light"] #categories a:hover {
+  border-color: var(--fom-l-line-strong) !important;
+  box-shadow: var(--fom-sh-card-hover) !important;
+}
+html[data-theme="light"] #categories a [style*="--gradient-ember"] {
+  display: none !important;
+}
+html[data-theme="light"] #categories a [class*="bg-accent/"] {
+  background: var(--fom-l-surface) !important;
+  color: var(--fom-l-ember-ink) !important;
+  border-color: var(--fom-l-hairline) !important;
+  box-shadow: var(--fom-sh-sm) !important;
+}
+
+/* PDP section marker: a short, crisp brand line with no gradient or glow. */
+html[data-theme="light"] [data-product-page] .pdp-accent-line {
+  width: 2px;
+  height: 22px;
+  background: var(--fom-l-ember-2) !important;
+  box-shadow: none !important;
+}

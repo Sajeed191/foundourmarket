@@ -6588,8 +6588,15 @@ html[data-theme="grey"] .account-ambient-decor {
 }
 
 /* ---- Light theme only — flash-deal progress indicator matches dark theme ----
-   Keep the warm accent fill; give the track a visible warm neutral background
-   so the active bar reads as a progress pill, not a floating orange box. */
+   Undo the light-theme button gradient that leaks onto the dot via .bg-accent,
+   and give the track a visible warm neutral background. */
+html[data-theme="light"] .fd-progress-dot,
+html[data-theme="grey"] .fd-progress-dot {
+  background: var(--color-accent) !important;
+  color: inherit !important;
+  box-shadow: 0 0 12px -2px var(--color-accent) !important;
+}
+
 html[data-theme="light"] span:has(> .fd-progress-dot),
 html[data-theme="grey"] span:has(> .fd-progress-dot) {
   background: var(--fom-l-hairline) !important;

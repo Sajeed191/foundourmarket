@@ -1,10 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ChevronDown, Smartphone, Home as HomeIcon, Gem, HeartPulse,
-  Car, Tent, PawPrint, Baby, ArrowRight, type LucideIcon,
+  Car, Tent, PawPrint, Baby, ArrowRight, MoreHorizontal, type LucideIcon,
 } from "lucide-react";
 import { useAllCategories } from "@/lib/use-categories";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Sub = { name: string; main: string; sub: string };
 type MainCat = {
@@ -111,6 +114,11 @@ const MENU: MainCat[] = [
   },
 ];
 
+/** Concise desktop label, e.g. "Beauty & Personal Care" -> "Beauty". */
+function shortLabel(name: string) {
+  return name.split(" & ")[0].split(" ")[0];
+}
+
 /** Premium desktop mega-menu. Desktop-only; mobile uses the existing drawer. */
 export function MegaMenu() {
   const [active, setActive] = useState<string | null>(null);
@@ -134,37 +142,116 @@ export function MegaMenu() {
     closeTimer.current = setTimeout(() => setActive(null), 160);
   };
 
+  // --- Overflow control -----------------------------------------------------
+  // Categories are measured once at their natural width, then the largest
+  // prefix that fits the available track is shown; the rest collapse into the
+  // "More" menu so the header can never overflow or clip the right-side actions.
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const shopRef = useRef<HTMLAnchorElement | null>(null);
+  const dealsRef = useRef<HTMLAnchorElement | null>(null);
+  const moreRef = useRef<HTMLDivElement | null>(null);
+  const widths = useRef<number[] | null>(null);
+  const [visible, setVisible] = useState(MENU.length);
+
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const GAP = 8;
+    const MORE_W = 84;
+
+    const measure = () => {
+      if (widths.current) return true;
+      const ws = itemRefs.current.map((el) => el?.offsetWidth ?? 0);
+      if (ws.length !== MENU.length || ws.some((w) => w === 0)) return false;
+      widths.current = ws;
+      return true;
+    };
+
+    const compute = () => {
+      if (!measure()) return;
+      const track = wrap.clientWidth;
+      if (!track) return;
+      const fixed =
+        (shopRef.current?.offsetWidth ?? 0) + (dealsRef.current?.offsetWidth ?? 0) + GAP * 3;
+      let used = fixed;
+      let fit = 0;
+      const ws = widths.current!;
+      for (let i = 0; i < ws.length; i++) {
+        const next = used + ws[i] + GAP;
+        // Reserve room for the "More" trigger whenever items remain.
+        const reserve = i === ws.length - 1 ? 0 : MORE_W;
+        if (next + reserve > track) break;
+        used = next;
+        fit++;
+      }
+      setVisible(Math.max(fit, 0));
+    };
+
+    compute();
+    // Retry until the items have a real laid-out width (webfont swap, first paint).
+    let tries = 0;
+    const retry = () => {
+      if (widths.current || tries++ > 20) return;
+      compute();
+      requestAnimationFrame(retry);
+    };
+    requestAnimationFrame(retry);
+
+    const ro = new ResizeObserver(compute);
+    ro.observe(wrap);
+    // Fonts finish loading after first paint; widths measured before that are
+    // stale, so re-measure once from a fully visible state.
+    const refresh = () => {
+      widths.current = null;
+      setVisible(MENU.length);
+      requestAnimationFrame(() => requestAnimationFrame(compute));
+    };
+    if (typeof document !== "undefined" && "fonts" in document) {
+      (document as Document & { fonts: FontFaceSet }).fonts.ready.then(refresh);
+    }
+    return () => ro.disconnect();
+  }, []);
+
+  const hidden = MENU.slice(visible);
+
   return (
-    <div className="hidden md:flex flex-1 min-w-0 overflow-hidden justify-center items-center gap-1.5 lg:gap-2.5 text-[13px] lg:text-[14px] font-medium text-muted-foreground [mask-image:linear-gradient(to_right,transparent,black_2.5rem,black_calc(100%-2.5rem),transparent)]">
+    <div
+      ref={wrapRef}
+      className="hidden md:flex flex-1 min-w-0 justify-center items-center gap-1.5 lg:gap-2.5 text-[13px] lg:text-[14px] font-medium text-muted-foreground"
+    >
       <Link
+        ref={shopRef}
         to="/"
         activeOptions={{ exact: true }}
-        activeProps={{ className: "text-foreground bg-white/5" }}
-        className="px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap"
+        activeProps={{ className: "nav-link-active text-foreground bg-white/5" }}
+        className="nav-link-desktop px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
       >
         Shop
       </Link>
 
-      {MENU.map((cat) => {
+  {MENU.map((cat, i) => {
         const Icon = cat.icon;
         const isOpen = active === cat.slug;
         const img = imageFor(cat.slug);
+        const collapsed = i >= visible;
         return (
           <div
             key={cat.slug}
-            className="relative"
+            ref={(el) => { itemRefs.current[i] = el; }}
+            className={collapsed ? "hidden" : "relative"}
             onMouseEnter={() => open(cat.slug)}
             onMouseLeave={scheduleClose}
           >
             <Link
               to="/category/$slug"
               params={{ slug: cat.slug }}
-              className={`flex items-center gap-1.5 px-3 lg:px-3.5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap ${
+              activeProps={{ className: "nav-link-active text-foreground bg-white/5" }}
+              className={`nav-link-desktop flex items-center gap-1.5 px-3 lg:px-3.5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                 isOpen ? "text-foreground bg-white/5" : "hover:text-foreground hover:bg-white/5"
               }`}
             >
-              <span className="hidden lg:inline">{cat.name.split(" & ")[0].split(" ")[0]}</span>
-              <span className="lg:hidden">{cat.name.split(" ")[0]}</span>
+              <span>{shortLabel(cat.name)}</span>
               <ChevronDown
                 className={`size-3 transition-transform duration-200 ${isOpen ? "rotate-180 text-accent" : "opacity-60"}`}
               />
@@ -231,10 +318,37 @@ export function MegaMenu() {
         );
       })}
 
+      {/* Lower-priority categories collapse here instead of overflowing. */}
+      <div ref={moreRef} className={hidden.length ? "relative" : "hidden"}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="More categories"
+              className="nav-link-desktop flex items-center gap-1.5 px-3 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            >
+              More
+              <MoreHorizontal className="size-3.5 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-56">
+            {hidden.map((cat) => (
+              <DropdownMenuItem key={cat.slug} asChild>
+                <Link to="/category/$slug" params={{ slug: cat.slug }}>
+                  <cat.icon className="size-4 opacity-70" />
+                  <span className="truncate">{cat.name}</span>
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <Link
+        ref={dealsRef}
         to="/deals"
-        activeProps={{ className: "text-foreground bg-white/5" }}
-        className="px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap"
+        activeProps={{ className: "nav-link-active text-foreground bg-white/5" }}
+        className="nav-link-desktop px-4 py-2.5 rounded-full hover:text-foreground hover:bg-white/5 transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
       >
         Deals
       </Link>

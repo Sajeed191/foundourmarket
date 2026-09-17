@@ -495,6 +495,7 @@ function CartPage() {
               }}
             >
               <div
+                data-cart-dock
                 className="pointer-events-auto relative overflow-hidden rounded-[24px] px-4 py-3.5 flex items-center gap-4 border border-white/[0.08]"
                 style={{
                   background: "linear-gradient(150deg, oklch(0.23 0.018 60 / 0.97), oklch(0.15 0.008 40 / 0.98))",
@@ -516,6 +517,7 @@ function CartPage() {
                   </div>
                   <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60 mt-2">Secure Payment · Easy Returns</p>
                 </div>
+
 
                 <div className="shrink-0 w-[44%] max-w-[172px]">
                   <CheckoutButton disabled={count === 0} label="Checkout" compact />

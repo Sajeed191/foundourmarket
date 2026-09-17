@@ -7025,3 +7025,17 @@ html[data-theme="light"] [data-product-page] .pdp-accent-line {
   background: var(--fom-l-ember-2) !important;
   box-shadow: none !important;
 }
+
+/* Dark-theme top nav: premium edge definition (dark theme ONLY).
+   The shared .glass-strong border (10% white) is nearly invisible over the
+   dark background, so the floating nav pill melts into the page. Lift it to a
+   slightly brighter, faintly warm hairline and add a glass top-edge highlight
+   + soft ambient shadow so the bar reads as a crisp floating premium surface —
+   without touching light or grey themes. */
+html[data-theme="dark"] [data-app-header] nav.glass-strong {
+  border-color: oklch(0.72 0.03 70 / 0.18) !important;
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.07),
+    0 1px 0 0 oklch(1 0 0 / 0.04),
+    0 18px 42px -20px oklch(0 0 0 / 0.65) !important;
+}
